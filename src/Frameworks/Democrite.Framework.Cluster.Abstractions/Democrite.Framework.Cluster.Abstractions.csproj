@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="$(SolutionDir)\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="$(SolutionDir)\SharedFrameworkDemocriteAssemblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>true</IsPackable>
+		<Description>Democrite generic cluster library use by node and client side.</Description>
+
+		<PackageTags>Democrite;Multi-VGrain;Framework;Cluster;Abstract</PackageTags>
+
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Hosting" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+		<PackageReference Include="Microsoft.Orleans.Sdk" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\ErrorSR.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>ErrorSR.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\ErrorSR.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>ErrorSR.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
+	
+</Project>

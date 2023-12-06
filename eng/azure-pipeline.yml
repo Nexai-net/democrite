@@ -1,0 +1,44 @@
+# .NET Desktop
+
+# Build and run tests for .NET Desktop or Windows classic desktop solutions.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
+
+trigger: none
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - main
+      - dev
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: 'Democrite.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  SolutionFolder: "./"
+  
+steps:
+- task: UseDotNet@2
+  displayName: 'Install .NET Core SDK'
+  inputs:
+    version: 7.x
+    includePreviewVersions: true # Required for preview versions
+  
+- task: NuGetAuthenticate@1
+
+- script: dotnet restore
+  displayName: Restore dependencies
+  workingDirectory: $(SolutionFolder)
+
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: Build
+  workingDirectory: $(SolutionFolder)
+
+- script: dotnet test /p:CollectCoverage=true
+  displayName: Test with Code Coverage recolt
+  workingDirectory: $(SolutionFolder)

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="$(SolutionDir)\SharedFrameworkAssmblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>false</IsPackable>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="HtmlAgilityPack" />
+		<PackageReference Include="Democrite.Framework.Core" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="$(SolutionDir)Nexai.Sample.Forex.VGrain.Abstractions\Nexai.Sample.Forex.VGrain.Abstractions.csproj" />
+	</ItemGroup>
+</Project>

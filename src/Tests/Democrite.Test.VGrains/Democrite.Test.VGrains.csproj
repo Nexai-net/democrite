@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="$(SolutionDir)\SharedFrameworkAssmblyInfo.props" />
+
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+	
+	<ItemGroup>
+	  <None Remove="Resources\Sample.html" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Node\Democrite.Framework.Node.csproj" />
+		<ProjectReference Include="$(SolutionDir)\src\Tests\Democrite.Test.Interfaces\Democrite.Test.Interfaces.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\Sample.html" />
+	</ItemGroup>
+
+</Project>

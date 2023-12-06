@@ -1,0 +1,93 @@
+# .NET Desktop
+
+# Build and run tests for .NET Desktop or Windows classic desktop solutions.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
+
+trigger: none
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  - group: democrite-frameworks-variables
+  - group: azure-api
+
+  - name: SolutionFolder
+    value: "./"
+    
+  - name: PublishNuget
+    value: ".publish/nuget"
+
+  - name: PkgVersionMajor
+    value: $(PackageVersionMajor)
+
+  - name: PkgVersionMinor
+    value: $(PackageVersionMinor)
+
+  - name: PkgVersionPatch
+    value: $(PackageVersionPatch)
+
+  - ${{ if eq(variables['ReleasePublic'], true) }}:
+    - name: PkgVersionBuild
+      value: ""
+
+    - name: NugetPackageFilter
+      value: "Democrite.Framework.*.nupkg"
+
+    - name: PkgVersionPrerelease
+      value: ""
+
+  - ${{ if ne(variables['ReleasePublic'], true) }}:
+
+    - name: PkgVersionBuild
+      value: ".$(Build.BuildId)"
+    
+    - name: NugetPackageFilter
+      value: "Democrite.Framework.*.symbols.nupkg"
+
+    - name: PkgVersionPrerelease
+      value: "-prerelease"
+
+  - name : FinalPkgVersion
+    value: ${{ variables.PkgVersionMajor }}.${{ variables.PkgVersionMinor }}.${{ variables.PkgVersionPatch }}${{ variables.PkgVersionBuild }}${{ variables.PkgVersionPrerelease }}
+
+steps:
+  - task: UseDotNet@2
+    displayName: 'Install .NET Core SDK'
+    inputs:
+      version: 7.x
+      includePreviewVersions: true # Required for preview versions
+
+  # Need a trust certificate chain to trust tier
+
+  # - task: DotNetCoreCLI@2
+  #   displayName: Install NuGetKeyVaultSignTool
+  #   inputs:
+  #     command: 'custom'
+  #     custom: 'tool'
+  #     arguments: 'install --tool-path . NuGetKeyVaultSignTool'
+
+  - task: NuGetAuthenticate@1
+
+  - script: dotnet pack ${{ variables.SolutionFolder }}/Democrite.sln -o "${{ variables.PublishNuget }}" -c $(BuildConfiguration) --include-symbols -p:PackageVersion=${{ variables.FinalPkgVersion }}
+    displayName: dotnet pack
+ 
+  # - task: PowerShell@2
+  #   displayName: Running NuGetKeyVaultSign
+  #   inputs:
+  #     targetType: 'inline'
+  #     script: |
+  #       .\NuGetKeyVaultSignTool sign $(PublishNuget)/**/${{ variables.NugetPackageFilter }} `
+  #       --file-digest "sha256" `
+  #       --timestamp-rfc3161 "https://timestamp.digicert.com" `
+  #       --timestamp-digest "sha256" `
+  #       --azure-key-vault-url "https://nexai-democrite-nuget.vault.azure.net/" `
+  #       --azure-key-vault-tenant-id "$(azure-tenant-id)" `
+  #       --azure-key-vault-client-id "$(azure-key-vault-client-id)" `
+  #       --azure-key-vault-client-secret "$(azure-key-vault-client-secret)" `
+  #       --azure-key-vault-certificate "nexai-democrite-nuget-sign-pkg"
+
+  - script: dotnet nuget push -s "$(NugetDepo)" "${{ variables.NugetPackageFilter }}" --api-key $(SecretApiKey) --skip-duplicate
+    displayName: dotnet push
+    workingDirectory: $(PublishNuget)

@@ -1,0 +1,201 @@
+﻿// Copyright (c) Nexai.
+// The Democrite licenses this file to you under the MIT license.
+// Produce by nexai & community (cf. docs/Teams.md)
+
+namespace Democrite.Framework.Core.Executions
+{
+    using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Models;
+    using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Toolbox.Extensions;
+
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
+    using Orleans.Concurrency;
+
+    using System;
+    using System.Diagnostics;
+    using System.Reflection;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// Launcher used to call a vgrain method and provide the result
+    /// </summary>
+    internal abstract class ExecutionBaseLauncher<TVGrain, TResult> : IExecutionLauncher, IExecutionLauncher<TResult>
+        where TVGrain : IVGrain
+    {
+        #region Fields
+
+        private static readonly MethodInfo s_genericCallMethod;
+
+        private readonly IVGrainProvider _vgrainProvider;
+        private readonly ILogger _logger;
+
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Initializes the <see cref="ExecutionBaseLauncher{TResult}"/> class.
+        /// </summary>
+        static ExecutionBaseLauncher()
+        {
+            var trait = typeof(ExecutionBaseLauncher<TVGrain, TResult>);
+            var genericCallMethod = trait.GetMethods()
+                                         .FirstOrDefault(m => m.Name == nameof(IExecutionLauncher.RunAsync) &&
+                                                              m.IsGenericMethod &&
+                                                              m.GetParameters().Length == 1 &&
+                                                              m.GetParameters().First().ParameterType == typeof(CancellationToken));
+
+            Debug.Assert(genericCallMethod != null);
+            s_genericCallMethod = genericCallMethod;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ExecutionBaseLauncher{TResult}"/> class.
+        /// </summary>
+        protected ExecutionBaseLauncher(ILogger? logger,
+                                        IVGrainProvider vgrainProvider)
+        {
+            this._vgrainProvider = vgrainProvider;
+            this._logger = logger ?? NullLogger.Instance;
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        async Task<IExecutionResult> IExecutionLauncher.RunAsync(CancellationToken token)
+        {
+            return await ((IExecutionLauncher)this).RunAsync<NoneType>(token);
+        }
+
+        /// <inheritdoc />
+        Task<IExecutionResult<TResult>> IExecutionLauncher<TResult>.RunAsync(CancellationToken token)
+        {
+            return ((IExecutionLauncher)this).RunAsync<TResult>(token);
+        }
+
+        /// <inheritdoc />
+        [OneWay]
+        public Task Fire()
+        {
+            return Task.Factory.StartNew(async () =>
+            {
+                try
+                {
+                    await RunImplAsync<NoneType>(default, true);
+                }
+                catch (Exception ex)
+                {
+                    this._logger.OptiLog(LogLevel.Error,
+                                         "[{context}] Fire Task result on exception : {exception}",
+                                         OnFireFailedBuildContext(ex),
+                                         ex);
+                }
+            }).Unwrap();
+        }
+
+        /// <inheritdoc />
+        public Task<IExecutionResult<TExpectedOutput>> RunAsync<TExpectedOutput>(CancellationToken token)
+        {
+            return RunImplAsync<TExpectedOutput>(token);
+        }
+
+        /// <inheritdoc />
+        async Task<IExecutionResult> IExecutionLauncher.RunAsync(Type expectedOutput, CancellationToken token)
+        {
+            var specialisedMethod = s_genericCallMethod.MakeGenericMethod(expectedOutput);
+
+            var result = (ValueTask)specialisedMethod.Invoke(this, new object[] { token })!;
+
+            var task = result.AsTask();
+            await task;
+
+            var taskResult = task.GetResult<IExecutionResult>();
+
+            Debug.Assert(taskResult != null);
+
+            return taskResult;
+        }
+
+        #region Tools
+
+        /// <summary>
+        ///     Generic execution able to call <typeparamref name="TExecutor"/> with diffent parameter
+        /// </summary>
+        private async Task<IExecutionResult<TExpectedOutput>> RunImplAsync<TExpectedOutput>(CancellationToken token,
+                                                                                            bool fire = false)
+        {
+            var executionContext = GenerateExecutionContext();
+            var input = GetInput();
+
+            var executor = await this._vgrainProvider.GetVGrainAsync<TVGrain>(input, executionContext, this._logger);
+
+            Exception? exception = null;
+            Task? executionTask = null;
+            try
+            {
+                token.ThrowIfCancellationRequested();
+
+                // Link cancel event to orlean grain cancel system
+                token.Register((ctx) => (ctx as IExecutionContext)?.Cancel(), executionContext, useSynchronizationContext: true);
+
+                executionTask = OnRunAsync<TExpectedOutput>(executor, input, executionContext, fire);
+                await executionTask;
+
+            }
+            catch (Exception ex)
+            {
+                exception = ex;
+            }
+
+            if (exception is not OperationCanceledException &&
+                executionTask != null &&
+                executionTask.Exception != null)
+            {
+                exception = exception is null
+                                ? exception = executionTask.Exception
+                                : new AggregateException(exception, executionTask.Exception);
+            }
+
+            TExpectedOutput? output = default;
+
+            if (!NoneType.IsEqualTo<TExpectedOutput>() && (executionTask?.IsCompletedSuccessfully ?? false))
+                output = executionTask.GetResult<TExpectedOutput>();
+
+            return ExecutionResult.Create(executionContext,
+                                          output,
+                                          exception,
+                                          succeeded: executionTask?.IsCompletedSuccessfully);
+        }
+
+        /// <summary>
+        /// Gets the input based on configuration.
+        /// </summary>
+        protected abstract object? GetInput();
+
+        /// <summary>
+        /// Generates <see cref="IExecutionContext"/> based on configuration.
+        /// </summary>
+        protected abstract IExecutionContext GenerateExecutionContext();
+
+        /// <summary>
+        /// Called to call the requested vgrain
+        /// </summary>
+        /// <returns></returns>
+        protected abstract Task OnRunAsync<TExpectedOutput>(TVGrain executor, object? input, IExecutionContext executionContext, bool fire);
+
+        /// <summary>
+        /// Called when build context information to help identify the element that failed
+        /// </summary>
+        protected abstract string? OnFireFailedBuildContext(Exception ex);
+
+        #endregion
+
+        #endregion
+    }
+}

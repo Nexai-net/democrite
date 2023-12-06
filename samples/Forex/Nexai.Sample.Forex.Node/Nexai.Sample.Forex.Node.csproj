@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="$(SolutionDir)\SharedFrameworkAssmblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>false</IsPackable>
+		<OutputType>Exe</OutputType>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Democrite.Framework.VGrains.Web.Abstractions" />
+		<PackageReference Include="Democrite.Framework.VGrains.Web" />
+		<PackageReference Include="Democrite.Framework.Node.Signals" />
+		<PackageReference Include="Democrite.Framework.Node.Cron" />
+		<PackageReference Include="Democrite.Framework.Builders" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="$(SolutionDir)Nexai.Sample.Forex.VGrain\Nexai.Sample.Forex.VGrain.csproj" />
+		<ProjectReference Include="$(SolutionDir)Nexai.Sample.Forex.VGrain.Abstractions\Nexai.Sample.Forex.VGrain.Abstractions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+</Project>

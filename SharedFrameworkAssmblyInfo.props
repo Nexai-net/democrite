@@ -1,0 +1,30 @@
+﻿<Project>
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>11</LangVersion>
+
+		<Authors>Nexai</Authors>
+		<Company>Nexai.net</Company>
+
+		<NeutralLanguage>en</NeutralLanguage>
+		<Copyright>Copyright (c) Nexai.net</Copyright>
+		
+		<PackageProjectUrl>https://github.com/nexai-net/democrite</PackageProjectUrl>
+		<PackageLicense>pkg/LICENSE</PackageLicense>
+		<PackageReadme>pkg/README.md</PackageReadme>
+		<PackageIcon>pkg/logo.png</PackageIcon>
+		<RepositoryType>Git</RepositoryType>
+		<RepositoryUrl>https://github.com/nexai-net/democrite/</RepositoryUrl>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+      <None Include="$(SolutionDir)docs\logo.png" Pack="true" PackagePath="pkg/"/>
+      <None Include="$(SolutionDir)README.md" Pack="true" PackagePath="pkg/"/>
+      <None Include="$(SolutionDir)LICENSE" Pack="true" PackagePath="pkg/" />
+  </ItemGroup>
+	
+</Project>
