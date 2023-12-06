@@ -110,18 +110,18 @@ This is why a grain consists of an interface and an implementation, allowing the
 
 With Democrite, there is no need to explicitly call the grain yourself : Democrite handles this based on the configuration.<br />
 
-That why we use the name of **Virtual Grains** (**VGrain**) to specify a 'not direct call consumation' behavior.
+This is the reason we refer to them as **Virtual Grains** (**VGrain**), to denote a behavior that does not involve direct call consumption.
+
 
 ### Sequences
 
-A **Sequence** is a chain of virtual grain that will be executed one after the other sequentially where output could be consumed as input by the next **VGrain**. <br />
+A **Sequence** is a series of virtual grains executed sequentially, where the output of one can be used as input for the next **VGrain**. <br />
 
-The goal is to define this sequence only once and store it in a database.
-To execute the sequence only its **Uid** is needed.
+The aim is to set up this sequence just once and save it in a database. To run the sequence, only its unique identifier (**Uid**) is required.
 
 > [!IMPORTANT]
-> For now only local declaration is managed.
-> Look to [Next](#next) section to see that future behavior to load those configuration from a storage system (Databases).
+> Currently, only local declarations are supported.
+> Please refer to the [Next](#next) section for information on future capabilities to load these configurations from a storage system, such as databases.
 
 To configure and test **sequences** you need to create and register it in the DemocriteNode configuration.
 
@@ -163,23 +163,23 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
 
 ### Triggers
 
-A **Sequences** could be executed manually but also automatic by triggers.
+A **Sequences** can be executed manually, but it can also be triggered automatically.
 
 There are differents kind of **triggers** :
 - **Time Periodicity**, use a cron expression to define the periodicity
 - **Signals**, trigge when configured signal also fire
 
-Like the **sequences**, trigger definition could be created and store locally or in the near future in external source like databases.
+Similar to **sequences**, trigger definitions can currently be created and stored locally, with plans for future storage in external sources like databases.
 
 > [!IMPORTANT]
-> For now only local declaration is managed.
-> Look to [Next](#next) section to see that next goal is to load those configurations from a storage source.
+> Currently, only local declarations are handled.
+> The upcoming goal, detailed in the [Next](#next) section, is to enable loading these configurations from a storage source.
 
-A trigger could provide a input to the sequence start.
+A trigger can supply an input to initiate the sequence.
 
 > [!IMPORTANT]
-> For now only static data collection is managed.
-> Look to [Next](#next) section to see that next goal is to load those configuration from a external provider.
+> Currently, only static data collection is supported.
+> Please see the [Next](#next) section for information on the future goal of loading these configurations from an external provider.
 
 **Time Periodicity** <br />
 ```csharp
@@ -234,20 +234,20 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
 
 ### Signals
 
-The signals feature is compose of two elements:
+The signals feature consists of two components:
 - **Signal**
 - **Door**
 
-A **signal** is like an event except it is **"fire and forget"**. <br />
+A **signal** functions similarly to an event, but with a **"fire and forget"** approach.<br />
 
-By default the signal carry:
+By default, the signal includes:
 - Definition name & Uid
 - The VGrain information that fire
 - The possible previous signal that cause this one to fire
 
-But you can get small information to carry. <br />
-We advise to keep it as small as possible to prevent memory issue. <br />
-It could a simple id to of data in the storage.
+However, it can carry a small amount of information. <br />
+It is recommended to keep this information as minimal as possible to avoid memory issues.<br />
+It could be something as simple as an ID referencing data in storage.
 
 Define a **signal**:
 ```csharp
@@ -256,9 +256,9 @@ var signalA = Signal.Create("signalA");
 <br />
 <br />
 
-A **Door** could listen multiples **signals** and based on specific condition could fire is own **signal**.
+A **Door** can listen to multiple **signals** and, based on specific conditions, can emit its own **signal**. 
 
-For know a boolean logic door is provided but you can easily create and setup you own gate logic.
+Currently, a boolean logic door is available, but you can easily create and configure your own gate logic.
 
 Define a **Logic boolean door**:
 ```csharp
@@ -308,25 +308,24 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
 
 ### Virtual Grain Id
 
-In orleans vision a grain could have multiple virtual instances. <br/>
-Only **one** instance is alive at the time associate to identifier a [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity).<br/>
 
-In orleans is the user responsability to provide the correct GrainId of the grain you want to call.
+In the Orleans framework, a grain can have multiple virtual instances.<br /> 
+However, only **one** instance is active at any given time, associated with a unique identifier known as a  [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity).<br/>
 
-In democrite virtual grain are instanciate and call by a generic orchestrator. <br />
-By default a new Guid is used each time. <br />
-Ideal for the [stateless grain](https://learn.microsoft.com/en-us/dotnet/orleans/grains/stateless-worker-grains).<br />
+In Orleans, it is the user's responsibility to supply the correct GrainId of the grain they wish to call. 
+
+In Democrite, virtual grains are instantiated and called by a generic orchestrator. <br />
+By default, a new Guid is used each time, which is ideal for [stateless grain](https://learn.microsoft.com/en-us/dotnet/orleans/grains/stateless-worker-grains). <br />
 
 [Virutal Grain](#virtual-grains) interface could be tag by attribute [VGrainIdFormatAttribute](/src/Frameworks/Democrite.Framework.Core.Abstractions/Attributes/VGrainIdFormatAttribute.cs) to indicate how to build the [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity).
 
-The template id system offer opportunities to create dynamically a [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity) using data input or execution context as information source.
+The template ID system provides the ability to dynamically create a [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity) using data input or execution context as the source of information.
 
 You can see a good example in the sample [Forex](#forex). <br/>
-This one use stateless vgrain to download html page and to parse it<br /> 
-but use a statefull vgrain to store the value extracted.<br />
+This one use stateless virtual grain (vgrain) to download html page and to parse it<br /> 
+but use a statefull virtual grain (vgrain) to store the value extracted.<br />
 
-This vgrain use a string value in the execution context, forex pair (eur-usd, eur-chf, ...) to create is GrainId.
-Creating on reusable instance by pair-
+This virtual grain (vgrain) employs a string value, such as a forex pair (eur-usd, eur-chf, etc.), from the execution context to form its GrainId, resulting in the creation of a single reusable instance for each pair
 
 This allow :
 - A client to directly call this vgrain to extract the values.
