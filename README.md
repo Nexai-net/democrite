@@ -101,7 +101,7 @@ await using (node)
 builder.Host.UseDemocriteClient(cfg => { ... });
 ```
 
-### Virtual Grains
+### Virtual Grains (vgrain)
 
 In accordance with Orleans terminology, a grain is a virtual actor that can appear in any compatible silo, with its state being restored if necessary.<br />
 
