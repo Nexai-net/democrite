@@ -1,9 +1,9 @@
-<table>
-    <tr>
-        <td>
+<table style="border:none">
+    <tr style="border:none">
+        <td style="border:none">
             <image src="docs/logo.png">
         </td>
-        <td>
+        <td style="border:none">
             <span style='font-size:112px;valign:center'>Democrite</span>
         </td>
     </tr>
@@ -11,26 +11,25 @@
 
 [![Release](https://img.shields.io/github/v/release/nexai-net/democrite)](https://github.com/nexai-net/democrite/releases) [![MIT License](https://img.shields.io/github/license/nexai-net/democrite?color=%230b0&style=flat-square)](https://github.com/nexai-net/democrite/blob/main/LICENSE) [![Help Wanted](https://img.shields.io/github/issues/nexai-net/democrite/help%20wanted?color=%232EA043&label=help%20wanted&style=flat-square)](https://github.com/nexai-net/democrite/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) [![Good First Issues](https://img.shields.io/github/issues/nexai-net/democrite/good%20first%20issue?color=%23512BD4&label=good%20first%20issue&style=flat-square)](https://github.com/nexai-net/democrite/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
-### Democrite is an open-source framework for building robust, scalable and distributed 'multi-agent like' system base on [Microsoft Orleans](https://github.com/dotnet/orleans).
+### Democrite is an open-source framework for building robust, scalable and distributed 'multi-agent like' system based on [Microsoft Orleans](https://github.com/dotnet/orleans).
 
-> [!IMPORTANT]
+> [!CAUTION]
 > The development is still in alpha phase
 
-Democrite provide an automatic orchestration & configuration system to be able to dynamicly create, edit and modify grain interactions.
+Democrite offers an automated orchestration and configuration system, enabling dynamic creation, editing, and modification of grain interactions.
 
-Democrite use build-in [Features](#features) to managed virtual grains and communication between them using mainly serializable descriptions.
-This allow to create easily different [Sequences](#sequences) of vgrains that transform into input to output. Using [Signals](#signals) to send information and [Triggers](#triggers) differents [Sequences](#sequences), chain the treatment through a graph.
+It incorporates built-in [Features](#features) to manage virtual grains and facilitate communication between them. This simplifies the creation of various [Sequences](#sequences) of virtual grains that can be transformed an input to output. Democrite utilizes [Signals](#signals) to transmit information and [Triggers](#triggers) to initiate different [Sequences](#sequences), thereby chaining processes through a graph. Most [Features](#features) are describe in a serializable structure.
 
 <p align="center">
     <img src="assets/full-schema.png" width="500px" />
 </p>
 
-Democrite is a layer above [Microsoft Orleans](https://docs.microsoft.com/dotnet/orleans/) that means all the feature of orleans remains.
+Democrite functions as a layer on top of [Microsoft Orleans](https://docs.microsoft.com/dotnet/orleans/), ensuring that all features of Orleans are retained.
 - **Scalability** using silo as virtually one server
 - **Robustes** through virtual actor model
 - **Simplicity** by grain design
 
-All orleans configuration remains possible however a simplify fluent configuration model is provide by democrite.
+All configurations possible with Orleans are still available, but Democrite offers a simplified, fluent configuration model.
 
 [Release Notes](/docs/ReleaseNotes.md)<br />
 [Teams](/docs/Team.md)
@@ -39,9 +38,9 @@ All orleans configuration remains possible however a simplify fluent configurati
 
 ### Nodes
 
-A node is a server in a cluster. <br />
-We advise to create a **client** (server API) and multiples **node** that process the request. <br />
-This allow to scale the process part and remain a simple facade part.
+A node refers to a server within a cluster.<br />
+It is recommended to establish a **client** (server API) along with multiple **nodes** that process requests.<br /> 
+This approach enables scaling of the processing component while maintaining a simplified facade.
 
 Democrite node has an individual setup.
 
@@ -69,9 +68,9 @@ await using (node)
 
 ### Client
 
-A client is another program that consume the cluster capabilities. <br />
-This one need configuration to found the cluster and send request. <br />
-We advise to create a client and cluster's node on different machines. <br />
+A client is a separate program that utilizes the cluster's capabilities.<br /> 
+It requires configuration to locate the cluster and send requests.<br /> 
+It is advisable to set up the client and the cluster's nodes on different machines.<br />
 
 Democrite client could be setup individually or through existing application setup.
 
@@ -102,26 +101,27 @@ await using (node)
 builder.Host.UseDemocriteClient(cfg => { ... });
 ```
 
-### Virtual Grains
+### Virtual Grains (vgrain)
 
-Following the terminalogie of Orleans a grain is virtual actor that could pop on any compatible silo with his state restore if necessary. <br />
-In orleans to call a grain you have to ask a proxy instance to the **IGrainFactory**. This proxy will transparently managed the communication between call and caller. <br />
-That why a grain is composed of an interface and implementation to allow proxy to inherite the interface.
+In accordance with Orleans terminology, a grain is a virtual actor that can appear in any compatible silo, with its state being restored if necessary.<br />
 
-Through democrite you doesn't need to call specificly the grain youself democrite will do it for you based on the configuration. <br />
+In Orleans, to invoke a grain, one must request a proxy instance from the **IGrainFactory**. This proxy seamlessly manages the communication between the caller and the called.
+This is why a grain consists of an interface and an implementation, allowing the proxy to inherit the interface.<br />
 
-That why we use the name of **Virtual Grains** (**VGrain**) to specify a 'not direct call consumation' behavior.
+With Democrite, there is no need to explicitly call the grain yourself, it will do it for you based on the configuration. <br />
+
+This is the reason we refer to them as **Virtual Grains** (**VGrain**), to denote a behavior that prevent direct call consumption.
+
 
 ### Sequences
 
-A **Sequence** is a chain of virtual grain that will be executed one after the other sequentially where output could be consumed as input by the next **VGrain**. <br />
+A **Sequence** is a series of virtual grains executed sequentially, where the output of one can be used as input for the next **VGrain**. <br />
 
-The goal is to define this sequence only once and store it in a database.
-To execute the sequence only its **Uid** is needed.
+The aim is to set up this sequence description just once and save it in a database. To run the sequence, only its unique identifier (**Uid**) is required.
 
 > [!IMPORTANT]
-> For now only local declaration is managed.
-> Look to [Next](#next) section to see that future behavior to load those configuration from a storage system (Databases).
+> Currently, only local declarations are supported.
+> Please refer to the [Next](#next) section for information on future capabilities to load these configurations from a storage system, such as databases.
 
 To configure and test **sequences** you need to create and register it in the DemocriteNode configuration.
 
@@ -163,23 +163,23 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
 
 ### Triggers
 
-A **Sequences** could be executed manually but also automatic by triggers.
+A **Sequences** can be executed manually, but it can also be triggered automatically.
 
 There are differents kind of **triggers** :
 - **Time Periodicity**, use a cron expression to define the periodicity
-- **Signals**, trigge when configured signal also fire
+- **Signals**, trigge when configured signal is also fire
 
-Like the **sequences**, trigger definition could be created and store locally or in the near future in external source like databases.
-
-> [!IMPORTANT]
-> For now only local declaration is managed.
-> Look to [Next](#next) section to see that next goal is to load those configurations from a storage source.
-
-A trigger could provide a input to the sequence start.
+Similar to **sequences**, trigger definitions can currently be created and stored locally, with plans for future storage in external sources like databases.
 
 > [!IMPORTANT]
-> For now only static data collection is managed.
-> Look to [Next](#next) section to see that next goal is to load those configuration from a external provider.
+> Currently, only local declarations are handled.
+> The upcoming goal, detailed in the [Next](#next) section, is to enable loading these configurations from a storage source.
+
+A trigger can supply an input to initiate the sequence.
+
+> [!IMPORTANT]
+> Currently, only static data collection is supported.
+> Please see the [Next](#next) section for information on the future goal of loading these configurations from an external provider.
 
 **Time Periodicity** <br />
 ```csharp
@@ -234,20 +234,21 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
 
 ### Signals
 
-The signals feature is compose of two elements:
+The signals feature consists of two components:
 - **Signal**
 - **Door**
 
-A **signal** is like an event except it is **"fire and forget"**. <br />
+A **signal** functions similarly to an event, but with a **"fire and forget"** approach.<br />
 
-By default the signal carry:
+By default, the signal includes:
 - Definition name & Uid
 - The VGrain information that fire
+- The datetime when it is fire
 - The possible previous signal that cause this one to fire
 
-But you can get small information to carry. <br />
-We advise to keep it as small as possible to prevent memory issue. <br />
-It could a simple id to of data in the storage.
+However, it can carry a small amount of information. <br />
+It is recommended to keep this information as minimal as possible to avoid memory issues.<br />
+It could be something as simple as an ID referencing data in storage.
 
 Define a **signal**:
 ```csharp
@@ -256,9 +257,9 @@ var signalA = Signal.Create("signalA");
 <br />
 <br />
 
-A **Door** could listen multiples **signals** and based on specific condition could fire is own **signal**.
+A **Door** can listen to multiple **signals** and, based on specific conditions, can emit its own **signal**. 
 
-For know a boolean logic door is provided but you can easily create and setup you own gate logic.
+Currently, a boolean logic door is available, but you can easily create and configure your own gate logic.
 
 Define a **Logic boolean door**:
 ```csharp
@@ -308,32 +309,30 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
 
 ### Virtual Grain Id
 
-In orleans vision a grain could have multiple virtual instances. <br/>
-Only **one** instance is alive at the time associate to identifier a [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity).<br/>
+In the Orleans framework, a grain definition can have multiple virtual instances.<br /> 
+However, only **one** instance is active at any given time, associated with a unique identifier known as a  [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity).<br/>
 
-In orleans is the user responsability to provide the correct GrainId of the grain you want to call.
+In Orleans, it is the user's responsibility to supply the correct GrainId of the grain they wish to call. 
 
-In democrite virtual grain are instanciate and call by a generic orchestrator. <br />
-By default a new Guid is used each time. <br />
-Ideal for the [stateless grain](https://learn.microsoft.com/en-us/dotnet/orleans/grains/stateless-worker-grains).<br />
+In Democrite, virtual grains are instantiated and called by a generic orchestrator. <br />
+By default, a new Guid is used each time, which is ideal for [stateless grain](https://learn.microsoft.com/en-us/dotnet/orleans/grains/stateless-worker-grains). <br />
 
 [Virutal Grain](#virtual-grains) interface could be tag by attribute [VGrainIdFormatAttribute](/src/Frameworks/Democrite.Framework.Core.Abstractions/Attributes/VGrainIdFormatAttribute.cs) to indicate how to build the [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity).
 
-The template id system offer opportunities to create dynamically a [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity) using data input or execution context as information source.
+The template ID system provides the ability to dynamically create a [GrainId](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-identity) using data input or execution context as the source of information.
 
 You can see a good example in the sample [Forex](#forex). <br/>
-This one use stateless vgrain to download html page and to parse it<br /> 
-but use a statefull vgrain to store the value extracted.<br />
+This one use stateless virtual grain (vgrain) to download html page and parse it<br /> 
+but use a statefull virtual grain (vgrain) to store the value extracted.<br />
 
-This vgrain use a string value in the execution context, forex pair (eur-usd, eur-chf, ...) to create is GrainId.
-Creating on reusable instance by pair-
+This virtual grain (vgrain) employs a string value, such as a forex pair (eur-usd, eur-chf, etc.), from the execution context to form its GrainId, resulting in the creation of a single reusable instance for each pair
 
 This allow :
 - A client to directly call this vgrain to extract the values.
 - To create only one grain by pair that is single-thread handled by orleans (no need to think of concurrent access)
 - Store information in dedicate a serializable model in class and not to focus on the storage mode (databases, files, ...)
 
-> [!IMPORTANT]
+> [!TIP]
 > You can access those grain usign the classic orleans [IGrainFactory]() way. <br />
 > **BUT** it is better to use [IDemocriteExecutionHandler](#consume-democrite-cluster) who will use correctly and automatically the correct GrainId.
 
@@ -361,10 +360,10 @@ If you split the agent implementation and definition in separate projet you coul
 
 To create a node you just have to follow the example bellow.
 
-> [!IMPORTANT]
+> [!CAUTION]
 > Orleans scan by default all the project dll.
 > Due to .net assembly load behavior if you deport your agent implementation in another projet is may not be loaded if you don't directly use any of the type defined. Reference the project is not enough.
-> In the [Next](#next) section you will see an objectif to reference assembly to load for now you have to use the SetupAgents method in the wizard configurator.
+> In the [Next](#next) section you will see an objectif to reference assembly to load for now you have to use the SetupVGrains method in the wizard configurator.
 
 In Program.cs:
 
@@ -390,7 +389,7 @@ await using (node)
 
 To create a client you just have to follow the example bellow.
 
-> [!IMPORTANT]
+> [!CAUTION]
 > All nodes and clients need a **meeting point** to know the others and form a cluster, orleans choose the database strategy.
 > By default only one node and one client could be present on the same machine wihtout any db setup.
 > But You could use the orleans fluent method to configure your cluster and client.
@@ -435,10 +434,6 @@ This handler follow democrite rules in grain id generation.
 
 In the section [Sample/Forex](/samples/Forex/)
 
-> [!IMPORTANT]
-> To execute this sample you will need all the code, use the **Democrite.sln** <br />
-> Later on the sample will be isolated with nuget reference
-
 **Use case**
 
 Fetch reguraly a forex pair value using public web site, store the values and be able to consume them through an api.
@@ -464,7 +459,7 @@ v 0.2.1-prerelease :
 - [ ] **IHostBuilder** integration to allow configuration on existing application.
 - [ ] Load **Definition**, sequence, signals, triggers, ... from an external source like databases using the design pattern strategy through IProviderSource
 - [ ] Configure trigger input source from an external service (support of pick mode)
-- [ ] Add method to reference the agent assembly in the system to be sure this one is loaded by orleans.
+- [ ] Add method to reference the vgrain assembly in the system to be sure this one is loaded by orleans.
 
 ## Versions
 
