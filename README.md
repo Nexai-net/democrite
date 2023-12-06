@@ -13,7 +13,7 @@
 
 ### Democrite is an open-source framework for building robust, scalable and distributed 'multi-agent like' system based on [Microsoft Orleans](https://github.com/dotnet/orleans).
 
-> [!IMPORTANT]
+> [!CAUTION]
 > The development is still in alpha phase
 
 Democrite offers an automated orchestration and configuration system, enabling dynamic creation, editing, and modification of grain interactions.
@@ -332,7 +332,7 @@ This allow :
 - To create only one grain by pair that is single-thread handled by orleans (no need to think of concurrent access)
 - Store information in dedicate a serializable model in class and not to focus on the storage mode (databases, files, ...)
 
-> [!IMPORTANT]
+> [!TIP]
 > You can access those grain usign the classic orleans [IGrainFactory]() way. <br />
 > **BUT** it is better to use [IDemocriteExecutionHandler](#consume-democrite-cluster) who will use correctly and automatically the correct GrainId.
 
@@ -360,7 +360,7 @@ If you split the agent implementation and definition in separate projet you coul
 
 To create a node you just have to follow the example bellow.
 
-> [!IMPORTANT]
+> [!CAUTION]
 > Orleans scan by default all the project dll.
 > Due to .net assembly load behavior if you deport your agent implementation in another projet is may not be loaded if you don't directly use any of the type defined. Reference the project is not enough.
 > In the [Next](#next) section you will see an objectif to reference assembly to load for now you have to use the SetupVGrains method in the wizard configurator.
@@ -389,7 +389,7 @@ await using (node)
 
 To create a client you just have to follow the example bellow.
 
-> [!IMPORTANT]
+> [!CAUTION]
 > All nodes and clients need a **meeting point** to know the others and form a cluster, orleans choose the database strategy.
 > By default only one node and one client could be present on the same machine wihtout any db setup.
 > But You could use the orleans fluent method to configure your cluster and client.
