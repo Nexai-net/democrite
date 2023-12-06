@@ -16,21 +16,20 @@
 > [!IMPORTANT]
 > The development is still in alpha phase
 
-Democrite provide an automatic orchestration & configuration system to be able to dynamicly create, edit and modify grain interactions.
+Democrite offers an automated orchestration and configuration system, enabling dynamic creation, editing, and modification of grain interactions.
 
-Democrite use build-in [Features](#features) to managed virtual grains and communication between them using mainly serializable descriptions.
-This allow to create easily different [Sequences](#sequences) of vgrains that transform into input to output. Using [Signals](#signals) to send information and [Triggers](#triggers) differents [Sequences](#sequences), chain the treatment through a graph.
+It incorporates built-in [Features](#features) to manage virtual grains and facilitate communication between them, primarily through serializable descriptions. This simplifies the creation of various [Sequences](#sequences) of virtual grains that can be transformed from input to output. Democrite utilizes [Signals](#signals) to transmit information and [Triggers](#triggers) to initiate different [Sequences](#sequences), thereby chaining processes through a graph.
 
 <p align="center">
     <img src="assets/full-schema.png" width="500px" />
 </p>
 
-Democrite is a layer above [Microsoft Orleans](https://docs.microsoft.com/dotnet/orleans/) that means all the feature of orleans remains.
+Democrite functions as a layer on top of [Microsoft Orleans](https://docs.microsoft.com/dotnet/orleans/), ensuring that all features of Orleans are retained.
 - **Scalability** using silo as virtually one server
 - **Robustes** through virtual actor model
 - **Simplicity** by grain design
 
-All orleans configuration remains possible however a simplify fluent configuration model is provide by democrite.
+All configurations possible with Orleans are still available, but Democrite offers a simplified, fluent configuration model.
 
 [Release Notes](/docs/ReleaseNotes.md)<br />
 [Teams](/docs/Team.md)
@@ -39,9 +38,9 @@ All orleans configuration remains possible however a simplify fluent configurati
 
 ### Nodes
 
-A node is a server in a cluster. <br />
-We advise to create a **client** (server API) and multiples **node** that process the request. <br />
-This allow to scale the process part and remain a simple facade part.
+A node refers to a server within a cluster.<br />
+It is recommended to establish a **client** (server API) along with multiple **node** that process requests.<br /> 
+This approach enables scaling of the processing component while maintaining a simplified facade.
 
 Democrite node has an individual setup.
 
@@ -69,9 +68,9 @@ await using (node)
 
 ### Client
 
-A client is another program that consume the cluster capabilities. <br />
-This one need configuration to found the cluster and send request. <br />
-We advise to create a client and cluster's node on different machines. <br />
+A client is a separate program that utilizes the cluster's capabilities.<br /> 
+It requires configuration to locate the cluster and send requests.<br /> 
+It is advisable to set up the client and the cluster's nodes on different machines.<br />
 
 Democrite client could be setup individually or through existing application setup.
 
@@ -104,11 +103,12 @@ builder.Host.UseDemocriteClient(cfg => { ... });
 
 ### Virtual Grains
 
-Following the terminalogie of Orleans a grain is virtual actor that could pop on any compatible silo with his state restore if necessary. <br />
-In orleans to call a grain you have to ask a proxy instance to the **IGrainFactory**. This proxy will transparently managed the communication between call and caller. <br />
-That why a grain is composed of an interface and implementation to allow proxy to inherite the interface.
+In accordance with Orleans terminology, a grain is a virtual actor that can appear in any compatible silo, with its state being restored if necessary.<br />
 
-Through democrite you doesn't need to call specificly the grain youself democrite will do it for you based on the configuration. <br />
+In Orleans, to invoke a grain, one must request a proxy instance from the **IGrainFactory**. This proxy seamlessly manages the communication between the caller and the call.
+This is why a grain consists of an interface and an implementation, allowing the proxy to inherit the interface.<br />
+
+With Democrite, there is no need to explicitly call the grain yourself : Democrite handles this based on the configuration.<br />
 
 That why we use the name of **Virtual Grains** (**VGrain**) to specify a 'not direct call consumation' behavior.
 
