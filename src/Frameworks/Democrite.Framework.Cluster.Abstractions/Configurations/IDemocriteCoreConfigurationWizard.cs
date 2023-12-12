@@ -45,12 +45,6 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
             where TImplementation : class, TService;
 
         /// <summary>
-        /// Adds a delegate for configuring the provided <see cref="ILoggingBuilder"/>. This may be called multiple times.
-        /// </summary>
-        /// <param name="configureLogging">The delegate that configures the <see cref="ILoggingBuilder"/>.</param>
-        TSubWizard ConfigureLogging(Action<ILoggingBuilder> configureLogging);
-
-        /// <summary>
         /// Map configuration section to a specific <typeparamref name="TOption"/> option
         /// </summary>
         TSubWizard AddOptionMapping<TOptions>(string section) where TOptions : class;

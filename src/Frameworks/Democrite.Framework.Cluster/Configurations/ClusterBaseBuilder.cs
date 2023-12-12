@@ -202,14 +202,6 @@ namespace Democrite.Framework.Cluster.Configurations
             return GetConfigurationBuilder();
         }
 
-        ///// <inheritdoc />
-        //public IDemocriteConfigurationWizard AddService<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImplementation, TKey>(TKey key)
-        //    where TService : class
-        //    where TImplementation : class, TService
-        //{
-        //    this._services.Enqueue(new ServiceDescriptor(typeof(TService), sp => new KeyedSingletonService<TKey, TService, TImplementation>(key, sp), ServiceLifetime.Singleton));
-        //    return this;
-        //}
 
         /// <inheritdoc />
         public TWizardConfig AddOptionMapping<TOptions>(string section)
@@ -233,7 +225,7 @@ namespace Democrite.Framework.Cluster.Configurations
         }
 
         /// <inheritdoc />
-        public abstract TWizardConfig ConfigureLogging(Action<ILoggingBuilder> configureLogging);
+        public abstract TWizard ConfigureLogging(Action<ILoggingBuilder> configureLogging);
 
         #endregion
 
@@ -325,8 +317,14 @@ namespace Democrite.Framework.Cluster.Configurations
 
             SetupServices();
 
+            if (!CheckIsExistSetupInServices<ILoggerProvider>(serviceCollection))
+                AddService<ILoggerProvider>(NullLoggerProvider.Instance);
+
+            if (!CheckIsExistSetupInServices<ILoggerFactory>(serviceCollection))
+                AddService<ILoggerFactory>(NullLoggerFactory.Instance);
+
             var loggerFactory = serviceCollection.BuildServiceProvider()
-                                     .GetService<ILoggerFactory>() ?? NullLoggerFactory.Instance;
+                                                 .GetService<ILoggerFactory>() ?? NullLoggerFactory.Instance;
 
             var logger = loggerFactory.CreateLogger(GetType().Name);
 
@@ -559,7 +557,7 @@ namespace Democrite.Framework.Cluster.Configurations
         /// </summary>
         protected bool CheckIsExistSetupInServices<TService>(IServiceCollection serviceCollection)
         {
-            return CheckIsExistInPendingServices<TService>() && !serviceCollection.Any(s => s.ServiceType == typeof(TService));
+            return CheckIsExistInPendingServices<TService>() || serviceCollection.Any(s => s.ServiceType == typeof(TService));
         }
 
         /// <summary>

@@ -40,7 +40,7 @@ namespace Democrite.Framework.Client.Configurations
         /// Create and setup a new democrite cluster client
         /// </summary>
         public static DemocriteClient Create(string[] args,
-                                             Action<IClusterClientBuilder>? builder,
+                                             Action<IDemocriteClientBuilder>? builder,
                                              ClusterBuilderTools? clusterBuilderTools = null)
         {
             return Create(args, null, builder, clusterBuilderTools);
@@ -50,7 +50,7 @@ namespace Democrite.Framework.Client.Configurations
         /// Create and setup a new democrite cluster client
         /// </summary>
         public static DemocriteClient Create(Action<HostBuilderContext, IConfigurationBuilder>? setupConfig,
-                                             Action<IClusterClientBuilder>? builder,
+                                             Action<IDemocriteClientBuilder>? builder,
                                              ClusterBuilderTools? clusterBuilderTools = null)
         {
             return Create(null, setupConfig, builder, clusterBuilderTools);
@@ -59,7 +59,7 @@ namespace Democrite.Framework.Client.Configurations
         /// <summary>
         /// Create and setup a new democrite cluster client
         /// </summary>
-        public static DemocriteClient Create(Action<IClusterClientBuilder>? builder = null,
+        public static DemocriteClient Create(Action<IDemocriteClientBuilder>? builder = null,
                                              ClusterBuilderTools? clusterBuilderTools = null)
         {
             return Create(null, null, builder, clusterBuilderTools);
@@ -70,7 +70,7 @@ namespace Democrite.Framework.Client.Configurations
         /// </summary>
         public static DemocriteClient Create(string[]? args,
                                              Action<HostBuilderContext, IConfigurationBuilder>? setupConfig,
-                                             Action<IClusterClientBuilder>? builder,
+                                             Action<IDemocriteClientBuilder>? builder,
                                              ClusterBuilderTools? clusterBuilderTools)
         {
             var host = CreateAndConfigureHost(args, setupConfig);
@@ -89,7 +89,7 @@ namespace Democrite.Framework.Client.Configurations
         /// </summary>
         internal static void Create<THostBuilder>(THostBuilder hostBuilder,
                                                   Action<HostBuilderContext, IConfigurationBuilder>? setupConfig = null,
-                                                  Action<IClusterClientBuilder>? builder = null,
+                                                  Action<IDemocriteClientBuilder>? builder = null,
                                                   ClusterBuilderTools? clusterBuilderTools = null)
             where THostBuilder : IHostBuilder
         {

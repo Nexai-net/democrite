@@ -22,7 +22,7 @@ namespace Democrite.Framework.Client
         /// Configure Democrite client part in the <paramref name="hostBuilder"/> environment
         /// </summary>
         public static THostBuilder UseDemocriteClient<THostBuilder>(this THostBuilder hostBuilder,
-                                                                    Action<IClusterClientBuilder>? builder = null,
+                                                                    Action<IDemocriteClientBuilder>? builder = null,
                                                                     ClusterBuilderTools? clusterBuilderTools = null)
             where THostBuilder : IHostBuilder
         {
@@ -34,7 +34,7 @@ namespace Democrite.Framework.Client
         /// </summary>
         public static THostBuilder UseDemocriteClient<THostBuilder>(this THostBuilder hostBuilder,
                                                                     Action<HostBuilderContext, IConfigurationBuilder>? setupConfig,
-                                                                    Action<IClusterClientBuilder>? builder,
+                                                                    Action<IDemocriteClientBuilder>? builder,
                                                                     ClusterBuilderTools? clusterBuilderTools)
             where THostBuilder : IHostBuilder
         {

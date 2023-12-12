@@ -19,11 +19,11 @@ namespace Democrite.Framework.Client.Configurations
     using System;
     using System.Net;
 
-    /// <see cref="IClusterClientBuilder" /> implementation
-    internal sealed class DemocriteClientBuilder : ClusterBaseBuilder<IClusterClientBuilderDemocriteWizard, IDemocriteCoreConfigurationWizard, DemocriteClientConfigurationDefinition>,
-                                                   IClusterClientBuilder,
-                                                   IDemocriteWizardStart<IClusterClientBuilderDemocriteWizard, IDemocriteCoreConfigurationWizard>,
-                                                   IClusterClientBuilderDemocriteWizard,
+    /// <see cref="IDemocriteClientBuilder" /> implementation
+    internal sealed class DemocriteClientBuilder : ClusterBaseBuilder<IDemocriteClientBuilderWizard, IDemocriteCoreConfigurationWizard, DemocriteClientConfigurationDefinition>,
+                                                   IDemocriteClientBuilder,
+                                                   IDemocriteWizardStart<IDemocriteClientBuilderWizard, IDemocriteCoreConfigurationWizard>,
+                                                   IDemocriteClientBuilderWizard,
                                                    IDemocriteCoreConfigurationWizard
     {
         #region Fields
@@ -67,14 +67,14 @@ namespace Democrite.Framework.Client.Configurations
         #region Methods
 
         /// <inheritdoc />
-        public sealed override IDemocriteCoreConfigurationWizard ConfigureLogging(Action<ILoggingBuilder> configureLogging)
+        public sealed override IDemocriteClientBuilderWizard ConfigureLogging(Action<ILoggingBuilder> configureLogging)
         {
             this._orleanClientBuilder.ConfigureServices(collection => collection.AddLogging(configureLogging));
             return this;
         }
 
         /// <inheritdoc />
-        public override IClusterClientBuilderDemocriteWizard NoCluster()
+        public override IDemocriteClientBuilderWizard NoCluster()
         {
             this._orleanClientBuilder.UseLocalhostClustering();
             return this;
@@ -89,7 +89,7 @@ namespace Democrite.Framework.Client.Configurations
         #region Tools
 
         /// <inheritdoc />
-        protected override IClusterClientBuilderDemocriteWizard GetWizard()
+        protected override IDemocriteClientBuilderWizard GetWizard()
         {
             return this;
         }

@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Cluster.Abstractions.Configurations
 {
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
 
     using System;
 
@@ -19,6 +20,12 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         /// Setups dependency injection relations
         /// </summary>
         TWizard Configure(Action<TWizardConfig> configureDelegate);
+
+        /// <summary>
+        /// Adds a delegate for configuring the provided <see cref="ILoggingBuilder"/>. This may be called multiple times.
+        /// </summary>
+        /// <param name="configureLogging">The delegate that configures the <see cref="ILoggingBuilder"/>.</param>
+        TWizard ConfigureLogging(Action<ILoggingBuilder> configureLogging);
 
         /// <summary>
         /// Manual configuration of services.

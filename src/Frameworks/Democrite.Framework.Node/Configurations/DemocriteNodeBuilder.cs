@@ -260,7 +260,7 @@ namespace Democrite.Framework.Node.Configurations
         #region IClusterNodeBuilderDemocriteConfigurationWizard
 
         /// <inheritdoc />
-        public sealed override IDemocriteNodeConfigurationWizard ConfigureLogging(Action<ILoggingBuilder> configureLogging)
+        public sealed override IDemocriteNodeWizard ConfigureLogging(Action<ILoggingBuilder> configureLogging)
         {
             this._orleanSiloBuilder.ConfigureLogging(configureLogging);
             return this;
@@ -410,9 +410,6 @@ namespace Democrite.Framework.Node.Configurations
 
             var serviceCollection = this._orleanSiloBuilder.Services;
 
-            if (!CheckIsExistSetupInServices<IArtifactResourceProvider>(serviceCollection))
-                AddService<IArtifactResourceProvider, ArtifactResourceProvider>();
-
             AddService<ISequenceDefinitionSourceProvider>(this._inMemorySequenceDefinition);
             AddService<IArtifactResourceProviderSource>(this._artefactInMemoryProviderSource);
             AddService<ITriggerDefinitionProviderSource>(this._triggerDefinitionProviderSource);
@@ -427,6 +424,9 @@ namespace Democrite.Framework.Node.Configurations
 
             if (!CheckIsExistSetupInServices<ITriggerDefinitionProvider>(serviceCollection))
                 AddService<IDoorDefinitionProvider, DoorDefinitionProvider>();
+
+            if (!CheckIsExistSetupInServices<IArtifactResourceProvider>(serviceCollection))
+                AddService<IArtifactResourceProvider, ArtifactResourceProvider>();
 
             // Artefacts
             serviceCollection.AddSingletonKeyedService<string, IExternalCodeExecutorPreparationStep, PreparationLocalCheckStep>(PreparationLocalCheckStep.KEY);

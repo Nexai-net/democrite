@@ -5,12 +5,11 @@
 namespace Democrite.Framework.Client.Abstractions.Configurations
 {
     using Democrite.Framework.Cluster.Abstractions.Configurations;
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
 
     /// <summary>
-    /// Builder used to configure a cluster client
+    ///  Cluster client configuration wizard tools
     /// </summary>
-    public interface IClusterClientBuilder : IDemocriteBuilder<IClusterClientBuilderDemocriteWizard, IDemocriteCoreConfigurationWizard>
+    public interface IDemocriteClientBuilderWizard : IDemocriteWizard<IDemocriteClientBuilderWizard, IDemocriteCoreConfigurationWizard>
     {
     }
 }
