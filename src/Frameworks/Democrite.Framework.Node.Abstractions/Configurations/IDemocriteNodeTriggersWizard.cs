@@ -14,6 +14,6 @@ namespace Democrite.Framework.Node.Abstractions.Configurations
         /// <summary>
         /// Registers a trigger definition.
         /// </summary>
-        IDemocriteNodeTriggersWizard Register(ITriggerDefinition triggerDefinition);
+        IDemocriteNodeTriggersWizard Register(params TriggerDefinition[] triggerDefinition);
     }
 }

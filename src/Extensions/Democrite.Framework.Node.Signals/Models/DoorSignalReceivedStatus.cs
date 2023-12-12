@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Signals.Models
 {
     using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
 
     using System;
@@ -13,11 +14,12 @@ namespace Democrite.Framework.Node.Signals.Models
     /// <summary>
     /// State class use to store signal status
     /// </summary>
-    public sealed class DoorSignalReceivedStatus
+    public sealed class DoorSignalReceivedStatus : IEquatable<DoorSignalReceivedStatus>
     {
         #region Fiels
 
-        private readonly Queue<SignalMessage> _signalReceivedHistory;
+        private readonly List<SignalMessage> _signalsReceivedHistory;
+        private readonly LinkedList<SignalMessage> _signalsReceivedNotConsumed;
 
         #endregion
 
@@ -29,7 +31,9 @@ namespace Democrite.Framework.Node.Signals.Models
         public DoorSignalReceivedStatus(Guid signalId)
         {
             this.SignalId = signalId;
-            this._signalReceivedHistory = new Queue<SignalMessage>(20);
+
+            this._signalsReceivedHistory = new List<SignalMessage>(20);
+            this._signalsReceivedNotConsumed = new LinkedList<SignalMessage>();
         }
 
         /// <summary>
@@ -39,12 +43,14 @@ namespace Democrite.Framework.Node.Signals.Models
         internal DoorSignalReceivedStatus(DoorSignalReceivedStatusSurrogate surrogate)
             : this(surrogate.SignalId)
         {
-            this.LastSignalReceivedNotConsomed = surrogate.LastSignalReceivedNotConsomed;
-            this._signalReceivedHistory = new Queue<SignalMessage>(surrogate.SignalReceivedHistory
-                                                                   ?.OrderBy(p => p.SendUtcTime) ?? EnumerableHelper<SignalMessage>.Enumerable);
+            this._signalsReceivedHistory = new List<SignalMessage>(surrogate.SignalReceivedHistory ?? EnumerableHelper<SignalMessage>.Enumerable);
 
-            this._signalReceivedHistory.EnsureCapacity(20);
+            this._signalsReceivedHistory.EnsureCapacity(this._signalsReceivedHistory.Count + 20);
 
+            this._signalsReceivedNotConsumed = new LinkedList<SignalMessage>(surrogate.LastSignalReceivedNotConsumed
+                                                                                    ?.OrderBy(p => p.SendUtcTime) ?? EnumerableHelper<SignalMessage>.Enumerable);
+
+            this.LastSignalReceived = surrogate.LastSignalReceived;
         }
 
         #endregion
@@ -57,9 +63,15 @@ namespace Democrite.Framework.Node.Signals.Models
         public Guid SignalId { get; }
 
         /// <summary>
-        /// Gets the last signal received.
+        /// Gets the not consume signal sort for oldest to newest based on <see cref="SignalMessage.SendUtcTime"/> ordered from older to recent
         /// </summary>
-        public SignalMessage? LastSignalReceivedNotConsomed { get; private set; }
+        /// <remarks>
+        ///     To be consumed like a stack
+        /// </remarks>
+        public IReadOnlyCollection<SignalMessage> SignalsReceivedNotConsumed
+        {
+            get { return this._signalsReceivedNotConsumed; }
+        }
 
         /// <summary>
         /// Gets the last signal received.
@@ -69,9 +81,9 @@ namespace Democrite.Framework.Node.Signals.Models
         /// <summary>
         /// Gets the signal received history.
         /// </summary>
-        public IReadOnlyCollection<SignalMessage> SignalReceivedHistory
+        public IReadOnlyCollection<SignalMessage> SignalsReceivedHistory
         {
-            get { return this._signalReceivedHistory; }
+            get { return this._signalsReceivedHistory; }
         }
 
         #endregion
@@ -79,47 +91,110 @@ namespace Democrite.Framework.Node.Signals.Models
         #region Methods
 
         /// <summary>
-        /// Push the <paramref name="signal"/> into history to update the status information.
+        /// Push the <paramref name="signal"/> into status content <see cref="SignalsReceivedNotConsumed"/> and <see cref="SignalsReceivedHistory"/>
         /// </summary>
-        internal void Update(in SignalMessage signal)
+        internal void Push(in SignalMessage signal)
         {
             ArgumentNullException.ThrowIfNull(signal);
 
-            if (this.LastSignalReceivedNotConsomed == null || this.LastSignalReceivedNotConsomed.SendUtcTime >= signal.SendUtcTime)
-                this.LastSignalReceivedNotConsomed = signal;
+            var sentSignalTime = signal.SendUtcTime;
 
-            if (this.LastSignalReceived == null || this.LastSignalReceived.SendUtcTime >= signal.SendUtcTime)
+            this._signalsReceivedNotConsumed.AddAfterWhen((_, next, newOne) => next.SendUtcTime > sentSignalTime, signal);
+
+            if (this.LastSignalReceived == null || signal.SendUtcTime > this.LastSignalReceived.SendUtcTime)
                 this.LastSignalReceived = signal;
-
-            if (signal != null)
-                this._signalReceivedHistory.Enqueue(signal);
         }
 
         /// <summary>
-        /// Inform the current status the <paramref name="signal"/> have been used to trigger the door.
+        /// Inform the current status the <paramref name="signal"/> have been used.
         /// </summary>
-        internal void UseToFire(in SignalMessage signal)
+        internal void MarkAsUsed(in SignalMessage signal, bool enableHistoryRetention)
         {
-            if (this.LastSignalReceivedNotConsomed == signal)
-                this.LastSignalReceivedNotConsomed = null;
+            this._signalsReceivedNotConsumed.Remove(signal);
+
+            if (enableHistoryRetention)
+                this._signalsReceivedHistory.Add(signal);
         }
 
         /// <summary>
-        /// Clean historical values received before <paramref name="maxUtcTime"/>
+        /// Clean not consumed values and retain only <paramref name="maxRetention"/> recent
         /// </summary>
-        internal void CleanHistory(in DateTime maxUtcTime)
+        internal bool ClearNotConsumed(in uint maxRetention)
         {
-            while (this._signalReceivedHistory.Count > 0)
-            {
-                var peek = this._signalReceivedHistory.Peek();
-                if (peek.SendUtcTime > maxUtcTime)
-                    break;
+            var toRemovedNotConsumed = this._signalsReceivedNotConsumed.Nodes()
+                                                                       .OrderBy(s => s.Value.SendUtcTime)
+                                                                       .SkipLast((int)maxRetention)
+                                                                       .ToArray();
 
-                this._signalReceivedHistory.Dequeue();
+            foreach (var node in toRemovedNotConsumed)
+                this._signalsReceivedNotConsumed.Remove(node);
 
-                if (this.LastSignalReceivedNotConsomed == peek)
-                    this.LastSignalReceivedNotConsomed = null;
-            }
+            return toRemovedNotConsumed.Length > 0;
+        }
+
+        /// <summary>
+        /// Clean historical values and retain only <paramref name="maxRetention"/> recent
+        /// </summary>
+        internal bool ClearHistory(in uint maxRetention)
+        {
+            var toRemovedNotConsumed = this._signalsReceivedHistory.OrderBy(k => k.SendUtcTime)
+                                                                   .Skip((int)maxRetention)
+                                                                   .ToArray();
+
+            foreach (var node in toRemovedNotConsumed)
+                this._signalsReceivedHistory.Remove(node);
+
+            return toRemovedNotConsumed.Length > 0;
+        }
+
+        /// <summary>
+        /// Clean historical values received before <paramref name="maxUtcTimeRetentions"/>
+        /// </summary>
+        internal bool ClearHistoryAndNotConsumed(DateTime maxUtcTimeRetentions)
+        {
+            var nbRemoved = this._signalsReceivedHistory.RemoveAll(s => s.SendUtcTime < maxUtcTimeRetentions);
+
+            var toRemovedNotConsumed = this._signalsReceivedNotConsumed.Nodes()
+                                                                       .Where(s => s.Value.SendUtcTime < maxUtcTimeRetentions)
+                                                                       .ToArray();
+
+            foreach (var node in toRemovedNotConsumed)
+                this._signalsReceivedNotConsumed.Remove(node);
+
+            return nbRemoved > 0 || toRemovedNotConsumed.Length > 0;
+        }
+
+        /// <inheritdoc />
+        public bool Equals(DoorSignalReceivedStatus? other)
+        {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(other, this))
+                return true;
+
+            return this.SignalId == other.SignalId &&
+                   this.LastSignalReceived == other.LastSignalReceived &&
+                   this.SignalsReceivedNotConsumed.SequenceEqual(other.SignalsReceivedNotConsumed) &&
+                   this.SignalsReceivedHistory.SequenceEqual(other.SignalsReceivedHistory);
+        }
+
+        /// <inheritdoc />
+        public sealed override int GetHashCode()
+        {
+            return HashCode.Combine(this.SignalId,
+                                    this.LastSignalReceived,
+                                    this.SignalsReceivedNotConsumed.OrderBy(s => s.Uid).Aggregate(0, (acc, s) => acc ^ s.GetHashCode()),
+                                    this.SignalsReceivedHistory.OrderBy(s => s.Uid).Aggregate(0, (acc, s) => acc ^ s.GetHashCode()));
+        }
+
+        /// <inheritdoc />
+        public sealed override bool Equals(object? obj)
+        {
+            if (obj is DoorSignalReceivedStatus other)
+                return Equals(other);
+
+            return false;
         }
 
         #endregion

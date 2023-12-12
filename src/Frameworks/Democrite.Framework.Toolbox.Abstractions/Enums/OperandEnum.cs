@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Toolbox.Abstractions.Enums
 {
     /// <summary>
-    /// Operand values
+    /// Operator values
     /// </summary>
     public enum OperandEnum
     {

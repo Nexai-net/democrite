@@ -6,6 +6,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 {
     using System;
     using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     [Serializable]
     [ImmutableObject(true)]
@@ -15,6 +16,12 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 #pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
 #pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
     {
+        #region Fields
+
+        public const string TypeDiscriminator = "member";
+
+        #endregion
+
         #region Ctor
 
         /// <summary>

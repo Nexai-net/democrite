@@ -26,7 +26,7 @@ namespace Democrite.Framework.Node.Signals.Doors
     /// <seealso cref="DoorBaseVGrain{ILogicalDoorVGrain, LogicalAggregatorDoorDefinition}" />
     /// <seealso cref="ILogicalDoorVGrain" />
     [DemocriteSystemVGrain]
-    internal sealed class LogicalDoorVGrain : DoorBaseVGrain<ILogicalDoorVGrain, LogicalAggregatorDoorDefinition>, ILogicalDoorVGrain
+    internal sealed class LogicalDoorVGrain : DoorBaseVGrain<ILogicalDoorVGrain, BooleanLogicalDoorDefinition>, ILogicalDoorVGrain
     {
         #region Fields
 
@@ -44,11 +44,11 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// Initializes a new instance of the <see cref="LogicalDoorVGrain"/> class.
         /// </summary>
         public LogicalDoorVGrain(ILogger<ILogicalDoorVGrain> logger,
-                                   [PersistentState("Doors", nameof(Democrite))] IPersistentState<DoorHandlerStateSurrogate> persistentState,
-                                   ISignalService signalService,
-                                   IDoorDefinitionProvider doorDefinitionProvider,
-                                   ITimeManager timeHandler,
-                                   IGrainFactory grainFactory)
+                                 [PersistentState("Doors", nameof(Democrite))] IPersistentState<DoorHandlerStateSurrogate> persistentState,
+                                 ISignalService signalService,
+                                 IDoorDefinitionProvider doorDefinitionProvider,
+                                 ITimeManager timeHandler,
+                                 IGrainFactory grainFactory)
 
             : base(logger, persistentState, signalService, doorDefinitionProvider, timeHandler, grainFactory)
         {
@@ -59,31 +59,39 @@ namespace Democrite.Framework.Node.Signals.Doors
         #region Methods
 
         /// </<inheritdoc />
-        protected override ValueTask OnInitializeAsync(LogicalAggregatorDoorDefinition doordDefinition)
+        protected override ValueTask OnInitializeAsync(BooleanLogicalDoorDefinition doorDefinition)
         {
-            var variables = doordDefinition.VariableNames.Keys.ToList();
+            var variables = doorDefinition.VariableNames.Keys.ToList();
 
-            this._indexedVariables = doordDefinition.DoorSourceIds
-                                                       .Select(s => (s.Uid, doordDefinition.VariableNames.First(kv => kv.Value == s.Uid).Key))
-                                                       .Concat(doordDefinition.SignalSourceIds
-                                                                                 .Select(s => (s.Uid, doordDefinition.VariableNames.First(kv => kv.Value == s.Uid).Key)))
-                                                       .ToDictionary(kv => kv.Uid, v => variables.IndexOf(v.Key));
+            this._indexedVariables = doorDefinition.DoorSourceIds.Select(s => (Uid: s.Uid, Key: doorDefinition.VariableNames.FirstOrDefault(kv => kv.Value == s.Uid).Key))
+                                                   .Concat(doorDefinition.SignalSourceIds.Select(s => (Uid: s.Uid, Key: doorDefinition.VariableNames.FirstOrDefault(kv => kv.Value == s.Uid).Key)))
+                                                   .Where(kv => kv.Key != null)
+                                                   .ToDictionary(kv => kv.Uid, v => variables.IndexOf(v.Key));
 
-            this._conditionExpression = ExpressionBuilder.BuildBoolLogicStatement(doordDefinition.LogicalFormula, variables);
+            if (doorDefinition.UseCurrentDoorStatus)
+            {
+                var thisVariable = doorDefinition.VariableNames.FirstOrDefault(vn => vn.Value == doorDefinition.Uid);
+                if (thisVariable.Key != null)
+                    this._indexedVariables.Add(thisVariable.Value, variables.IndexOf(thisVariable.Key));
+            }
 
-            return base.OnInitializeAsync(doordDefinition);
+            if (variables.Count != this._indexedVariables.Count)
+                this.Logger.OptiLog(LogLevel.Critical, "[Door:{doorId}-{name}] doesn't founed all the variable requested in the formula", doorDefinition.Uid, doorDefinition.ToDebugDisplayName());
+
+            this._conditionExpression = ExpressionBuilder.BuildBoolLogicStatement(doorDefinition.LogicalFormula, variables);
+
+            return base.OnInitializeAsync(doorDefinition);
         }
 
         /// </<inheritdoc />
-        protected override ValueTask<(bool result, IReadOnlyCollection<SignalMessage> responsibleSignals)> OnDoorStimulateAsync(LogicalAggregatorDoorDefinition doordDefinition,
-                                                                                                                                CancellationToken token)
+        protected override ValueTask<StimulationReponse> OnDoorStimulateAsync(BooleanLogicalDoorDefinition doordDefinition, CancellationToken token)
         {
             if (doordDefinition == null || doordDefinition.VariableNames.Count == 0)
-                return ValueTask.FromResult((false, EnumerableHelper<SignalMessage>.ReadOnly));
+                return ValueTask.FromResult(StimulationReponse.Default);
 
             Span<bool> arguments = stackalloc bool[doordDefinition!.VariableNames.Count];
 
-            var activeSignals = base.GetLastActiveSignalSince();
+            var activeSignals = base.GetLastActiveSignalNotConsumed();
 
             var result = false;
             var responsibleSignals = EnumerableHelper<SignalMessage>.ReadOnly;
@@ -103,27 +111,29 @@ namespace Democrite.Framework.Node.Signals.Doors
                 responsibleSignals = activeSignals;
             }
 
-            if (doordDefinition.UseCurrentDoorStatus)
+            if (doordDefinition.UseCurrentDoorStatus && doordDefinition.ActiveWindowInterval != null)
             {
                 var lastDoorSignal = base.GetLastSignalReceived(doordDefinition.DoorId.Uid);
 
                 var utcNow = this.TimeHandler.UtcNow;
 
-                var nextTick = (lastDoorSignal?.SendUtcTime ?? utcNow) + doordDefinition.Interval;
+                var nextTick = (lastDoorSignal?.SendUtcTime ?? utcNow) + doordDefinition.ActiveWindowInterval;
 
-                if (utcNow < nextTick)
+                if (utcNow < nextTick.Value)
                 {
                     this._simulateThisTimerToken?.Dispose();
 
                     this._simulateThisTimerToken = RegisterTimer(SimulateThisFireAsync,
-                                                                      string.Empty,
-                                                                      nextTick - utcNow,
-                                                                      s_noRepetitionDelay);
+                                                                 string.Empty,
+                                                                 nextTick.Value - utcNow,
+                                                                 s_noRepetitionDelay);
                 }
             }
 
             token.ThrowIfCancellationRequested();
-            return ValueTask.FromResult((result, responsibleSignals));
+
+            var stimulationResult = new StimulationReponse(result, responsibleSignals);
+            return ValueTask.FromResult(stimulationResult);
         }
 
         /// <summary>

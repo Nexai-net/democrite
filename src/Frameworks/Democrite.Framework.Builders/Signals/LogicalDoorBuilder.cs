@@ -16,21 +16,21 @@ namespace Democrite.Framework.Builders.Signals
     using System.Text.RegularExpressions;
 
     /// <summary>
-    /// Create a <see cref="LogicalAggregatorDoorDefinition"/>
+    /// Create a <see cref="BooleanLogicalDoorDefinition"/>
     /// </summary>
     /// <seealso cref="ILogicalDoorBuilder" />
-    internal sealed class LogicalDoorBuilder : ILogicalDoorBuilder, IDefinitionBaseBuilder<DoorDefinition>, ILogicalDoorBuilderWithInterval
+    internal sealed class LogicalDoorBuilder : ILogicalDoorBuilder, IDefinitionBaseBuilder<DoorDefinition>
     {
         #region Fields
 
         private static readonly Regex s_formulaCharAllowed = new Regex(@"^[a-zA-Z!&|^\(\)\s]+$");
         private static readonly Regex s_variableCharAllowed = new Regex(@"^[a-zA-Z]+$");
 
-        private readonly IDoorWithListenerBuilder _doorBuilder;
+        private readonly IDoorWithListenerBuilder _rootDoorBuilder;
         private readonly Dictionary<Guid, string> _variableNames;
 
         private string? _logicalFormula;
-        private TimeSpan? _interval;
+        private TimeSpan? _activeWindowInterval;
 
         #endregion
 
@@ -41,7 +41,7 @@ namespace Democrite.Framework.Builders.Signals
         /// </summary>
         public LogicalDoorBuilder(IDoorWithListenerBuilder doorBuilder)
         {
-            this._doorBuilder = doorBuilder;
+            this._rootDoorBuilder = doorBuilder;
             this._variableNames = new Dictionary<Guid, string>();
         }
 
@@ -50,19 +50,19 @@ namespace Democrite.Framework.Builders.Signals
         #region Methods
 
         /// <inheritdoc />
-        public ILogicalDoorBuilderWithInterval ListenWindowMode(ListenWindowModeEnum windowModeEnum)
+        public ILogicalDoorBuilder ListenWindowMode(ListenWindowModeEnum windowModeEnum)
         {
             throw new NotSupportedException("Feature to yet implement and supported");
         }
 
         /// <inheritdoc />
-        public ILogicalDoorBuilderWithInterval AssignVariableName(string variableName, SignalId signalId)
+        public ILogicalDoorBuilder AssignVariableName(string variableName, SignalId signalId)
         {
             ArgumentException.ThrowIfNullOrEmpty(variableName);
 
             if (!s_variableCharAllowed.IsMatch(variableName))
             {
-                throw new InvalidParameterException(nameof(LogicalAggregatorDoorDefinition.VariableNames),
+                throw new InvalidParameterException(nameof(BooleanLogicalDoorDefinition.VariableNames),
                                                     BuildErrorSR.VariableOnlyCharAllowed);
             }
 
@@ -71,13 +71,13 @@ namespace Democrite.Framework.Builders.Signals
         }
 
         /// <inheritdoc />
-        public ILogicalDoorBuilderWithInterval AssignVariableName(string variableName, DoorId doorId)
+        public ILogicalDoorBuilder AssignVariableName(string variableName, DoorId doorId)
         {
             ArgumentException.ThrowIfNullOrEmpty(variableName);
 
             if (!s_variableCharAllowed.IsMatch(variableName))
             {
-                throw new InvalidParameterException(nameof(LogicalAggregatorDoorDefinition.VariableNames),
+                throw new InvalidParameterException(nameof(BooleanLogicalDoorDefinition.VariableNames),
                                                     BuildErrorSR.VariableOnlyCharAllowed);
             }
 
@@ -86,21 +86,21 @@ namespace Democrite.Framework.Builders.Signals
         }
 
         /// <inheritdoc />
-        public ILogicalDoorBuilderWithInterval AssignVariableName(string variableName, SignalDefinition signalId)
+        public ILogicalDoorBuilder AssignVariableName(string variableName, SignalDefinition signalId)
         {
             return AssignVariableName(variableName, signalId.SignalId);
         }
 
         /// <inheritdoc />
-        public ILogicalDoorBuilderWithInterval AssignVariableName(string variableName, DoorDefinition doorId)
+        public ILogicalDoorBuilder AssignVariableName(string variableName, DoorDefinition doorId)
         {
             return AssignVariableName(variableName, doorId.DoorId);
         }
 
         /// <inheritdoc />
-        public ILogicalDoorBuilderWithInterval UseVariableThis()
+        public ILogicalDoorBuilder UseVariableThis()
         {
-            this._variableNames.Add(this._doorBuilder.Uid, "this");
+            this._variableNames.Add(this._rootDoorBuilder.Uid, "this");
             return this;
         }
 
@@ -113,42 +113,42 @@ namespace Democrite.Framework.Builders.Signals
         }
 
         /// <inheritdoc />
-        public ILogicalDoorBuilderWithInterval Interval(TimeSpan interval)
+        public ILogicalDoorBuilder ActiveWindowInterval(TimeSpan activeWindowInterval)
         {
-            this._interval = interval;
+            this._activeWindowInterval = activeWindowInterval;
             return this;
         }
 
         /// <inheritdoc />
         public DoorDefinition Build()
         {
-            if (this._interval == null)
-                throw new InvalidParameterException(nameof(LogicalAggregatorDoorDefinition.Interval), BuildErrorSR.MandatoryValueMissing);
+            if (this._activeWindowInterval == null)
+                throw new InvalidParameterException(nameof(BooleanLogicalDoorDefinition.ActiveWindowInterval), BuildErrorSR.MandatoryValueMissing);
 
             if (string.IsNullOrEmpty(this._logicalFormula))
-                throw new InvalidParameterException(nameof(LogicalAggregatorDoorDefinition.LogicalFormula), BuildErrorSR.MandatoryValueMissing);
+                throw new InvalidParameterException(nameof(BooleanLogicalDoorDefinition.LogicalFormula), BuildErrorSR.MandatoryValueMissing);
 
-            var allVariablesIds = this._doorBuilder.SignalIds
+            var allVariablesIds = this._rootDoorBuilder.SignalIds
                                                       .Select(p => (p.Uid, p.Name))
-                                                      .Concat(this._doorBuilder.DoorIds.Select(s => (s.Uid, s.Name)))
+                                                      .Concat(this._rootDoorBuilder.DoorIds.Select(s => (s.Uid, s.Name)))
                                                       .Distinct()
                                                       .ToArray();
 
             if (allVariablesIds.Length == 0)
             {
-                throw new InvalidParameterException(nameof(this._doorBuilder.SignalIds) + "-" + nameof(this._doorBuilder.DoorIds),
+                throw new InvalidParameterException(nameof(this._rootDoorBuilder.SignalIds) + "-" + nameof(this._rootDoorBuilder.DoorIds),
                                                     BuildErrorSR.MandatoryValueMissing);
             }
 
-            if (allVariablesIds.Length != this._variableNames.Count(g => g.Key != this._doorBuilder.Uid))
+            if (allVariablesIds.Length != this._variableNames.Count(g => g.Key != this._rootDoorBuilder.Uid))
             {
-                throw new InvalidParameterException(nameof(LogicalAggregatorDoorDefinition.VariableNames),
+                throw new InvalidParameterException(nameof(BooleanLogicalDoorDefinition.VariableNames),
                                                     BuildErrorSR.VariableNamesIsNotAlignWIthSources);
             }
 
             if (string.IsNullOrEmpty(this._logicalFormula))
             {
-                throw new InvalidParameterException(nameof(LogicalAggregatorDoorDefinition.LogicalFormula),
+                throw new InvalidParameterException(nameof(BooleanLogicalDoorDefinition.LogicalFormula),
                                                     BuildErrorSR.MandatoryValueMissing);
             }
 
@@ -158,23 +158,26 @@ namespace Democrite.Framework.Builders.Signals
 
             if (missingVariable.Length > 0)
             {
-                throw new InvalidParameterException(nameof(LogicalAggregatorDoorDefinition.LogicalFormula),
+                throw new InvalidParameterException(nameof(BooleanLogicalDoorDefinition.LogicalFormula),
                                                     BuildErrorSR.VariableNameIsMissingFromFormula.WithArguments(string.Join(", ", missingVariable)));
             }
 
             if (!ExpressionBuilder.CanBuildBoolLogicStatement(this._logicalFormula, this._variableNames.Values.ToArray(), out var reason))
-                throw new InvalidParameterException(nameof(LogicalAggregatorDoorDefinition.LogicalFormula), reason);
+                throw new InvalidParameterException(nameof(BooleanLogicalDoorDefinition.LogicalFormula), reason);
 
-            return new LogicalAggregatorDoorDefinition(this._doorBuilder.Uid,
-                                                          this._doorBuilder.Name,
-                                                          this._doorBuilder.GroupName,
-                                                          this._logicalFormula,
-                                                          typeof(ILogicalDoorVGrain).AssemblyQualifiedName!,
-                                                          this._doorBuilder.SignalIds,
-                                                          this._doorBuilder.DoorIds,
-                                                          this._interval.Value,
-                                                          this._variableNames.ToDictionary(kv => kv.Value, kv => kv.Key),
-                                                          this._variableNames.ContainsKey(this._doorBuilder.Uid));
+            return new BooleanLogicalDoorDefinition(this._rootDoorBuilder.Uid,
+                                                    this._rootDoorBuilder.Name,
+                                                    this._rootDoorBuilder.GroupName,
+                                                    this._logicalFormula,
+                                                    typeof(ILogicalDoorVGrain).AssemblyQualifiedName!,
+                                                    this._rootDoorBuilder.SignalIds,
+                                                    this._rootDoorBuilder.DoorIds,
+                                                    this._variableNames.ToDictionary(kv => kv.Value, kv => kv.Key),
+                                                    this._variableNames.ContainsKey(this._rootDoorBuilder.Uid),
+                                                    this._activeWindowInterval,
+                                                    this._rootDoorBuilder.RetentionMaxPeriod,
+                                                    this._rootDoorBuilder.HistoryMaxRetention,
+                                                    this._rootDoorBuilder.NotConsumedMaxRetiention);
         }
 
         #endregion

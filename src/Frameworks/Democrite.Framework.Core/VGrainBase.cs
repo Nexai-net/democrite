@@ -10,11 +10,13 @@ namespace Democrite.Framework.Core
     using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Toolbox.Extensions;
 
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
     using Orleans.Runtime;
 
     using System;
+    using System.ComponentModel;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
@@ -83,6 +85,11 @@ namespace Democrite.Framework.Core
 
         /// <inheritdoc />
         public VGrainMetaData MetaData { get; }
+
+        /// <summary>
+        /// Gets the identity card.
+        /// </summary>
+        public IComponentIdentityCard? IdentityCard { get; private set; }
 
         #endregion
 
@@ -309,6 +316,21 @@ namespace Democrite.Framework.Core
             this.Logger.OptiLog(LogLevel.Trace, "{state} : {vgrainType}:{vgrainId}", state, grainId.Type, grainId.Key);
         }
 
+        /// <summary>
+        /// Registers it self as a component and get in return its dedicated <see cref="IComponentIdentityCard"/>
+        /// That managed permission.
+        /// </summary>
+        internal async ValueTask<TIdentityCard> RegisterAsComponentAsync<TIdentityCard>(Guid componentId)
+            where TIdentityCard : IComponentIdentityCard
+        {
+            var componentIdentityCardProvider = this.ServiceProvider.GetRequiredService<IComponentIdentitCardProviderClient>();
+
+            var card = await componentIdentityCardProvider.GetComponentIdentityCardAsync(GetGrainId(), componentId);
+            this.IdentityCard = card;
+
+            return (TIdentityCard)card;
+        }
+
         #endregion
 
         #endregion
@@ -329,6 +351,7 @@ namespace Democrite.Framework.Core
         #region Fields
 
         private readonly IPersistentState<TVGrainState> _persistentState;
+
         private TVGrainState? _state;
 
         #endregion
@@ -339,7 +362,7 @@ namespace Democrite.Framework.Core
         /// Initializes a new instance of the <see cref="VGrainBase"/> class.
         /// </summary>
         protected VGrainBase(ILogger<TVGrainInterface> logger,
-                            IPersistentState<TVGrainState> persistentState)
+                             IPersistentState<TVGrainState> persistentState)
             : base(logger)
         {
             this._persistentState = persistentState;
@@ -456,7 +479,7 @@ namespace Democrite.Framework.Core
         /// Initializes a new instance of the <see cref="VGrainBase"/> class.
         /// </summary>
         protected VGrainBase(ILogger<TVGrainInterface> logger,
-                            IPersistentState<TStateSurrogate> persistentState)
+                             IPersistentState<TStateSurrogate> persistentState)
             : base(logger)
         {
             this._persistentState = persistentState;
@@ -469,7 +492,7 @@ namespace Democrite.Framework.Core
         /// <summary>
         /// Gets saved state.
         /// </summary>
-        protected TVGrainState? State
+        public TVGrainState? State
         {
             get { return this._state ?? default; }
         }
@@ -502,7 +525,7 @@ namespace Democrite.Framework.Core
         /// <summary>
         /// Loads the state from storage.
         /// </summary>
-        protected async Task PullStateAsync(CancellationToken ct)
+        protected virtual async Task PullStateAsync(CancellationToken ct)
         {
             if (this._persistentState == null)
                 return;
@@ -530,7 +553,7 @@ namespace Democrite.Framework.Core
         /// <summary>
         /// Push <paramref name="newState"/> to storage
         /// </summary>
-        protected async Task PushStateAsync(TVGrainState newState, CancellationToken ct)
+        protected virtual async Task PushStateAsync(TVGrainState newState, CancellationToken ct)
         {
             if (this._persistentState == null)
                 return;

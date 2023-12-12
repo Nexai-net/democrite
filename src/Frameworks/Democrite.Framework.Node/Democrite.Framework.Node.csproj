@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="$(SolutionDir)\SharedFrameworkAssmblyInfo.props" />
-	<Import Project="$(SolutionDir)\SharedFrameworkDemocriteAssemblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
 
 	<PropertyGroup>
 
@@ -13,10 +13,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
-		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
-		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Toolbox\Democrite.Framework.Toolbox.csproj" />
-		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Cluster\Democrite.Framework.Cluster.csproj" />
+		<ProjectReference Include="..\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
+		<ProjectReference Include="..\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
+		<ProjectReference Include="..\Democrite.Framework.Toolbox\Democrite.Framework.Toolbox.csproj" />
+		<ProjectReference Include="..\Democrite.Framework.Cluster\Democrite.Framework.Cluster.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -13,6 +13,22 @@ namespace Democrite.Framework.Builders.Signals
     public interface IDoorBuilder : ISignalNetworkBasePartBuilder<IDoorBuilder>
     {
         /// <summary>
+        /// Sets the time a signal is maintain and interpret in history and "not consumed" queue.
+        /// </summary>
+        /// <param name="signalRetentionPeriod">period a message is valid and could be keep in history; default 1 days <see cref="DoorDefinition.DEFAULT_RETENTION_MAX_DELAY"/> to prevent any memory overload.</param>
+        /// <remarks>
+        ///     Null value could produce a memory overflow if other history clean way is not provided.
+        /// </remarks>
+        IDoorBuilder SetSignalRetention(TimeSpan? signalRetentionPeriod);
+
+        /// <summary>
+        /// Sets the signal retention maximum number on to be analyzed on door.
+        /// </summary>
+        /// <param name="history">The number of signal consumed on the past; default value 0 (<see cref="DoorDefinition.DEFAULT_HISTORY_RETENTION"/>) that also desactivate the history collect.</param>
+        /// <param name="notConsumed">The number od signal not consumed. default null (<see cref="DoorDefinition.DEFAULT_NOT_CONSUMED_RETENTION"/>) to collect prevent signal lost.</param>
+        IDoorBuilder SetSignalRetention(uint? history, uint? notConsumed);
+
+        /// <summary>
         /// Configure a signal as input listen by the door
         /// </summary>
         IDoorWithListenerBuilder Listen(params SignalDefinition[] signalDefinition);

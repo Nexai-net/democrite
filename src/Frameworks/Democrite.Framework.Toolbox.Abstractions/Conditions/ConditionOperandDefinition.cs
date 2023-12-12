@@ -8,6 +8,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 
     using System;
     using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Define a group condition link by <see cref="OperandEnum"/>
@@ -20,6 +21,12 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 #pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
 #pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
     {
+        #region Fields
+
+        public const string TypeDiscriminator = "op";
+
+        #endregion
+
         #region Ctor
 
         /// <summary>

@@ -96,13 +96,11 @@ namespace Democrite.Framework.Toolbox.UnitTests.Helpers
         {
             var stopwatch = new Stopwatch();
 
-            var token = CancellationHelper.Timeout(TimeSpan.FromMilliseconds(1_000));
-
             stopwatch.Start();
-            Check.ThatCode(async () => await Task.Delay(Timeout.Infinite, token)).Throws<OperationCanceledException>();
+            Check.ThatCode(async () => await Task.Delay(Timeout.Infinite, CancellationHelper.Timeout(TimeSpan.FromMilliseconds(1_000)))).Throws<OperationCanceledException>();
             stopwatch.Stop();
 
-            Check.That(stopwatch.ElapsedMilliseconds).IsGreaterOrEqualThan(1_000).And.IsLessOrEqualThan(2_000);
+            Check.That(stopwatch.ElapsedMilliseconds).IsGreaterOrEqualThan(900).And.IsLessOrEqualThan(1_300);
         }
     }
 }

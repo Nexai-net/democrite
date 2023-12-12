@@ -11,7 +11,7 @@ namespace Democrite.Framework.Node.Signals
     /// <summary>
     /// Signal state handler
     /// </summary>
-    internal sealed class SignalHandlerState : SignalSubscriptionState
+    internal sealed class SignalHandlerState : SignalSubscriptionState, IEquatable<SignalHandlerState>
     {
         #region Ctor
 
@@ -21,6 +21,16 @@ namespace Democrite.Framework.Node.Signals
         public SignalHandlerState(IEnumerable<SignalSubscription> subscriptions)
             : base(subscriptions)
         {
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        public bool Equals(SignalHandlerState? other)
+        {
+            return base.Equals((SignalSubscriptionState?)other);
         }
 
         #endregion

@@ -4,9 +4,6 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<!-- Orlean -->
-		<PackageVersion Include="Cronos" Version="0.7.1" />
-		<PackageVersion Include="HtmlAgilityPack" Version="1.11.54" />
-		<PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.0" />
 		<PackageVersion Include="Microsoft.Orleans.Clustering.AdoNet" Version="7.2.1" />
 		<PackageVersion Include="Microsoft.Orleans.Core" Version="7.2.3" />
 		<PackageVersion Include="Microsoft.Orleans.Core.Abstractions" Version="7.2.3" />
@@ -16,6 +13,7 @@
 		<PackageVersion Include="Microsoft.Orleans.Runtime" Version="7.2.3" />
 		<PackageVersion Include="Microsoft.Orleans.Runtime.Abstractions" Version="3.7.1" />
 		<PackageVersion Include="Microsoft.Orleans.Serialization.NewtonsoftJson" Version="7.2.3" />
+		<PackageVersion Include="Microsoft.Orleans.Serialization.TestKit" Version="7.2.4" />
 		<PackageVersion Include="Microsoft.Orleans.TestingHost" Version="7.2.1" />
 		<PackageVersion Include="Microsoft.Orleans.Client" Version="7.2.1" />
 		<PackageVersion Include="Microsoft.Orleans.Server" Version="7.2.1" />
@@ -24,7 +22,6 @@
 		<PackageVersion Include="Microsoft.VisualStudio.SlowCheetah" Version="4.0.50" />
 		<PackageVersion Include="Orleans.Providers.MongoDB" Version="7.6.0" />
 		<PackageVersion Include="OrleansDashboard" Version="7.2.2" />
-		<PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
 		<!-- System -->
 		<PackageVersion Include="System.Reactive" Version="6.0.0" />
 		<PackageVersion Include="System.Data.SqlClient" Version="4.8.5" />
@@ -43,10 +40,15 @@
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.7.0" PrivateAssets="all" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" PrivateAssets="all" />
+		<PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.0" />
+		<PackageVersion Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
 		<!-- Test -->
+		<PackageVersion Include="AutoFixture" Version="4.18.1" />
+		<PackageVersion Include="AutoFixture.AutoNSubstitute" Version="4.18.1" />
+		<PackageVersion Include="AutoFixture.Xunit2" Version="4.18.1" />
 		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
-
 		<!-- SECURITY ISSUE REMOVE MOQ and replace by NSubstitute-->
+		<PackageVersion Include="NSubstitute" Version="5.1.0" />
 		<PackageVersion Include="Moq" Version="4.20.69" />
 		<PackageVersion Include="NFluent" Version="3.0.1.352" />
 		<PackageVersion Include="xunit" Version="2.6.2" />
@@ -54,7 +56,10 @@
 		<PackageVersion Include="xunit.runner.visualstudio" Version="2.5.4" />
 		<PackageVersion Include="coverlet.collector" Version="6.0.0" />
 		<!-- Other -->
+		<PackageVersion Include="Cronos" Version="0.7.1" />
+		<PackageVersion Include="HtmlAgilityPack" Version="1.11.54" />
 		<PackageVersion Include="H.Pipes" Version="2.0.53" />
 		<PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
 	</ItemGroup>
 </Project>

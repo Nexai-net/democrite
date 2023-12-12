@@ -36,11 +36,13 @@ namespace Democrite.Framework.Node.Signals.Models
         /// <summary>
         /// Gets the subscription uid.
         /// </summary>
+        [Id(0)]
         public Guid Uid { get; }
 
         /// <summary>
         /// Gets the target grain identifier.
         /// </summary>
+        [Id(1)]
         public GrainId TargetGrainId { get; }
 
         #endregion

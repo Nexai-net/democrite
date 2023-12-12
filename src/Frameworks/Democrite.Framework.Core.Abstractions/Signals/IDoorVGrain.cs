@@ -8,7 +8,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
     /// Door virtual grain use to manage signal conditiona and can fire a custom signal.
     /// </summary>
     /// <seealso cref="Orleans.IGrainWithGuidKey" />
-    public interface IDoorVGrain : IVGrain, IGrainWithGuidKey
+    public interface IDoorVGrain : IVGrain, IGrainWithGuidKey, ISignalReceiver
     {
         /// <summary>
         /// Initializes the door.

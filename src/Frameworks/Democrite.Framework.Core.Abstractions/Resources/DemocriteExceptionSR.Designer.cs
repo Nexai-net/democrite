@@ -61,24 +61,6 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to VGrainCategories could not be generated on vgrain {0} and have no fallback values.
-        /// </summary>
-        internal static string VGrainIdGenerationExceptionMessage {
-            get {
-                return ResourceManager.GetString("VGrainIdGenerationExceptionMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Attribute &quot;ExpectedVGrainIdFormatAttribute&quot; is missing on type &apos;{0}&apos; (this attribute is not inherited). This attribute is mandatory to generate vgrain id..
-        /// </summary>
-        internal static string VGrainIdTemplateMissingExceptionMessage {
-            get {
-                return ResourceManager.GetString("VGrainIdTemplateMissingExceptionMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; definition with id &apos;{1}&apos; is missing..
         /// </summary>
         internal static string DefinitionMissingExceptionMessage {
@@ -88,11 +70,20 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid vgrain id get &apos;{0}&apos; expect : {1]..
+        ///   Looks up a localized string similar to Door information &quot;{0}&quot;has not be founded on different definition provider sources..
         /// </summary>
-        internal static string InvalidVGrainIdExceptionMessage {
+        internal static string DoorNotFounded {
             get {
-                return ResourceManager.GetString("InvalidVGrainIdExceptionMessage", resourceCulture);
+                return ResourceManager.GetString("DoorNotFounded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Definition: {0} - {1}] failed due to \n {2}..
+        /// </summary>
+        internal static string InvalidDefinitionErrorMessages {
+            get {
+                return ResourceManager.GetString("InvalidDefinitionErrorMessages", resourceCulture);
             }
         }
         
@@ -124,6 +115,15 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid vgrain id get &apos;{0}&apos; expect : {1]..
+        /// </summary>
+        internal static string InvalidVGrainIdExceptionMessage {
+            get {
+                return ResourceManager.GetString("InvalidVGrainIdExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Signal named &quot;{0}&quot;has not be founded on different definition provider sources..
         /// </summary>
         internal static string SignalNotFounded {
@@ -133,11 +133,20 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Door information &quot;{0}&quot;has not be founded on different definition provider sources..
+        ///   Looks up a localized string similar to VGrainType could not be generated on vgrain {0} and have no fallback values.
         /// </summary>
-        internal static string DoorNotFounded {
+        internal static string VGrainIdGenerationExceptionMessage {
             get {
-                return ResourceManager.GetString("DoorNotFounded", resourceCulture);
+                return ResourceManager.GetString("VGrainIdGenerationExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attribute &quot;ExpectedVGrainIdFormatAttribute&quot; is missing on type &apos;{0}&apos; (this attribute is not inherited). This attribute is mandatory to generate vgrain id..
+        /// </summary>
+        internal static string VGrainIdTemplateMissingExceptionMessage {
+            get {
+                return ResourceManager.GetString("VGrainIdTemplateMissingExceptionMessage", resourceCulture);
             }
         }
     }

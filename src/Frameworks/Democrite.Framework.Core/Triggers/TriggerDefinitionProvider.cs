@@ -14,10 +14,10 @@ namespace Democrite.Framework.Core.Triggers
     using System.Linq.Expressions;
 
     /// <summary>
-    /// Provider in charge to give access to <see cref="ITriggerDefinition"/>
+    /// Provider in charge to give access to <see cref="TriggerDefinition"/>
     /// </summary>
     /// <seealso cref="ITriggerDefinitionProvider" />
-    public sealed class TriggerDefinitionProvider : ProviderStrategyBase<ITriggerDefinition, Guid, ITriggerDefinitionProviderSource>, ITriggerDefinitionProvider
+    public sealed class TriggerDefinitionProvider : ProviderStrategyBase<TriggerDefinition, Guid, ITriggerDefinitionProviderSource>, ITriggerDefinitionProvider
     {
         #region Ctor
 
@@ -36,7 +36,7 @@ namespace Democrite.Framework.Core.Triggers
         /// <summary>
         /// Gets the fetch by key expressions.
         /// </summary>
-        protected override Expression<Func<ITriggerDefinition, bool>> GetFetchByKeyExpressions(IReadOnlyCollection<Guid> keys)
+        protected override Expression<Func<TriggerDefinition, bool>> GetFetchByKeyExpressions(IReadOnlyCollection<Guid> keys)
         {
             return (t => keys.Contains(t.Uid));
         }

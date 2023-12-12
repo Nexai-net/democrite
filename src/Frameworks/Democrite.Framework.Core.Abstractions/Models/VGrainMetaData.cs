@@ -22,13 +22,15 @@ namespace Democrite.Framework.Core.Abstractions.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="VGrainMetaData"/> struct.
         /// </summary>
-        public VGrainMetaData(string impentationType,
-                             bool haveState,
-                             IEnumerable<string>? vgrainCategories,
-                             bool isDemocriteSystem)
+        [Newtonsoft.Json.JsonConstructor]
+        [System.Text.Json.Serialization.JsonConstructor]
+        public VGrainMetaData(string implementation,
+                              bool haveState,
+                              IEnumerable<string>? vgrainCategories,
+                              bool isDemocriteSystem)
         {
 
-            this.ImpentationType = impentationType;
+            this.Implementation = implementation;
             this.HaveState = haveState;
             this.VGrainCategories = vgrainCategories?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;
             this.IsDemocriteSystem = isDemocriteSystem;
@@ -42,7 +44,7 @@ namespace Democrite.Framework.Core.Abstractions.Models
         /// Gets the type of the impentation.
         /// </summary>
         [Id(0)]
-        public string ImpentationType { get; }
+        public string Implementation { get; }
 
         /// <summary>
         /// Gets a value indicating whether have a state.

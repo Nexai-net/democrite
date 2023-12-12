@@ -92,7 +92,7 @@ namespace Democrite.Framework.Toolbox.Statements
                         return false;
                     }
                 }
-                if (!s_formulaCharNotAlphabeticalAllowed.IsMatch(tmpStatement))
+                if (!string.IsNullOrEmpty(tmpStatement) && !s_formulaCharNotAlphabeticalAllowed.IsMatch(tmpStatement))
                 {
                     reason = "Invalid variable remains '" + tmpStatement + "'";
                     return false;

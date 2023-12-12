@@ -39,6 +39,6 @@ steps:
   displayName: Build
   workingDirectory: $(SolutionFolder)
 
-- script: dotnet test /p:CollectCoverage=true
+- script: dotnet test -v:detailed --consoleLoggerParameters:ErrorsOnly --collect "Code Coverage"
   displayName: Test with Code Coverage recolt
   workingDirectory: $(SolutionFolder)

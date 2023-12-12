@@ -11,6 +11,7 @@ namespace Democrite.Framework.Node.Configurations
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
+    using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Triggers;
@@ -25,12 +26,14 @@ namespace Democrite.Framework.Node.Configurations
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.ArtifactResources;
     using Democrite.Framework.Node.ArtifactResources.ExecCodePreparationSteps;
+    using Democrite.Framework.Node.Components;
     using Democrite.Framework.Node.Inputs;
     using Democrite.Framework.Node.Models;
     using Democrite.Framework.Node.Services;
     using Democrite.Framework.Node.Signals;
     using Democrite.Framework.Node.Triggers;
     using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.Loggers;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -68,6 +71,7 @@ namespace Democrite.Framework.Node.Configurations
         private readonly InMemoryArtifactResourceProviderSource _artefactInMemoryProviderSource;
         private readonly InMemorySignalDefinitionProviderSource _signalDefinitionProviderSource;
         private readonly InMemorySequenceDefinitionProvider _inMemorySequenceDefinition;
+        private readonly InMemoryLogger _globalBuildLogger;
         private readonly INetworkInspector _networkInspector;
         private readonly ISiloBuilder _orleanSiloBuilder;
 
@@ -100,6 +104,8 @@ namespace Democrite.Framework.Node.Configurations
             this._networkInspector = clusterBuilderTools.NetworkInspector;
 
             this._orleanSiloBuilder = siloBuilder;
+
+            this._globalBuildLogger = new InMemoryLogger(new LoggerFilterOptions() { MinLevel = LogLevel.Trace }.ToMonitorOption());
         }
 
         #endregion
@@ -265,9 +271,14 @@ namespace Democrite.Framework.Node.Configurations
         #region IClusterNodeBuilderDemocriteSequenceWizard
 
         /// <inheritdoc />
-        public IDemocriteNodeSequenceWizard Register(SequenceDefinition sequenceDefinition)
+        public IDemocriteNodeSequenceWizard Register(params SequenceDefinition[] sequenceDefinitions)
         {
-            this._inMemorySequenceDefinition.AddOrUpdate(sequenceDefinition);
+            foreach (var sequenceDefinition in sequenceDefinitions)
+            {
+                // TODO : ValidateDefinition(sequenceDefinition);
+                this._inMemorySequenceDefinition.AddOrUpdate(sequenceDefinition);
+            }
+
             return this;
         }
 
@@ -337,9 +348,14 @@ namespace Democrite.Framework.Node.Configurations
         #region IDemocriteNodeTriggersWizard
 
         /// <inheritdoc />
-        public IDemocriteNodeTriggersWizard Register(ITriggerDefinition triggerDefinition)
+        public IDemocriteNodeTriggersWizard Register(params TriggerDefinition[] triggerDefinitions)
         {
-            this._triggerDefinitionProviderSource.AddOrUpdate(triggerDefinition);
+            foreach (var triggerDefinition in triggerDefinitions)
+            {
+                // TODO : ValidateDefinition(triggerDefinition);
+                this._triggerDefinitionProviderSource.AddOrUpdate(triggerDefinition);
+            }
+
             return this;
         }
 
@@ -348,9 +364,13 @@ namespace Democrite.Framework.Node.Configurations
         #region IDemocriteNodeSignalsWizard
 
         /// <inheritdoc />
-        public IDemocriteNodeSignalsWizard Register(SignalDefinition signalDefinition)
+        public IDemocriteNodeSignalsWizard Register(params SignalDefinition[] signalDefinitions)
         {
-            this._signalDefinitionProviderSource.AddOrUpdate(signalDefinition);
+            foreach (var signalDefinition in signalDefinitions)
+            {
+                ValidateDefinition(signalDefinition);
+                this._signalDefinitionProviderSource.AddOrUpdate(signalDefinition);
+            }
             return this;
         }
 
@@ -359,9 +379,13 @@ namespace Democrite.Framework.Node.Configurations
         #region IDemocriteNodeDoorsWizard
 
         /// <inheritdoc />
-        public IDemocriteNodeDoorsWizard Register(DoorDefinition signalDefinition)
+        public IDemocriteNodeDoorsWizard Register(params DoorDefinition[] signalDefinitions)
         {
-            this._doorDefinitionProviderSource.AddOrUpdate(signalDefinition);
+            foreach (var signalDefinition in signalDefinitions)
+            {
+                ValidateDefinition(signalDefinition);
+                this._doorDefinitionProviderSource.AddOrUpdate(signalDefinition);
+            }
             return this;
         }
 
@@ -381,13 +405,15 @@ namespace Democrite.Framework.Node.Configurations
         /// <inheritdoc />
         protected override void OnManualBuildConfigure()
         {
-            AddService<ISequenceDefinitionSourceProvider>(this._inMemorySequenceDefinition);
+            this._orleanSiloBuilder.AddGrainService<ClusterNodeComponentIdentitCardProvider>();
+            AddService<IComponentIdentitCardProviderClient, ClusterNodeComponentIdentitCardProviderClient>();
 
             var serviceCollection = this._orleanSiloBuilder.Services;
 
             if (!CheckIsExistSetupInServices<IArtifactResourceProvider>(serviceCollection))
                 AddService<IArtifactResourceProvider, ArtifactResourceProvider>();
 
+            AddService<ISequenceDefinitionSourceProvider>(this._inMemorySequenceDefinition);
             AddService<IArtifactResourceProviderSource>(this._artefactInMemoryProviderSource);
             AddService<ITriggerDefinitionProviderSource>(this._triggerDefinitionProviderSource);
             AddService<ISignalDefinitionProviderSource>(this._signalDefinitionProviderSource);
@@ -451,8 +477,13 @@ namespace Democrite.Framework.Node.Configurations
         }
 
         /// <inheritdoc />
-        protected sealed override DemocriteNodeConfigurationDefinition OnBuild(ILogger _)
+        protected sealed override DemocriteNodeConfigurationDefinition OnBuild(ILogger logger)
         {
+            var logs = this._globalBuildLogger.GetLogsCopy();
+
+            foreach (var log in logs)
+                logger.Log(log.LogLevel, log.Message);
+
             var manifest = this._vgrainsCfg?.Setup(this._orleanSiloBuilder.Services) ?? new TypeManifestOptions();
 
             return new DemocriteNodeConfigurationDefinition(manifest);
@@ -492,6 +523,29 @@ namespace Democrite.Framework.Node.Configurations
                                                                                                   logger);
         }
 
+        /// <summary>
+        /// Validates the definition before registry in local memory
+        /// </summary>
+        private void ValidateDefinition<TDefinition>(TDefinition definition)
+            where TDefinition : class, IDefinition
+        {
+            ArgumentNullException.ThrowIfNull(definition);
+
+            using (var contextualLogger = CreateBuilderLogger(typeof(TDefinition).Name))
+            {
+                if (!definition.Validate(contextualLogger))
+                    throw new InvalidDecmocriteDefinitionException(definition, contextualLogger.GetLogsCopy()!);
+            }
+        }
+
+        /// <summary>
+        /// Create a local logger used to trace build informations
+        /// </summary>
+        private RelayLogger CreateBuilderLogger(string category)
+        {
+            return new RelayLogger(this._globalBuildLogger, category, true);
+        }
+        
         #endregion
 
         #endregion

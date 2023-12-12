@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Signals.Doors
 {
     using Democrite.Framework.Core;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Signals;
@@ -16,6 +17,7 @@ namespace Democrite.Framework.Node.Signals.Doors
 
     using Microsoft.Extensions.Logging;
 
+    using Orleans.Concurrency;
     using Orleans.Runtime;
 
     using System;
@@ -32,8 +34,8 @@ namespace Democrite.Framework.Node.Signals.Doors
     /// <seealso cref="IDoorVGrain" />
     /// <seealso cref="ISignalReceiver" />
     public abstract class DoorBaseVGrain<TVGrain, TDoordDef> : VGrainBase<DoorHandlerState, DoorHandlerStateSurrogate, DoorHandlerStateSurrogateConverter, TVGrain>,
-                                                                   IDoorVGrain,
-                                                                   ISignalReceiver
+                                                               IDoorVGrain,
+                                                               ISignalReceiver
         where TVGrain : IDoorVGrain
         where TDoordDef : DoorDefinition
     {
@@ -43,11 +45,14 @@ namespace Democrite.Framework.Node.Signals.Doors
         private readonly ISignalService _signalService;
         private readonly IGrainFactory _grainFactory;
 
+        private readonly SemaphoreSlim _concurrencyStateLock;
         private readonly SemaphoreSlim _concurrencyLock;
+
         private readonly HashSet<Guid> _subscriptionIds;
 
         private readonly TimeSpan _stimulationTimeout;
 
+        private IComponentDoorIdentityCard? _identityCard;
         private IDoorSignalVGrain? _signalVGrain;
         private TDoordDef? _doordDefinition;
 
@@ -59,14 +64,15 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// Initializes a new instance of the <see cref="DoorBaseVGrain{TVGrain}"/> class.
         /// </summary>
         protected DoorBaseVGrain(ILogger<TVGrain> logger,
-                                   IPersistentState<DoorHandlerStateSurrogate> persistentState,
-                                   ISignalService signalService,
-                                   IDoorDefinitionProvider doorDefinitionProvider,
-                                   ITimeManager timeHandler,
-                                   IGrainFactory grainFactory,
-                                   TimeSpan? stimulationTimeout = null)
+                                 IPersistentState<DoorHandlerStateSurrogate> persistentState,
+                                 ISignalService signalService,
+                                 IDoorDefinitionProvider doorDefinitionProvider,
+                                 ITimeManager timeHandler,
+                                 IGrainFactory grainFactory,
+                                 TimeSpan? stimulationTimeout = null)
             : base(logger, persistentState)
         {
+            this._concurrencyStateLock = new SemaphoreSlim(1);
             this._concurrencyLock = new SemaphoreSlim(1);
 
             this._stimulationTimeout = stimulationTimeout ?? TimeSpan.FromSeconds(1);
@@ -95,11 +101,31 @@ namespace Democrite.Framework.Node.Signals.Doors
 
         #endregion
 
+        #region Nested
+
+        /// <summary>
+        /// Result returned by method <see cref="OnDoorStimulateAsync(TDoordDef, CancellationToken)"/>
+        /// </summary>
+        protected readonly record struct StimulationReponse(bool Result,
+                                                            IReadOnlyCollection<SignalMessage> ResponsibleSignals,
+                                                            bool NeedRebound = false,
+                                                            bool RelaySignalsContent = false)
+        {
+            /// <summary>
+            /// Gets the default.
+            /// </summary>
+            public static StimulationReponse Default { get; }
+        }
+
+        #endregion
+
         #region Methods
 
         /// <inheritdoc />
         public async Task InitializeAsync(DoorDefinition doorDefinition)
         {
+            ArgumentNullException.ThrowIfNull(doorDefinition);
+
             await this._concurrencyLock.WaitAsync();
 
             try
@@ -108,6 +134,10 @@ namespace Democrite.Framework.Node.Signals.Doors
                     return;
 
                 this._doordDefinition = (TDoordDef)doorDefinition;
+
+                // Ensure grain and definition always match
+                System.Diagnostics.Debug.Assert(doorDefinition.Uid == this.GetPrimaryKey());
+
                 try
                 {
                     foreach (var signalSource in doorDefinition.SignalSourceIds)
@@ -122,7 +152,15 @@ namespace Democrite.Framework.Node.Signals.Doors
                         this._subscriptionIds.Add(subscrptionId);
                     }
 
-                    this.State!.InitializeSignalSupport(doorDefinition);
+                    await this._concurrencyStateLock.WaitAsync();
+                    try
+                    {
+                        this.State!.InitializeSignalSupport(doorDefinition);
+                    }
+                    finally
+                    {
+                        this._concurrencyStateLock.Release();
+                    }
 
                     if (this._signalVGrain == null)
                         this._signalVGrain = this._grainFactory.GetGrain<IDoorSignalVGrain>(doorDefinition.DoorId.Uid);
@@ -132,6 +170,7 @@ namespace Democrite.Framework.Node.Signals.Doors
                 catch (Exception ex)
                 {
                     this.Logger.OptiLog(LogLevel.Error, "Door initialization failed {exception}", ex);
+                    throw;
                 }
             }
             finally
@@ -141,21 +180,43 @@ namespace Democrite.Framework.Node.Signals.Doors
         }
 
         /// <inheritdoc />
+        [OneWay]
         public async Task ReceiveSignalAsync(SignalMessage signal)
         {
+            if (!await this._identityCard!.IsEnable())
+                return;
+
+            var state = this.State!;
+            var hasPush = false;
+
+            await this._concurrencyStateLock.WaitAsync();
+            try
+            {
+                hasPush = state.Push(signal);
+            }
+            finally
+            {
+                this._concurrencyStateLock.Release();
+            }
+
             await this._concurrencyLock.WaitAsync();
 
             try
             {
-                this.State!.UpdateSignalStatus(signal);
+                // push only if signal cache state have changed
+                if (hasPush)
+                    await PushStateAsync(default);
+
+                await HandledSignalContextChanged();
+            }
+            catch (Exception ex)
+            {
+                this.Logger.OptiLog(LogLevel.Error, "Error on handling input signal {signal} : {exception}", signal, ex);
+
+                // backup on error
                 await PushStateAsync(default);
 
-                await StimulateDoorAsync(this._doordDefinition!);
-
-                if (this._doordDefinition != null)
-                    this.State!.CleanHistory(this.TimeHandler.UtcNow.Subtract(this._doordDefinition.Interval));
-
-                await PushStateAsync(default);
+                throw;
             }
             finally
             {
@@ -163,22 +224,29 @@ namespace Democrite.Framework.Node.Signals.Doors
             }
         }
 
-        /// <inheritdoc />
-        public sealed override async Task OnActivateAsync(CancellationToken cancellationToken)
+        /// <summary>
+        /// Sealed the activation to way the state restore
+        /// </summary>
+        public sealed override Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            await base.OnActivateAsync(cancellationToken);
+            return base.OnActivateAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Called when when state is in initialization
+        /// </summary>
+        protected sealed override async Task OnActivationSetupState(DoorHandlerState? state, CancellationToken ct)
+        {
+            await base.OnActivationSetupState(state, ct);
 
             var doorId = this.GetPrimaryKey();
 
-            var info = await this._doorDefinitionProvider.TryGetFirstValueAsync(doorId);
+            var info = await this._doorDefinitionProvider.GetFirstValueByIdAsync(doorId) ?? throw new DoorNotFoundException(doorId.ToString());
 
-            if (info.Result == false || info.value == null)
-                throw new DoorNotFoundException(doorId.ToString());
+            this._identityCard = await base.RegisterAsComponentAsync<IComponentDoorIdentityCard>(info.Uid);
 
-            await InitializeAsync(info.value);
+            await InitializeAsync(info);
         }
-
-        #region Tools
 
         /// <summary>
         /// Gets the last not consumed active signal since interval (>).
@@ -188,12 +256,24 @@ namespace Democrite.Framework.Node.Signals.Doors
         ///     By default the interval is compute by <see cref="ITimeManager.UtcNow"/> - <see cref="DoordDefinition.Interval"/>
         /// </remarks>
         /// <param name="forcedUtcMinTime">Force min datetime to UTC to gatter signal.</param>
-        protected IReadOnlyCollection<SignalMessage> GetLastActiveSignalSince(DateTime? forcedUtcMinDateTime = null)
+        protected IReadOnlyCollection<SignalMessage> GetLastActiveSignalNotConsumed(DateTime? forcedUtcMinDateTime = null)
         {
             EnsureExecutionContextIsThreadSafe();
 
-            var minPeriodTime = forcedUtcMinDateTime ?? this.TimeHandler.UtcNow - this._doordDefinition!.Interval;
-            return this.State!.GetLastActiveSignalSince(minPeriodTime);
+            var activeWindowLoopUp = forcedUtcMinDateTime;
+
+            if (activeWindowLoopUp == null && this._doordDefinition!.ActiveWindowInterval != null)
+                activeWindowLoopUp = this.TimeHandler.UtcNow - this._doordDefinition!.ActiveWindowInterval;
+
+            this._concurrencyStateLock.Wait();
+            try
+            {
+                return this.State!.GetLastActiveSignalSince(activeWindowLoopUp);
+            }
+            finally
+            {
+                this._concurrencyStateLock.Release();
+            }
         }
 
         /// <summary>
@@ -229,10 +309,23 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// </returns>
         /// <remarks>ThreadSafe</remarks>
         [ThreadSafe]
-        protected abstract ValueTask<(bool result, IReadOnlyCollection<SignalMessage> responsibleSignals)> OnDoorStimulateAsync(TDoordDef doordDef, CancellationToken token);
+        protected abstract ValueTask<StimulationReponse> OnDoorStimulateAsync(TDoordDef doordDef, CancellationToken token);
 
         /// <summary>
-        /// Manuallies the trigger door stimulation.
+        ///     Mark <see cref="SignalMessage"/> are used and will not be reuse later on.
+        /// </summary>
+        /// <remarks>
+        ///     Must be used only on thread safe context like OnInitializeAsync or OnDoorStimulateAsync
+        ///     By default the interval is compute by <see cref="ITimeManager.UtcNow"/> - <see cref="DoordDefinition.Interval"/>
+        /// </remarks>
+        protected void MarkAsUsed(IReadOnlyCollection<SignalMessage> signalUse)
+        {
+            EnsureExecutionContextIsThreadSafe();
+            this.State!.MarkAsUsed(signalUse, this._doordDefinition!.HistoryMaxRetention != 0);
+        }
+
+        /// <summary>
+        /// Manually the trigger door stimulation.
         /// </summary>
         protected async Task ManuallyTriggerStimulation()
         {
@@ -240,7 +333,7 @@ namespace Democrite.Framework.Node.Signals.Doors
 
             try
             {
-                await StimulateDoorAsync(this._doordDefinition!);
+                await HandledSignalContextChanged();
             }
             finally
             {
@@ -249,43 +342,121 @@ namespace Democrite.Framework.Node.Signals.Doors
         }
 
         /// <summary>
+        /// Produces the signal content from result.
+        /// </summary>
+        protected virtual object? ProduceSignalContentFromResult(DoorBaseVGrain<TVGrain, TDoordDef>.StimulationReponse stimulationResult)
+        {
+            if (stimulationResult.ResponsibleSignals.Count == 0)
+                return null;
+
+            if (stimulationResult.ResponsibleSignals.Count == 1)
+            {
+                var signalResponsible = stimulationResult.ResponsibleSignals.Single();
+
+                if (signalResponsible != null &&
+                    signalResponsible.From != null &&
+                    !string.IsNullOrEmpty(signalResponsible.From.CarryMessageType))
+                {
+                    return signalResponsible.From.GetContent();
+                }
+
+                return null;
+            }
+
+            throw new NotSupportedException("To managed relay of multiples signals to must override this method " + nameof(ProduceSignalContentFromResult));
+        }
+
+        /// <summary>
+        /// Called when at the end of <see cref="DisposeResourcesEnd"/> to offer child class a safe way to clean resources
+        /// </summary>
+        protected virtual void OnDisposeResourcesEnd()
+        {
+        }
+
+        #region Tools
+
+        /// <summary>
         /// Call when door received some signal to compute decision if yes or not the door must trigged
         /// </summary>
+        /// <returns>
+        ///     <c>true</c> is the door signal have been fire at least one.
+        /// </returns>
         [ThreadSafe]
-        private async Task StimulateDoorAsync(TDoordDef doordDef)
+        private async Task<bool> StimulateDoorAsync(TDoordDef doordDef)
         {
+            bool hadFire = false;
+
             try
             {
-                var token = CancellationHelper.Timeout(this._stimulationTimeout);
-                var mustFire = await OnDoorStimulateAsync(doordDef, token);
-
-                if (mustFire.result == false)
-                    return;
-
-                if (this._signalVGrain != null)
+                bool stillToProcess = false;
+                do
                 {
-                    if (mustFire.responsibleSignals != null && mustFire.responsibleSignals.Count > 0)
-                        this.State!.UseToFire(mustFire.responsibleSignals);
+                    stillToProcess = false;
 
-                    var fireId = Guid.NewGuid();
+                    var token = CancellationHelper.Timeout(this._stimulationTimeout);
+                    var stimulationResult = await OnDoorStimulateAsync(doordDef, token);
 
-                    var signal = new SignalMessage(fireId,
-                                          this.TimeHandler.UtcNow,
-                                          new SignalSource(fireId,
-                                                           doordDef.DoorId.Uid,
-                                                           doordDef.DoorId.Name,
-                                                           true,
-                                                           this.TimeHandler.UtcNow,
-                                                           GetGrainId(),
-                                                           this.MetaData,
-                                                           mustFire.responsibleSignals?.Select(s => s.From)));
+                    if (stimulationResult.Result == false)
+                        break;
 
-                    await this._signalVGrain.Fire(signal);
+                    token.ThrowIfCancellationRequested();
+
+                    if (this._signalVGrain != null)
+                    {
+                        if (stimulationResult.ResponsibleSignals != null && stimulationResult.ResponsibleSignals.Count > 0)
+                            MarkAsUsed(stimulationResult.ResponsibleSignals);
+
+                        var fireId = Guid.NewGuid();
+
+                        var source = CreateSignalSource(fireId, stimulationResult, doordDef);
+
+                        var signal = new SignalMessage(fireId,
+                                                       this.TimeHandler.UtcNow,
+                                                       source);
+
+                        token.ThrowIfCancellationRequested();
+                        await this._signalVGrain.Fire(signal);
+
+                        hadFire = true;
+                        stillToProcess = stimulationResult.NeedRebound;
+                    }
                 }
+                while (stillToProcess);
+
             }
             catch (OperationCanceledException)
             {
             }
+
+            return hadFire;
+        }
+
+        /// <summary>
+        /// Creates <see cref="SignalSource"/> that defined the current information responsible of a signal fire.
+        /// </summary>
+        private SignalSource CreateSignalSource(in Guid fireId,
+                                                in DoorBaseVGrain<TVGrain, TDoordDef>.StimulationReponse stimulationResult,
+                                                in TDoordDef doordDef)
+        {
+            Type? contentType = null;
+            object? content = null;
+
+            if (stimulationResult.RelaySignalsContent)
+            {
+                content = ProduceSignalContentFromResult(stimulationResult);
+                contentType = content?.GetType();
+            }
+
+            return SignalSource.Create(fireId,
+                                       doordDef.DoorId.Uid,
+                                       doordDef.DoorId.Name,
+                                       true,
+                                       this.TimeHandler.UtcNow,
+                                       GetGrainId(),
+                                       this.MetaData,
+                                       contentType,
+                                       content,
+                                       stimulationResult.ResponsibleSignals?.Select(s => s.From));
         }
 
         /// <summary>
@@ -299,11 +470,79 @@ namespace Democrite.Framework.Node.Signals.Doors
                 throw new InvalidOperationException("This method MUST be called in safe context like in OnInitializeAsync or OnDoorStimulateAsync");
         }
 
+        /// <summary>
+        /// Handleds door stimuation when signal context changed (or manual called)
+        /// </summary>
+        [ThreadSafe]
+        private async Task HandledSignalContextChanged()
+        {
+            var state = this.State!;
+            var def = this._doordDefinition!;
+
+            var hadFire = false;
+
+            if (await this._identityCard!.CanBeStimuate())
+                hadFire = await StimulateDoorAsync(def);
+
+            var hadCleaned = false;
+
+            if (this._doordDefinition != null)
+            {
+                if (def.ActiveWindowInterval != null)
+                    hadCleaned |= state.ClearHistoryAndNotConsumed(this.TimeHandler.UtcNow.Subtract(def.ActiveWindowInterval.Value));
+
+                if (def.HistoryMaxRetention != null)
+                    hadCleaned |= state.ClearHistory(def.HistoryMaxRetention.Value);
+
+                if (def.NotConsumedMaxRetiention != null)
+                    hadCleaned |= state.ClearNotConsumed(def.NotConsumedMaxRetiention.Value);
+            }
+
+            // push only if signal cache state have changed
+            if (hadFire || hadCleaned)
+                await PushStateAsync(default);
+        }
+
         /// <inheritdoc />
-        protected override void DisposeResourcesEnd()
+        /// <remarks>
+        ///     Sealed to ensure the resource is well cleaned
+        /// </remarks>
+        protected sealed override void DisposeResourcesEnd()
         {
             this._concurrencyLock.Dispose();
+            this._concurrencyStateLock.Dispose();
+
             base.DisposeResourcesEnd();
+
+            OnDisposeResourcesEnd();
+        }
+
+        /// <inheritdoc />
+        protected sealed override async Task PullStateAsync(CancellationToken ct)
+        {
+            await this._concurrencyStateLock.WaitAsync();
+            try
+            {
+                await base.PullStateAsync(ct);
+            }
+            finally
+            {
+                this._concurrencyStateLock.Release();
+            }
+        }
+
+        /// <inheritdoc />
+        protected sealed override async Task PushStateAsync(DoorHandlerState newState, CancellationToken ct)
+        {
+            await this._concurrencyStateLock.WaitAsync();
+            try
+            {
+                await base.PushStateAsync(newState, ct);
+            }
+            finally
+            {
+                this._concurrencyStateLock.Release();
+            }
         }
 
         #endregion

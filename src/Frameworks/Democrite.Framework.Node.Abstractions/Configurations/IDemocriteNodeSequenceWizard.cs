@@ -15,7 +15,7 @@ namespace Democrite.Framework.Node.Abstractions.Configurations
         /// <summary>
         /// Registers a sequence definition.
         /// </summary>
-        IDemocriteNodeSequenceWizard Register(SequenceDefinition sequenceDefinition);
+        IDemocriteNodeSequenceWizard Register(params SequenceDefinition[] sequenceDefinition);
 
         /// <summary>
         /// Registers <typeparamref name="TSequenceModule"/>

@@ -9,6 +9,7 @@ namespace Democrite.Framework.Builders.Signals
     using Democrite.Framework.Toolbox.Helpers;
 
     using System;
+    using System.Linq.Expressions;
 
     /// <summary>
     /// Extensions method used to customize the door behavior desired
@@ -18,10 +19,45 @@ namespace Democrite.Framework.Builders.Signals
         #region Methods
 
         /// <summary>
+        /// Uses a relay filter door definition. <br/>
+        /// A relay filter door relay signal that valid the setup conditions
+        /// </summary>
+        /// <typeparam name="TContent">Content carray by the signal</typeparam>
+        public static IDefinitionBaseBuilder<DoorDefinition> UseRelayFilter<TContent>(this IDoorWithListenerBuilder doorWithListenerBuilder,
+                                                                                      Expression<Func<TContent, SignalMessage, bool>> filterExpression)
+            where TContent : struct
+        {
+            return UseRelayFilter(doorWithListenerBuilder , (IRelayFilterDoorBuilder r) => r.Condition<TContent>(filterExpression));
+        }
+
+        /// <summary>
+        /// Uses a relay filter door definition. <br/>
+        /// A relay filter door relay signal that valid the setup conditions
+        /// </summary>
+        public static IDefinitionBaseBuilder<DoorDefinition> UseRelayFilter(this IDoorWithListenerBuilder doorWithListenerBuilder,
+                                                                            Expression<Func<SignalMessage, bool>> filterExpression)
+        {
+            return UseRelayFilter(doorWithListenerBuilder , (IRelayFilterDoorBuilder r) => r.Condition(filterExpression));
+        }
+
+        /// <summary>
+        /// Uses a relay filter door definition. <br/>
+        /// A relay filter door relay signal that valid the setup conditions
+        /// </summary>
+        public static IDefinitionBaseBuilder<DoorDefinition> UseRelayFilter(this IDoorWithListenerBuilder doorWithListenerBuilder,
+                                                                            Func<IRelayFilterDoorBuilder, IDefinitionBaseBuilder<DoorDefinition>> builder)
+        {
+            ArgumentNullException.ThrowIfNull(doorWithListenerBuilder);
+            ArgumentNullException.ThrowIfNull(builder);
+
+            return builder(new RelayFilterDoorBuilder(doorWithListenerBuilder));
+        }
+
+        /// <summary>
         /// Uses the logical aggregator.
         /// </summary>
         public static IDefinitionBaseBuilder<DoorDefinition> UseLogicalAggregator(this IDoorWithListenerBuilder doorWithListenerBuilder,
-                                                                                     Func<ILogicalDoorBuilder, IDefinitionBaseBuilder<DoorDefinition>> builder)
+                                                                                  Func<ILogicalDoorBuilder, IDefinitionBaseBuilder<DoorDefinition>> builder)
         {
             ArgumentNullException.ThrowIfNull(doorWithListenerBuilder);
             ArgumentNullException.ThrowIfNull(builder);
@@ -45,7 +81,7 @@ namespace Democrite.Framework.Builders.Signals
 
             return UseLogicalAggregator(doorWithListenerBuilder, b =>
             {
-                var builder = b.Interval(fixedInterval!);
+                var builder = b.ActiveWindowInterval(fixedInterval!);
 
                 var variables = new List<string>(doorWithListenerBuilder.SignalIds.Count + doorWithListenerBuilder.DoorIds.Count);
                 uint indx = 0;
@@ -84,7 +120,7 @@ namespace Democrite.Framework.Builders.Signals
         /// </summary>
         public static IDefinitionBaseBuilder<DoorDefinition> Relay(this IDoorWithListenerBuilder doorWithListenerBuilder)
         {
-            // Interval small used to try caching only source element
+            // ActiveWindowInterval small used to try caching only source element
             var fixedInterval = TimeSpan.FromMilliseconds(100);
             return UseLogicalAggregator(doorWithListenerBuilder, LogicEnum.Or, fixedInterval, onlyOneByInterval: false);
         }

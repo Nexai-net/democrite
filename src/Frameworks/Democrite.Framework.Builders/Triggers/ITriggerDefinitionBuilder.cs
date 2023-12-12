@@ -21,7 +21,7 @@ namespace Democrite.Framework.Builders.Triggers
         /// <summary>
         /// Adds the targe id. Sample:  Sequence.Uid
         /// </summary>
-        ITriggerDefinitionFinalizeBuilder AddTarget(SequenceDefinition sequenceDefinition);
+        ITriggerDefinitionFinalizeBuilder AddTargetSequence(SequenceDefinition sequenceDefinition);
 
         /// <summary>
         /// Adds a signal as target

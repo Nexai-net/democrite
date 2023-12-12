@@ -8,6 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="AutoFixture.Xunit2" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="Moq" />
 		<PackageReference Include="NFluent" />
@@ -24,6 +25,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Toolbox\Democrite.Framework.Toolbox.csproj" />
+	  <ProjectReference Include="..\Democrite.UnitTests.ToolKit\Democrite.UnitTests.ToolKit.csproj" />
 	</ItemGroup>
 
 </Project>

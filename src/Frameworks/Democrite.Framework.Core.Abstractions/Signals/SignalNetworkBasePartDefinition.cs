@@ -4,6 +4,10 @@
 
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
+    using Democrite.Framework.Toolbox.Extensions;
+
+    using Microsoft.Extensions.Logging;
+
     using System;
     using System.ComponentModel;
 
@@ -14,7 +18,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public abstract class SignalNetworkBasePartDefinition
+    public abstract class SignalNetworkBasePartDefinition : IDefinition
     {
         #region Ctor
 
@@ -51,6 +55,33 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// </summary>
         [Id(2)]
         public string? Group { get; }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        public bool Validate(ILogger logger, bool matchWarningAsError = false)
+        {
+            bool isValid = true;
+
+            if (this.Uid == Guid.Empty)
+            {
+                logger.OptiLog(LogLevel.Critical, "Signal id MUST not be equals to Guid.Empty");
+                isValid = false;
+            }
+
+            return isValid && OnValidate(logger, matchWarningAsError);
+        }
+
+        /// <inheritdoc />
+        public string ToDebugDisplayName()
+        {
+            return GetType().Name + ":" + this.Name;
+        }
+
+        /// <inheritdoc cref="IDefinition.Validate(ILogger, bool)"/>
+        protected abstract bool OnValidate(ILogger logger, bool matchWarningAsError = false);
 
         #endregion
     }

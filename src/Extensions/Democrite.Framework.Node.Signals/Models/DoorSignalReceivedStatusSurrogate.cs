@@ -27,13 +27,37 @@ namespace Democrite.Framework.Node.Signals.Models
         /// Gets the last signal received.
         /// </summary>
         [Id(1)]
-        public SignalMessage? LastSignalReceivedNotConsomed { get; set; }
+        public IEnumerable<SignalMessage> LastSignalReceivedNotConsumed { get; set; }
 
         /// <summary>
         /// Gets the signal received history.
         /// </summary>
         [Id(2)]
         public IEnumerable<SignalMessage> SignalReceivedHistory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the last signal received.
+        /// </summary>
+        [Id(3)]
+        public SignalMessage? LastSignalReceived { get; set; }  
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Creates <see cref="DoorSignalReceivedStatusSurrogate"/> from <see cref="DoorSignalReceivedStatus"/>
+        /// </summary>
+        public static DoorSignalReceivedStatusSurrogate CreateFrom(DoorSignalReceivedStatus status)
+        {
+            return new DoorSignalReceivedStatusSurrogate()
+            {
+                SignalId = status.SignalId,
+                LastSignalReceivedNotConsumed = status.SignalsReceivedNotConsumed.ToArray(),
+                SignalReceivedHistory = status.SignalsReceivedHistory.ToArray(),
+                LastSignalReceived = status.LastSignalReceived
+            };
+        }
 
         #endregion
     }

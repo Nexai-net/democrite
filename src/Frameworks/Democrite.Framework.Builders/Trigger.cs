@@ -29,10 +29,33 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
+        public static ITriggerDefinitionBuilder Signal(SignalId signalDefinition)
+        {
+            if (signalDefinition.Uid == Guid.Empty)
+                throw new ArgumentException(nameof(signalDefinition) + " must not be default value");
+
+            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal, signalDefinition, null);
+        }
+
+        /// <summary>
+        /// Configure a trigger based on signal fire
+        /// </summary>
         public static ITriggerDefinitionBuilder Signal(SignalDefinition signalDefinition)
         {
             ArgumentNullException.ThrowIfNull(signalDefinition);
             return Signal(signalDefinition.SignalId);
+        }
+
+        /// <summary>
+        /// Configure a multiple trigger based on multiple signal fire
+        /// </summary>
+        public static TriggerDefinition[] Signals(IReadOnlyCollection<SignalId> signalsDefinition, Func<ITriggerDefinitionBuilder, TriggerDefinition> buildTrigger)
+        {
+            ArgumentNullException.ThrowIfNull(signalsDefinition);
+            ArgumentNullException.ThrowIfNull(buildTrigger);
+
+            return signalsDefinition.Select(s => buildTrigger(Signal(s)))
+                                    .ToArray();
         }
 
         /// <summary>
@@ -47,23 +70,24 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
-        public static ITriggerDefinitionBuilder Signal(SignalId signalDefinition)
-        {
-            if (signalDefinition.Uid == Guid.Empty)
-                throw new ArgumentException(nameof(signalDefinition) + " must not be default value");
-
-            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal, signalDefinition, null);
-        }
-
-        /// <summary>
-        /// Configure a trigger based on signal fire
-        /// </summary>
         public static ITriggerDefinitionBuilder Door(DoorId doorDefinition)
         {
             if (doorDefinition.Uid == Guid.Empty)
                 throw new ArgumentException(nameof(doorDefinition) + " must not be default value");
 
             return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal, null, doorDefinition);
+        }
+
+        /// <summary>
+        /// Configure a multiple trigger based on multiple doors fire
+        /// </summary>
+        public static TriggerDefinition[] Doors(IReadOnlyCollection<DoorId> doorsDefinition, Func<ITriggerDefinitionBuilder, TriggerDefinition> buildTrigger)
+        {
+            ArgumentNullException.ThrowIfNull(doorsDefinition);
+            ArgumentNullException.ThrowIfNull(buildTrigger);
+
+            return doorsDefinition.Select(s => buildTrigger(Door(s)))
+                                  .ToArray();
         }
     }
 }

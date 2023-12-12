@@ -12,12 +12,13 @@ namespace Democrite.Framework.Node.Signals.Doors
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
+    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// State use by <see cref="DoorBaseVGrain{TVGrain, TDoordDef}"/> to handled signal status
     /// </summary>
     /// <seealso cref="SignalSubscriptionState" />
-    public sealed class DoorHandlerState
+    public sealed class DoorHandlerState : IEquatable<DoorHandlerState>
     {
         #region Fields
 
@@ -30,14 +31,14 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// <summary>
         /// Initializes a new instance of the <see cref="DoorHandlerState"/> class.
         /// </summary>
-        internal DoorHandlerState(IEnumerable<DoorSignalReceivedStatusSurrogate> doorSignalListerners)
+        internal DoorHandlerState(IEnumerable<DoorSignalReceivedStatusSurrogate> doorSignalListerners, IEnumerable<Guid>? listenSignals)
         {
 
             this._signalReceivedStatus = (doorSignalListerners ?? EnumerableHelper<DoorSignalReceivedStatusSurrogate>.ReadOnly)
                                                 .Select(surrogate => new DoorSignalReceivedStatus(surrogate))
                                                 .ToImmutableDictionary(k => k.SignalId);
 
-            this.ListenSignals = EnumerableHelper<Guid>.ReadOnly;
+            this.ListenSignals = listenSignals?.ToArray() ?? EnumerableHelper<Guid>.ReadOnly;
         }
 
         #endregion
@@ -64,14 +65,23 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// <summary>
         /// Gets the last active signal since.
         /// </summary>
-        internal IReadOnlyCollection<SignalMessage> GetLastActiveSignalSince(DateTime minTolerateUtcTime)
+        /// <param name="activeWindowLoopUp">Define a window period when the signal must have been fire; if null it pick the oldest</param>
+        internal IReadOnlyCollection<SignalMessage> GetLastActiveSignalSince(DateTime? activeWindowLoopUp = null)
         {
-            if (minTolerateUtcTime.Kind != DateTimeKind.Utc)
+            if (activeWindowLoopUp == null)
+            {
+                return this._signalReceivedStatus.Where(s => s.Value.SignalsReceivedNotConsumed.Any())
+                                                 .Select(s => s.Value.SignalsReceivedNotConsumed.First())
+                                                 .ToArray();
+            }
+
+            if (activeWindowLoopUp.Value.Kind != DateTimeKind.Utc)
                 throw new InvalidDataException("Signal handler : Only utc time are toleranted");
 
-            return this._signalReceivedStatus.Where(s => s.Value.LastSignalReceivedNotConsomed != null &&
-                                                         s.Value.LastSignalReceivedNotConsomed.SendUtcTime > minTolerateUtcTime)
-                                             .Select(s => s.Value.LastSignalReceivedNotConsomed!)
+            return this._signalReceivedStatus.Where(s => s.Value.SignalsReceivedNotConsumed.Any())
+                                             .Select(s => s.Value.SignalsReceivedNotConsumed.FirstOrDefault(n => n.SendUtcTime > activeWindowLoopUp.Value))
+                                             .Where(n => n != null)
+                                             .Select(s => s!)
                                              .ToArray();
         }
 
@@ -101,11 +111,11 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// <summary>
         /// Updates a signal status.
         /// </summary>
-        internal bool UpdateSignalStatus(in SignalMessage signal)
+        internal bool Push(in SignalMessage signal)
         {
             if (this._signalReceivedStatus.TryGetValue(signal.From.SourceDefinitionId, out var doorSignalStatus))
             {
-                doorSignalStatus.Update(signal);
+                doorSignalStatus.Push(signal);
                 return true;
             }
 
@@ -113,24 +123,42 @@ namespace Democrite.Framework.Node.Signals.Doors
         }
 
         /// <summary>
-        /// Define if the signal have been uses to fire.
+        /// Define if the signal have been used.
         /// </summary>
-        internal void UseToFire(in IReadOnlyCollection<SignalMessage> signals)
+        internal void MarkAsUsed(in IReadOnlyCollection<SignalMessage> signals, bool enableHistoryRetention)
         {
             foreach (var signal in signals)
             {
                 if (this._signalReceivedStatus.TryGetValue(signal.From.SourceDefinitionId, out var doorSignalStatus))
-                    doorSignalStatus.UseToFire(signal);
+                    doorSignalStatus.MarkAsUsed(signal, enableHistoryRetention);
             }
         }
 
         /// <summary>
         /// Cleans the history past to old base on <paramref name="maxUtcTime"/>
         /// </summary>
-        internal void CleanHistory(in DateTime maxUtcTime)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ClearHistoryAndNotConsumed(DateTime maxUtcTime)
         {
-            foreach (var status in this._signalReceivedStatus)
-                status.Value.CleanHistory(maxUtcTime);
+            return ApplyActionOnAllSignals(s => s.ClearHistoryAndNotConsumed(maxUtcTime));
+        }
+
+        /// <summary>
+        /// Cleans the history based on <paramref name="maxRetensionSize"/>
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ClearHistory(uint maxRetensionSize)
+        {
+            return ApplyActionOnAllSignals(s => s.ClearHistory(maxRetensionSize));
+        }
+
+        /// <summary>
+        /// Cleans the history based on <paramref name="maxRetensionSize"/>
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ClearNotConsumed(uint maxRetensionSize)
+        {
+            return ApplyActionOnAllSignals(s => s.ClearNotConsumed(maxRetensionSize));
         }
 
         /// <summary>
@@ -142,6 +170,47 @@ namespace Democrite.Framework.Node.Signals.Doors
                 return signalStatus.LastSignalReceived;
 
             return null;
+        }
+
+        private bool ApplyActionOnAllSignals(Func<DoorSignalReceivedStatus, bool> action)
+        {
+            var applyed = false;
+            foreach (var status in this._signalReceivedStatus)
+            {
+                var applySucess = action(status.Value);
+                applyed |= applySucess;
+            }
+
+            return applyed;
+        }
+
+        /// <inheritdoc />
+        public bool Equals(DoorHandlerState? other)
+        {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(this, other))
+                return true;
+
+            return this.ListenSignals.SequenceEqual(other.ListenSignals) &&
+                   this.SignalStatus.SequenceEqual(other.SignalStatus);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            if (obj is DoorHandlerState other)
+                return Equals(other);
+
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.ListenSignals?.OrderBy(s => s).Aggregate(0, (acc, l) => acc ^ l.GetHashCode()),
+                                    this.SignalStatus?.OrderBy(s => s.SignalId).Aggregate(0, (acc, s) => acc ^ s.GetHashCode()));
         }
 
         #endregion

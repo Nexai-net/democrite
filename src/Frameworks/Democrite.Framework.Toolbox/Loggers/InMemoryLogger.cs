@@ -26,9 +26,9 @@ namespace Democrite.Framework.Toolbox.Loggers
 
         private readonly IOptionsMonitor<LoggerFilterOptions> _loggerOptions;
 
-        private readonly IObservable<string> _observableLog;
-        private readonly Subject<string> _logRelay;
-        private readonly Queue<string> _logs;
+        private readonly IObservable<SimpleLog> _observableLog;
+        private readonly Subject<SimpleLog> _logRelay;
+        private readonly Queue<SimpleLog> _logs;
 
         #endregion
 
@@ -41,8 +41,8 @@ namespace Democrite.Framework.Toolbox.Loggers
         {
             this._loggerOptions = loggerOptions;
 
-            this._logs = new Queue<string>();
-            this._logRelay = new Subject<string>();
+            this._logs = new Queue<SimpleLog>();
+            this._logRelay = new Subject<SimpleLog>();
 
             var observableLog = this._logRelay.ObserveOn(TaskPoolScheduler.Default).Publish();
             observableLog.Connect();
@@ -64,7 +64,7 @@ namespace Democrite.Framework.Toolbox.Loggers
         }
 
         /// <inheritdoc />
-        public IReadOnlyCollection<string> GetLogsCopy()
+        public IReadOnlyCollection<SimpleLog> GetLogsCopy()
         {
             lock (this._logs)
             {
@@ -81,7 +81,7 @@ namespace Democrite.Framework.Toolbox.Loggers
         /// <inheritdoc />
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
-            var msgLog = string.Format("[{0}] {1}", logLevel, formatter(state, exception));
+            var msgLog = new SimpleLog(logLevel, string.Format("[{0}] {1}", logLevel, formatter(state, exception)));
 
             lock (this._logs)
             {
@@ -92,7 +92,7 @@ namespace Democrite.Framework.Toolbox.Loggers
         }
 
         /// <inheritdoc />
-        public IDisposable Subscribe(IObserver<string> observer)
+        public IDisposable Subscribe(IObserver<SimpleLog> observer)
         {
             return this._observableLog.Subscribe(observer);
         }

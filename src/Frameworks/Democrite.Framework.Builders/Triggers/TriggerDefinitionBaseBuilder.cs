@@ -88,7 +88,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public ITriggerDefinitionFinalizeBuilder AddTarget(SequenceDefinition sequenceDefinition)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSequence(SequenceDefinition sequenceDefinition)
         {
             ArgumentNullException.ThrowIfNull(sequenceDefinition);
 

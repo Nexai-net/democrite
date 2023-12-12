@@ -4,11 +4,20 @@
 
 	<PropertyGroup>
 		<IsPackable>false</IsPackable>
+		<IsTestProject>false</IsTestProject>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 	
 	<ItemGroup>
+		<PackageReference Include="AutoFixture" />
+		<PackageReference Include="AutoFixture.AutoNSubstitute" />
 		<PackageReference Include="H.Pipes" />
 		<PackageReference Include="Microsoft.Orleans.TestingHost" />
+		<PackageReference Include="NFluent" />
+		<PackageReference Include="xunit" />
+		<PackageReference Include="System.ComponentModel.TypeConverter" />
+		
+		<!-- TO BE REPLACE by NSubstitute -->
 		<PackageReference Include="Moq" />
 	</ItemGroup>
 

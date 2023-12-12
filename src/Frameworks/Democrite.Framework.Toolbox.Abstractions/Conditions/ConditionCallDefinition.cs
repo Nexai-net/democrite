@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 {
+    using Newtonsoft.Json;
+
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -17,6 +19,12 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 #pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
 #pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
     {
+        #region Fields
+
+        public const string TypeDiscriminator = "call";
+
+        #endregion
+
         #region Ctor
 
         /// <summary>
@@ -38,6 +46,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the instance to call the method; could be null on static method
         /// </summary>
+        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.All)]
         public ConditionBaseDefinition? Instance { get; }
 
         /// <summary>
@@ -48,6 +57,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the arguments.
         /// </summary>
+        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.All)]
         public IReadOnlyCollection<ConditionBaseDefinition> Arguments { get; }
 
         #endregion

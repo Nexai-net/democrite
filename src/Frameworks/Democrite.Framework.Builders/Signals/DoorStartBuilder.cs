@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Builders.Signals
 {
+    using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Signals;
 
     using System;
@@ -33,23 +34,32 @@ namespace Democrite.Framework.Builders.Signals
         {
             this._signalIds = new HashSet<SignalId>();
             this._doorIds = new HashSet<DoorId>();
+
+            this.RetentionMaxPeriod = DoorDefinition.DEFAULT_RETENTION_MAX_DELAY;
+            this.HistoryMaxRetention = DoorDefinition.DEFAULT_HISTORY_RETENTION;
+            this.NotConsumedMaxRetiention = DoorDefinition.DEFAULT_NOT_CONSUMED_RETENTION;
         }
 
         #endregion
 
         #region Properties
 
-        /// <summary>
-        /// Gets the signal ids.
-        /// </summary>
+        /// <inheritdoc />
+        public TimeSpan? RetentionMaxPeriod { get; private set; }
+
+        /// <inheritdoc />
+        public uint? HistoryMaxRetention { get; private set; }
+
+        /// <inheritdoc />
+        public uint? NotConsumedMaxRetiention { get; private set; }
+
+        /// <inheritdoc />
         public IReadOnlyCollection<SignalId> SignalIds
         {
             get { return this._signalIds; }
         }
 
-        /// <summary>
-        /// Gets the door ids.
-        /// </summary>
+        /// <inheritdoc />
         public IReadOnlyCollection<DoorId> DoorIds
         {
             get { return this._doorIds; }
@@ -58,6 +68,30 @@ namespace Democrite.Framework.Builders.Signals
         #endregion
 
         #region Methods
+
+        /// <inheritdoc />
+        public IDoorBuilder SetSignalRetention(TimeSpan? retentionMaxPeriod)
+        {
+            this.RetentionMaxPeriod = retentionMaxPeriod;
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IDoorBuilder SetSignalRetention(uint? history, uint? notConsumed)
+        {
+            this.HistoryMaxRetention = history;
+
+            if (notConsumed != null && notConsumed < 1)
+            {
+                throw new InvalidDefinitionPropertyValueException(typeof(DoorDefinition),
+                                                                  nameof(DoorDefinition.NotConsumedMaxRetiention),
+                                                                  notConsumed?.ToString() ?? string.Empty,
+                                                                  "Couldn't be less than 1");
+            }
+
+            this.HistoryMaxRetention = history;
+            return this;
+        }
 
         /// <inheritdoc />
         public IDoorWithListenerBuilder Listen(params SignalDefinition[] signalDefinition)

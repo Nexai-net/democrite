@@ -14,7 +14,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     [Immutable]
     [Serializable]
     [ImmutableObject(true)]
-    public sealed class SignalTriggerDefinition : TriggerDefinition, ISignalTriggerDefinition
+    public sealed class SignalTriggerDefinition : TriggerDefinition
     {
         #region Ctor
 

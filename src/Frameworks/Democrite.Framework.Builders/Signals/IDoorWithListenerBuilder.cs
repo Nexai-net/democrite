@@ -28,6 +28,21 @@ namespace Democrite.Framework.Builders.Signals
         Guid Uid { get; }
 
         /// <summary>
+        /// Gets the global signal retention period (history and not consumed), Default 1 day
+        /// </summary>
+        TimeSpan? RetentionMaxPeriod { get; }
+
+        /// <summary>
+        /// Gets the signal history maximum retention. Default 0 to prevent any signal history
+        /// </summary>
+        uint? HistoryMaxRetention { get; }
+
+        /// <summary>
+        /// Gets the signal "not consumed" maximum retiention. Default null to keep all the incoming signals
+        /// </summary>
+        uint? NotConsumedMaxRetiention { get; }
+
+        /// <summary>
         /// Gets the signal ids.
         /// </summary>
         IReadOnlyCollection<SignalId> SignalIds { get; }

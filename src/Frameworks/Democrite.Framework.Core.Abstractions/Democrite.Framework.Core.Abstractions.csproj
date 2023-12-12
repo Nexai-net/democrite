@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="$(SolutionDir)\SharedFrameworkAssmblyInfo.props" />
-	<Import Project="$(SolutionDir)\SharedFrameworkDemocriteAssemblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
 
 	<PropertyGroup>
 
@@ -17,7 +17,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Toolbox\Democrite.Framework.Toolbox.csproj" />
+		<InternalsVisibleTo Include="Democrite.Framework.Node"/>
+		
+		<!-- Testing Purpose -->
+		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals.UnitTests"/>
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Democrite.Framework.Toolbox\Democrite.Framework.Toolbox.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

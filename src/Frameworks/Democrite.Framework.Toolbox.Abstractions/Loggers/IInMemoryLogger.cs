@@ -11,14 +11,14 @@ namespace Democrite.Framework.Toolbox.Abstractions.Loggers
     /// <summary>
     ///  Logger that keep in memory the logs
     /// </summary>
-    public interface IInMemoryLogger : ILogger, IObservable<string>
+    public interface IInMemoryLogger : ILogger, IObservable<SimpleLog>
     {
         #region Methods
 
         /// <summary>
         /// Gets a copy of logs at requested time.
         /// </summary>
-        IReadOnlyCollection<string> GetLogsCopy();
+        IReadOnlyCollection<SimpleLog> GetLogsCopy();
 
         #endregion
     }

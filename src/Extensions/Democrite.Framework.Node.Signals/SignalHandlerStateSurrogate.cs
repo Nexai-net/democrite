@@ -11,6 +11,7 @@ namespace Democrite.Framework.Node.Signals
     /// <summary>
     /// Surrogate struct to help storing <see cref="SignalHandlerState"/>
     /// </summary>
+    [Serializable]
     [GenerateSerializer]
     internal struct SignalHandlerStateSurrogate
     {

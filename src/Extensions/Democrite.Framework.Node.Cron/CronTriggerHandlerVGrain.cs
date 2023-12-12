@@ -105,7 +105,7 @@ namespace Democrite.Framework.Node.Cron
         }
 
         /// <inheritdoc />
-        private async Task<bool> UpdateNextTriggerAndCheckCanExecuteAsync(ICronTriggerDefinition definition)
+        private async Task<bool> UpdateNextTriggerAndCheckCanExecuteAsync(CronTriggerDefinition definition)
         {
             if (definition.Enabled == false)
             {
@@ -119,8 +119,8 @@ namespace Democrite.Framework.Node.Cron
 
             if (string.IsNullOrWhiteSpace(definition.CronExpression))
             {
-                throw new InvalidDefinitionPropertyValueException(typeof(ICronTriggerDefinition),
-                                                                  nameof(ICronTriggerDefinition.CronExpression),
+                throw new InvalidDefinitionPropertyValueException(typeof(CronTriggerDefinition),
+                                                                  nameof(CronTriggerDefinition.CronExpression),
                                                                   definition.CronExpression,
                                                                   "not null");
             }
@@ -134,8 +134,8 @@ namespace Democrite.Framework.Node.Cron
             }
             catch (Exception ex)
             {
-                throw new InvalidDefinitionPropertyValueException(typeof(ICronTriggerDefinition),
-                                                                  nameof(ICronTriggerDefinition.CronExpression),
+                throw new InvalidDefinitionPropertyValueException(typeof(CronTriggerDefinition),
+                                                                  nameof(CronTriggerDefinition.CronExpression),
                                                                   definition.CronExpression,
                                                                   ex.Message,
                                                                   ex);

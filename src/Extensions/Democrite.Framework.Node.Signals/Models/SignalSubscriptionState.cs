@@ -13,7 +13,7 @@ namespace Democrite.Framework.Node.Signals.Models
     /// <summary>
     /// Base State use to managed signal subscription
     /// </summary>
-    internal abstract class SignalSubscriptionState
+    internal abstract class SignalSubscriptionState : IEquatable<SignalSubscriptionState>
     {
         #region Fields
 
@@ -107,8 +107,71 @@ namespace Democrite.Framework.Node.Signals.Models
                 this._subscriptionLocker.ExitWriteLock();
 
             }
-
-            #endregion
         }
+
+        /// <inheritdoc />
+        public bool Equals(SignalSubscriptionState? other)
+        {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(other, this))
+                return true;
+
+            this._subscriptionLocker.EnterReadLock();
+
+            try
+            {
+                return other.Subscriptions.SequenceEqual(this.Subscriptions) &&
+                       OnEquals(other!);
+            }
+            finally
+            {
+                this._subscriptionLocker.ExitReadLock();
+            }
+        }
+
+        /// <inheritdoc />
+        public sealed override int GetHashCode()
+        {
+            this._subscriptionLocker.EnterReadLock();
+
+            try
+            {
+                return HashCode.Combine(this._subscriptions.OrderBy(o => o.Value.Uid)
+                                                           .Aggregate(0, (acc, kv) => acc ^ kv.Value.GetHashCode()),
+                                        OnGetHashCode());
+            }
+            finally
+            {
+                this._subscriptionLocker.ExitReadLock();
+            }
+        }
+
+        /// <inheritdoc cref="object.GetHashCode" />
+        protected virtual int OnGetHashCode()
+        {
+            return 0;
+        }
+
+        /// <inheritdoc cref="object.Equals(object?)" />
+        /// <inheritdoc cref="IEquatable{SignalSubscriptionState}.Equals(SignalSubscriptionState?)" />
+        /// <remarks>
+        ///     Null check and reference check have already been done
+        /// </remarks>
+        protected virtual bool OnEquals(SignalSubscriptionState signalSubscriptionState)
+        {
+            return true;
+        }
+
+        /// <inheritdoc />
+        public sealed override bool Equals(object? obj)
+        {
+            if (obj is SignalSubscriptionState other)
+                return Equals(other);
+            return false;
+        }
+
+        #endregion
     }
 }

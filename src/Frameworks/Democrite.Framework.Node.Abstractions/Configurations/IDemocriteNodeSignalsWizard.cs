@@ -14,6 +14,6 @@ namespace Democrite.Framework.Node.Abstractions.Configurations
         /// <summary>
         /// Registers a signals definition.
         /// </summary>
-        IDemocriteNodeSignalsWizard Register(SignalDefinition signalDefinition);
+        IDemocriteNodeSignalsWizard Register(params SignalDefinition[] signalDefinition);
     }
 }

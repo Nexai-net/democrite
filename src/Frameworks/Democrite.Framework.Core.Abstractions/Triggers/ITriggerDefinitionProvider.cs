@@ -12,7 +12,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     /// <see cref="ITriggerDefinition"/> provider
     /// </summary>
     /// <seealso cref="IProviderStrategy{ITriggerDefinition, Guid}" />
-    public interface ITriggerDefinitionProvider : IProviderStrategy<ITriggerDefinition, Guid>
+    public interface ITriggerDefinitionProvider : IProviderStrategy<TriggerDefinition, Guid>
     {
     }
 }

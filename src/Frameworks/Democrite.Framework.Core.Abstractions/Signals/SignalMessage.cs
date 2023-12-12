@@ -66,17 +66,16 @@ namespace Democrite.Framework.Core.Abstractions.Signals
                 return true;
 
             return this.Uid == other.Uid &&
-                   this.From.SourceDefinitionId == other.From.SourceDefinitionId &&
-                   this.From.VGrainSourceId == other.From.VGrainSourceId;
-            ;
+                   this.From == other.From &&
+                   this.SendUtcTime == other.SendUtcTime;
         }
 
         /// <inheritdoc />
         public sealed override int GetHashCode()
         {
             return HashCode.Combine(this.Uid,
-                                    this.From.SourceDefinitionId,
-                                    this.From.VGrainSourceId);
+                                    this.From,
+                                    this.SendUtcTime);
         }
 
         /// <inheritdoc />
@@ -86,6 +85,18 @@ namespace Democrite.Framework.Core.Abstractions.Signals
                 return Equals(otherSignal);
 
             return false;
+        }
+
+        /// <inheritdoc />
+        public static bool operator ==(SignalMessage? lhs, SignalMessage? rhs)
+        {
+            return lhs?.Equals(rhs) ?? lhs is null;
+        }
+
+        /// <inheritdoc />
+        public static bool operator !=(SignalMessage? lhs, SignalMessage? rhs)
+        {
+            return !(lhs == rhs);
         }
 
         #endregion

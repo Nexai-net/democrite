@@ -4,8 +4,15 @@
 
 namespace Democrite.Framework.Toolbox.UnitTests.Extensions
 {
+    using AutoFixture;
+    using AutoFixture.Kernel;
+    using AutoFixture.Xunit2;
+
     using Democrite.Framework.Toolbox.Abstractions.Conditions;
+    using Democrite.Framework.Toolbox.Abstractions.Enums;
     using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.UnitTests.Xunits;
+    using Democrite.UnitTests.ToolKit.Helpers;
 
     using Newtonsoft.Json;
 
@@ -13,7 +20,11 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
 
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Diagnostics;
     using System.Linq.Expressions;
+
+    using Xunit.Sdk;
 
     /// <summary>
     /// Test extension around <see cref="Expression"/>
@@ -72,6 +83,93 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
 
             ConditionSerializationTest((string? item) => item != null && item.StartsWith("s") && item.EndsWith("d"), new[] { sucessStr }, new[] { failStartStr, failEndStr, string.Empty, null });
             ConditionSerializationTest((string? item) => item != null && (item.StartsWith("s") || item.EndsWith("d")), new[] { sucessStr, failStartStr, failEndStr }, new[] { string.Empty, null });
+        }
+
+        /// <summary>
+        /// one condition simple that contains math operator
+        /// </summary>
+        [Theory]
+        [EnumData<MathOperatorEnum>()]
+        public void ConditionSerialization_Simple_MathOperator(MathOperatorEnum mathOperator)
+        {
+            Expression<Func<int, bool>> expression;
+
+            switch (mathOperator)
+            {
+                case MathOperatorEnum.Sum:
+                    expression = (i) => i + 2 < 10;
+                    break;
+
+                case MathOperatorEnum.Sub:
+                    expression = (i) => i - 2 < 10;
+                    break;
+
+                case MathOperatorEnum.Multiply:
+                    expression = (i) => i * 2 < 10;
+                    break;
+
+                case MathOperatorEnum.Modulo:
+                    expression = (i) => i % 2 == 0;
+                    break;
+
+                case MathOperatorEnum.Divide:
+                    expression = (i) => i / 2 < 10;
+                    break;
+
+                case MathOperatorEnum.None:
+                    // All
+#pragma warning disable IDE0047 // Remove unnecessary parentheses
+                    expression = (i) => (((i + 2 - 4) * 2) / 4) % 2 == 0;
+#pragma warning restore IDE0047 // Remove unnecessary parentheses
+                    break;
+
+                default:
+                    throw new NotSupportedException("Math operator not managed " + mathOperator);
+            }
+
+            var func = expression.Compile();
+
+            var results = Enumerable.Range(0, 1000)
+                                    .GroupBy(i => func(i))   
+                                    .ToDictionary(k => k.Key, v => v.ToList());
+
+            Check.That(results).CountIs(2);
+            Check.That(results[true]).Not.IsEmpty();
+            Check.That(results[false]).Not.IsEmpty();
+
+            ConditionSerializationTest<int>(expression, results[true], results[false]);
+        }
+
+        /// <summary>
+        /// Conditions the serialization each serialize part.
+        /// </summary>
+        [Theory]
+        [InlineData(typeof(ConditionParameterDefinition))]
+        [InlineData(typeof(ConditionCallDefinition))]
+        [InlineData(typeof(ConditionExpressionDefinition))]
+        [InlineData(typeof(ConditionGroupDefinition))]
+        [InlineData(typeof(ConditionMathOperationDefinition))]
+        [InlineData(typeof(ConditionMemberAccessDefinition))]
+        [InlineData(typeof(ConditionOperandDefinition))]
+        [InlineData(typeof(ConditionValueDefinition))]
+        public void ConditionSerialization_Each_SerializePart(Type partType)
+        {
+            var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
+
+            fixture.Register<ConditionValueDefinition>(() => new ConditionValueDefinition(typeof(int), Random.Shared.Next(0, 152)));
+            fixture.Register<ConditionBaseDefinition>(() => fixture.Create<ConditionValueDefinition>());
+
+            var inst = fixture.Create(partType, new SpecimenContext(fixture));
+            Check.That(inst).IsNotNull();
+
+            var serializationJson = JsonConvert.SerializeObject(inst, s_serializationSetting);
+
+            Check.That(serializationJson).IsNotNull();
+
+            var newInst = JsonConvert.DeserializeObject(serializationJson, partType, s_serializationSetting);
+            
+            Check.That(newInst).IsNotNull().And.IsInstanceOfType(partType);
+            Check.That(newInst).IsEqualTo(inst);
         }
 
         #region Tools

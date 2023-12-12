@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
     /// <summary>
-    /// Virtual grain in charge to handled behavior describe by <see cref="LogicalAggregatorDoorDefinition"/>
+    /// Virtual grain in charge to handled behavior describe by <see cref="BooleanLogicalDoorDefinition"/>
     /// </summary>
     /// <seealso cref="IDoorVGrain" />
     public interface ILogicalDoorVGrain : IDoorVGrain

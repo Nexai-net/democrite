@@ -16,7 +16,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     [Serializable]
     [Immutable]
     [ImmutableObject(true)]
-    public abstract class TriggerDefinition : ITriggerDefinition
+    public abstract class TriggerDefinition
     {
         #region Ctor
 

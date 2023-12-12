@@ -19,43 +19,37 @@ namespace Democrite.Framework.Builders.Signals
         /// <example>
         ///     If all signal arrive in the <paramref name="interval"/> and Logical condition are simply <see cref="LogicEnum.And"/> then door signal is send.
         /// </example>
-        ILogicalDoorBuilderWithInterval Interval(TimeSpan interval);
-    }
-
-    /// <summary>
-    /// Configure the logical behavior of the door
-    /// </summary>
-    public interface ILogicalDoorBuilderWithInterval
-    {
-        /// <summary>
-        /// Assigns a variable name to <paramref name="signalId"/> source; Variable used in the formula.
-        /// </summary>
-        ILogicalDoorBuilderWithInterval ListenWindowMode(ListenWindowModeEnum windowModeEnum);
+        ILogicalDoorBuilder ActiveWindowInterval(TimeSpan interval);
 
         /// <summary>
         /// Assigns a variable name to <paramref name="signalId"/> source; Variable used in the formula.
         /// </summary>
-        ILogicalDoorBuilderWithInterval AssignVariableName(string variableName, SignalId signalId);
+        ILogicalDoorBuilder ListenWindowMode(ListenWindowModeEnum windowModeEnum);
+
+        /// <summary>
+        /// Assigns a variable name to <paramref name="signalId"/> source; Variable used in the formula.
+        /// </summary>
+        ILogicalDoorBuilder AssignVariableName(string variableName, SignalId signalId);
 
         /// <summary>
         /// Assigns a variable name to <paramref name="signalDefinition"/> source; Variable used in the formula.
         /// </summary>
-        ILogicalDoorBuilderWithInterval AssignVariableName(string variableName, SignalDefinition signalDefinition);
+        ILogicalDoorBuilder AssignVariableName(string variableName, SignalDefinition signalDefinition);
 
         /// <summary>
         /// Assigns a variable name to <paramref name="doorDefinition"/> source; Variable used in the formula.
         /// </summary>
-        ILogicalDoorBuilderWithInterval AssignVariableName(string variableName, DoorDefinition doorDefinition);
+        ILogicalDoorBuilder AssignVariableName(string variableName, DoorDefinition doorDefinition);
 
         /// <summary>
         /// Assigns a variable name to <paramref name="doorId"/> source; Variable used in the formula.
         /// </summary>
-        ILogicalDoorBuilderWithInterval AssignVariableName(string variableName, DoorId doorId);
+        ILogicalDoorBuilder AssignVariableName(string variableName, DoorId doorId);
 
         /// <summary>
         /// Uses the variable this.
         /// </summary>
-        ILogicalDoorBuilderWithInterval UseVariableThis();
+        ILogicalDoorBuilder UseVariableThis();
 
         /// <summary>
         /// Conditions express like "(A & B) | C" when operator are <br/>

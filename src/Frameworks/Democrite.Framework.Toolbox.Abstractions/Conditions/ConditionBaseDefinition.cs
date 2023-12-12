@@ -4,13 +4,51 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 {
+    using Newtonsoft.Json;
+
     using System;
+    using System.ComponentModel;
+    using System.Runtime.Serialization;
+    using System.Text.Json.Serialization;
+    using System.Text.Json.Serialization.Metadata;
 
     /// <summary>
     /// Base of all condition part
     /// </summary>
+    [Serializable]
+    [ImmutableObject(true)]
+
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$discriminator")]
+    [JsonDerivedType(typeof(ConditionParameterDefinition), ConditionParameterDefinition.TypeDiscriminator)]
+    [JsonDerivedType(typeof(ConditionCallDefinition), ConditionCallDefinition.TypeDiscriminator)]
+    [JsonDerivedType(typeof(ConditionGroupDefinition), ConditionGroupDefinition.TypeDiscriminator)]
+    [JsonDerivedType(typeof(ConditionMathOperationDefinition), ConditionMathOperationDefinition.TypeDiscriminator)]
+    [JsonDerivedType(typeof(ConditionMemberAccessDefinition), ConditionMemberAccessDefinition.TypeDiscriminator)]
+    [JsonDerivedType(typeof(ConditionOperandDefinition), ConditionOperandDefinition.TypeDiscriminator)]
+    [JsonDerivedType(typeof(ConditionValueDefinition), ConditionValueDefinition.TypeDiscriminator)]
+
+    [JsonObject(ItemTypeNameHandling = TypeNameHandling.All)]
+
+    [KnownType(typeof(ConditionParameterDefinition))]
+    [KnownType(typeof(ConditionCallDefinition))]
+    [KnownType(typeof(ConditionGroupDefinition))]
+    [KnownType(typeof(ConditionMathOperationDefinition))]
+    [KnownType(typeof(ConditionMemberAccessDefinition))]
+    [KnownType(typeof(ConditionOperandDefinition))]
+    [KnownType(typeof(ConditionValueDefinition))]
+
     public abstract class ConditionBaseDefinition : IEquatable<ConditionBaseDefinition>
     {
+        #region Properties
+
+        /// Initializes a new instance of the <see cref="ConditionBaseDefinition"/> class.
+        /// </summary>
+        public ConditionBaseDefinition()
+        {
+        }
+
+        #endregion
+
         #region Methods
 
         /// <summary>
@@ -86,7 +124,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         ///     Type, Null and reference check already done
         /// </remarks>
         protected abstract bool OnEquals(ConditionBaseDefinition other);
-
+        
         #endregion
     }
 }

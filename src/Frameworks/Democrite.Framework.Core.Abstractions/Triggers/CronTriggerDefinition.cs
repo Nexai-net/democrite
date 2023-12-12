@@ -11,7 +11,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     /// Trigger definition used to setup a timer - cron
     /// </summary>
     /// <seealso cref="TriggerBaseDefinition" />
-    public sealed class CronTriggerDefinition : TriggerDefinition, ICronTriggerDefinition
+    public sealed class CronTriggerDefinition : TriggerDefinition
     {
         #region Ctor
 

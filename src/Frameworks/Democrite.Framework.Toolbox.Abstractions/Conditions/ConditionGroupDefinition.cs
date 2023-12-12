@@ -6,10 +6,13 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 {
     using Democrite.Framework.Toolbox.Abstractions.Enums;
 
+    using Newtonsoft.Json;
+
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Define a group condition link by <see cref="LogicEnum"/>
@@ -22,7 +25,13 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 #pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
 #pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
     {
-        #region Ctor
+        #region Fields
+
+        public const string TypeDiscriminator = "grp";
+
+        #endregion
+
+        #region Ctor        
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConditionGroupDefinition"/> class.
@@ -45,6 +54,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the conditions.
         /// </summary>
+        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.All)]
         public IReadOnlyCollection<ConditionBaseDefinition> Conditions { get; }
 
         #endregion

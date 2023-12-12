@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="$(SolutionDir)\SharedFrameworkAssmblyInfo.props" />
-	<Import Project="$(SolutionDir)\SharedFrameworkDemocriteAssemblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
 
 	<PropertyGroup>
 
@@ -15,11 +15,15 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Orleans.Core.Abstractions" />
 	</ItemGroup>
+	
+	<ItemGroup>
+		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals.UnitTests"/>
+	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
-		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
-		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
+		<ProjectReference Include="..\..\Frameworks\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
+		<ProjectReference Include="..\..\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\..\Frameworks\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Signals
 {
+    using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Signals.Doors;
     using Democrite.Framework.Node.Signals.Models;
 
@@ -21,6 +22,12 @@ namespace Democrite.Framework.Node.Signals
         /// </summary>
         [Id(0)]
         public IEnumerable<DoorSignalReceivedStatusSurrogate> SignalStates { get; set; }
+
+        /// <summary>
+        /// Gets or sets the listen signals.
+        /// </summary>
+        [Id(1)]
+        public IEnumerable<Guid> ListenSignals { get; set; }
     }
 
     /// <summary>
@@ -33,7 +40,7 @@ namespace Democrite.Framework.Node.Signals
         /// <inheritdoc />
         public DoorHandlerState ConvertFromSurrogate(in DoorHandlerStateSurrogate surrogate)
         {
-            return new DoorHandlerState(surrogate.SignalStates);
+            return new DoorHandlerState(surrogate.SignalStates, surrogate.ListenSignals);
         }
 
         /// <inheritdoc />
@@ -42,12 +49,10 @@ namespace Democrite.Framework.Node.Signals
             return new DoorHandlerStateSurrogate()
             {
                 SignalStates = value.SignalStatus
-                                    .Select(s => new DoorSignalReceivedStatusSurrogate()
-                                    {
-                                        SignalId = s.SignalId,
-                                        LastSignalReceivedNotConsomed = s.LastSignalReceivedNotConsomed,
-                                        SignalReceivedHistory = s.SignalReceivedHistory.ToArray()
-                                    }).ToArray()
+                                    .Select(DoorSignalReceivedStatusSurrogate.CreateFrom)
+                                    .ToArray(),
+
+                ListenSignals = value.ListenSignals.ToArray()
             };
         }
     }

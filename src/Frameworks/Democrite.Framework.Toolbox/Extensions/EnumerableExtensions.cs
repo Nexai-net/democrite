@@ -104,5 +104,35 @@ namespace Democrite.Framework.Toolbox.Extensions
                 current = current.Next;
             }
         }
+
+        /// <summary>
+        /// Adds after tested node when condition is validate.
+        /// </summary>
+        /// <param name="predicate">Func(Previous, Current, newNodeContent, Bool)</param>
+        public static LinkedListNode<TNode> AddAfterWhen<TNode>(this LinkedList<TNode> collection, Func<TNode?, TNode, TNode, bool> predicate, TNode newNodeContent)
+        {
+            ArgumentNullException.ThrowIfNull(nameof(collection));
+
+            foreach (var node in collection.Nodes())
+            {
+                TNode? previousNode = default;
+
+                if (node.Previous != null)
+                    previousNode = node.Previous.Value;
+
+                if (predicate(previousNode, node.Value, newNodeContent))
+                {
+                    if (node.Previous == null)
+                        return collection.AddBefore(node, newNodeContent);
+
+                    return collection.AddAfter(node.Previous, newNodeContent);
+                }
+            }
+
+            if (collection.First == null)
+                return collection.AddFirst(newNodeContent);
+
+            return collection.AddLast(newNodeContent);
+        }
     }
 }

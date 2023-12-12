@@ -4,22 +4,30 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 {
+    using Newtonsoft.Json;
+
     using System;
     using System.ComponentModel;
 
     [Serializable]
     [ImmutableObject(true)]
+    [JsonObject(ItemTypeNameHandling = TypeNameHandling.All)]
     public sealed class ConditionExpressionDefinition : IEquatable<ConditionExpressionDefinition>
     {
+        #region Fields
+
+        public const string TypeDiscriminator = "cond";
+
+        #endregion
+
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConditionExpressionDefinition"/> class.
         /// </summary>
-        public ConditionExpressionDefinition(string inputName, Type inputType, ConditionBaseDefinition condition)
+        public ConditionExpressionDefinition(IEnumerable<ConditionParameterDefinition> parameters, ConditionBaseDefinition condition)
         {
-            this.InputName = inputName;
-            this.InputType = inputType;
+            this.Parameters = parameters?.ToArray() ?? Array.Empty<ConditionParameterDefinition>();
             this.Condition = condition;
         }
 
@@ -28,18 +36,14 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         #region Properties
 
         /// <summary>
-        /// Gets the name of the input.
+        /// Gets the parameters.
         /// </summary>
-        public string InputName { get; }
-
-        /// <summary>
-        /// Gets the type of the input.
-        /// </summary>
-        public Type InputType { get; }
+        public IReadOnlyCollection<ConditionParameterDefinition> Parameters { get; }
 
         /// <summary>
         /// Gets the condition.
         /// </summary>
+        [JsonProperty(ItemTypeNameHandling = TypeNameHandling.All)]
         public ConditionBaseDefinition Condition { get; }
 
         #endregion
@@ -78,8 +82,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
             if (object.ReferenceEquals(this, other))
                 return true;
 
-            return this.InputName == other.InputName &&
-                   this.InputType == other.InputType &&
+            return this.Parameters.SequenceEqual(other.Parameters) &&
                    this.Condition.Equals(other.Condition);
         }
 
@@ -103,9 +106,8 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// </returns>
         public override int GetHashCode()
         {
-            return (this.InputName?.GetHashCode() ?? 0) ^
-                   (this.InputType?.GetHashCode() ?? 0) ^
-                   (this.Condition?.GetHashCode() ?? 0);
+            return HashCode.Combine(this.Parameters.Aggregate(0, (acc, p) => acc ^ p.GetHashCode()),
+                                    this.Condition);
         }
 
         #endregion

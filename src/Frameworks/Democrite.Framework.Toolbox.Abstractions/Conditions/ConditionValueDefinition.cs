@@ -4,8 +4,13 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 {
+    using Newtonsoft.Json;
+
     using System;
+    using System.Collections;
     using System.ComponentModel;
+    using System.Reflection;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Store simple value
@@ -18,6 +23,14 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 #pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
 #pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
     {
+        #region Fields
+
+        public const string TypeDiscriminator = "value";
+
+        private readonly IEqualityComparer _comparer;
+
+        #endregion
+
         #region Ctor
 
         /// <summary>
@@ -27,6 +40,14 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         {
             this.Type = type;
             this.Value = value;
+
+            if (value is not null && value.GetType() != this.Type)
+            {
+                var serialized = JsonConvert.SerializeObject(value);
+                this.Value = JsonConvert.DeserializeObject(serialized, this.Type);
+            }
+
+            this._comparer = BuildComparer(type);
         }
 
         #endregion
@@ -41,6 +62,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the value.
         /// </summary>
+        [Newtonsoft.Json.JsonProperty(TypeNameHandling = Newtonsoft.Json.TypeNameHandling.All)]
         public object? Value { get; }
 
         #endregion
@@ -68,7 +90,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         {
             return other is ConditionValueDefinition val &&
                    this.Type.Equals(val.Type) &&
-                   object.Equals(this.Value, val.Value);
+                   this._comparer.Equals(this.Value, val.Value);
         }
 
         /// <inheritdoc />
@@ -77,6 +99,17 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
             return this.Type.GetHashCode() ^ (this.Value?.GetHashCode() ?? 0);
         }
 
+        /// <summary>
+        /// Builds the comparer.
+        /// </summary>
+        private static IEqualityComparer BuildComparer(Type type)
+        {
+            // OPTIMIZE : cache comparer by type
+            return (IEqualityComparer)(typeof(EqualityComparer<>).MakeGenericType(type)
+                                                                 .GetProperty(nameof(EqualityComparer<int>.Default), BindingFlags.Public | BindingFlags.Static)!
+                                                                 .GetValue(null))!;
+        }
+        
         #endregion
     }
 }

@@ -12,6 +12,7 @@
 		<PackageReference Include="Microsoft.Orleans.TestingHost"  />
 		<PackageReference Include="Moq"  />
 		<PackageReference Include="NFluent"  />
+		<PackageReference Include="System.ComponentModel.TypeConverter" />
 		<PackageReference Include="xunit"  />
 		<PackageReference Include="xunit.runner.visualstudio" >
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

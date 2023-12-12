@@ -144,4 +144,7 @@
   <data name="DoorNotFounded" xml:space="preserve">
     <value>Door information "{0}"has not be founded on different definition provider sources.</value>
   </data>
+  <data name="InvalidDefinitionErrorMessages" xml:space="preserve">
+    <value>[Definition: {0} - {1}] failed due to \n {2}.</value>
+  </data>
 </root>
