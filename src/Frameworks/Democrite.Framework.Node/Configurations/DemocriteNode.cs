@@ -51,7 +51,7 @@ namespace Democrite.Framework.Node.Configurations
                                            Action<IDemocriteNodeBuilder>? builder,
                                            ClusterBuilderTools? clusterBuilderTools = null)
         {
-            return Create(null, setupConfig, builder, clusterBuilderTools);
+            return Create((string[]?)null, setupConfig, builder, clusterBuilderTools);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Democrite.Framework.Node.Configurations
         public static DemocriteNode Create(Action<IDemocriteNodeBuilder>? builder = null,
                                            ClusterBuilderTools? clusterBuilderTools = null)
         {
-            return Create(null, null, builder, clusterBuilderTools);
+            return Create((string[]?)null, null, builder, clusterBuilderTools);
         }
 
         /// <summary>
@@ -75,6 +75,29 @@ namespace Democrite.Framework.Node.Configurations
                                            Action<IDemocriteNodeBuilder>? builder,
                                            ClusterBuilderTools? clusterBuilderTools = null)
         {
+            var host = CreateAndConfigureHost(args, setupConfig);
+
+            Create(host, setupConfig, builder, clusterBuilderTools);
+
+            var buildedHost = host.Build();
+
+            return new DemocriteNode(buildedHost,
+                                     buildedHost.Services.GetRequiredService<DemocriteNodeConfigurationDefinition>(),
+                                     buildedHost.Services.GetRequiredService<IDemocriteExecutionHandler>());
+        }
+
+        /// <summary>
+        /// Create and setup a new democrite cluster node
+        /// </summary>
+        /// <remarks>
+        ///     Code on section node part ClusterClient.Create is very similar.
+        ///     Couldn't factorize for know due method like UseOrleans that are extension method.
+        /// </remarks>
+        internal static void Create(IHostBuilder host,
+                                    Action<HostBuilderContext, IConfigurationBuilder>? setupConfig,
+                                    Action<IDemocriteNodeBuilder>? builder,
+                                    ClusterBuilderTools? clusterBuilderTools = null)
+        {
             if (builder is null)
             {
                 builder = cfg => cfg.WizardConfig()
@@ -82,10 +105,6 @@ namespace Democrite.Framework.Node.Configurations
             }
 
             clusterBuilderTools ??= ClusterBuilderTools.Default;
-
-            var host = CreateAndConfigureHost(args, setupConfig);
-
-            DemocriteNodeConfigurationDefinition? configDef = null;
 
             host.UseOrleans((ctx, orleanBuilder) =>
             {
@@ -95,14 +114,10 @@ namespace Democrite.Framework.Node.Configurations
                                                        clusterBuilderTools);
                 builder?.Invoke(cfgHost);
 
-                configDef = cfgHost.Build(ctx);
+                var democriteNodeConfigurationDefinition = cfgHost.Build(ctx);
+
+                orleanBuilder.Services.AddSingleton(democriteNodeConfigurationDefinition);
             });
-
-            var buildedHost = host.Build();
-
-            return new DemocriteNode(buildedHost,
-                                     configDef,
-                                     buildedHost.Services.GetService<IDemocriteExecutionHandler>());
         }
 
         #endregion

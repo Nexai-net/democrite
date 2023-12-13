@@ -10,7 +10,7 @@ namespace Democrite.Framework.Node.Configurations
     /// <summary>
     /// Extensions method about node configuration
     /// </summary>
-    public static class IClusterNodeBuilderDemocriteWizardExtensions
+    public static class DemocriteNodeBuilderWizardExtensions
     {
         /// <summary>
         /// Adds the diagnostic options.
