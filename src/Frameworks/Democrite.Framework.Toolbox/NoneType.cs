@@ -11,7 +11,7 @@ namespace Democrite.Framework.Toolbox
     /// </summary>
     [Serializable]
     [ImmutableObject(true)]
-    public sealed class NoneType
+    public sealed class NoneType : IEquatable<NoneType>
     {
         #region Ctor
 
@@ -55,6 +55,24 @@ namespace Democrite.Framework.Toolbox
         public static bool IsEqualTo<TType>()
         {
             return typeof(TType) == Trait;
+        }
+
+        /// <inheritdoc />
+        public bool Equals(NoneType? other)
+        {
+            return other is not null;
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            return obj is NoneType;
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return 42;
         }
 
         #endregion

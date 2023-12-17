@@ -17,7 +17,7 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         /// <summary>
         /// The property name used to defined the auto configuration type 
         /// </summary>
-        public const string AutoConfigKey = "AutoConfig";
+        public const string AutoConfigKey = "AutoKey";
 
         /// <summary>
         /// The property name used to defined the connection String
@@ -40,43 +40,23 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         public const string ExtensionSection = Root + SectionSeparator + "Extensions";
 
         /// <summary>
-        /// The root section in change to configured the storages memberships, vgrain states, reminder, timers ...
+        /// The section configuring the cluster meeting point db
         /// </summary>
-        public const string NodeStorages = Root + SectionSeparator + "Storages";
+        public const string ClusterMembership = Root + SectionSeparator + "Cluster";
 
         /// <summary>
-        /// The section configuring the membership tables storages
+        /// The section configuring thhe cluster meeting point db auto config key
         /// </summary>
-        public const string NodeStorageMembership = NodeStorages + SectionSeparator + "Memberships";
+        public const string ClusterMembershipAutoConfigKey = ClusterMembership + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.AutoConfigKey;
 
         /// <summary>
-        /// The section configuring the vgrain state memory
+        /// The section configuring thhe cluster meeting point db connection string
         /// </summary>
-        public const string NodeVGrainStateMemoryMembership = NodeStorages + SectionSeparator + "VGrainStates";
+        public const string ClusterMembershipConnectionStringKey = ClusterMembership + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.ConnectionString;
 
         /// <summary>
-        /// The section configuring the vgrain state memory
+        /// The endpoints section name configuration
         /// </summary>
-        public const string NodeVGrainStateMemoryMembershipAutoConfigKey = NodeVGrainStateMemoryMembership + SectionSeparator + AutoConfigKey;
-
-        /// <summary>
-        /// The section configuring the vgrain state memory
-        /// </summary>
-        public const string NodeReminderStateMemoryMembership = NodeStorages + SectionSeparator + "ReminderStates";
-
-        /// <summary>
-        /// The section configuring the vgrain state memory
-        /// </summary>
-        public const string NodeReminderStateMemoryMembershipAutoConfigKey = NodeReminderStateMemoryMembership + SectionSeparator + AutoConfigKey;
-
-        /// <summary>
-        /// The section configuring the membership tables storages
-        /// </summary>
-        public const string NodeStorageMembershipAutoConfigKey = NodeStorageMembership + SectionSeparator + AutoConfigKey;
-
-        /// <summary>
-        /// The section configuring the membership tables storages
-        /// </summary>
-        public const string NodeStorageMembershipConnectionStringKey = NodeStorageMembership + SectionSeparator + ConnectionString;
+        public const string Endpoints = Root + SectionSeparator + "Endpoint";
     }
 }

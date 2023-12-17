@@ -4,8 +4,8 @@
 
 namespace Democrite.Framework.Node.Configurations.AutoConfigurator
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
+    using Democrite.Framework.Node.Abstractions.Configurations.Builders;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -14,16 +14,26 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     using System;
 
     /// <summary>
-    /// Configurator in charge to setup the default services
+    /// Auto configure - In AppDomain Memory - custom state memory
     /// </summary>
-    /// <seealso cref="IMembershipsAutoConfigurator" />
-    public sealed class AutoDefaultNodeConfigurator : IMembershipsAutoConfigurator
+    /// <seealso cref="INodeCustomMemoryAutoConfigurator" />
+    public sealed class AutoDefaultCustomMemoryConfigurator : INodeCustomMemoryAutoConfigurator
     {
         /// <inheritdoc />
-        public void AutoConfigure(IDemocriteClusterBuilder democriteBuilderWizard,
+        public void AutoConfigure(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
                                   IConfiguration configuration,
-                                  IServiceCollection serviceDescriptors,
+                                  IServiceCollection serviceCollection,
                                   ILogger logger)
+        {
+            throw new NotSupportedException("Call AutoConfigureCustomStorage to pass key");
+        }
+
+        /// <inheritdoc />
+        public void AutoConfigureCustomStorage(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
+                                               IConfiguration configuration,
+                                               IServiceCollection serviceCollection,
+                                               ILogger logger,
+                                               string key)
         {
             ArgumentNullException.ThrowIfNull(democriteBuilderWizard);
 
@@ -36,7 +46,7 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
             if (democriteBuilderWizard.IsClient || siloBuilder == null)
                 throw new InvalidOperationException("The auto configurator must only be used by Node/Server side");
 
-            siloBuilder.UseLocalhostClustering();
+            siloBuilder.AddMemoryGrainStorage(key);
         }
     }
 }

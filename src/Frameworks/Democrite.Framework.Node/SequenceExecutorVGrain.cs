@@ -10,8 +10,10 @@ namespace Democrite.Framework.Node
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions;
+    using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.Models;
     using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
 
@@ -30,9 +32,8 @@ namespace Democrite.Framework.Node
     /// </summary>
     /// <seealso cref="ISequenceExecutorVGrain" />
     [Guid("5F886D59-E817-4970-A108-F34A38B87B45")]
-
     [DemocriteSystemVGrain]
-    public sealed class SequenceExecutorVGrain : VGrainBase<SequenceExecutorState, ISequenceExecutorVGrain>, ISequenceExecutorVGrain
+    internal sealed class SequenceExecutorVGrain : VGrainBase<SequenceExecutorState, SequenceExecutorStateSurrogate, SequenceExecutorStateConverter, ISequenceExecutorVGrain>, ISequenceExecutorVGrain
     {
         #region Fields
 
@@ -41,6 +42,7 @@ namespace Democrite.Framework.Node
         private readonly IDiagnosticLogger _diagnosticLogger;
         private readonly ILoggerProvider _loggerProvider;
         private readonly IVGrainProvider _vgrainProvider;
+        private readonly ITimeManager _timeManager;
 
         #endregion
 
@@ -50,12 +52,13 @@ namespace Democrite.Framework.Node
         /// Initializes a new instance of the <see cref="SequenceVGrain"/> class.
         /// </summary>
         public SequenceExecutorVGrain(ILogger<SequenceExecutorVGrain> logger,
-                                     ILoggerProvider loggerProvider,
-                                     IDiagnosticLogger diagnosticLogger,
-                                     ISequenceDefinitionProvider sequenceDefinitionManager,
-                                     IVGrainProvider vgrainProvider,
-                                     [PersistentState(nameof(SequenceExecutorVGrain), nameof(Democrite))] IPersistentState<SequenceExecutorState> sequenceExecutorState,
-                                     IEnumerable<ISequenceExecutorThreadStageProvider>? stageProviders = null)
+                                      ILoggerProvider loggerProvider,
+                                      IDiagnosticLogger diagnosticLogger,
+                                      ISequenceDefinitionProvider sequenceDefinitionManager,
+                                      IVGrainProvider vgrainProvider,
+                                      [PersistentState("SequenceExecutor", nameof(Democrite))] IPersistentState<SequenceExecutorStateSurrogate> sequenceExecutorState,
+                                      ITimeManager timeManager,
+                                      IEnumerable<ISequenceExecutorThreadStageProvider>? stageProviders = null)
             : base(logger, sequenceExecutorState)
         {
             this._loggerProvider = loggerProvider;
@@ -63,6 +66,7 @@ namespace Democrite.Framework.Node
             this._diagnosticLogger = diagnosticLogger;
             this._vgrainProvider = vgrainProvider;
             this._stageProviders = stageProviders?.ToReadOnly() ?? EnumerableHelper<ISequenceExecutorThreadStageProvider>.ReadOnlyArray;
+            this._timeManager = timeManager;
         }
 
         #endregion
@@ -85,7 +89,9 @@ namespace Democrite.Framework.Node
 
             if (state == null || state.SequenceDefinitionId == Guid.Empty)
             {
-                var newState = new SequenceExecutorState(executionContext.Configuration, executionContext.FlowUID);
+                var newState = new SequenceExecutorState(executionContext.Configuration,
+                                                         executionContext.FlowUID,
+                                                         this._timeManager.UtcNow);
                 await base.PushStateAsync(newState, default);
 
                 state = base.State ?? newState;

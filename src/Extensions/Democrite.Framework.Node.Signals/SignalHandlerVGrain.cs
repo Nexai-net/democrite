@@ -43,10 +43,10 @@ namespace Democrite.Framework.Node.Signals
         /// Initializes a new instance of the <see cref="SignalHandlerVGrain"/> class.
         /// </summary>
         public SignalHandlerVGrain(ILogger<SignalHandlerVGrain> logger,
-                                 [PersistentState(nameof(SignalMessage), nameof(Democrite))] IPersistentState<SignalHandlerStateSurrogate> persistentState,
-                                 ISignalDefinitionProvider signalDefinitionProvider,
-                                 IGrainFactory grainFactory,
-                                 ITimeManager timeManager)
+                                   [PersistentState("Signals", nameof(Democrite))] IPersistentState<SignalHandlerStateSurrogate> persistentState,
+                                   ISignalDefinitionProvider signalDefinitionProvider,
+                                   IGrainFactory grainFactory,
+                                   ITimeManager timeManager)
             : base(logger, persistentState, grainFactory)
         {
             this._timeManager = timeManager;

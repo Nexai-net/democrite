@@ -11,6 +11,7 @@ namespace Democrite.Framework.Node.Configurations
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
@@ -27,6 +28,7 @@ namespace Democrite.Framework.Node.Configurations
     using Democrite.Framework.Node.ArtifactResources;
     using Democrite.Framework.Node.ArtifactResources.ExecCodePreparationSteps;
     using Democrite.Framework.Node.Components;
+    using Democrite.Framework.Node.Extensions;
     using Democrite.Framework.Node.Inputs;
     using Democrite.Framework.Node.Models;
     using Democrite.Framework.Node.Services;
@@ -41,6 +43,7 @@ namespace Democrite.Framework.Node.Configurations
     using Microsoft.Extensions.Logging;
 
     using Orleans.Hosting;
+    using Orleans.Providers;
     using Orleans.Runtime;
     using Orleans.Serialization.Configuration;
     using Orleans.Storage;
@@ -71,7 +74,6 @@ namespace Democrite.Framework.Node.Configurations
         private readonly InMemoryArtifactResourceProviderSource _artefactInMemoryProviderSource;
         private readonly InMemorySignalDefinitionProviderSource _signalDefinitionProviderSource;
         private readonly InMemorySequenceDefinitionProvider _inMemorySequenceDefinition;
-        private readonly InMemoryLogger _globalBuildLogger;
         private readonly INetworkInspector _networkInspector;
         private readonly ISiloBuilder _orleanSiloBuilder;
 
@@ -104,8 +106,6 @@ namespace Democrite.Framework.Node.Configurations
             this._networkInspector = clusterBuilderTools.NetworkInspector;
 
             this._orleanSiloBuilder = siloBuilder;
-
-            this._globalBuildLogger = new InMemoryLogger(new LoggerFilterOptions() { MinLevel = LogLevel.Trace }.ToMonitorOption());
         }
 
         #endregion
@@ -182,6 +182,24 @@ namespace Democrite.Framework.Node.Configurations
         {
             ArgumentNullException.ThrowIfNull(config);
             config(this);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IDemocriteNodeWizard SetupNodeMemories(string defaultAutokey, Action<IDemocriteNodeMemoryBuilder>? memoryBuilder = null)
+        {
+            if (memoryBuilder != null)
+                SetupNodeMemories(memoryBuilder);
+
+            var configSection = this.Configuration.GetSection(ConfigurationNodeSectionNames.NodeMemoryDefaultAutoConfigKey);
+
+            if (!configSection.Exists())
+            {
+                ArgumentNullException.ThrowIfNullOrEmpty(defaultAutokey);
+
+                configSection.Value = defaultAutokey;   
+            }
+
             return this;
         }
 
@@ -396,10 +414,52 @@ namespace Democrite.Framework.Node.Configurations
         /// <inheritdoc />
         protected override void OnAutoConfigure(IConfiguration configuration, IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies, ILogger logger)
         {
-            AutoConfigVGrainStateMemory(configuration, indexedAssemblies, logger);
-            AutoConfigReminderStateMemory(configuration, indexedAssemblies, logger);
+            var defaultMemoryAutoKey = configuration.GetSection(ConfigurationNodeSectionNames.NodeMemoryDefaultAutoConfigKey).Get<string>();
+
+            AutoConfigImpl<INodeDemocriteMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                              indexedAssemblies,
+                                                                                              s => s.GetServiceByKey<string, IGrainStorage>(nameof(Democrite)) != null,
+                                                                                              ConfigurationNodeSectionNames.NodeDemocriteSystemMemoryAutoConfigKey,
+                                                                                              logger,
+                                                                                              defaultAutoKey: defaultMemoryAutoKey);
+
+            AutoConfigImpl<INodeReminderStateMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                                  indexedAssemblies,
+                                                                                                  s => s.Any(d => (d.ServiceType == typeof(IReminderTable))),
+                                                                                                  ConfigurationNodeSectionNames.NodeReminderStateMemoryAutoConfigKey,
+                                                                                                  logger,
+                                                                                                  defaultAutoKey: defaultMemoryAutoKey);
 
             base.OnAutoConfigure(configuration, indexedAssemblies, logger);
+
+            var sectionCustomMemory = configuration.GetSection(ConfigurationNodeSectionNames.NodeCustomMemory);
+
+            if (sectionCustomMemory != null && sectionCustomMemory.Exists())
+            {
+                foreach (var child in sectionCustomMemory.GetChildren())
+                {
+                    AutoConfigImpl<INodeCustomMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                                   indexedAssemblies,
+                                                                                                   s => s.GetServiceByKey<string, IGrainStorage>(child.Key) != null,
+                                                                                                   
+                                                                                                   ConfigurationNodeSectionNames.NodeCustomMemory + 
+                                                                                                   ConfigurationSectionNames.SectionSeparator + 
+                                                                                                   child.Key + 
+                                                                                                   ConfigurationSectionNames.SectionSeparator + 
+                                                                                                   ConfigurationSectionNames.AutoConfigKey,
+
+                                                                                                   logger,
+                                                                                                   (c, wizard, cfg, service, logger) => c.AutoConfigureCustomStorage(wizard, cfg, service, logger, child.Key),
+                                                                                                   defaultAutoKey: defaultMemoryAutoKey);
+                }
+            }
+
+            AutoConfigImpl<INodeDefaultMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                            indexedAssemblies,
+                                                                                            s => s.GetServiceByKey<string, IGrainStorage>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME) != null,
+                                                                                            ConfigurationNodeSectionNames.NodeDefaultMemoryAutoConfigKey,
+                                                                                            logger,
+                                                                                            defaultAutoKey: defaultMemoryAutoKey);
         }
 
         /// <inheritdoc />
@@ -443,35 +503,10 @@ namespace Democrite.Framework.Node.Configurations
         /// <inheritdoc />
         protected sealed override void OnFinalizeManualBuildConfigure(ILogger logger)
         {
-            AddOptionFromInstOrConfig(this._orleanSiloBuilder.Services,
-                                      ConfigurationNodeSectionNames.Diagnostics,
-                                      ClusterNodeDiagnosticOptions.Default,
-                                      false);
-
-            var endpoint = AddOptionFromInstOrConfig(this._orleanSiloBuilder.Services,
-                                                     ConfigurationNodeSectionNames.Endpoints,
-                                                     ClusterNodeEndPointOptions.Default,
-                                                     false);
-
-            if (endpoint != null)
-            {
-                var bindAddr = IPAddress.Loopback;
-
-                if (!endpoint.Loopback)
-                {
-                    var ips = this._networkInspector.GetHostAddresses(this._networkInspector.GetHostName()); // Dns.GetHostAddresses(Dns.GetHostName());
-                    bindAddr = ips.First();
-                }
-
-                logger.LogInformation("Bind ip {bindAddr}", bindAddr);
-
-                this._orleanSiloBuilder.ConfigureEndpoints(bindAddr,
-                                                           endpoint.SiloPort == 0
-                                                                ? this._networkInspector.GetNextUnusedPort(5000, 65536) //NetworkHelper.GetNextUnusedPort(5000, 65536)
-                                                                : (int)endpoint.SiloPort,
-                                                           endpoint.GatewayPort ?? 0,
-                                                           listenOnAnyHostAddress: endpoint.Loopback == false);
-            }
+            this._orleanSiloBuilder.Services.AddOptionFromInstOrConfig(this.Configuration,
+                                                                       ConfigurationNodeSectionNames.Diagnostics,
+                                                                       ClusterNodeDiagnosticOptions.Default,
+                                                                       false);
 
             base.OnFinalizeManualBuildConfigure(logger);
         }
@@ -479,7 +514,7 @@ namespace Democrite.Framework.Node.Configurations
         /// <inheritdoc />
         protected sealed override DemocriteNodeConfigurationDefinition OnBuild(ILogger logger)
         {
-            var logs = this._globalBuildLogger.GetLogsCopy();
+            var logs = this.MemoryLogger.GetLogsCopy();
 
             foreach (var log in logs)
                 logger.Log(log.LogLevel, log.Message);
@@ -493,34 +528,6 @@ namespace Democrite.Framework.Node.Configurations
         protected override IDemocriteNodeWizard GetWizard()
         {
             return this;
-        }
-
-        /// <summary>
-        /// Automatics the configuration vgrain state memory.
-        /// </summary>
-        private void AutoConfigVGrainStateMemory(IConfiguration configuration,
-                                               IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
-                                               ILogger logger)
-        {
-            AutoConfigImpl<INodeVGrainStateMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
-                                                                                               indexedAssemblies,
-                                                                                               s => s.Any(d => (d.ServiceType == typeof(IGrainStorage))),
-                                                                                               ConfigurationSectionNames.NodeVGrainStateMemoryMembershipAutoConfigKey,
-                                                                                               logger);
-        }
-
-        /// <summary>
-        /// Automatics the configuration reminder state memory.
-        /// </summary>
-        private void AutoConfigReminderStateMemory(IConfiguration configuration,
-                                       IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
-                                       ILogger logger)
-        {
-            AutoConfigImpl<INodeReminderStateMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
-                                                                                                  indexedAssemblies,
-                                                                                                  s => s.Any(d => (d.ServiceType == typeof(IReminderTable))),
-                                                                                                  ConfigurationSectionNames.NodeReminderStateMemoryMembershipAutoConfigKey,
-                                                                                                  logger);
         }
 
         /// <summary>
@@ -543,9 +550,9 @@ namespace Democrite.Framework.Node.Configurations
         /// </summary>
         private RelayLogger CreateBuilderLogger(string category)
         {
-            return new RelayLogger(this._globalBuildLogger, category, true);
+            return new RelayLogger(this.MemoryLogger, category, true);
         }
-        
+
         #endregion
 
         #endregion

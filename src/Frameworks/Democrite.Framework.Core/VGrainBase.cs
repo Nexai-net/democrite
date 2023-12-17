@@ -384,14 +384,23 @@ namespace Democrite.Framework.Core
 
         #region Methods
 
-        /// <summary>
-        /// Called on <see cref="VGrainBase" /> setup.
-        /// </summary>
+        /// <inheritdoc />
         protected sealed override async Task OnActivationSetupState(CancellationToken ct)
         {
             await PullStateAsync(ct);
 
             await (OnActivationSetupState(this.State, ct) ?? Task.CompletedTask);
+        }
+
+        /// <inheritdoc />
+        public sealed async override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
+        {
+            if (this._state != null)
+                await PushStateAsync(cancellationToken);
+
+            await base.OnDeactivateAsync(reason, cancellationToken);
+
+            await(OnDeactivateAsync(this._state, reason, cancellationToken) ?? Task.CompletedTask);
         }
 
         /// <summary>
@@ -407,6 +416,17 @@ namespace Democrite.Framework.Core
 
             this._state = this._persistentState.State;
             await OnStateRefreshedAsync(this._state);
+        }
+        
+        /// <summary>
+        /// Push <paramref name="newState"/> to storage
+        /// </summary>
+        protected Task PushStateAsync(CancellationToken ct)
+        {
+            if (this._state is null)
+                return Task.CompletedTask;
+
+            return PushStateAsync(this._state, ct);
         }
 
         /// <summary>
@@ -426,6 +446,15 @@ namespace Democrite.Framework.Core
         /// Called on <see cref="VGrainBase" /> setup.
         /// </summary>
         protected virtual Task OnActivationSetupState(TVGrainState? state, CancellationToken ct)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        ///  Call after push state on desactivation
+        /// </summary>
+        /// <inheritdoc cref="OnDeactivateAsync(DeactivationReason, CancellationToken)" />
+        protected virtual Task OnDeactivateAsync(TVGrainState? state, DeactivationReason reason, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

@@ -6,7 +6,7 @@ namespace Democrite.Framework.Node.Abstractions
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
 
-    public interface ISequenceExecutorThreadStageProvider
+    internal interface ISequenceExecutorThreadStageProvider
     {
         /// <summary>
         /// Determines whether this instance can handler the specified stage.

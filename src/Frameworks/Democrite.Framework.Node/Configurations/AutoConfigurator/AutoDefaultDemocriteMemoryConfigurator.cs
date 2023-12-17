@@ -16,8 +16,8 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     /// <summary>
     /// Auto configure - In AppDomain Memory - the vgrain state
     /// </summary>
-    /// <seealso cref="INodeVGrainStateMemoryAutoConfigurator" />
-    public sealed class AutoDefaultVGrainStateMemoryConfigurator : INodeVGrainStateMemoryAutoConfigurator
+    /// <seealso cref="INodeDemocriteMemoryAutoConfigurator" />
+    public sealed class AutoDefaultDemocriteMemoryConfigurator : INodeDemocriteMemoryAutoConfigurator
     {
         /// <inheritdoc />
         public void AutoConfigure(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
@@ -37,7 +37,6 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
                 throw new InvalidOperationException("The auto configurator must only be used by Node/Server side");
 
             siloBuilder.AddMemoryGrainStorage(nameof(Democrite));
-            siloBuilder.AddMemoryGrainStorageAsDefault();
         }
     }
 }

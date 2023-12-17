@@ -14,7 +14,7 @@ namespace Democrite.Framework.Node.Abstractions
     /// <summary>
     /// Handler used to manipulate thread information. Use by <see cref="ISequenceExecutorThreadStageHandler"/> to do advanced thread execution
     /// </summary>
-    public interface ISequenceExecutorThreadHandler
+    internal interface ISequenceExecutorThreadHandler
     {
         /// <summary>
         /// Gets a value indicating whether if all inner threads job are done.

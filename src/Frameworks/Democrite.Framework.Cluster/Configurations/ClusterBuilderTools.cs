@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Cluster.Configurations
 {
+    using Democrite.Framework.Cluster.Abstractions.Configurations;
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Services;
     using Democrite.Framework.Toolbox.Abstractions.Services;
@@ -12,7 +13,7 @@ namespace Democrite.Framework.Cluster.Configurations
     /// <summary>
     /// Container about some services used during the cluster build process (node/client)
     /// </summary>
-    public class ClusterBuilderTools
+    public sealed class ClusterBuilderTools : IClusterBuilderTools
     {
         #region Ctor
 

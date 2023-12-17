@@ -20,16 +20,16 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations.Builders
         /// <summary>
         /// Adds cluster rendez point connection string.
         /// </summary>
-        TBuilder AddConnectionString(string connectionString);
+        TBuilder ConnectionString(string connectionString);
 
         /// <summary>
         /// Adds cluster rendez point connection string.
         /// </summary>
-        TBuilder AddConnectionString(Func<IConfiguration, string> connectionStringFunc);
+        TBuilder ConnectionString(Func<IConfiguration, string> connectionStringFunc);
 
         /// <summary>
         /// Add and fill cluster rendez point option
         /// </summary>
-        TBuilder AddOption(Action<TOption, IConfiguration> optionBuilder);
+        TBuilder ManualConfig(Action<TOption, IConfiguration> optionBuilder);
     }
 }

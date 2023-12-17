@@ -2,6 +2,7 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
+// Keep : Democrite.Framework.Node.Configurations; to easy configuration use
 namespace Democrite.Framework.Node.Configurations
 {
     using Democrite.Framework.Node.Abstractions.Configurations;

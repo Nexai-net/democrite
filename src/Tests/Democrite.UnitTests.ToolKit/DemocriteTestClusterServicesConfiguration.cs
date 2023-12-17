@@ -9,6 +9,8 @@ namespace Democrite.UnitTests.ToolKit
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Services;
     using Democrite.Framework.Node.Services;
+    using Democrite.Framework.Toolbox.Abstractions.Services;
+    using Democrite.Framework.Toolbox.Services;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +18,7 @@ namespace Democrite.UnitTests.ToolKit
 
     using Orleans.Hosting;
     using Orleans.TestingHost;
+    using Orleans.Timers.Internal;
 
     /// <summary>
     /// Service configuration use to 
@@ -53,7 +56,8 @@ namespace Democrite.UnitTests.ToolKit
         {
             services.AddSingleton<IVGrainProvider, VGrainProvider>()
                     .AddSingleton<IDiagnosticLogger, Democrite.Framework.Core.Diagnostics.DiagnosticLogger>()
-                    .AddSingleton<IVGrainIdFactory, VGrainIdFactory>();
+                    .AddSingleton<IVGrainIdFactory, VGrainIdFactory>()
+                    .AddSingleton<ITimeManager, TimeManager>();
         }
 
         #endregion

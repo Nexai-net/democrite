@@ -95,66 +95,6 @@ namespace Democrite.Framework.Client.Configurations
         }
 
         /// <inheritdoc />
-        protected override void OnFinalizeManualBuildConfigure(ILogger logger)
-        {
-            var clusters = AddOptionFromInstOrConfig(this._orleanClientBuilder.Services,
-                                                     ConfigurationClientSectionNames.Cluster,
-                                                     ClusterClientOptions.Default,
-                                                     false);
-
-            if (clusters != null)
-            {
-                var endPoints = SolvedEndpoints(clusters.Endpoints, logger);
-                if (endPoints.Any())
-                {
-                    this._orleanClientBuilder.UseStaticClustering(endPoints.Distinct()
-                                                                           .ToArray());
-                }
-            }
-
-            base.OnFinalizeManualBuildConfigure(logger);
-        }
-
-        /// <summary>
-        /// Try solve endpoints dns host to provide only IP:PORT from HOST:IP
-        /// </summary>
-        private List<IPEndPoint> SolvedEndpoints(IReadOnlyCollection<string> endpoints, ILogger logger)
-        {
-            var endPointsError = new List<string>();
-            var endPoints = new List<IPEndPoint>();
-
-            foreach (var endpoint in (endpoints ?? EnumerableHelper<string>.ReadOnly))
-            {
-                try
-                {
-                    var solved = this._networkInspector.SolveHostAddresse(endpoint);
-                    foreach (var s in solved)
-                    {
-                        try
-                        {
-                            var ipEndpoint = IPEndPoint.Parse(s);
-                            if (ipEndpoint != null)
-                                endPoints.Add(ipEndpoint);
-                        }
-                        catch (Exception parseEx)
-                        {
-                            endPointsError.Add("IPEndpoint " + endpoint + " Parse (" + s + ") - " + parseEx.Message);
-                        }
-                    }
-                }
-                catch (Exception solvingEx)
-                {
-                    endPointsError.Add("IPEndpoint " + endpoint + " - " + solvingEx.Message);
-                }
-            }
-
-            foreach (var error in endPointsError)
-                logger.LogError(error);
-
-            return endPoints;
-        }
-
-        /// <inheritdoc />
         protected override DemocriteClientConfigurationDefinition OnBuild(ILogger _)
         {
             return new DemocriteClientConfigurationDefinition();

@@ -30,7 +30,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
     /// </summary>
     /// <seealso cref="ISequenceExecutorThreadStageProvider" />
     /// <seealso cref="ISequenceExecutorThreadStageHandler" />
-    public sealed class SequenceExecutorCallThreadStageProvider : SafeDisposable, ISequenceExecutorThreadStageProvider, ISequenceExecutorThreadStageHandler
+    internal sealed class SequenceExecutorCallThreadStageProvider : SafeDisposable, ISequenceExecutorThreadStageProvider, ISequenceExecutorThreadStageHandler
     {
         #region Fields
 

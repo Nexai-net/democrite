@@ -9,9 +9,8 @@ using Democrite.Framework.Node.Configurations.AutoConfigurator;
 
 [assembly: AutoConfiguratorKey("Default")]
 
-[assembly: AutoConfigurator<IMembershipsAutoConfigurator, AutoDefaultNodeConfigurator>()]
-[assembly: AutoConfigurator<INodeVGrainStateMemoryAutoConfigurator, AutoDefaultVGrainStateMemoryConfigurator>()]
+[assembly: AutoConfigurator<IMembershipsAutoConfigurator, AutoDefaultMembershipsNodeConfigurator>()]
+[assembly: AutoConfigurator<IClusterEndpointAutoConfigurator, AutoDefaultNodeEndpointAutoConfigurator>()]
+[assembly: AutoConfigurator<INodeDemocriteMemoryAutoConfigurator, AutoDefaultDemocriteMemoryConfigurator>()]
 [assembly: AutoConfigurator<INodeReminderStateMemoryAutoConfigurator, AutoDefaultReminderStateMemoryAutoConfigurator>()]
-
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Democrite.Framework.Node.UnitTests")]
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Democrite.UnitTests.ToolKit")]
+[assembly: AutoConfigurator<INodeCustomMemoryAutoConfigurator, AutoDefaultCustomMemoryConfigurator>()]

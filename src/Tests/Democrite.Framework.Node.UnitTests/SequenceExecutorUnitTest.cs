@@ -12,11 +12,13 @@ namespace Democrite.Framework.Node.UnitTests
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Models;
     using Democrite.Framework.Core.Services;
+    using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.Models;
     using Democrite.Framework.Node.UnitTests.Extensions;
     using Democrite.Framework.Toolbox;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
+    using Democrite.Framework.Toolbox.Services;
     using Democrite.Test.Interfaces;
     using Democrite.Test.VGrains;
     using Democrite.UnitTests.ToolKit;
@@ -43,8 +45,8 @@ namespace Democrite.Framework.Node.UnitTests
     {
         #region Fields
 
-        private const string EMAIL_A = "thumerel@elvexoft.com";
-        private const string EMAIL_B = "fortias@elvexoft.com";
+        private const string EMAIL_A = "mickael@nexai.net";
+        private const string EMAIL_B = "jerome@nexai.net";
         private const string EMAIL_SAMPLE_TEST = "An email have been send to " + EMAIL_A + " - " + EMAIL_B + " ---";
 
         private readonly ITestOutputHelper _testOutputHelper;
@@ -81,21 +83,30 @@ namespace Democrite.Framework.Node.UnitTests
             var sequenceProvider = new Mock<ISequenceDefinitionProvider>(MockBehavior.Strict);
             var vgrainProvider = new Mock<IVGrainProvider>(MockBehavior.Strict);
             var logProvider = new Mock<ILoggerProvider>(MockBehavior.Strict);
+            var timeManager = new TimeManager();
 
             var executionLog = new TestDiagnosticLogConsumer();
             var diagnosticLogger = new Core.Diagnostics.DiagnosticLogger(new[] { executionLog }, null);
 
             var execCtx = new ExecutionContextWithConfiguration<Guid>(Guid.NewGuid(), Guid.NewGuid(), null, def.Uid);
-            var ctxState = new SequenceExecutorState(execCtx.Configuration, execCtx.FlowUID, execCtx.CurrentExecutionId);
+            var ctxState = new SequenceExecutorStateSurrogate()
+            {
+                FlowUid = execCtx.FlowUID,
+                SequenceDefinitionId = execCtx.Configuration,
+                InstanceId = execCtx.CurrentExecutionId
+            };
 
-            var stateStack = new Stack<SequenceExecutorState>();
+            var stateStack = new Stack<SequenceExecutorStateSurrogate>();
 
             var ctx = new Mock<IGrainContext>(MockBehavior.Strict);
 
-            var persistentState = new Mock<IPersistentState<SequenceExecutorState>>(MockBehavior.Strict);
+            var persistentState = new Mock<IPersistentState<SequenceExecutorStateSurrogate>>(MockBehavior.Strict);
             persistentState.Setup(s => s.ReadStateAsync()).Returns(Task.CompletedTask);
 
             persistentState.SetupProperty(s => s.State, ctxState);
+
+            var etag = Guid.NewGuid().ToString().Replace("-", "");
+            persistentState.SetupGet(s => s.Etag).Returns(etag);
 
             persistentState.Setup(s => s.WriteStateAsync())
                            .Returns(() =>
@@ -120,11 +131,12 @@ namespace Democrite.Framework.Node.UnitTests
                          });
 
             var executor = new SequenceExecutorVGrain(rootLogger,
-                                                logProvider.Object,
-                                                diagnosticLogger,
-                                                sequenceProvider.Object,
-                                                vgrainProvider.Object,
-                                                persistentState.Object);
+                                                      logProvider.Object,
+                                                      diagnosticLogger,
+                                                      sequenceProvider.Object,
+                                                      vgrainProvider.Object,
+                                                      persistentState.Object,
+                                                      timeManager);
 
             var result = await executor.RunAsync<string[], string>(EMAIL_SAMPLE_TEST, execCtx);
 

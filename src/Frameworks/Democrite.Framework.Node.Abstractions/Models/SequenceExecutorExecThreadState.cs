@@ -21,41 +21,24 @@ namespace Democrite.Framework.Node.Abstractions.Models
     /// State used by <see cref="SequenceExecutor"/> to execute a state sequence
     /// </summary>
     [Serializable]
-    [GenerateSerializer]
-    public sealed class SequenceExecutorExecThreadState : SafeDisposable,
-                                                          ISupportDebugDisplayName,
-                                                          IEquatable<SequenceExecutorExecThreadState>,
-                                                          ISequenceExecutorExecThreadState
+    internal sealed class SequenceExecutorExecThreadState : SafeDisposable,
+                                                            ISupportDebugDisplayName,
+                                                            IEquatable<SequenceExecutorExecThreadState>,
+                                                            ISequenceExecutorExecThreadState
     {
         #region Fields
 
         private readonly ReaderWriterLockSlim _lock;
 
-        [Id(7)]
         private IReadOnlyCollection<SequenceExecutorExecThreadState> _innerThreads;
-
-        [Id(2)]
         private Guid _currentStageExecId;
-        
-        [Id(3)]
         private Guid? _parentStageExecId;
-
-        [Id(9)]
         private Exception? _exception;
-
-        [Id(8)]
         private string? _errorMessage;
-
-        [Id(6)]
         private object? _output;
-
-        [Id(4)]
         private Guid? _cursor;
-
-        [Id(10)]
         private bool _started;
-
-        [Id(11)]
+        private bool _done;
         private bool _running;
 
         #endregion
@@ -80,6 +63,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
                    null,
                    null,
                    null,
+                   false,
                    false)
         {
         }
@@ -89,16 +73,17 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// </summary>
         [Newtonsoft.Json.JsonConstructor]
         [System.Text.Json.Serialization.JsonConstructor]
-        private SequenceExecutorExecThreadState(Guid flowUid,
-                                                Guid flowDefinitionId,
-                                                Guid currentStageExecId,
-                                                Guid? parentStageExecId,
-                                                Guid? cursor,
-                                                object? threadInput,
-                                                object? output,
-                                                IEnumerable<SequenceExecutorExecThreadState>? innerThreads,
-                                                Exception? exception,
-                                                bool started)
+        internal SequenceExecutorExecThreadState(Guid flowUid,
+                                                 Guid flowDefinitionId,
+                                                 Guid currentStageExecId,
+                                                 Guid? parentStageExecId,
+                                                 Guid? cursor,
+                                                 object? threadInput,
+                                                 object? output,
+                                                 IEnumerable<SequenceExecutorExecThreadState>? innerThreads,
+                                                 Exception? exception,
+                                                 bool started,
+                                                 bool done)
         {
             this._lock = new ReaderWriterLockSlim();
 
@@ -110,6 +95,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
             this._output = output;
             this._exception = exception;
             this._started = started;
+            this._done = done;
 
             this._currentStageExecId = currentStageExecId;
             this._parentStageExecId = parentStageExecId;
@@ -122,11 +108,9 @@ namespace Democrite.Framework.Node.Abstractions.Models
         #region Properties
 
         /// <inheritdoc />
-        [Id(0)]
         public Guid FlowUid { get; }
 
         /// <inheritdoc />
-        [Id(1)]
         public Guid FlowDefinitionId { get; }
 
         /// <inheritdoc />
@@ -181,7 +165,6 @@ namespace Democrite.Framework.Node.Abstractions.Models
         }
 
         /// <inheritdoc />
-        [Id(5)]
         public object? ThreadInput { get; }
 
         /// <inheritdoc />
@@ -210,7 +193,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
                 this._lock.EnterReadLock();
                 try
                 {
-                    return (this._exception != null || this._cursor == null) && (this.InnerThreads.Count == 0 || this.InnerThreads.All(i => i.JobDone));
+                    return this._done || ((this._exception != null || this._cursor == null) && (this.InnerThreads.Count == 0 || this.InnerThreads.All(i => i.JobDone)));
                 }
                 finally
                 {
@@ -363,6 +346,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
             {
                 this._cursor = null;
                 this._output = output ?? NoneType.Instance;
+                this._done = true;
             }
             finally
             {
@@ -398,6 +382,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
 
                 this._errorMessage = message;
                 this._exception = exception;
+                this._done = true;
             }
             finally
             {

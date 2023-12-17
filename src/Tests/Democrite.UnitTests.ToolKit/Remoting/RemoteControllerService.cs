@@ -97,7 +97,7 @@ namespace Democrite.UnitTests.ToolKit.Remoting
             //e.Connection.MessageReceived += Connection_MessageReceived;
 
             //if (!e.Connection.IsConnected)
-            //    e.Connection.Start();
+            //    e.Connection.StartAt();
 
             Debug.WriteLine("Client connect on pipe " + this.Uid);
         }

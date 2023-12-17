@@ -28,7 +28,7 @@ namespace Democrite.Framework.Node.Models
     /// <summary>
     /// Execution thread used by <see cref="SequenceExecutorVGrain"/> to execute a flow step
     /// </summary>
-    public sealed class SequenceExecutorExecThread : SafeDisposable, ISequenceExecutorExecThread
+    internal sealed class SequenceExecutorExecThread : SafeDisposable, ISequenceExecutorExecThread
     {
         #region Fields
 
@@ -308,9 +308,9 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Builds the execution thread from state
         /// </summary>
-        public static Task<SequenceExecutorExecThread> BuildFromAsync(SequenceExecutorExecThreadState threadState,
-                                                                      Func<Guid, ValueTask<SequenceDefinition?>> getSequenceDef,
-                                                                      IReadOnlyCollection<ISequenceExecutorThreadStageProvider>? stageProviders)
+        internal static Task<SequenceExecutorExecThread> BuildFromAsync(SequenceExecutorExecThreadState threadState,
+                                                                        Func<Guid, ValueTask<SequenceDefinition?>> getSequenceDef,
+                                                                        IReadOnlyCollection<ISequenceExecutorThreadStageProvider>? stageProviders)
         {
             return BuildFromImplAsync(threadState, getSequenceDef, 0, stageProviders);
         }

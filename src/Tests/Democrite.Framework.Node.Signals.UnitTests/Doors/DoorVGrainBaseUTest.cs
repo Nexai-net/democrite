@@ -136,7 +136,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             await mockSignalService.Received(1)
                                    .SubscribeAsync(Arg.Any<SignalId>(), Arg.Any<ISignalReceiver>());
 
-            // Start signal testing
+            // StartAt signal testing
             var state = GetDoorState(door);
 
             var signalStatusCollection = state?.SignalStatus.Where(s => s.SignalId != def.Uid).ToArray();
@@ -241,7 +241,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             await mockSignalService.Received(1)
                                    .SubscribeAsync(Arg.Any<SignalId>(), Arg.Any<ISignalReceiver>());
 
-            // Start signal testing
+            // StartAt signal testing
             var state = GetDoorState(door);
 
             var signalStatusCollection = state?.SignalStatus.Where(s => s.SignalId != def.Uid).ToArray();

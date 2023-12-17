@@ -117,7 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="RequiredConfigurationMissing" xml:space="preserve">
+  <data name="InvalidFormatDemocriteCondigurationMessage" xml:space="preserve">
+    <value>[{0}] Configuration failed format issue : get '{1}' expected {2}.</value>
+  </data>
+  <data name="RequiredAutoConfigurationMissing" xml:space="preserve">
     <value>Missing configuration cover by the auto configurator type '{0}' or missing auto property value key '{1}'. (try setup the "Extensions" configuration)</value>
+  </data>
+  <data name="RequiredConfigurationMissing" xml:space="preserve">
+    <value>Missing configuration required configuration (from file or external). Path '{0}' -&gt; {1}</value>
   </data>
 </root>

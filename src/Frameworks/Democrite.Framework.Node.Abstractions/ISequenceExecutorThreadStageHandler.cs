@@ -17,7 +17,7 @@ namespace Democrite.Framework.Node.Abstractions
     /// <summary>
     /// Handler execution of the <see cref="ISequenceStageDefinition"/>
     /// </summary>
-    public interface ISequenceExecutorThreadStageHandler
+    internal interface ISequenceExecutorThreadStageHandler
     {
         /// <summary>
         /// Stage execution

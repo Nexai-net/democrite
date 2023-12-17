@@ -16,21 +16,6 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations.Builders
         #region Methods
 
         /// <summary>
-        /// Adds the cluster option to setup the communition info.
-        /// </summary>
-        IDemocriteClusterBuilder AddClusterOption<TOptions>(string configurationSection) where TOptions : class;
-
-        /// <summary>
-        /// Adds the cluster option to setup the communition info.
-        /// </summary>
-        IDemocriteClusterBuilder AddClusterOption<TOptions>(TOptions instances) where TOptions : class;
-
-        /// <summary>
-        /// Adds the cluster option to setup the communition info.
-        /// </summary>
-        IDemocriteClusterBuilder AddClusterOption<TOptions>(Action<TOptions> options) where TOptions : class;
-
-        /// <summary>
         /// [CLIENT] Adds the gateway list provider, used for the client to get vgrain list from cluster.
         /// </summary>
         IDemocriteClusterBuilder AddGatewayListProvider<TListProvider>() where TListProvider : class, IGatewayListProvider;

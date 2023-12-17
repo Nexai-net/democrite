@@ -94,7 +94,7 @@ namespace Democrite.Framework.Node
             {
                 try
                 {
-                    // Start external program
+                    // StartAt external program
                     // And ping health check that external could be contacted
                     await executor.StartAsync(executionContext, executionContext.CancellationToken);
 

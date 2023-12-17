@@ -31,7 +31,7 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// Initializes a new instance of the <see cref="DoorSignalVGrain"/> class.
         /// </summary>
         public DoorSignalVGrain(ILogger<IDoorSignalVGrain> logger,
-                                [PersistentState(nameof(SignalMessage), nameof(Democrite))] IPersistentState<SignalHandlerStateSurrogate> persistentState,
+                                [PersistentState("Signals", nameof(Democrite))] IPersistentState<SignalHandlerStateSurrogate> persistentState,
                                 IGrainFactory grainFactory)
             : base(logger, persistentState, grainFactory)
         {

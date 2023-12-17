@@ -8,11 +8,8 @@ namespace Democrite.Framework.Node.Abstractions
 
     using System;
     using System.Collections.Generic;
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public interface ISequenceExecutorExecThreadState
+    
+    internal interface ISequenceExecutorExecThreadState
     {
         /// <summary>
         /// Gets the flow identifier.

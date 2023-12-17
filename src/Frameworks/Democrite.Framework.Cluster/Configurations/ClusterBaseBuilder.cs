@@ -18,6 +18,7 @@ namespace Democrite.Framework.Cluster.Configurations
     using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
+    using Democrite.Framework.Toolbox.Loggers;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +27,9 @@ namespace Democrite.Framework.Cluster.Configurations
     using Microsoft.Extensions.Logging.Abstractions;
     using Microsoft.Extensions.Options;
 
+    using Orleans.Configuration;
     using Orleans.Messaging;
+    using Orleans.Runtime;
 
     using System.Diagnostics.CodeAnalysis;
 
@@ -78,6 +81,9 @@ namespace Democrite.Framework.Cluster.Configurations
             ArgumentNullException.ThrowIfNull(clusterBuilderTools.FileSystemHandler);
 
             this._host = host;
+
+            this.Tools = clusterBuilderTools;
+
             this._assemblyInspector = clusterBuilderTools.AssemblyInspector;
             this._fileSystemHandler = clusterBuilderTools.FileSystemHandler;
             this._assemblyLoader = clusterBuilderTools.AssemblyLoader;
@@ -90,6 +96,8 @@ namespace Democrite.Framework.Cluster.Configurations
 
             this._options = new Queue<Action<IServiceCollection>>();
             this._services = new Queue<ServiceDescriptor>();
+
+            this.MemoryLogger = new InMemoryLogger(new LoggerFilterOptions() { MinLevel = LogLevel.Trace }.ToMonitorOption());
         }
 
         #endregion
@@ -106,12 +114,30 @@ namespace Democrite.Framework.Cluster.Configurations
         public abstract object SourceOrleanBuilder { get; }
 
         /// <summary>
+        /// Gets the build tools.
+        /// </summary>
+        public IClusterBuilderTools Tools { get; }
+
+        /// <summary>
         /// Gets the configuration.
         /// </summary>
         protected IConfiguration Configuration
         {
             get { return this._context.Configuration; }
         }
+
+        /// <summary>
+        /// Gets the build logger.
+        /// </summary>
+        public ILogger Logger
+        {
+            get { return this.MemoryLogger; }
+        }
+
+        /// <summary>
+        /// Gets the build logger.
+        /// </summary>
+        protected InMemoryLogger MemoryLogger { get; }
 
         #endregion
 
@@ -159,8 +185,21 @@ namespace Democrite.Framework.Cluster.Configurations
         }
 
         /// <inheritdoc />
-        public TWizard ClusterFromConfig()
+        public TWizard SetupClusterFromConfig(string? configurationKey = null)
         {
+            var section = this._context.Configuration.GetSection(ConfigurationSectionNames.ClusterMembership);
+
+            if (section == null || section.Exists() == false)
+                throw new MissingRequiredDemocriteConfigurationException(ConfigurationSectionNames.ClusterMembership, "How to join the cluster. It need a data source to provide the information about other silo nodes");
+
+            var autoConfigSection = this._context.Configuration.GetSection(ConfigurationSectionNames.ClusterMembershipAutoConfigKey);
+
+            if (!autoConfigSection.Exists() && !string.IsNullOrEmpty(configurationKey))
+            {
+                // Force auto configuration value
+                autoConfigSection.Value = configurationKey;
+            }
+
             return GetWizard();
         }
 
@@ -202,7 +241,6 @@ namespace Democrite.Framework.Cluster.Configurations
             return GetConfigurationBuilder();
         }
 
-
         /// <inheritdoc />
         public TWizardConfig AddOptionMapping<TOptions>(string section)
             where TOptions : class
@@ -213,15 +251,14 @@ namespace Democrite.Framework.Cluster.Configurations
         }
 
         /// <inheritdoc />
-        public IDemocriteClusterBuilder AddClusterOption<TOptions>(TOptions instance) where TOptions : class
+        public void AddExtensionOption<TOptions>(TOptions instance) where TOptions : class
         {
             if (instance is not null)
             {
                 var services = GetServiceCollection();
                 services.AddSingleton<IOptions<TOptions>>(instance.ToOption());
+                services.AddSingleton<IOptionsMonitor<TOptions>>(instance.ToMonitorOption());
             }
-
-            return this;
         }
 
         /// <inheritdoc />
@@ -229,39 +266,55 @@ namespace Democrite.Framework.Cluster.Configurations
 
         #endregion
 
-        #region IClusterBuilderDemocriteClusterWizard
-
         /// <inheritdoc />
-        public IDemocriteClusterBuilder AddClusterOption<TOptions>(Action<TOptions> optionsCfg) where TOptions : class
+        public void AddExtensionOption<TOption>(Action<TOption> optionsCfg) where TOption : class
         {
-            AddOption<TOptions>(optionsCfg);
-            return this;
+            AddOption<TOption>(optionsCfg);
         }
 
         /// <inheritdoc />
-        public IDemocriteClusterBuilder AddClusterOption<TOptions>(string configurationSection) where TOptions : class
+        public TOption AddExtensionOption<TOption>(string configurationSection, TOption fallbackOption)
+            where TOption : class
         {
             var services = GetServiceCollection();
-            services.Configure<TOptions>(this._context.Configuration.GetSection(configurationSection));
-            return this;
+
+            var config = this._context.Configuration.GetSection(configurationSection);
+
+            if (config != null && config.Exists())
+            {
+                var opt = config.Get<TOption>();
+
+                if (opt != null)
+                {
+                    services.Configure<TOption>(config);
+                    return opt;
+                }
+            }
+
+            ArgumentNullException.ThrowIfNull(fallbackOption);
+            AddExtensionOption(fallbackOption);
+            return fallbackOption;
         }
 
         /// <inheritdoc />
-        public IDemocriteClusterBuilder AddGatewayListProvider<TListProvider>() where TListProvider : class, IGatewayListProvider
+        public IDemocriteClusterBuilder AddGatewayListProvider<TListProvider>()
+            where TListProvider : class, IGatewayListProvider
         {
             AddService<IGatewayListProvider, TListProvider>();
             return this;
         }
 
         /// <inheritdoc />
-        public IDemocriteClusterBuilder AddConfigurationValidator<TValidator>() where TValidator : class, IConfigurationValidator
+        public IDemocriteClusterBuilder AddConfigurationValidator<TValidator>()
+            where TValidator : class, IConfigurationValidator
         {
             AddService<IConfigurationValidator, TValidator>();
             return this;
         }
 
         /// <inheritdoc />
-        public IDemocriteClusterBuilder AddMembershipTable<TMembership>() where TMembership : class, IMembershipTable
+        public IDemocriteClusterBuilder AddMembershipTable<TMembership>()
+            where TMembership : class, IMembershipTable
         {
             AddService<IMembershipTable, TMembership>();
             return this;
@@ -270,7 +323,11 @@ namespace Democrite.Framework.Cluster.Configurations
         /// <inheritdoc />
         public abstract IServiceCollection GetServiceCollection();
 
-        #endregion
+        /// <inheritdoc />
+        public IConfiguration GetConfiguration()
+        {
+            return this.Configuration;
+        }
 
         #region IClusterOptionBuilder
 
@@ -381,9 +438,20 @@ namespace Democrite.Framework.Cluster.Configurations
                                                                                                         .ToDictionary(k => k.Key, v => v.Single().Implementation),
                                                              StringComparer.OrdinalIgnoreCase) ?? DictionaryHelper<string, IReadOnlyDictionary<Type, Type>>.ReadOnly;
 
-            AutoConfigMembershipTable(configuration, indexedAssemblies, logger);
-
             OnAutoConfigure(configuration, indexedAssemblies, logger);
+
+            AutoConfigImpl<IMembershipsAutoConfigurator, IDemocriteClusterBuilder>(configuration,
+                                                                                   indexedAssemblies,
+                                                                                   s => s.Any(d => (d.ServiceType == typeof(IMembershipTable) && d.ImplementationType != null) ||
+                                                                                                   (d.ServiceType == typeof(IGatewayListProvider) && d.ImplementationType != null)),
+                                                                                   ConfigurationSectionNames.ClusterMembershipAutoConfigKey,
+                                                                                   logger);
+
+            AutoConfigImpl<IClusterEndpointAutoConfigurator, IDemocriteClusterBuilder>(configuration,
+                                                                                       indexedAssemblies,
+                                                                                       s => s.Any(d => (d.ServiceType == typeof(EndpointOptions) && d.ImplementationType != null)),
+                                                                                       ConfigurationSectionNames.Endpoints,
+                                                                                       logger);
         }
 
         /// <summary>
@@ -394,41 +462,29 @@ namespace Democrite.Framework.Cluster.Configurations
         }
 
         /// <summary>
-        /// Automatics the configuration of membership table.
-        /// </summary>
-        protected virtual void AutoConfigMembershipTable(IConfiguration configuration,
-                                                         IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
-                                                         ILogger logger)
-        {
-            AutoConfigImpl<IMembershipsAutoConfigurator, IDemocriteClusterBuilder>(configuration,
-                                                                                                indexedAssemblies,
-                                                                                                s => s.Any(d => (d.ServiceType == typeof(IMembershipTable) && d.ImplementationType != null) ||
-                                                                                                                (d.ServiceType == typeof(IGatewayListProvider) && d.ImplementationType != null)),
-                                                                                                ConfigurationSectionNames.NodeStorageMembershipAutoConfigKey,
-                                                                                                logger);
-        }
-
-        /// <summary>
         /// Automatics the configuration
         /// </summary>
-        /// <exception cref="MissingRequiredConfigurationException">Raised when no auto configuration have been setup for specific key.</exception>
+        /// <exception cref="MissingRequiredDemocriteConfigurationException">Raised when no auto configuration have been setup for specific key.</exception>
         protected void AutoConfigImpl<TAutoConfig, TAutoWizard>(IConfiguration configuration,
                                                                 IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
                                                                 Func<IServiceCollection, bool> predicateConfigurationExist,
                                                                 string configKey,
-                                                                ILogger logger)
+                                                                ILogger logger,
+                                                                Action<TAutoConfig, TAutoWizard, IConfiguration, IServiceCollection, ILogger>? customConfig = null,
+                                                                string? defaultAutoKey = ConfigurationSectionNames.DefaultAutoConfigKey)
 
             where TAutoConfig : IAutoConfigurator<TAutoWizard>
             where TAutoWizard : IBuilderDemocriteBaseWizard
         {
             var serviceCollection = GetServiceCollection();
 
-            var first = serviceCollection.FirstOrDefault(d => d.ServiceType == typeof(IMembershipTable));
-
             if (predicateConfigurationExist(serviceCollection))
                 return;
 
             var autoConfigKey = configuration.GetValue<string?>(configKey);
+
+            if (string.IsNullOrEmpty(autoConfigKey))
+                autoConfigKey = defaultAutoKey;
 
             if (string.IsNullOrEmpty(autoConfigKey))
                 autoConfigKey = ConfigurationSectionNames.DefaultAutoConfigKey;
@@ -437,14 +493,17 @@ namespace Democrite.Framework.Cluster.Configurations
                 autoConfigurators.TryGetValue(typeof(TAutoConfig), out var autoConfigurator))
             {
                 var configurator = (TAutoConfig)(Activator.CreateInstance(autoConfigurator) ?? throw new NotSupportedException());
-                configurator.AutoConfigure((TAutoWizard)(object)this, configuration, serviceCollection, logger);
+
+                customConfig ??= (c, wizard, cfg, service, logger) => c.AutoConfigure(wizard, cfg, service, logger);
+
+                customConfig(configurator, (TAutoWizard)(object)this, configuration, serviceCollection, logger);
 
                 // Directly push data to predicateConfigurationExist function to work correctly
                 SetupServices();
                 return;
             }
 
-            throw MissingRequiredConfigurationException.Create<TAutoConfig>(autoConfigKey);
+            throw MissingRequiredAutoDemocriteConfigurationException.Create<TAutoConfig>(autoConfigKey);
         }
 
         /// <summary>
@@ -498,49 +557,6 @@ namespace Democrite.Framework.Cluster.Configurations
         protected void AddOption<TOptions>(Action<TOptions> optionsCfg) where TOptions : class
         {
             this._options.Enqueue((IServiceCollection s) => s.Configure(optionsCfg));
-        }
-
-        /// <summary>
-        /// Adds option from implementation or instance
-        /// </summary>
-        /// <returns>
-        ///     Return option inserted
-        /// </returns>
-        protected TOption? AddOptionFromInstOrConfig<TOption>(IServiceCollection services,
-                                                              string? configurationSection = null,
-                                                              TOption? option = default,
-                                                              bool overrideValue = true)
-            where TOption : class
-        {
-            if (overrideValue == false &&
-                (services.Any(s => s.ServiceType == typeof(TOption)) ||
-                 services.Any(s => s.ServiceType == typeof(IOptions<TOption>))))
-            {
-                return null;
-            }
-
-            if (!string.IsNullOrWhiteSpace(configurationSection))
-            {
-                var cfg = this.Configuration.GetSection(configurationSection);
-
-                if (cfg != null)
-                {
-                    services.Configure<TOption>(cfg);
-
-                    var resultMapped = cfg.Get<TOption>();
-                    return resultMapped;
-                }
-            }
-
-            if (option != default)
-            {
-                services.AddSingleton(option)
-                        .AddSingleton(option.ToOption());
-
-                return option;
-            }
-
-            return null;
         }
 
         /// <summary>

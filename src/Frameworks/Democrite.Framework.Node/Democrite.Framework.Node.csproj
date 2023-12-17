@@ -25,6 +25,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="Democrite.UnitTests.ToolKit" />
+		<InternalsVisibleTo Include="Democrite.Framework.Node.UnitTests" />
+	</ItemGroup>
+	
+	<ItemGroup>
 	  <Compile Update="Resources\NodeExceptionSR.Designer.cs">
 	    <DesignTime>True</DesignTime>
 	    <AutoGen>True</AutoGen>

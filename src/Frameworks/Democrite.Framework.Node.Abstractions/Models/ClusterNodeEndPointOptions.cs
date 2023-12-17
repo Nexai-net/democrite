@@ -14,12 +14,6 @@ namespace Democrite.Framework.Node.Abstractions.Models
     [ImmutableObject(true)]
     public sealed class ClusterNodeEndPointOptions : INodeOptions
     {
-        #region Fields
-
-        public const string ConfiguratioName = "Endpoint";
-
-        #endregion
-
         #region Ctor
 
         /// <summary>
@@ -33,9 +27,9 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterNodeEndPointOptions"/> class.
         /// </summary>
-        public ClusterNodeEndPointOptions(bool loopback,
-                                          uint siloPort,
-                                          int? gatewayPort)
+        public ClusterNodeEndPointOptions(bool loopback = false,
+                                          uint siloPort = 0,
+                                          int? gatewayPort = 0)
         {
             this.Loopback = loopback;
             this.SiloPort = siloPort;

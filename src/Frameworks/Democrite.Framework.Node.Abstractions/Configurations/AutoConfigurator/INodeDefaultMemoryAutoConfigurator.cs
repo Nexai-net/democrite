@@ -8,10 +8,10 @@ namespace Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator
     using Democrite.Framework.Node.Abstractions.Configurations.Builders;
 
     /// <summary>
-    /// Auto setup virtual grain state memory container
+    /// Auto setup default state memory container
     /// </summary>
     /// <seealso cref="IAutoConfigurator{IClusterNodeBuilderDemocriteMemoryBuilder}" />
-    public interface INodeVGrainStateMemoryAutoConfigurator : IAutoConfigurator<IDemocriteNodeMemoryBuilder>
+    public interface INodeDefaultMemoryAutoConfigurator : IAutoConfigurator<IDemocriteNodeMemoryBuilder>
     {
     }
 }

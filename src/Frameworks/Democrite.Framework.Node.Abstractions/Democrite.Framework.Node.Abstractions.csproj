@@ -22,6 +22,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="Democrite.Framework.Node"/>
+		
+		<!-- Unit test -->
+		<InternalsVisibleTo Include="Democrite.Framework.Node.UnitTests"/>
+		<InternalsVisibleTo Include="Democrite.Framework.Node.Abstraction.UnitTests"/>
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
+	</ItemGroup>
+
+	<ItemGroup>
 	  <Compile Update="Resources\NodeAbstractionExceptionSR.Designer.cs">
 	    <DesignTime>True</DesignTime>
 	    <AutoGen>True</AutoGen>

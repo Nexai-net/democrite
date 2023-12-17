@@ -14,15 +14,17 @@ namespace Democrite.Framework.Cluster.Abstractions.Exceptions
     /// Exception raised when the a required configuration is missing
     /// </summary>
     /// <seealso cref="DemocriteBaseException" />
-    public sealed class MissingRequiredConfigurationException : DemocriteBaseException
+    public sealed class MissingRequiredAutoDemocriteConfigurationException : DemocriteBaseException
     {
         #region Ctor
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MissingRequiredConfigurationException"/> class.
+        /// Initializes a new instance of the <see cref="MissingRequiredAutoDemocriteConfigurationException"/> class.
         /// </summary>
-        private MissingRequiredConfigurationException(Type autoConfiguratorType, string? autoPropKeyValue, Exception? innerException = null)
-            : base(ErrorSR.RequiredConfigurationMissing.WithArguments(autoConfiguratorType, autoPropKeyValue),
+        private MissingRequiredAutoDemocriteConfigurationException(Type autoConfiguratorType,
+                                                                   string? autoPropKeyValue,
+                                                                   Exception? innerException = null)
+            : base(ErrorSR.RequiredAutoConfigurationMissing.WithArguments(autoConfiguratorType, autoPropKeyValue),
                    DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Build, DemocriteErrorCodes.PartType.Configuration, DemocriteErrorCodes.ErrorType.Missing),
                    innerException)
         {
@@ -35,12 +37,12 @@ namespace Democrite.Framework.Cluster.Abstractions.Exceptions
         #region Methods
 
         /// <summary>
-        /// Creates an exception <see cref="MissingRequiredConfigurationException"/> with parameter rulled.
+        /// Creates an exception <see cref="MissingRequiredDemocriteConfigurationException"/> with parameter rulled.
         /// </summary>
-        public static MissingRequiredConfigurationException Create<TAutoConfigurator>(string? autoPropKeyValue)
+        public static MissingRequiredAutoDemocriteConfigurationException Create<TAutoConfigurator>(string? autoPropKeyValue)
             where TAutoConfigurator : IAutoConfigurator
         {
-            return new MissingRequiredConfigurationException(typeof(TAutoConfigurator), autoPropKeyValue);
+            return new MissingRequiredAutoDemocriteConfigurationException(typeof(TAutoConfigurator), autoPropKeyValue);
         }
 
         #endregion

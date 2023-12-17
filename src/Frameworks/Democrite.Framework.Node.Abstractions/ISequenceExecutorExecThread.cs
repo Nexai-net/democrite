@@ -10,7 +10,7 @@ namespace Democrite.Framework.Node.Abstractions
     /// <summary>
     /// Internal thread executor
     /// </summary>
-    public interface ISequenceExecutorExecThread
+    internal interface ISequenceExecutorExecThread
     {
         #region Properties
 

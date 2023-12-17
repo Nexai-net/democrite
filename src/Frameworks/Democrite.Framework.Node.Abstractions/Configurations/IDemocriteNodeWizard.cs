@@ -39,5 +39,10 @@ namespace Democrite.Framework.Node.Abstractions.Configurations
         /// Setups the nodes memories, how to same state, reminder, trigger ...
         /// </summary>
         IDemocriteNodeWizard SetupNodeMemories(Action<IDemocriteNodeMemoryBuilder> memoryBuilder);
+
+        /// <summary>
+        /// Setups the nodes memories, how to same state, reminder, trigger ...
+        /// </summary>
+        IDemocriteNodeWizard SetupNodeMemories(string defaultAutokey, Action<IDemocriteNodeMemoryBuilder>? memoryBuilder = null);
     }
 }

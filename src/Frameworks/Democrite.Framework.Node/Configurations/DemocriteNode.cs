@@ -101,7 +101,7 @@ namespace Democrite.Framework.Node.Configurations
             if (builder is null)
             {
                 builder = cfg => cfg.WizardConfig()
-                                    .ClusterFromConfig();
+                                    .SetupClusterFromConfig();
             }
 
             clusterBuilderTools ??= ClusterBuilderTools.Default;

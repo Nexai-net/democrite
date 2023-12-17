@@ -27,7 +27,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
     /// </summary>
     /// <seealso cref="ISequenceExecutorThreadStageProvider" />
     /// <seealso cref="ISequenceExecutorThreadStageHandler" />
-    public sealed class SequenceExecutorForeachThreadStageProvider : ISequenceExecutorThreadStageProvider, ISequenceExecutorThreadStageHandler
+    internal sealed class SequenceExecutorForeachThreadStageProvider : ISequenceExecutorThreadStageProvider, ISequenceExecutorThreadStageHandler
     {
         #region Fields
 

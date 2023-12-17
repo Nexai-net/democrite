@@ -5,7 +5,9 @@
 using Democrite.Framework.Client.Configurations.AutoConfigurator;
 using Democrite.Framework.Cluster.Abstractions.Attributes;
 using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
+using Democrite.Framework.Node.Configurations.AutoConfigurator;
 
 [assembly: AutoConfiguratorKey("Default")]
 
 [assembly: AutoConfigurator<IMembershipsAutoConfigurator, AutoDefaultClientConfigurator>()]
+[assembly: AutoConfigurator<IClusterEndpointAutoConfigurator, AutoDefaultClientEndpointAutoConfigurator>()]

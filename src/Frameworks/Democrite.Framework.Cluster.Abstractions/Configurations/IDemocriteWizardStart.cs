@@ -23,7 +23,7 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         /// <summary>
         ///  The cluster configuration is only extract from external configuration.
         /// </summary>
-        TWizard ClusterFromConfig();
+        TWizard SetupClusterFromConfig(string? clusterConfigKey = null);
 
         /// <summary>
         /// Setups the cluster informaiton; Storage system; ... information used to synchonize node and states

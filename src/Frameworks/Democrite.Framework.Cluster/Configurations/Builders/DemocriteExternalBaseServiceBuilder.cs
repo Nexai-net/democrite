@@ -45,14 +45,14 @@ namespace Democrite.Framework.Cluster.Configurations.Builders
         #region Methods
 
         /// <inheritdoc />
-        public TBuilder AddConnectionString(string connectionString)
+        public TBuilder ConnectionString(string connectionString)
         {
             this._connectionString = connectionString;
             return GetSourceBuilder();
         }
 
         /// <inheritdoc />
-        public TBuilder AddConnectionString(Func<IConfiguration, string> connectionStringFunc)
+        public TBuilder ConnectionString(Func<IConfiguration, string> connectionStringFunc)
         {
             ArgumentNullException.ThrowIfNull(connectionStringFunc);
 
@@ -61,7 +61,7 @@ namespace Democrite.Framework.Cluster.Configurations.Builders
         }
 
         /// <inheritdoc />
-        public TBuilder AddOption(Action<TOption, IConfiguration> optionBuilder)
+        public TBuilder ManualConfig(Action<TOption, IConfiguration> optionBuilder)
         {
             ArgumentNullException.ThrowIfNull(optionBuilder);
 

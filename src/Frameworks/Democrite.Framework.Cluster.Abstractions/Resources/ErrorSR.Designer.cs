@@ -61,7 +61,25 @@ namespace Democrite.Framework.Cluster.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [{0}] Configuration failed format issue : get &apos;{1}&apos; expected {2}..
+        /// </summary>
+        internal static string InvalidFormatDemocriteCondigurationMessage {
+            get {
+                return ResourceManager.GetString("InvalidFormatDemocriteCondigurationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing configuration cover by the auto configurator type &apos;{0}&apos; or missing auto property value key &apos;{1}&apos;. (try setup the &quot;Extensions&quot; configuration).
+        /// </summary>
+        internal static string RequiredAutoConfigurationMissing {
+            get {
+                return ResourceManager.GetString("RequiredAutoConfigurationMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing configuration required configuration (from file or external). Path &apos;{0}&apos; -&gt; {1}.
         /// </summary>
         internal static string RequiredConfigurationMissing {
             get {

@@ -85,6 +85,12 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             /// </summary>
             [Description("Error code category door")]
             Door = 0x_08_00_00_00_00_00_00_00,
+
+            /// <summary>
+            /// Error code category configuration
+            /// </summary>
+            [Description("Error code category configuration")]
+            Configuration = 0x_09_00_00_00_00_00_00_00,
         }
 
         public enum PartType : ulong

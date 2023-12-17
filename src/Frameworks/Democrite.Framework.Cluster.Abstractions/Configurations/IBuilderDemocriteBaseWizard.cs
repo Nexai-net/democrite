@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Cluster.Abstractions.Configurations
 {
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -15,5 +16,10 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         /// Gets the DPI service descriptors.
         /// </summary>
         IServiceCollection GetServiceCollection();
+
+        /// <summary>
+        /// Gets the configuration.
+        /// </summary>
+        IConfiguration GetConfiguration();
     }
 }
