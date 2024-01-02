@@ -63,7 +63,7 @@ namespace Democrite.Framework.Node.Cron
         /// <summary>
         /// Raised when the <see cref="ITriggerDefinitionProvider"/> notify a change in the definitions.
         /// </summary>
-        private async void TriggerDefinitionProvider_DataChanged(object? sender, EventArgs e)
+        private async void TriggerDefinitionProvider_DataChanged(object? sender, IReadOnlyCollection<Guid> definitionThatChanged)
         {
             await LaunchTriggerHandlersAsync();
         }

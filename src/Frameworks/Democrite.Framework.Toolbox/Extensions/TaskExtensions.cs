@@ -4,9 +4,11 @@
 
 namespace Democrite.Framework.Toolbox.Extensions
 {
-    using Democrite.Framework.Toolbox.Extensions.Types;
+    using Democrite.Framework.Toolbox.Abstractions.Extensions.Types;
+    using Democrite.Framework.Toolbox.Helpers;
 
     using System;
+    using System.Collections;
     using System.Diagnostics;
     using System.Reflection;
     using System.Runtime.CompilerServices;
@@ -123,6 +125,53 @@ namespace Democrite.Framework.Toolbox.Extensions
             var task = (Task?)taskFromBuiler.Invoke(null, new[] { data });
             Debug.Assert(task != null);
             return task;
+        }
+
+        /// <summary>
+        /// Safes wait all tasks to be completed
+        /// </summary>
+        /// <exception cref="AggregateException"></exception>
+        public static async Task SafeWhenAllAsync(this IReadOnlyCollection<ValueTask> tasks, CancellationToken token = default)
+        {
+            await SafeWhenAllAsync(tasks.Select(t => t.AsTask()).ToReadOnly(), token);
+        }
+
+        /// <summary>
+        /// Safes wait all tasks to be completed
+        /// </summary>
+        /// <exception cref="AggregateException"></exception>
+        public static async Task SafeWhenAllAsync(this IReadOnlyCollection<Task> tasks, CancellationToken token = default)
+        {
+            if (tasks is null || tasks.Count == 0)
+                return;
+
+            var remains = new HashSet<Task>(tasks);
+
+            while (remains.Any())
+            {
+                try
+                {
+                    await Task.WhenAny(remains);
+                }
+                catch
+                {
+                }
+
+                if (token.IsCancellationRequested)
+                    break;
+
+                remains.RemoveWhere(x => x.IsCompleted);
+            }
+
+            var exceptions = tasks.Where(t => t.IsFaulted && !t.IsCanceled && t.Exception != null)
+                                  .Select(e => e.Exception!)
+                                  .Distinct()
+                                  .ToArray() ?? EnumerableHelper<Exception>.ReadOnlyArray;
+
+            if (exceptions.Any())
+                throw new AggregateException(exceptions);
+
+            token.ThrowIfCancellationRequested();
         }
 
         #endregion

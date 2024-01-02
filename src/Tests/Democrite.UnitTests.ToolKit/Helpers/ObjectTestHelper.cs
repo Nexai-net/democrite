@@ -5,14 +5,14 @@
 namespace Democrite.UnitTests.ToolKit.Helpers
 {
     using AutoFixture;
+    using AutoFixture.AutoNSubstitute;
 
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Serialization;
 
     using NFluent;
 
     using System.Diagnostics;
-    using Newtonsoft.Json.Serialization;
-    using AutoFixture.AutoNSubstitute;
 
     /// <summary>
     /// Helper unit test to validate serialization

@@ -10,6 +10,7 @@ namespace Democrite.Framework.Builders.Steps
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace Democrite.Framework.Builders.Steps
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Create a call step, it correspond to the vgrain entry point
+    /// Build a call step, it correspond to the vgrain entry point
     /// </summary>
     /// <seealso cref="ISequencePipelineInternalStageStep" />
     public sealed class CallStepBuilder : StepBaseBuilder
@@ -149,18 +150,20 @@ namespace Democrite.Framework.Builders.Steps
         /// <summary>
         /// Converts to definition.
         /// </summary>
-        public override ISequenceStageDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
-                                                                        bool preventReturn,
-                                                                        TContext? contextInfo = default)
+        public override SequenceStageBaseDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
+                                                                           bool preventReturn,
+                                                                           TContext? contextInfo = default)
                         where TContext : default
         {
-            var def = this._mthd.ToCallDefinition();
+            var def = this._mthd.GetAbstractMethod();
 
-            return new SequenceStageCallDefinition(this.Input,
-                                                   this._vgrainType,
+            return new SequenceStageCallDefinition(this.Input?.GetAbstractType(),
+                                                   this._vgrainType?.GetAbstractType() as ConcreteType ?? throw new InvalidDataException("VGrain interface must not be null"),
                                                    def,
-                                                   this.Output,
-                                                   EqualityComparer<TContext>.Default.Equals(contextInfo, default) ? NoneType.Trait : typeof(TContext),
+                                                   this.Output?.GetAbstractType(),
+                                                   EqualityComparer<TContext>.Default.Equals(contextInfo, default) 
+                                                        ? NoneType.AbstractTrait
+                                                        : typeof(TContext).GetAbstractType(),
                                                    contextInfo,
 
                                                    options: option,

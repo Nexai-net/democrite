@@ -18,7 +18,7 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         /// <summary>
         ///  Don't join any cluster, map over the default Orlean local port 1111, May be used for test and dev purpose.
         /// </summary>
-        TWizard NoCluster();
+        TWizard NoCluster(bool useLoopback = true);
 
         /// <summary>
         ///  The cluster configuration is only extract from external configuration.

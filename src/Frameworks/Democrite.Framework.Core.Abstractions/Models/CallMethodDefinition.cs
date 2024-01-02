@@ -11,6 +11,7 @@ namespace Democrite.Framework.Core.Abstractions.Models
     using System.ComponentModel;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Definition used to identify a method and how to call it.
@@ -18,6 +19,8 @@ namespace Democrite.Framework.Core.Abstractions.Models
     /// <seealso cref="IEquatable{ModelDefinition}" />
     /// <seealso cref="IEquatable{MethodInfo}" />
     [Serializable]
+    [Immutable]
+    [DataObject]
     [ImmutableObject(true)]
     public sealed class CallMethodDefinition : IEquatable<CallMethodDefinition>, IEquatable<MethodInfo>
     {
@@ -46,6 +49,7 @@ namespace Democrite.Framework.Core.Abstractions.Models
         /// <summary>
         /// Gets the method name.
         /// </summary>
+        [DataMember]
         public string Name { get; }
 
         /// <summary>
@@ -54,21 +58,25 @@ namespace Democrite.Framework.Core.Abstractions.Models
         /// <remarks>
         ///     Could be generic params
         /// </remarks>
+        [DataMember]
         public Type ReturnType { get; }
 
         /// <summary>
         /// Gets method's arguments types.
         /// </summary>
+        [DataMember]
         public IReadOnlyCollection<Type> Arguments { get; }
 
         /// <summary>
         /// Gets the type of declaring the method.
         /// </summary>
+        [DataMember]
         public Type? DeclaringType { get; }
 
         /// <summary>
         /// Gets collection of generic implementation values
         /// </summary>
+        [DataMember]
         public Type[]? GenericImplementationTypes { get; }
 
         #endregion

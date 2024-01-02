@@ -5,14 +5,18 @@
 namespace Democrite.Framework.Toolbox.Patterns.Strategy
 {
     using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
+    using Democrite.Framework.Toolbox.Abstractions.Supports;
     using Democrite.Framework.Toolbox.Disposables;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
+    using Democrite.Framework.Toolbox.Supports;
 
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -21,7 +25,7 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <seealso cref="IProviderStrategySource{T, TKey}" />
-    public abstract class ProviderStrategyBaseSource<TValue, TKey> : SafeDisposable, IProviderStrategySource<TValue, TKey>
+    public abstract class ProviderStrategyBaseSource<TValue, TKey> : SupportBaseInitialization, IProviderStrategySource<TValue, TKey>
         where TValue : class
         where TKey : notnull
     {
@@ -76,42 +80,31 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         #region Events
 
         /// <inheritdoc />
-        public event EventHandler? DataChanged;
+        public event EventHandler<IReadOnlyCollection<TKey>>? DataChanged;
 
         #endregion
 
         #region Methods
 
         /// <inheritdoc />
-        public virtual ValueTask BuildAsync()
+        public virtual ValueTask<(bool Success, TValue? Result)> TryGetDataAsync(TKey key, CancellationToken token)
         {
-            return ValueTask.CompletedTask;
-        }
-
-        /// <inheritdoc />
-        public ValueTask<bool> TryGetDataAsync(TKey key, out TValue? value)
-        {
-            value = default;
-
             this._dataCacheLock.EnterReadLock();
             try
             {
                 if (this._cachedData.TryGetValue(key, out var cachedValue))
-                {
-                    value = cachedValue;
-                    return ValueTask.FromResult(true);
-                }
+                    return ValueTask.FromResult<(bool Success, TValue? Result)>((Success: true, Result: cachedValue));
             }
             finally
             {
                 this._dataCacheLock.ExitReadLock();
             }
 
-            return ValueTask.FromResult(false);
+            return ValueTask.FromResult<(bool Success, TValue? Result)>((false, default(TValue)));
         }
 
         /// <inheritdoc />
-        public ValueTask<IReadOnlyCollection<TValue>> GetValuesAsync(Expression<Func<TValue, bool>> filterExpression, Func<TValue, bool> filter)
+        public virtual ValueTask<IReadOnlyCollection<TValue>> GetValuesAsync(Expression<Func<TValue, bool>> filterExpression, Func<TValue, bool> filter, CancellationToken token)
         {
             this._dataCacheLock.EnterReadLock();
             try
@@ -128,10 +121,8 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
             }
         }
 
-        /// <summary>
-        /// Gets the value based on filter
-        /// </summary>
-        public ValueTask<TValue?> GetFirstValueAsync(Expression<Func<TValue, bool>> filterExpression, Func<TValue, bool> filter)
+        /// <inheritdoc />
+        public virtual ValueTask<TValue?> GetFirstValueAsync(Expression<Func<TValue, bool>> filterExpression, Func<TValue, bool> filter, CancellationToken token)
         {
             this._dataCacheLock.EnterReadLock();
             try
@@ -148,7 +139,46 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
             }
         }
 
+        /// <inheritdoc />
+        public virtual ValueTask<IReadOnlyCollection<TValue>> GetValuesAsync(IEnumerable<TKey> keys, CancellationToken token)
+        {
+            this._dataCacheLock.EnterReadLock();
+            try
+            {
+                var results = keys.Distinct()
+                                  .Where(k => this._cachedData.ContainsKey(k))
+                                  .Select(k => this._cachedData[k])
+                                  .ToReadOnly();
+
+                return ValueTask.FromResult(results);
+            }
+            finally
+            {
+                this._dataCacheLock.ExitReadLock();
+            }
+        }
+
+        /// <inheritdoc />
+        public virtual ValueTask ForceUpdateAsync(CancellationToken token)
+        {
+            return ValueTask.CompletedTask;
+        }
+
+        /// <inheritdoc />
+        protected sealed override async ValueTask OnInitializedAsync<TState>(TState? _, CancellationToken token) 
+            where TState : default
+        {
+            await OnInitializedAsync(token);
+            await ForceUpdateAsync(token);
+        }
+
         #region Tools
+
+        /// <inheritdoc />
+        protected virtual ValueTask OnInitializedAsync(CancellationToken token)
+        {
+            return ValueTask.CompletedTask;
+        }
 
         /// <summary>
         /// Thread safes add a key, value
@@ -230,9 +260,9 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         /// <summary>
         /// Raiseds <see cref="DataChanged"/>.
         /// </summary>
-        protected void RaisedDataChanged()
+        protected void RaisedDataChanged(IReadOnlyCollection<TKey> definitionThatChanged)
         {
-            DataChanged?.Invoke(this, EventArgs.Empty);
+            DataChanged?.Invoke(this, definitionThatChanged);
         }
 
         #endregion

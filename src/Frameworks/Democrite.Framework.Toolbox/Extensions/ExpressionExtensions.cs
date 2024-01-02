@@ -130,7 +130,7 @@ namespace Democrite.Framework.Toolbox.Extensions
             ArgumentNullException.ThrowIfNull(expressionDefinition);
 
             var inputs = expressionDefinition.Parameters
-                                             .Select(p => (Expression.Parameter(p.Type, p.Name), definition: p))
+                                             .Select(p => (Expression.Parameter(p.Type.ToType(), p.Name), definition: p))
                                              .ToDictionary(k => k.Item1, v => v.definition);
 
             var body = SerializeConditionsToExpression(expressionDefinition.Condition, inputs);
@@ -261,7 +261,7 @@ namespace Democrite.Framework.Toolbox.Extensions
         private static ConditionExpressionDefinition SerializeLambda(this LambdaExpression expression)
         {
             var inputParameter = expression.Parameters
-                                           .Select((p, indx) => (parameter: p, definition: new ConditionParameterDefinition(Guid.NewGuid(), p.Name ?? string.Empty, p.Type, (ushort)indx)))
+                                           .Select((p, indx) => (parameter: p, definition: new ConditionParameterDefinition(Guid.NewGuid(), p.Name ?? string.Empty, p.Type.GetAbstractType(), (ushort)indx)))
                                            .ToImmutableDictionary(kv => kv.parameter, kv => kv.definition);
 
             var condition = SerializeConditions(expression.Body, inputParameter)!;
@@ -323,7 +323,7 @@ namespace Democrite.Framework.Toolbox.Extensions
                         // with value source is instant must indicate the expression context
                         var context = (ConstantExpression)memberAccess.Expression;
                         var cstValue = context.Type.GetField(memberAccess.Member.Name)?.GetValue(context.Value);
-                        return new ConditionValueDefinition(((FieldInfo)memberAccess.Member).FieldType, cstValue);
+                        return new ConditionValueDefinition(((FieldInfo)memberAccess.Member).FieldType.GetAbstractType(), cstValue);
                     }
 
                     var instance = SerializeCallInstance(memberAccess.Expression, sourceInputExpressions);
@@ -331,7 +331,7 @@ namespace Democrite.Framework.Toolbox.Extensions
 
                 case ExpressionType.Constant:
                     var cst = (ConstantExpression)body;
-                    return new ConditionValueDefinition(cst.Type, cst.Value);
+                    return new ConditionValueDefinition(cst.Type.GetAbstractType(), cst.Value);
 
                 case ExpressionType.Parameter:
                     return SerializeCallInstance(body, sourceInputExpressions);
@@ -395,7 +395,7 @@ namespace Democrite.Framework.Toolbox.Extensions
                 return sourceInputExpressions.First(kv => kv.Value == paramDef).Key;
 
             if (body is ConditionValueDefinition value)
-                return Expression.Constant(value.Value, value.Type);
+                return Expression.Constant(value.Value, value.Type.ToType());
 
             if (body is ConditionMemberAccessDefinition member)
             {

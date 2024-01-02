@@ -9,7 +9,9 @@ namespace Democrite.UnitTests.ToolKit
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Services;
     using Democrite.Framework.Node.Services;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Abstractions.Services;
+    using Democrite.Framework.Toolbox.Models;
     using Democrite.Framework.Toolbox.Services;
 
     using Microsoft.Extensions.Configuration;
@@ -57,7 +59,8 @@ namespace Democrite.UnitTests.ToolKit
             services.AddSingleton<IVGrainProvider, VGrainProvider>()
                     .AddSingleton<IDiagnosticLogger, Democrite.Framework.Core.Diagnostics.DiagnosticLogger>()
                     .AddSingleton<IVGrainIdFactory, VGrainIdFactory>()
-                    .AddSingleton<ITimeManager, TimeManager>();
+                    .AddSingleton<ITimeManager, TimeManager>()
+                    .AddSingleton<IObjectConverter, ObjectConverter>();
         }
 
         #endregion

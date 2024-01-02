@@ -5,15 +5,28 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+    using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Toolbox;
     using Democrite.Framework.Toolbox.Abstractions.Supports;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
+    using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Define information needed to setup, run and diagnostic a stage
     /// </summary>
+    [Immutable]
+    [DataContract]
+    [Serializable]
+    [ImmutableObject(true)]
+
+    [KnownType(typeof(SequenceStageCallDefinition))]
+    [KnownType(typeof(SequenceStageFilterDefinition))]
+    [KnownType(typeof(SequenceStageForeachDefinition))]
+
     public abstract class SequenceStageBaseDefinition : Equatable<ISequenceStageDefinition>,
                                                         ISupportDebugDisplayName,
                                                         ISequenceStageDefinition
@@ -23,12 +36,12 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// <summary>
         /// Initializes a new instance of the <see cref="ISequenceStageDefinition"/> class.
         /// </summary>
-        public SequenceStageBaseDefinition(StageTypeEnum type,
-                                           Type? input,
-                                           Type? output,
-                                           SequenceOptionStageDefinition? options = null,
-                                           bool preventReturn = false,
-                                           Guid? uid = null)
+        protected SequenceStageBaseDefinition(StageTypeEnum type,
+                                              AbstractType? input,
+                                              AbstractType? output,
+                                              SequenceOptionStageDefinition? options = null,
+                                              bool preventReturn = false,
+                                              Guid? uid = null)
         {
             this.Uid = uid ?? options?.StageId ?? Guid.NewGuid();
 
@@ -52,6 +65,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// <summary>
         /// Gets stage unique id.
         /// </summary>
+        [DataMember]
         public Guid Uid { get; }
 
         /// <summary>
@@ -60,26 +74,31 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// <value>
         ///   <c>true</c> if [prevent type return]; otherwise, <c>false</c>.
         /// </value>
+        [DataMember]
         public bool PreventReturn { get; }
 
         /// <summary>
         /// Gets the input first stage input.
         /// </summary>
-        public Type? Input { get; }
+        [DataMember]
+        public AbstractType? Input { get; }
 
         /// <summary>
         /// Gets the input first stage ouytput.
         /// </summary>
-        public Type? Output { get; }
+        [DataMember]
+        public AbstractType? Output { get; }
 
         /// <summary>
         /// Gets the stage type.
         /// </summary>
+        [DataMember]
         public StageTypeEnum Type { get; }
 
         /// <summary>
         /// Gets the options.
         /// </summary>
+        [DataMember]
         public SequenceOptionStageDefinition Options { get; }
 
         #endregion

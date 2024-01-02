@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
 {
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions.Resources;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.Collections.Generic;
@@ -38,7 +39,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         /// <summary>
         /// Format exception about vgrain method not founded
         /// </summary>
-        public static VGrainMethodDemocriteException MethodNotFounded(string signature, Type vgrainType, Exception? innerException = null)
+        public static VGrainMethodDemocriteException MethodNotFounded(string signature, AbstractType vgrainType, Exception? innerException = null)
         {
             return new VGrainMethodDemocriteException(string.Format(NodeAbstractionExceptionSR.MethodNotFound, signature, vgrainType), innerException);
         }
@@ -46,11 +47,11 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         /// <summary>
         /// Format exception about vgrain method not founded
         /// </summary>
-        public static VGrainMethodDemocriteException MethodNotFounded(Type vgrainType, Type? output, string methodName, IReadOnlyCollection<Type> argumentTypes)
+        public static VGrainMethodDemocriteException MethodNotFounded(AbstractType vgrainType, AbstractType? output, string methodName, IReadOnlyCollection<AbstractType> argumentTypes)
         {
             var returnSignature = "Task";
 
-            if (output != null)
+            if (output is not null)
                 returnSignature = string.Format("Task<{0}>", output);
 
             var args = "";

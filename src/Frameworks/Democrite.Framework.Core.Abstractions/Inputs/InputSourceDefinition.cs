@@ -4,14 +4,20 @@
 
 namespace Democrite.Framework.Core.Abstractions.Inputs
 {
+    using Democrite.Framework.Toolbox.Models;
+
     using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Definition of sequence input source
     /// </summary>
     [Immutable]
-    [ImmutableObject(true)]
     [Serializable]
+    [ImmutableObject(true)]
+    [DataContract]
+    
+    [KnownType(typeof(InputSourceStaticCollectionDefinition<>))]
     public abstract class InputSourceDefinition : IEquatable<InputSourceDefinition>
     {
         #region ctor
@@ -19,7 +25,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         /// <summary>
         /// Initializes a new instance of the <see cref="InputSourceDefinition"/> class.
         /// </summary>
-        protected InputSourceDefinition(InputSourceTypeEnum InputSourceType, Type inputType)
+        protected InputSourceDefinition(InputSourceTypeEnum InputSourceType, AbstractType inputType)
         {
             this.InputSourceType = InputSourceType;
             this.InputType = inputType;
@@ -32,12 +38,14 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         /// <summary>
         /// Gets the type of the input source.
         /// </summary>
+        [IgnoreDataMember]
         public InputSourceTypeEnum InputSourceType { get; }
 
         /// <summary>
         /// Gets the type of the input.
         /// </summary>
-        public Type InputType { get; }
+        [IgnoreDataMember]
+        public AbstractType InputType { get; }
 
         #endregion
 
@@ -54,7 +62,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
 
             return this.InputSourceType == other.InputSourceType &&
                    this.InputType == other.InputType &&
-                   OnEqualds(other);
+                   OnEquals(other);
         }
 
         /// <inheritdoc />
@@ -81,7 +89,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         /// <remarks>
         ///     Null check and reference check are already done
         /// </remarks>
-        protected abstract bool OnEqualds(InputSourceDefinition other);
+        protected abstract bool OnEquals(InputSourceDefinition other);
 
         #endregion
     }

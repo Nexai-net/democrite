@@ -7,29 +7,38 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Core.Abstractions.Signals;
 
+    using System.ComponentModel;
+    using System.Runtime.Serialization;
+
     /// <summary>
     /// Trigger definition used to setup a timer - cron
     /// </summary>
     /// <seealso cref="TriggerBaseDefinition" />
+    [Immutable]
+    [DataContract]
+    [Serializable]
+    [ImmutableObject(true)]
     public sealed class CronTriggerDefinition : TriggerDefinition
     {
         #region Ctor
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CronTriggerDefinition{TTriggerOutput}"/> class.
+        /// Initializes a new instance of the <see cref="CronTriggerDefinition"/> class.
         /// </summary>
+        [System.Text.Json.Serialization.JsonConstructor]
+        [Newtonsoft.Json.JsonConstructor]
         public CronTriggerDefinition(Guid uid,
-                                     string cronExpression,
                                      IEnumerable<Guid> targetSequenceIds,
                                      IEnumerable<SignalId> targetSignalIds,
                                      bool enabled,
-                                     InputSourceDefinition? triggerInputSourceDefinition = null)
+                                     string cronExpression,
+                                     InputSourceDefinition? inputSourceDefinition = null)
             : base(uid,
                    TriggerTypeEnum.Cron,
                    targetSequenceIds,
                    targetSignalIds,
                    enabled,
-                   triggerInputSourceDefinition)
+                   inputSourceDefinition)
         {
             this.CronExpression = cronExpression;
         }
@@ -39,6 +48,8 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         #region Properties
 
         /// <inheritdoc />
+        [Id(0)]
+        [DataMember]
         public string CronExpression { get; }
 
         #endregion

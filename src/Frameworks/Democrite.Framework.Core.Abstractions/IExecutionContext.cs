@@ -45,7 +45,7 @@ namespace Democrite.Framework.Core.Abstractions
         /// <summary>
         /// Gets the logger associate to current sequence execution and vgrain
         /// </summary>
-        ILogger GetLogger<T>(ILoggerProvider loggerProvider) where T : IVGrain;
+        ILogger GetLogger<T>(ILoggerFactory loggerProvider) where T : IVGrain;
 
         /// <summary>
         /// Gets linked context

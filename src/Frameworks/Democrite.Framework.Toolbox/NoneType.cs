@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Toolbox
 {
+    using Democrite.Framework.Toolbox.Models;
+
     using System.ComponentModel;
 
     /// <summary>
@@ -21,6 +23,7 @@ namespace Democrite.Framework.Toolbox
         static NoneType()
         {
             Trait = typeof(NoneType);
+            AbstractTrait = Trait.GetAbstractType();
             Instance = new NoneType();
         }
 
@@ -39,6 +42,11 @@ namespace Democrite.Framework.Toolbox
         /// Gets the trait.
         /// </summary>
         public static Type Trait { get; }
+
+        /// <summary>
+        /// Gets the trait.
+        /// </summary>
+        public static AbstractType AbstractTrait { get; }
 
         /// <summary>
         /// Gets the instance.

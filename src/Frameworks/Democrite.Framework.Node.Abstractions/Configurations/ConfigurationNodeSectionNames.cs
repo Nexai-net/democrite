@@ -85,5 +85,10 @@ namespace Democrite.Framework.Node.Configurations
         /// The section configuring the vgrain state memory
         /// </summary>
         public const string NodeReminderStateMemoryAutoConfigKey = NodeReminderStateMemory + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.AutoConfigKey;
+
+        /// <summary>
+        /// The root section in change to configured the definitions provider
+        /// </summary>
+        public const string NodeDefinitionProvider = ConfigurationSectionNames.Root + ConfigurationSectionNames.SectionSeparator + "Definitions";
     }
 }

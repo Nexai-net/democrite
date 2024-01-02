@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 {
+    using Democrite.Framework.Toolbox.Models;
+
     using Newtonsoft.Json;
 
     using System;
@@ -36,18 +38,18 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Initializes a new instance of the <see cref="ConditionValueDefinition"/> class.
         /// </summary>
-        public ConditionValueDefinition(Type type, object? value)
+        public ConditionValueDefinition(AbstractType type, object? value)
         {
             this.Type = type;
             this.Value = value;
 
-            if (value is not null && value.GetType() != this.Type)
+            if (value is not null && type.IsEqualTo(value.GetType()) == false)
             {
                 var serialized = JsonConvert.SerializeObject(value);
-                this.Value = JsonConvert.DeserializeObject(serialized, this.Type);
+                this.Value = JsonConvert.DeserializeObject(serialized, type.ToType());
             }
 
-            this._comparer = BuildComparer(type);
+            this._comparer = BuildComparer(type.ToType());
         }
 
         #endregion
@@ -57,7 +59,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the type.
         /// </summary>
-        public Type Type { get; }
+        public AbstractType Type { get; }
 
         /// <summary>
         /// Gets the value.

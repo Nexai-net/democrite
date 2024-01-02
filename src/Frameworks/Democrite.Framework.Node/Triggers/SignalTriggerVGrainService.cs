@@ -60,7 +60,7 @@ namespace Democrite.Framework.Node.Triggers
         /// <summary>
         /// Triggers the definition provider data changed.
         /// </summary>
-        private async void TriggerDefinitionProvider_DataChanged(object? sender, EventArgs e)
+        private async void TriggerDefinitionProvider_DataChanged(object? sender, IReadOnlyCollection<Guid> dataThatChanged)
         {
             await EnsureSignalTriggerAreSetups();
         }

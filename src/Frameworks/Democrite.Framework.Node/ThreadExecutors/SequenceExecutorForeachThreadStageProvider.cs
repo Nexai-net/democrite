@@ -136,9 +136,9 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
                         ArgumentNullException.ThrowIfNull(sequenceStageDefinition);
 
-                        collectionType = sequenceStageDefinition.Output?.MakeArrayType();
+                        collectionType = sequenceStageDefinition.Output?.ToType().MakeArrayType();
 
-                        if (sequenceStageDefinition.Output != null && collectionType != null)
+                        if (sequenceStageDefinition.Output is not null && collectionType != null)
                         {
                             object? result = Activator.CreateInstance(collectionType, new object[] { 0 });
 

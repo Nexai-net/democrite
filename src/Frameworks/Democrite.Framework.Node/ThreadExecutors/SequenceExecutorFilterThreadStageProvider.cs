@@ -8,6 +8,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Toolbox.Disposables;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
         private static readonly Type s_handlerGenericTraits = typeof(SequenceExecutorFilterThreadStageHandler<,>);
 
-        private readonly Dictionary<Type, ISequenceExecutorThreadStageHandler> _handlerCache;
+        private readonly Dictionary<AbstractType, ISequenceExecutorThreadStageHandler> _handlerCache;
         private readonly ReaderWriterLockSlim _locker;
 
         #endregion
@@ -36,7 +37,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
         /// </summary>
         public SequenceExecutorFilterThreadStageProvider()
         {
-            this._handlerCache = new Dictionary<Type, ISequenceExecutorThreadStageHandler>();
+            this._handlerCache = new Dictionary<AbstractType, ISequenceExecutorThreadStageHandler>();
             this._locker = new ReaderWriterLockSlim();
         }
 
@@ -76,7 +77,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
                 if (!this._handlerCache.TryGetValue(stage.Input, out newTypeHandler))
                 {
-                    newTypeHandler = (ISequenceExecutorThreadStageHandler?)Activator.CreateInstance(s_handlerGenericTraits.MakeGenericType(stage.Input, stage.CollectionItemType));
+                    newTypeHandler = (ISequenceExecutorThreadStageHandler?)Activator.CreateInstance(s_handlerGenericTraits.MakeGenericType(stage.Input.ToType(), stage.CollectionItemType.ToType()));
 
                     Debug.Assert(newTypeHandler != null);
                     this._handlerCache.Add(stage.Input, newTypeHandler);

@@ -14,3 +14,4 @@ using Democrite.Framework.Node.Configurations.AutoConfigurator;
 [assembly: AutoConfigurator<INodeDemocriteMemoryAutoConfigurator, AutoDefaultDemocriteMemoryConfigurator>()]
 [assembly: AutoConfigurator<INodeReminderStateMemoryAutoConfigurator, AutoDefaultReminderStateMemoryAutoConfigurator>()]
 [assembly: AutoConfigurator<INodeCustomMemoryAutoConfigurator, AutoDefaultCustomMemoryConfigurator>()]
+[assembly: AutoConfigurator<INodeDefaultMemoryAutoConfigurator, AutoDefaultMemoryConfigurator>()]

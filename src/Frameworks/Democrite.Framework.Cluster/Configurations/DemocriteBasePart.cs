@@ -16,6 +16,7 @@ namespace Democrite.Framework.Cluster.Configurations
     using Microsoft.Extensions.Logging.Abstractions;
 
     using System;
+    using System.Net;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -23,13 +24,14 @@ namespace Democrite.Framework.Cluster.Configurations
     /// </summary>
     /// <typeparam name="TConfig">The type of the configuration.</typeparam>
     /// <seealso cref="SafeAsyncDisposable" />
-    public abstract class DemocriteBasePart<TConfig> : SafeAsyncDisposable
+    public abstract class DemocriteBasePart<TConfig> : SafeAsyncDisposable, IHostedService
     {
         #region Fields
 
         private readonly IDemocriteExecutionHandler _democriteExecutionHandler;
 
         private readonly SemaphoreSlim _locker;
+        private readonly bool _hostOwned;
         private readonly ILogger _logger;
         private readonly IHost _host;
 
@@ -45,7 +47,8 @@ namespace Democrite.Framework.Cluster.Configurations
         /// </summary>
         protected DemocriteBasePart(IHost host,
                                     TConfig? config,
-                                    IDemocriteExecutionHandler? democriteExecutionHandler)
+                                    IDemocriteExecutionHandler? democriteExecutionHandler,
+                                    bool hostOwner)
         {
             ArgumentNullException.ThrowIfNull(host);
             ArgumentNullException.ThrowIfNull(config);
@@ -53,6 +56,8 @@ namespace Democrite.Framework.Cluster.Configurations
 
             this.Config = config;
             this._host = host;
+
+            this._hostOwned = hostOwner;
 
             this._logger = this._host.Services.GetService<ILoggerFactory>()?.CreateLogger(GetType().Name) ?? NullLogger.Instance;
 
@@ -85,18 +90,16 @@ namespace Democrite.Framework.Cluster.Configurations
         /// <summary>
         /// Start the <see cref="ClusterNode"/> and await until the server stop
         /// </summary>
-        public async Task StartUntilEndAsync(Func<IServiceProvider, IDemocriteExecutionHandler, Task>? runningFunction = null)
+        public async Task StartUntilEndAsync(Func<IServiceProvider, IDemocriteExecutionHandler, CancellationToken, Task>? runningFunction = null, CancellationToken token = default)
         {
-            await StartAsync(runningFunction);
-
-            CancellationToken token = default;
+            await StartAsync(runningFunction, token);
 
             try
             {
-                await this._locker.WaitAsync();
+                await this._locker.WaitAsync(token);
 
                 if (this._runningTaskCancellationTokenSource != null)
-                    token = this._runningTaskCancellationTokenSource.Token;
+                    token = CancellationTokenSource.CreateLinkedTokenSource(token, this._runningTaskCancellationTokenSource.Token).Token;
             }
             finally
             {
@@ -106,20 +109,48 @@ namespace Democrite.Framework.Cluster.Configurations
             await this._host.WaitForShutdownAsync(token);
         }
 
+        /// <inheritdoc />
+        public Task StartAsync(CancellationToken token = default)
+        {
+            return StartAsync(null, token);
+        }
+
         /// <summary>
         /// Start the <see cref="ClusterNode"/>, execute <paramref name="runningFunction"/> and give back the hand while server run in background
         /// </summary>
-        public async Task StartAsync(Func<IServiceProvider, IDemocriteExecutionHandler, Task>? runningFunction = null)
+        public async Task StartAsync(Func<IServiceProvider, IDemocriteExecutionHandler, CancellationToken, Task>? runningFunction = null, CancellationToken token = default)
         {
             Task? runningTask = null;
             try
             {
-                await this._locker.WaitAsync();
+                await this._locker.WaitAsync(token);
 
                 if (this._runningTask == null)
                 {
                     this._runningTaskCancellationTokenSource = new CancellationTokenSource();
-                    this._runningTask = this._host.StartAsync(this._runningTaskCancellationTokenSource.Token);
+                    var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(token, this._runningTaskCancellationTokenSource.Token);
+                    token = linkedToken.Token;
+
+                    var serviceToInit = this._host.Services.GetServices<INodeInitService>();
+
+                    var initTasks = serviceToInit.Where(s => !s.IsInitialized && !s.IsInitializing)
+                                                 .Select(s => s.InitializationAsync(this._host.Services, token: token))
+                                                 .ToArray();
+
+                    try
+                    {
+                        await initTasks.SafeWhenAllAsync(token);
+                    }
+                    catch (AggregateException ex)
+                    {
+                        foreach (var inner in ex.InnerExceptions)
+                            this._logger.OptiLog(LogLevel.Critical, "Exceptions on INodeInitService : {exception}", inner);
+                    }
+
+                    if (this._hostOwned)
+                        this._runningTask = this._host.StartAsync(token);
+                    else
+                        this._runningTask = Task.CompletedTask;
                 }
 
                 runningTask = this._runningTask;
@@ -129,30 +160,49 @@ namespace Democrite.Framework.Cluster.Configurations
                 this._locker.Release();
             }
 
-            await OnStartAsync();
+            await OnStartAsync(token);
 
             if (runningTask != null)
             {
                 await runningTask;
 
                 if (runningFunction != null)
-                    await runningFunction(this._host.Services, this._democriteExecutionHandler);
+                    await runningFunction(this._host.Services, this._democriteExecutionHandler, token);
             }
         }
 
         /// <summary>
         /// Stop the <see cref="ClusterNode"/>
         /// </summary>
-        public async Task StopAsync()
+        public async Task StopAsync(CancellationToken token = default)
         {
             Task? runningTask = null;
             try
             {
-                await this._locker.WaitAsync();
+                await this._locker.WaitAsync(token);
 
                 runningTask = this._runningTask;
                 if (this._runningTask != null)
                 {
+                    var serviceToFinalize = this._host.Services.GetServices<INodeFinalizeService>();
+
+                    var initTasks = serviceToFinalize.Where(s => !s.IsFinalized && !s.IsFinalizing)
+                                                     .Select(s => s.FinalizeAsync(token: token))
+                                                     .ToArray();
+
+                    try
+                    {
+                        await initTasks.SafeWhenAllAsync(token);
+                    }
+                    catch (OperationCanceledException)
+                    { 
+                    }
+                    catch (AggregateException ex)
+                    {
+                        foreach (var inner in ex.InnerExceptions)
+                            this._logger.OptiLog(LogLevel.Critical, "Exceptions on INodeInitService : {exception}", inner);
+                    }
+
                     this._runningTaskCancellationTokenSource?.Cancel();
 
                     this._runningTaskCancellationTokenSource = null;
@@ -160,6 +210,9 @@ namespace Democrite.Framework.Cluster.Configurations
 
                     return;
                 }
+
+                if (this._hostOwned)
+                    await this._host.StopAsync(token);
             }
             catch (Exception ex)
             {
@@ -193,7 +246,7 @@ namespace Democrite.Framework.Cluster.Configurations
         /// <summary>
         /// Called when cluster node start.
         /// </summary>
-        protected virtual Task OnStartAsync()
+        protected virtual Task OnStartAsync(CancellationToken token = default)
         {
             return Task.CompletedTask;
         }

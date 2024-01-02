@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy
 {
+    using Democrite.Framework.Toolbox.Abstractions.Supports;
+
     using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Threading.Tasks;
@@ -19,7 +21,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy
         /// <summary>
         /// Occurs when source have been update.
         /// </summary>
-        event EventHandler DataChanged;
+        event EventHandler<IReadOnlyCollection<TKey>>? DataChanged;
 
         #endregion
 
@@ -54,6 +56,11 @@ namespace Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy
         /// Try get first value to correspond to <paramref name="key"/>
         /// </summary>
         ValueTask<(bool Result, T? value)> TryGetFirstValueAsync(TKey key);
+
+        /// <summary>
+        /// Forces cache data to update
+        /// </summary>
+        ValueTask ForceUpdateAsync();
 
         #endregion
     }

@@ -8,7 +8,7 @@ namespace Democrite.Framework.Builders.Triggers
     using Democrite.Framework.Core.Abstractions.Inputs;
 
     /// <summary>
-    /// Create in charge to customize an trigger input using a static collection of value provide are the construction
+    /// Build in charge to customize an trigger input using a static collection of value provide are the construction
     /// </summary>
     /// <typeparam name="TTriggerOutput">The type of the trigger output.</typeparam>
     /// <seealso cref="ITriggerInputBuilder{TTriggerOutput}" />

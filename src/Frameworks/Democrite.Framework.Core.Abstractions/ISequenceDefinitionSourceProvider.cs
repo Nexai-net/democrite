@@ -15,7 +15,7 @@ namespace Democrite.Framework.Core.Abstractions
     /// <remarks>
     ///     Use <see cref="ISequenceDefinitionProvider"/> to access <see cref="SequenceDefinition"/>
     /// </remarks>
-    public interface ISequenceDefinitionSourceProvider : IProviderStrategySource<SequenceDefinition, Guid>
+    public interface ISequenceDefinitionSourceProvider : IProviderStrategySource<SequenceDefinition, Guid>, INodeInitService
     {
     }
 }

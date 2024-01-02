@@ -7,6 +7,7 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Toolbox.Abstractions.Conditions;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
 
@@ -38,10 +39,12 @@ namespace Democrite.Framework.Builders.Sequences
         #region Methods
 
         /// <inheritdoc />
-        public ISequenceStageDefinition ToDefinition()
+        public SequenceStageBaseDefinition ToDefinition()
         {
             var config = BuildConfigDefinition();
-            return new SequenceStageFilterDefinition(typeof(TInput), this._condition, config);
+            return new SequenceStageFilterDefinition((CollectionType)typeof(TInput).GetAbstractType(),
+                                                     this._condition,
+                                                     config);
         }
 
         #endregion

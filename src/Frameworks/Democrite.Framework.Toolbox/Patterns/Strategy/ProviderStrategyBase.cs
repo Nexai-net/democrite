@@ -56,7 +56,7 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         ///     Not connect yet
         ///     
         /// </remarks>
-        public event EventHandler? DataChanged;
+        public event EventHandler<IReadOnlyCollection<TKey>>? DataChanged;
 
         #endregion
 
@@ -67,8 +67,9 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         {
             foreach (var source in this._providerSource)
             {
-                if (await source.TryGetDataAsync(key, out var data))
-                    return data;
+                var result = await source.TryGetDataAsync(key);
+                if (result.Success)
+                    return result.Result;
             }
 
             return null;
@@ -79,15 +80,19 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         {
             if (keys.Length == 0)
                 return ValueTask.FromResult(EnumerableHelper<T>.ReadOnly);
-            return GetValuesAsync(GetFetchByKeyExpressions(keys));
+            return GetValuesAsync(((IReadOnlyCollection<TKey>)keys));
         }
 
         /// <inheritdoc />
-        public ValueTask<IReadOnlyCollection<T>> GetValuesAsync(IReadOnlyCollection<TKey> keys)
+        public async ValueTask<IReadOnlyCollection<T>> GetValuesAsync(IReadOnlyCollection<TKey> keys)
         {
             if (keys.Count == 0)
-                return ValueTask.FromResult(EnumerableHelper<T>.ReadOnly);
-            return GetValuesAsync(GetFetchByKeyExpressions(keys));
+                return EnumerableHelper<T>.ReadOnly;
+
+            var tasks = this._providerSource.Select(source => source.GetValuesAsync(keys).AsTask())
+                                            .ToList();
+
+            return await GetResults(tasks);
         }
 
         /// <inheritdoc />
@@ -95,7 +100,59 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         {
             var predicate = filter.Compile();
             var tasks = this._providerSource.Select(source => source.GetValuesAsync(filter, predicate).AsTask())
-                                             .ToList();
+                                            .ToList();
+
+            return await GetResults(tasks);
+        }
+
+        /// <inheritdoc />
+        public async ValueTask<T?> GetFirstValueAsync(Expression<Func<T, bool>> filter)
+        {
+            var predicate = filter.Compile();
+
+            foreach (var source in this._providerSource)
+            {
+                var result = await source.GetFirstValueAsync(filter, predicate);
+                if (!EqualityComparer<T>.Default.Equals(result, default))
+                    return result;
+            }
+
+            return default;
+        }
+
+        /// <inheritdoc />
+        public virtual async ValueTask<(bool Result, T? value)> TryGetFirstValueAsync(TKey key)
+        {
+            var value = await GetFirstValueByIdAsync(key);
+            return (value is not null, value);
+        }
+
+        /// <inheritdoc />
+        public ValueTask ForceUpdateAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        #region Tools
+
+        /// <summary>
+        /// Gets the fetch by key expressions.
+        /// </summary>
+        protected abstract Expression<Func<T, bool>> GetFetchByKeyExpressions(IReadOnlyCollection<TKey> keys);
+
+        /// <summary>
+        /// Raises the data changed.
+        /// </summary>
+        protected void RaiseDataChanged(IReadOnlyCollection<TKey> dataUpdated)
+        {
+            DataChanged?.Invoke(this, dataUpdated);
+        }
+
+        /// <summary>
+        /// Gets the results from tasks.
+        /// </summary>
+        private async ValueTask<IReadOnlyCollection<T>> GetResults(IReadOnlyList<Task<IReadOnlyCollection<T>>> tasks)
+        {
             var tasksCollection = tasks.Where(t => t.IsCompleted == false);
 
             while (tasksCollection.Any())
@@ -134,43 +191,6 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
             }
 
             return results;
-        }
-
-        /// <inheritdoc />
-        public async ValueTask<T?> GetFirstValueAsync(Expression<Func<T, bool>> filter)
-        {
-            var predicate = filter.Compile();
-
-            foreach (var source in this._providerSource)
-            {
-                var result = await source.GetFirstValueAsync(filter, predicate);
-                if (!EqualityComparer<T>.Default.Equals(result, default))
-                    return result;
-            }
-
-            return default;
-        }
-
-        /// <inheritdoc />
-        public virtual async ValueTask<(bool Result, T? value)> TryGetFirstValueAsync(TKey key)
-        {
-            var value = await GetFirstValueByIdAsync(key);
-            return (value is not null, value);
-        }
-
-        #region Tools
-
-        /// <summary>
-        /// Gets the fetch by key expressions.
-        /// </summary>
-        protected abstract Expression<Func<T, bool>> GetFetchByKeyExpressions(IReadOnlyCollection<TKey> keys);
-
-        /// <summary>
-        /// Raises the data changed.
-        /// </summary>
-        protected void RaiseDataChanged()
-        {
-            DataChanged?.Invoke(this, EventArgs.Empty);
         }
 
         #endregion

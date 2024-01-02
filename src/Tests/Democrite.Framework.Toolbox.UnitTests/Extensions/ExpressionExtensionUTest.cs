@@ -11,6 +11,8 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
     using Democrite.Framework.Toolbox.Abstractions.Conditions;
     using Democrite.Framework.Toolbox.Abstractions.Enums;
     using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.Models;
+    using Democrite.Framework.Toolbox.UnitTests.Helpers;
     using Democrite.Framework.Toolbox.UnitTests.Xunits;
     using Democrite.UnitTests.ToolKit.Helpers;
 
@@ -156,6 +158,8 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
         {
             var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
 
+            // TODO: Allow more type combinaison to improve test efficiency
+            fixture.Register<AbstractType>(() => typeof(int).GetAbstractType());
             fixture.Register<ConditionValueDefinition>(() => new ConditionValueDefinition(typeof(int), Random.Shared.Next(0, 152)));
             fixture.Register<ConditionBaseDefinition>(() => fixture.Create<ConditionValueDefinition>());
 

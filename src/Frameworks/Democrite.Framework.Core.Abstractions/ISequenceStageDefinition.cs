@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
 
@@ -31,12 +32,12 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// <summary>
         /// Gets the input first stage input.
         /// </summary>
-        public Type? Input { get; }
+        AbstractType? Input { get; }
 
         /// <summary>
         /// Gets the input first stage ouytput.
         /// </summary>
-        Type? Output { get; }
+        AbstractType? Output { get; }
 
         /// <summary>
         /// Gets the stage type.

@@ -75,10 +75,10 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
             ValidateCronExpression();
 
             return new CronTriggerDefinition(Guid.NewGuid(),
-                                             this._cronExpression,
                                              this.TargetSequenceIds,
                                              this.TargetSignalIds,
                                              true,
+                                             this._cronExpression,
                                              base.TriggerInputDefinition);
         }
 

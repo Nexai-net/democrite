@@ -5,21 +5,20 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
-    using Democrite.Framework.Core.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
-
-    using Newtonsoft.Json;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.ComponentModel;
-    using System.Linq;
     using System.Runtime.Serialization;
 
     /// <summary>
     /// Stage related to VGrain call information
     /// </summary>
     /// <seealso cref="ISequenceStageDefinition" />
+    [Immutable]
     [Serializable]
+    [DataContract]
     [ImmutableObject(true)]
     public sealed class SequenceStageCallDefinition : SequenceStageBaseDefinition
     {
@@ -28,32 +27,26 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStageCallDefinition"/> class.
         /// </summary>
-        public SequenceStageCallDefinition(Type? input,
-                                           Type vgrainType,
-                                           CallMethodDefinition callMethodDefinition,
-                                           Type? output,
-                                           Type? contextInfoType = null,
-                                           object? contextInfo = null,
+        public SequenceStageCallDefinition(AbstractType? input,
+                                           ConcreteType vgrainType,
+                                           AbstractMethod callMethodDefinition,
+                                           AbstractType? output,
+                                           AbstractType? configurationType = null,
+                                           object? configurationInfo = null,
                                            SequenceOptionStageDefinition? options = null,
                                            bool preventReturn = false,
                                            Guid? uid = null)
             : base(StageTypeEnum.Call, input, output, options, preventReturn, uid)
         {
             ArgumentNullException.ThrowIfNull(callMethodDefinition);
+            ArgumentNullException.ThrowIfNull(vgrainType);
 
             this.CallMethodDefinition = callMethodDefinition;
 
             this.VGrainType = vgrainType;
 
-            this.ConfigurationType = contextInfoType;
-            this.ConfigurationInfo = contextInfo;
-
-            string genericArgs = string.Empty;
-
-            if (callMethodDefinition?.GenericImplementationTypes != null && callMethodDefinition.GenericImplementationTypes.Any())
-                genericArgs = "<" + string.Join(',', callMethodDefinition.GenericImplementationTypes.Select(t => t.Name)) + ">";
-
-            this.UniqueKey = $"{vgrainType.FullName}.{callMethodDefinition!.Name}{genericArgs}({string.Join(',', callMethodDefinition.Arguments.Select(p => string.IsNullOrEmpty(p.FullName) ? p.Name : p.FullName))})";
+            this.ConfigurationType = configurationType;
+            this.ConfigurationInfo = configurationInfo;
         }
 
         #endregion
@@ -63,32 +56,26 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// <summary>
         /// Gets the method information.
         /// </summary>
-        public CallMethodDefinition CallMethodDefinition { get; }
+        [DataMember]
+        public AbstractMethod CallMethodDefinition { get; }
 
         /// <summary>
         /// Gets the type of the vgrain.
         /// </summary>
-        public Type VGrainType { get; }
+        [DataMember]
+        public ConcreteType VGrainType { get; }
 
         /// <summary>
         /// Gets the type of the context information.
         /// </summary>
-        public Type? ConfigurationType { get; }
+        [DataMember]
+        public AbstractType? ConfigurationType { get; }
 
         /// <summary>
         /// Gets the context information.
         /// </summary>
+        [DataMember]
         public object? ConfigurationInfo { get; }
-
-        /// <summary>
-        /// Gets a unique key resuming the informations.
-        /// </summary>
-        /// <remarks>
-        ///     Used for <see cref="ISupportDebugDisplayName"/> and cache
-        /// </remarks>
-        [JsonIgnore]
-        [IgnoreDataMember]
-        public string UniqueKey { get; }
 
         #endregion
 
@@ -99,7 +86,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         {
             return other is SequenceStageCallDefinition callOther &&
                    callOther.CallMethodDefinition == this.CallMethodDefinition &&
-                   callOther.VGrainType == this.VGrainType;
+                   callOther.VGrainType.Equals((AbstractType)this.VGrainType);
         }
 
         /// <inheritdoc/>

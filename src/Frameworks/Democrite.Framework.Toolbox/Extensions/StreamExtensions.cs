@@ -25,7 +25,8 @@ namespace Democrite.Framework.Toolbox.Extensions
 
             while (readed < stream.Length)
             {
-                int readLength = Math.Min((int)stream.Length, ReadBatchSize);
+                var remain = stream.Length - readed;    
+                int readLength = Math.Min((int)remain, ReadBatchSize);
                 var readCount = stream.Read(bytes, readed, readLength);
 
                 if (readCount < readLength)

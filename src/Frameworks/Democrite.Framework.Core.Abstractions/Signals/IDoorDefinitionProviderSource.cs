@@ -11,7 +11,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
     /// <summary>
     /// Provider source of <see cref="DoorDefinition"/>
     /// </summary>
-    public interface IDoorDefinitionProviderSource : IProviderStrategySource<DoorDefinition, Guid>
+    public interface IDoorDefinitionProviderSource : IProviderStrategySource<DoorDefinition, Guid>, INodeInitService
     {
     }
 }

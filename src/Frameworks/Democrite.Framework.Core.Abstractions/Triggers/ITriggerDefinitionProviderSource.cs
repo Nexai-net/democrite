@@ -11,7 +11,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     /// <summary>
     /// Provider source of <see cref="TriggerDefinition"/>
     /// </summary>
-    public interface ITriggerDefinitionProviderSource : IProviderStrategySource<TriggerDefinition, Guid>
+    public interface ITriggerDefinitionProviderSource : IProviderStrategySource<TriggerDefinition, Guid>, INodeInitService
     {
     }
 }

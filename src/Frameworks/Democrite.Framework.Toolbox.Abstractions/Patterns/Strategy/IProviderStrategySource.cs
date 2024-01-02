@@ -4,12 +4,14 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy
 {
+    using Democrite.Framework.Toolbox.Abstractions.Supports;
+
     using System.Linq.Expressions;
 
     /// <summary>
     /// Define a source of information consumed by <see cref="IProviderStrategy{T, TKey}"/>
     /// </summary>
-    public interface IProviderStrategySource<T, TKey>
+    public interface IProviderStrategySource<T, TKey> : ISupportInitialization
         where T : class
         where TKey : notnull
     {
@@ -27,31 +29,36 @@ namespace Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy
         /// <summary>
         /// Occurs when intformation have been updated.
         /// </summary>
-        event EventHandler DataChanged;
+        event EventHandler<IReadOnlyCollection<TKey>> DataChanged;
 
         #endregion
 
         #region Methods
 
         /// <summary>
-        /// Call to build data <see cref="T"/>
-        /// </summary>
-        ValueTask BuildAsync();
-
-        /// <summary>
         /// Tries get data <typeparamref name="T"/> from key <paramref name="key"/>
         /// </summary>
-        ValueTask<bool> TryGetDataAsync(TKey key, out T? value);
+        ValueTask<(bool Success, T? Result)> TryGetDataAsync(TKey key, CancellationToken token = default);
 
         /// <summary>
         /// Gets the values based on filter
         /// </summary>
-        ValueTask<IReadOnlyCollection<T>> GetValuesAsync(Expression<Func<T, bool>> filterExpression, Func<T, bool> filter);
+        ValueTask<IReadOnlyCollection<T>> GetValuesAsync(Expression<Func<T, bool>> filterExpression, Func<T, bool> filter, CancellationToken token = default);
+
+        /// <summary>
+        /// Gets the values keys
+        /// </summary>
+        ValueTask<IReadOnlyCollection<T>> GetValuesAsync(IEnumerable<TKey> keys, CancellationToken token = default);
 
         /// <summary>
         /// Gets the value based on filter
         /// </summary>
-        ValueTask<T?> GetFirstValueAsync(Expression<Func<T, bool>> filterExpression, Func<T, bool> filter);
+        ValueTask<T?> GetFirstValueAsync(Expression<Func<T, bool>> filterExpression, Func<T, bool> filter, CancellationToken token = default);
+
+        /// <summary>
+        /// Forces cache data to update
+        /// </summary>
+        ValueTask ForceUpdateAsync(CancellationToken token);
 
         #endregion
     }

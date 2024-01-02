@@ -70,7 +70,7 @@ namespace Democrite.Framework.Node.Signals
         /// <summary>
         /// Doors the definition provider data changed.
         /// </summary>
-        private async void DoorDefinitionProvider_DataChanged(object? sender, EventArgs e)
+        private async void DoorDefinitionProvider_DataChanged(object? sender, IReadOnlyCollection<Guid> definitionThatChanged)
         {
             await LaunchSynpaseVGrainsAsync();
         }

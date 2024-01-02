@@ -9,7 +9,7 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions.Sequence;
 
     /// <summary>
-    /// Create a sequence pipeline steps builder
+    /// Build a sequence pipeline steps builder
     /// </summary>
     public interface ISequencePipelineBaseBuilder : IDefinitionBaseBuilder<SequenceDefinition>
     {
@@ -30,7 +30,7 @@ namespace Democrite.Framework.Builders.Sequences
         ISequencePipelineBuilder<TOutput> EnqueueStage<TOutput>(ISequencePipelineStageDefinitionProvider stage);
 
         /// <summary>
-        /// Create a sub <see cref="SequenceBuilder"/>
+        /// Build a sub <see cref="SequenceBuilder"/>
         /// </summary>
         /// <remarks>
         ///     used to link all sub sequence definition to an origine one
@@ -39,7 +39,7 @@ namespace Democrite.Framework.Builders.Sequences
     }
 
     /// <summary>
-    /// Create a sequence pipeline steps builder
+    /// Build a sequence pipeline steps builder
     /// </summary>
     public interface ISequencePipelineBuilder : ISequencePipelineBaseBuilder
     {

@@ -6,6 +6,7 @@
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.Linq.Expressions;
@@ -70,11 +71,11 @@
                 return new SequenceDefinition(Guid.NewGuid(),
                                               fixture.Create<string>(),
                                               SequenceOptionDefinition.Default,
-                                              new ISequenceStageDefinition[]
+                                              new SequenceStageBaseDefinition[]
                                               {
-                                                  new SequenceStageFilterDefinition(typeof(string), ((Expression<Func<string, bool>>)(s => s != null)).Serialize()),
-                                                  new SequenceStageFilterDefinition(typeof(string), ((Expression<Func<string, bool>>)(s => s != null)).Serialize()),
-                                                  new SequenceStageFilterDefinition(typeof(string), ((Expression<Func<string, bool>>)(s => s != null)).Serialize()),
+                                                  new SequenceStageFilterDefinition((CollectionType)typeof(List<string>).GetAbstractType(), ((Expression<Func<string, bool>>)(s => s != null)).Serialize()),
+                                                  new SequenceStageFilterDefinition((CollectionType)typeof(List<string>).GetAbstractType(), ((Expression<Func<string, bool>>)(s => s != null)).Serialize()),
+                                                  new SequenceStageFilterDefinition((CollectionType)typeof(List<string>).GetAbstractType(), ((Expression<Func<string, bool>>)(s => s != null)).Serialize()),
                                               });
             });
 

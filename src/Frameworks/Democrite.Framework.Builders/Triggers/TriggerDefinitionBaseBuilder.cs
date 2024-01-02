@@ -13,7 +13,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
     using System;
 
     /// <summary>
-    /// Create trigger definition
+    /// Build trigger definition
     /// </summary>
     /// <typeparam name="TOutputMesage">The type of the output mesage.</typeparam>
     /// <seealso cref="ITriggerDefinitionBuilder" />

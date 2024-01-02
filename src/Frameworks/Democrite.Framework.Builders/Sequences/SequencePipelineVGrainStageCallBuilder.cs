@@ -114,7 +114,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// Save in <see cref="T:Democrite.Framework.Core.Abstractions.Sequence.SequenceStageBaseDefinition" /> if element is root
         /// </summary>
         /// <returns></returns>
-        protected override ISequenceStageDefinition InternalToDefinition()
+        protected override SequenceStageBaseDefinition InternalToDefinition()
         {
             ArgumentNullException.ThrowIfNull(this._callDefinition);
 

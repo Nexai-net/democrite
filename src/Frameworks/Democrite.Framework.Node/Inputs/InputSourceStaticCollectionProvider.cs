@@ -8,6 +8,7 @@ namespace Democrite.Framework.Node.Inputs
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Toolbox.Disposables;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.Threading;
@@ -59,7 +60,7 @@ namespace Democrite.Framework.Node.Inputs
         #region Properties
 
         /// <inheritdoc />
-        public Type InputType
+        public AbstractType InputType
         {
             get { return this._definition.InputType; }
         }

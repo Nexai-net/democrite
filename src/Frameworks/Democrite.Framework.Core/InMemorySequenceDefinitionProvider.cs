@@ -9,6 +9,8 @@ namespace Democrite.Framework.Core
     using Democrite.Framework.Toolbox.Patterns.Strategy;
 
     using System;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// <see cref="SequenceDefinition"/> provider register in memory

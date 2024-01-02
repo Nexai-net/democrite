@@ -8,12 +8,14 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
 
     using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Define all the stage options
     /// </summary>
     [Immutable]
     [Serializable]
+    [DataContract]
     [ImmutableObject(true)]
     public sealed class SequenceOptionStageDefinition : Equatable<SequenceOptionStageDefinition>
     {
@@ -47,6 +49,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// <summary>
         /// Gets the desired stage identifier.
         /// </summary>
+        [DataMember]
         public Guid? StageId { get; }
 
         #endregion

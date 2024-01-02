@@ -14,12 +14,15 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
     using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Toolbox.Abstractions.Disposables;
     using Democrite.Framework.Toolbox.Helpers;
+    using Democrite.Framework.Toolbox.Models;
     using Democrite.UnitTests.ToolKit;
     using Democrite.UnitTests.ToolKit.VGrains.Transformers;
 
     using Moq;
 
     using NFluent;
+
+    using Orleans.Serialization.Serializers;
 
     using System;
     using System.Diagnostics;
@@ -42,9 +45,9 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             var mockBaseSequenceStage = new Mock<ISequenceStageDefinition>();
             Check.ThatCode(() => provider.CanHandler(mockBaseSequenceStage.Object)).DoesNotThrow().And.WhichResult().IsFalse();
 
-            var def = typeof(SequenceExecutorForeachThreadStageProviderUnitTests).GetMethod(nameof(SequenceExecutorForeachThreadStageProvider_CanHandler))!.ToCallDefinition();
+            var def = typeof(SequenceExecutorForeachThreadStageProviderUnitTests).GetMethod(nameof(SequenceExecutorForeachThreadStageProvider_CanHandler))!.GetAbstractMethod();
             Check.ThatCode(() => provider.CanHandler(new SequenceStageCallDefinition(null,
-                                                                                     typeof(string),
+                                                                                     (ConcreteType)typeof(string).GetAbstractType(),
                                                                                      def,
                                                                                      null,
                                                                                      null)))
@@ -58,8 +61,8 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                                                                         new SequenceDefinition(Guid.NewGuid(),
                                                                                                                "",
                                                                                                                SequenceOptionDefinition.Default,
-                                                                                                               EnumerableHelper<ISequenceStageDefinition>.ReadOnly),
-                                                                                        typeof(string))))
+                                                                                                               EnumerableHelper<SequenceStageBaseDefinition>.ReadOnly),
+                                                                                        typeof(string).GetAbstractType())))
                  .DoesNotThrow()
                  .And
                  .WhichResult()
@@ -77,16 +80,16 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             // Prepare
             var provider = new SequenceExecutorForeachThreadStageProvider();
 
-            var def = typeof(ITestExtractEmailTransformer).GetMethod(nameof(ITestExtractEmailTransformer.ExtractEmailsAsync))!.ToCallDefinition();
+            var def = typeof(ITestExtractEmailTransformer).GetMethod(nameof(ITestExtractEmailTransformer.ExtractEmailsAsync))!.GetAbstractMethod();
 
-            var callDefinition = new SequenceStageCallDefinition(typeof(string),
-                                                                 typeof(ITestExtractEmailTransformer),
+            var callDefinition = new SequenceStageCallDefinition(typeof(string).GetAbstractType(),
+                                                                 (ConcreteType)typeof(ITestExtractEmailTransformer).GetAbstractType(),
                                                                  def,
-                                                                 typeof(string[]));
+                                                                 typeof(string[]).GetAbstractType());
 
             var innerDef = new SequenceDefinition(Guid.NewGuid(), "test", SequenceOptionDefinition.Default, new[] { callDefinition });
 
-            var foreachDefinition = new SequenceStageForeachDefinition(typeof(string[]), innerDef, typeof(string[]));
+            var foreachDefinition = new SequenceStageForeachDefinition(typeof(string[]).GetAbstractType(), innerDef, typeof(string[]).GetAbstractType());
 
             var execContext = new Democrite.Framework.Core.Models.ExecutionContext(Guid.NewGuid(), Guid.NewGuid(), null);
             var logger = new MemoryTestLogger();

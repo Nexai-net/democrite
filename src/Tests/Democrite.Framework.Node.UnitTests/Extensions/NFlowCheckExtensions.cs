@@ -95,11 +95,13 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
             Check.That(workfExec.Call).IsNotNull().And
                                       .WhichMember(p => p!.TargetVGrainType).Verifies(p => p.IsNotNull().And.IsEqualTo(typeof(IGenericContextedExecutor<Guid>).AssemblyQualifiedName));
 
-            if (definition.Output != null)
+            if (definition.Output is not null)
             {
-                var outputTask = string.Format("{0}`1[{1}", typeof(Task).FullName, definition.Output?.FullName);
+                var outputTask = string.Format("] {0}`1[{1}", typeof(Task).FullName, definition.Output?.FullDisplayName);
 
-                Check.That(workfExec.Call).WhichMember(c => c!.TargetMethod).Verifies(mth => mth.StartsWith(outputTask));
+                Check.That(workfExec.Call).IsNotNull();
+                Check.That(workfExec.Call!.TargetMethod).IsNotNull();
+                Check.ThatCode(() => workfExec.Call!.TargetMethod!.Contains(outputTask)).IsNotNull();
             }
 
             Check.That(flowStageConsumed.Add(workfExec));
@@ -230,19 +232,19 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
 
             Check.That(stageExecutionInfo.Call).IsNotNull();
             Check.That(stageExecutionInfo.Call?.TargetVGrainType).IsNotNull().And.IsEqualTo(callDef.VGrainType.AssemblyQualifiedName);
-            Check.That(stageExecutionInfo.Call?.TargetMethod).IsNotNull().And.Contains(callDef.CallMethodDefinition.Name);
+            Check.That(stageExecutionInfo.Call?.TargetMethod).IsNotNull().And.Contains(callDef.CallMethodDefinition.DisplayName);
 
-            if (callDef.Output != null && callDef.Output != NoneType.Trait)
+            if (callDef.Output is null && callDef.Output != NoneType.Trait)
             {
                 Check.That(stageExecutionInfo.ReturnArg).IsNotNull();
                 Check.That(stageExecutionInfo.ReturnArg?.Error).IsNullOrEmpty();
                 Check.That(stageExecutionInfo.ReturnArg?.InOut).IsNotNull();
 
                 var results = stageExecutionInfo.ReturnArg!.InOut!.Flattern();
-                Check.That(results).IsNotNull().And.CountIs(1).And.ContainsOnlyInstanceOfType(callDef.Output);
+                Check.That(results).IsNotNull().And.CountIs(1).And.ContainsOnlyInstanceOfType(callDef.Output!.ToType());
             }
 
-            if (callDef.Input != null && callDef.Input != NoneType.Trait)
+            if (callDef.Input is null && callDef.Input != NoneType.Trait)
             {
                 Check.That(stageExecutionInfo.Parameters).IsNotNull();
                 Check.That(stageExecutionInfo.Parameters?.Error).IsNullOrEmpty();
@@ -250,7 +252,7 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
 
                 var inputs = stageExecutionInfo.Parameters!.InOut!.Flattern();
                 Check.That(inputs).IsNotNull().And.ContainsNoDuplicateItem().And.ContainsOnlyElementsThatMatch(o => o == null ||
-                                                                                                                    o.GetType().IsAssignableTo(callDef.Input) ||
+                                                                                                                    o.GetType().IsAssignableTo(callDef.Input?.ToType()) ||
                                                                                                                     o is IExecutionContext);
             }
 

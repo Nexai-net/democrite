@@ -24,6 +24,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Builders\Democrite.Framework.Builders.csproj" />
+		<ProjectReference Include="..\Democrite.UnitTests.ToolKit\Democrite.UnitTests.ToolKit.csproj" />
 	</ItemGroup>
 
 </Project>

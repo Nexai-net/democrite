@@ -5,7 +5,6 @@
 namespace Democrite.Framework.Cluster.Abstractions.Configurations
 {
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
 
     using System;
     using System.Diagnostics.CodeAnalysis;
@@ -25,6 +24,12 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         /// Add service <typeparamref name="TImplementation"/> instance with access key <typeparamref name="TService"/>
         /// </summary>
         TSubWizard AddService<TService>(TService instance)
+            where TService : class;
+
+        /// <summary>
+        /// Add service <typeparamref name="TImplementation"/> instance with access key <typeparamref name="TService"/>
+        /// </summary>
+        TSubWizard AddService<TService>(Func<IServiceProvider, TService> factory)
             where TService : class;
 
         /// <summary>

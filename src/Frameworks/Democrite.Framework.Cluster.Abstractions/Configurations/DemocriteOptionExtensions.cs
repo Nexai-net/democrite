@@ -21,7 +21,7 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         /// Adds option from implementation or instance
         /// </summary>
         /// <returns>
-        ///     Return option inserted
+        ///     Return option
         /// </returns>
         public static TOption? AddOptionFromInstOrConfig<TOption>(this IServiceCollection services,
                                                                   IConfiguration configuration,
@@ -34,7 +34,37 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
                 (services.Any(s => s.ServiceType == typeof(TOption)) ||
                  services.Any(s => s.ServiceType == typeof(IOptions<TOption>))))
             {
-                return null;
+                var serviceDesc = services.FirstOrDefault(s => s.ServiceType == typeof(TOption));
+
+                if (serviceDesc != null)
+                {
+                    if (serviceDesc.ImplementationInstance is TOption optionInst)
+                        return optionInst;
+
+                    if (serviceDesc.ImplementationFactory != null)
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+                        return (TOption)serviceDesc.ImplementationFactory(null);
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+
+                    throw new InvalidOperationException("Option already registred but could not extract the value");
+                }
+
+                serviceDesc = services.First(s => s.ServiceType == typeof(IOptions<TOption>));
+
+                if (serviceDesc != null)
+                {
+                    if (serviceDesc.ImplementationInstance is IOptions<TOption> optionIncInst)
+                        return optionIncInst.Value;
+
+                    if (serviceDesc.ImplementationFactory != null)
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
+                        return ((IOptions<TOption>)serviceDesc.ImplementationFactory(null))?.Value;
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+
+                    throw new InvalidOperationException("Option already registred but could not extract the value");
+                }
+
+                throw new InvalidOperationException("Option already registred but could not extract the value");
             }
 
             if (!string.IsNullOrWhiteSpace(configurationSection))

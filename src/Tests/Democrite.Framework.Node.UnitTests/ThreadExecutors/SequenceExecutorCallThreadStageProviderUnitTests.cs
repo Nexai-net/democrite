@@ -11,6 +11,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.Models;
     using Democrite.UnitTests.ToolKit;
     using Democrite.UnitTests.ToolKit.VGrains.Transformers;
 
@@ -55,11 +56,11 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                 var mockBaseSequenceStage = new Mock<ISequenceStageDefinition>();
                 Check.ThatCode(() => provider.CanHandler(mockBaseSequenceStage.Object)).DoesNotThrow().And.WhichResult().IsFalse();
 
-                var def = typeof(SequenceExecutorCallThreadStageProviderUnitTests).GetMethod(nameof(SequenceExecutorCallThreadStageProvider_CanHandler))!.ToCallDefinition();
+                var def = typeof(SequenceExecutorCallThreadStageProviderUnitTests).GetMethod(nameof(SequenceExecutorCallThreadStageProvider_CanHandler))!.GetAbstractMethod();
 
                 // True
                 Check.ThatCode(() => provider.CanHandler(new SequenceStageCallDefinition(null,
-                                                                                         typeof(string),
+                                                                                         (ConcreteType)typeof(string).GetAbstractType(),
                                                                                          def,
                                                                                          null,
                                                                                          null)))
@@ -78,12 +79,12 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
         {
             using (var provider = new SequenceExecutorCallThreadStageProvider())
             {
-                var def = typeof(ITestExtractEmailTransformer).GetMethod(nameof(ITestExtractEmailTransformer.ExtractEmailsAsync))!.ToCallDefinition();
+                var def = typeof(ITestExtractEmailTransformer).GetMethod(nameof(ITestExtractEmailTransformer.ExtractEmailsAsync))!.GetAbstractMethod();
 
-                var callDefinition = new SequenceStageCallDefinition(typeof(string),
-                                                                     typeof(ITestExtractEmailTransformer),
+                var callDefinition = new SequenceStageCallDefinition(typeof(string).GetAbstractType(),
+                                                                     (ConcreteType)typeof(ITestExtractEmailTransformer).GetAbstractType(),
                                                                      def,
-                                                                     typeof(string[]));
+                                                                     typeof(string[]).GetAbstractType());
 
                 // Get Handler
                 var handler = provider.Provide(callDefinition);
@@ -111,7 +112,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                 var mockDiagnositicLogger = new Mock<IDiagnosticLogger>(MockBehavior.Strict);
 
                 var mockVGrainProvider = new Mock<IVGrainProvider>(MockBehavior.Strict);
-                mockVGrainProvider.Setup(m => m.GetVGrainAsync(callDefinition.VGrainType, input, It.Is(execContextValidator), It.IsAny<ILogger>()))
+                mockVGrainProvider.Setup(m => m.GetVGrainAsync(callDefinition.VGrainType.ToType(), input, It.Is(execContextValidator), It.IsAny<ILogger>()))
                                  .Returns(ValueTask.FromResult<IVGrain>(mockVGrain.Object));
 
                 // ACT
@@ -130,7 +131,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
 
                 await result.result;
 
-                mockVGrainProvider.Verify(m => m.GetVGrainAsync(callDefinition.VGrainType, input, It.Is(execContextValidator), It.IsAny<ILogger>()), Times.Once);
+                mockVGrainProvider.Verify(m => m.GetVGrainAsync(callDefinition.VGrainType.ToType(), input, It.Is(execContextValidator), It.IsAny<ILogger>()), Times.Once);
                 mockVGrain.Verify(m => m.ExtractEmailsAsync(input, It.Is(execContextValidator)), Times.Once);
 
                 mockVGrainProvider.VerifyNoOtherCalls();

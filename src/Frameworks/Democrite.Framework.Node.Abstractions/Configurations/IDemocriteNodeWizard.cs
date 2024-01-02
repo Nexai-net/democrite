@@ -33,7 +33,7 @@ namespace Democrite.Framework.Node.Abstractions.Configurations
         /// <summary>
         /// Setups in local memory definitions
         /// </summary>
-        IDemocriteNodeWizard SetupInMemoryDefintions(Action<IDemocriteNodeLocalDefinitionsBuilder> config);
+        IDemocriteNodeWizard AddInMemoryMongoDefinitionProvider(Action<IDemocriteNodeLocalDefinitionsBuilder> config);
 
         /// <summary>
         /// Setups the nodes memories, how to same state, reminder, trigger ...

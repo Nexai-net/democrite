@@ -122,7 +122,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Converts to definition.
         /// </summary>
-        public virtual ISequenceStageDefinition ToDefinition()
+        public virtual SequenceStageBaseDefinition ToDefinition()
         {
             return this._root?.ToDefinition() ?? InternalToDefinition();
         }
@@ -130,7 +130,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Save in <see cref="ISequenceStageDefinition"/> if element is root
         /// </summary>
-        protected virtual ISequenceStageDefinition InternalToDefinition()
+        protected virtual SequenceStageBaseDefinition InternalToDefinition()
         {
             throw new NotImplementedException();
         }

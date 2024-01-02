@@ -4,6 +4,10 @@
 
 namespace Democrite.Framework.Node.Abstractions.Configurations.Builders
 {
+    using Democrite.Framework.Core.Abstractions.Sequence;
+    using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Abstractions.Triggers;
+
     using System;
 
     /// <summary>
@@ -21,9 +25,19 @@ namespace Democrite.Framework.Node.Abstractions.Configurations.Builders
         IDemocriteNodeLocalDefinitionsBuilder SetupSequences(Action<IDemocriteNodeSequenceWizard> config);
 
         /// <summary>
+        /// Setup callable sequence
+        /// </summary>
+        IDemocriteNodeLocalDefinitionsBuilder SetupSequences(params SequenceDefinition[] sequences);
+
+        /// <summary>
         /// Setups the triggers.
         /// </summary>
         IDemocriteNodeLocalDefinitionsBuilder SetupTriggers(Action<IDemocriteNodeTriggersWizard> config);
+
+        /// <summary>
+        /// Setups the triggers.
+        /// </summary>
+        IDemocriteNodeLocalDefinitionsBuilder SetupTriggers(params TriggerDefinition[] triggers);
 
         /// <summary>
         /// Setups the signals.
@@ -31,9 +45,19 @@ namespace Democrite.Framework.Node.Abstractions.Configurations.Builders
         IDemocriteNodeLocalDefinitionsBuilder SetupSignals(Action<IDemocriteNodeSignalsWizard> config);
 
         /// <summary>
+        /// Setups the signals.
+        /// </summary>
+        IDemocriteNodeLocalDefinitionsBuilder SetupSignals(params SignalDefinition[] signals);
+
+        /// <summary>
         /// Setups the doors.
         /// </summary>
         IDemocriteNodeLocalDefinitionsBuilder SetupDoors(Action<IDemocriteNodeDoorsWizard> config);
+
+        /// <summary>
+        /// Setups the doors.
+        /// </summary>
+        IDemocriteNodeLocalDefinitionsBuilder SetupDoors(params DoorDefinition[] doors);
 
         /// <summary>
         /// Setups the artifact resource, external source code (python, c++, exe, dll, png, ...)

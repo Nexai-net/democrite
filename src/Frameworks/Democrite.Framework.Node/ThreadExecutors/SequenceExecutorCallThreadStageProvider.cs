@@ -82,12 +82,12 @@ namespace Democrite.Framework.Node.ThreadExecutors
             if (mthd == null)
             {
                 throw VGrainMethodDemocriteException.MethodNotFounded(step.VGrainType,
-                                                                     step.Output,
-                                                                     step.CallMethodDefinition.Name,
-                                                                     step.CallMethodDefinition.Arguments);
+                                                                      step.Output,
+                                                                      step.CallMethodDefinition.DisplayName,
+                                                                      step.CallMethodDefinition.Arguments);
             }
 
-            if (step.ConfigurationType != null)
+            if (step.ConfigurationType is not null)
             {
                 var validators = mthd.GetCustomAttributes()
                                      .OfType<IExecutionContextConfigurationValidator>()
@@ -103,38 +103,39 @@ namespace Democrite.Framework.Node.ThreadExecutors
 #pragma warning restore IDE0270 // Use coalesce expression
 
             var args = mthd.GetParameters()
-                       .Select(p =>
-                       {
-                           var paramType = p.ParameterType;
-                           if (paramType.IsAssignableTo(typeof(IExecutionContext)))
+                           .Select(p =>
                            {
-                               if (step.ConfigurationType == null || paramType == typeof(IExecutionContext))
-                                   return sequenceContext;
+                               var paramType = p.ParameterType;
 
-                               if (paramType == typeof(IExecutionContext<>).MakeGenericType(step.ConfigurationType))
+                               if (paramType.IsAssignableTo(typeof(IExecutionContext)))
                                {
-                                   sequenceContext = sequenceContext.DuplicateWithContext(step.ConfigurationInfo, step.ConfigurationType);
-                                   return sequenceContext;
+                                   if (step.ConfigurationType is null || paramType == typeof(IExecutionContext))
+                                       return sequenceContext;
+                           
+                                   if (paramType == typeof(IExecutionContext<>).MakeGenericType(step.ConfigurationType.ToType()))
+                                   {
+                                       sequenceContext = sequenceContext.DuplicateWithContext(step.ConfigurationInfo, step.ConfigurationType.ToType());
+                                       return sequenceContext;
+                                   }
                                }
-                           }
+                           
+                               if (input != null && (paramType == input.GetType() || input.GetType().IsAssignableTo(paramType)))
+                                   return input;
+                           
+                               if (paramType.IsClass)
+                                   return null;
+                           
+                               return Activator.CreateInstance(p.ParameterType);
+                           
+                           }).ToArray();
 
-                           if (input != null && (paramType == input.GetType() || input.GetType().IsAssignableTo(paramType)))
-                               return input;
-
-                           if (paramType.IsClass)
-                               return null;
-
-                           return Activator.CreateInstance(p.ParameterType);
-
-                       }).ToArray();
-
-            var vgrainProxy = await vgrainProvider.GetVGrainAsync(step.VGrainType, input, sequenceContext, logger);
+            var vgrainProxy = await vgrainProvider.GetVGrainAsync(step.VGrainType.ToType(), input, sequenceContext, logger);
 
             var resultTask = (Task?)mthd.Invoke(vgrainProxy, args);
 
             ArgumentNullException.ThrowIfNull(resultTask);
 
-            return new StageStepResult(step.Output, resultTask);
+            return new StageStepResult(step.Output?.ToType(), resultTask);
         }
 
         #region Tools
@@ -148,28 +149,31 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
             using (this._locker.LockRead())
             {
-                if (this._methodCallCache.TryGetValue(step.UniqueKey, out var cacheMthd))
+                if (this._methodCallCache.TryGetValue(step.CallMethodDefinition.MethodUniqueId, out var cacheMthd))
                     mthd = cacheMthd;
             }
 
             if (mthd == null)
             {
-                var allMethods = step.VGrainType
-                                     .GetMethods(BindingFlags.Instance | BindingFlags.Public)
-                                     .Concat(step.CallMethodDefinition
-                                                 .DeclaringType?.GetMethods(BindingFlags.Instance | BindingFlags.Public) ?? EnumerableHelper<MethodInfo>.ReadOnlyArray);
+                var type = step.VGrainType.ToType();
 
-                mthd = allMethods.FirstOrDefault(m => step.CallMethodDefinition.Equals(m));
+                mthd = type.GetAllMethodInfos(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                           .FirstOrDefault(m => step.CallMethodDefinition.IsEqualTo(m, true));
 
                 if (mthd != null)
                 {
-                    if (mthd.IsGenericMethodDefinition && (step.CallMethodDefinition.GenericImplementationTypes?.Any() ?? false))
-                        mthd = mthd.MakeGenericMethod(step.CallMethodDefinition.GenericImplementationTypes);
+                    if (mthd.IsGenericMethodDefinition && step.CallMethodDefinition.HasGenericArguments)
+                    {
+                        mthd = mthd.MakeGenericMethod(step.CallMethodDefinition
+                                                          .GenericArguments
+                                                          .Select(g => g.ToType())
+                                                          .ToArray());
+                    }
 
                     using (this._locker.LockWrite())
                     {
-                        if (!this._methodCallCache.ContainsKey(step.UniqueKey))
-                            this._methodCallCache.Add(step.UniqueKey, mthd);
+                        if (!this._methodCallCache.ContainsKey(step.CallMethodDefinition.MethodUniqueId))
+                            this._methodCallCache.Add(step.CallMethodDefinition.MethodUniqueId, mthd);
                     }
                 }
             }

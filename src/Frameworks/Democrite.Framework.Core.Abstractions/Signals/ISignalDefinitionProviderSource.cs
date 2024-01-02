@@ -11,7 +11,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
     /// <summary>
     /// Provider source of <see cref="SignalDefinition"/>
     /// </summary>
-    public interface ISignalDefinitionProviderSource : IProviderStrategySource<SignalDefinition, Guid>
+    public interface ISignalDefinitionProviderSource : IProviderStrategySource<SignalDefinition, Guid>, INodeInitService
     {
     }
 }

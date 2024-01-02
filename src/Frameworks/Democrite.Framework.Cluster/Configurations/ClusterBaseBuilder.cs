@@ -10,6 +10,8 @@ namespace Democrite.Framework.Cluster.Configurations
     using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
     using Democrite.Framework.Cluster.Abstractions.Exceptions;
     using Democrite.Framework.Cluster.Abstractions.Services;
+    using Democrite.Framework.Cluster.Services;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Core.Extensions;
@@ -27,6 +29,7 @@ namespace Democrite.Framework.Cluster.Configurations
     using Microsoft.Extensions.Logging.Abstractions;
     using Microsoft.Extensions.Options;
 
+    using Orleans;
     using Orleans.Configuration;
     using Orleans.Messaging;
     using Orleans.Runtime;
@@ -162,13 +165,20 @@ namespace Democrite.Framework.Cluster.Configurations
         }
 
         /// <inheritdoc />
+        public TWizard ConfigureServices(Action<IServiceCollection, IConfiguration> config)
+        {
+            config(GetServiceCollection(), GetConfiguration());
+            return GetWizard();
+        }
+
+        /// <inheritdoc />
         public virtual IDemocriteWizardStart<TWizard, TWizardConfig> WizardConfig()
         {
             return this;
         }
 
         /// <inheritdoc />
-        public abstract TWizard NoCluster();
+        public abstract TWizard NoCluster(bool useLoopback = true);
 
         /// <inheritdoc />
         public TWizard SetupCluster(Action<IDemocriteClusterBuilder> clusterWizard)
@@ -220,15 +230,34 @@ namespace Democrite.Framework.Cluster.Configurations
         }
 
         /// <inheritdoc />
+        public TWizardConfig AddService<TService>(Func<IServiceProvider, TService> factory)
+            where TService : class
+        {
+            ArgumentNullException.ThrowIfNull(factory);
+
+            // Attention Do not register the concret type
+            this._services.Enqueue(ServiceDescriptor.Singleton<TService>(factory));
+
+            return GetConfigurationBuilder();
+        }
+
+        /// <inheritdoc />
         public TWizardConfig AddService(Type service, Type instanceType)
         {
+            ArgumentNullException.ThrowIfNull(service);
+            ArgumentNullException.ThrowIfNull(instanceType);
+
             this._services.Enqueue(ServiceDescriptor.Singleton(service, instanceType));
+
             return GetConfigurationBuilder();
         }
 
         public TWizardConfig AddService(Type service, object instance)
         {
+            ArgumentNullException.ThrowIfNull(instance);
+
             this._services.Enqueue(ServiceDescriptor.Singleton(service, instance));
+
             return GetConfigurationBuilder();
         }
 
@@ -238,6 +267,7 @@ namespace Democrite.Framework.Cluster.Configurations
             where TImplementation : class, TService
         {
             this._services.Enqueue(ServiceDescriptor.Singleton<TService, TImplementation>());
+
             return GetConfigurationBuilder();
         }
 
@@ -390,7 +420,47 @@ namespace Democrite.Framework.Cluster.Configurations
 
             OnFinalizeManualBuildConfigure(logger);
 
+            // Create Init and Finalize services
+            RegisterNodeService<INodeInitService>(serviceCollection);
+            RegisterNodeService<INodeFinalizeService>(serviceCollection);
+
             return OnBuild(logger);
+        }
+
+        /// <summary>
+        /// Registers in the <paramref name="serviceCollection"/> the related <typeparamref name="TService"/>
+        /// </summary>
+        private static void RegisterNodeService<TService>(IServiceCollection serviceCollection)
+        {
+            var serviceTrait = typeof(TService);
+
+            // Get Concret type that inherite from TService
+            var servicesToSetup = serviceCollection.Where(t => t.ServiceType.IsAssignableTo(serviceTrait) &&
+                                                               (t.Lifetime == ServiceLifetime.Singleton || t.ImplementationInstance != null))
+                                                   .Distinct()
+                                                   .GroupBy(k => k.ServiceType)
+                                                   .ToArray();
+
+#pragma warning disable CS8603 // Possible null reference return.
+            
+            foreach (var init in servicesToSetup)
+            {
+                if (init.Count() == 1)
+                {
+                    serviceCollection.Add(new ServiceDescriptor(serviceTrait,
+                                                                provider => provider.GetService(init.Key),
+                                                                ServiceLifetime.Singleton));
+
+                    continue;
+                }
+
+                serviceCollection.Add(new ServiceDescriptor(serviceTrait,
+                                                            p => new NodeServiceProxy(p, init.Key),
+                                                            ServiceLifetime.Singleton));
+            }
+
+#pragma warning restore CS8603 // Possible null reference return.
+
         }
 
         #region Tools

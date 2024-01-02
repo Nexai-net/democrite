@@ -7,8 +7,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Toolbox.Abstractions.Conditions;
     using Democrite.Framework.Toolbox.Extensions;
-
-    using Newtonsoft.Json;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.ComponentModel;
@@ -20,6 +19,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     /// </summary>
     /// <seealso cref="ISequenceStageDefinition" />
     [Serializable]
+    [DataContract]
     [ImmutableObject(true)]
     public sealed class SequenceStageFilterDefinition : SequenceStageBaseDefinition
     {
@@ -28,7 +28,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStageFilterDefinition"/> class.
         /// </summary>
-        public SequenceStageFilterDefinition(Type? input,
+        public SequenceStageFilterDefinition(CollectionType? input,
                                              ConditionExpressionDefinition condition,
                                              SequenceOptionStageDefinition? options = null,
                                              bool preventReturn = false,
@@ -41,12 +41,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 
             ArgumentNullException.ThrowIfNull(input);
 
-            var inputTypeInfo = input.GetTypeIntoExtension()!;
-
-            if (!inputTypeInfo.IsCollection)
-                throw new InvalidDataException("Input must be a collection");
-
-            this.CollectionItemType = inputTypeInfo.CollectionItemType!;
+            this.CollectionItemType = input.ItemAbstractType;
         }
 
         #endregion
@@ -56,14 +51,14 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// <summary>
         /// Gets the condition to filter
         /// </summary>
+        [DataMember]
         public ConditionExpressionDefinition Condition { get; }
 
         /// <summary>
         /// Gets the type of the collection item.
         /// </summary>
-        [JsonIgnore]
-        [IgnoreDataMember]
-        public Type CollectionItemType { get; }
+        [DataMember]
+        public AbstractType CollectionItemType { get; }
 
         #endregion
 
@@ -100,7 +95,11 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
                                                                                    Guid? uid = null)
             where TInputCollection : IEnumerable<TInput>
         {
-            return new SequenceStageFilterDefinition(typeof(TInputCollection), filter.Serialize(), options, preventReturn, uid);
+            return new SequenceStageFilterDefinition((CollectionType)typeof(TInputCollection).GetAbstractType(),
+                                                     filter.Serialize(),
+                                                     options,
+                                                     preventReturn,
+                                                     uid);
         }
 
         #endregion

@@ -24,7 +24,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Converts to definition.
         /// </summary>
-        ISequenceStageDefinition? ToDefinition();
+        SequenceStageBaseDefinition? ToDefinition();
 
         /// <summary>
         /// Configurations the option.

@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Cluster.Abstractions.Configurations
 {
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
@@ -31,5 +32,10 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         /// Manual configuration of services.
         /// </summary>
         TWizard ConfigureServices(Action<IServiceCollection> config);
+
+        /// <summary>
+        /// Manual configuration of services.
+        /// </summary>
+        TWizard ConfigureServices(Action<IServiceCollection, IConfiguration> config);
     }
 }

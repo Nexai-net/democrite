@@ -13,6 +13,7 @@ namespace Democrite.Framework.Node
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.Models;
     using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
@@ -25,6 +26,7 @@ namespace Democrite.Framework.Node
     using System;
     using System.Diagnostics;
     using System.Runtime.InteropServices;
+    using System.Runtime.Serialization;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -40,8 +42,9 @@ namespace Democrite.Framework.Node
         private readonly IReadOnlyCollection<ISequenceExecutorThreadStageProvider> _stageProviders;
         private readonly ISequenceDefinitionProvider _sequenceDefinitionManager;
         private readonly IDiagnosticLogger _diagnosticLogger;
-        private readonly ILoggerProvider _loggerProvider;
+        private readonly IObjectConverter _objectConverter;
         private readonly IVGrainProvider _vgrainProvider;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ITimeManager _timeManager;
 
         #endregion
@@ -52,21 +55,23 @@ namespace Democrite.Framework.Node
         /// Initializes a new instance of the <see cref="SequenceVGrain"/> class.
         /// </summary>
         public SequenceExecutorVGrain(ILogger<SequenceExecutorVGrain> logger,
-                                      ILoggerProvider loggerProvider,
+                                      ILoggerFactory loggerFactory,
                                       IDiagnosticLogger diagnosticLogger,
                                       ISequenceDefinitionProvider sequenceDefinitionManager,
                                       IVGrainProvider vgrainProvider,
                                       [PersistentState("SequenceExecutor", nameof(Democrite))] IPersistentState<SequenceExecutorStateSurrogate> sequenceExecutorState,
                                       ITimeManager timeManager,
+                                      IObjectConverter objectConverter,
                                       IEnumerable<ISequenceExecutorThreadStageProvider>? stageProviders = null)
             : base(logger, sequenceExecutorState)
         {
-            this._loggerProvider = loggerProvider;
+            this._loggerFactory = loggerFactory;
             this._sequenceDefinitionManager = sequenceDefinitionManager;
             this._diagnosticLogger = diagnosticLogger;
             this._vgrainProvider = vgrainProvider;
             this._stageProviders = stageProviders?.ToReadOnly() ?? EnumerableHelper<ISequenceExecutorThreadStageProvider>.ReadOnlyArray;
             this._timeManager = timeManager;
+            this._objectConverter = objectConverter;
         }
 
         #endregion
@@ -104,7 +109,7 @@ namespace Democrite.Framework.Node
 
             ArgumentNullException.ThrowIfNull(state);
 
-            var execLogger = executionContext.GetLogger<SequenceExecutorVGrain>(this._loggerProvider);
+            var execLogger = executionContext.GetLogger<SequenceExecutorVGrain>(this._loggerFactory);
 
             try
             {
@@ -130,7 +135,8 @@ namespace Democrite.Framework.Node
 
                     var mainExecutionThread = await SequenceExecutorExecThread.BuildFromAsync(state.MainThread,
                                                                                               id => this._sequenceDefinitionManager.GetFirstValueByIdAsync(id),
-                                                                                              this._stageProviders);
+                                                                                              this._stageProviders,
+                                                                                              this._objectConverter);
 
                     do
                     {

@@ -38,12 +38,15 @@ namespace Democrite.Framework.Builders.Sequences
         #region Methods
 
         /// <inheritdoc />
-        public ISequenceStageDefinition ToDefinition()
+        public SequenceStageBaseDefinition ToDefinition()
         {
             var innerDefinition = this._sequenceBuilder.Build();
             var cfg = BuildConfigDefinition();
 
-            return new SequenceStageForeachDefinition(typeof(TInput), innerDefinition, innerDefinition.Output, cfg);
+            return new SequenceStageForeachDefinition(typeof(TInput).GetAbstractType(),
+                                                      innerDefinition,
+                                                      innerDefinition.Output,
+                                                      cfg);
         }
 
         #endregion

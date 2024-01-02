@@ -74,7 +74,7 @@ namespace Democrite.Framework.Client.Configurations
         }
 
         /// <inheritdoc />
-        public override IDemocriteClientBuilderWizard NoCluster()
+        public sealed override IDemocriteClientBuilderWizard NoCluster(bool _)
         {
             this._orleanClientBuilder.UseLocalhostClustering();
             return this;

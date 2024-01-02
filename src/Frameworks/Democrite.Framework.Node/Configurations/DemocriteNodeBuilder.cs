@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Configurations
 {
     using Democrite.Framework.Cluster.Abstractions.Configurations;
+    using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Configurations;
     using Democrite.Framework.Core;
@@ -34,14 +35,18 @@ namespace Democrite.Framework.Node.Configurations
     using Democrite.Framework.Node.Services;
     using Democrite.Framework.Node.Signals;
     using Democrite.Framework.Node.Triggers;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Loggers;
+    using Democrite.Framework.Toolbox.Models;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
+    using Orleans.Configuration;
     using Orleans.Hosting;
     using Orleans.Providers;
     using Orleans.Runtime;
@@ -140,7 +145,12 @@ namespace Democrite.Framework.Node.Configurations
         public IDemocriteNodeWizard AddNodeOption<TOption>(TOption option)
              where TOption : class, INodeOptions
         {
-            this._orleanSiloBuilder.Services.ConfigureOptions(option);
+            var services = this._orleanSiloBuilder.Services;
+
+            services.AddSingleton(option);
+            services.AddSingleton(option.ToOption());
+            services.AddSingleton(option.ToMonitorOption());
+
             return this;
         }
 
@@ -170,7 +180,7 @@ namespace Democrite.Framework.Node.Configurations
         }
 
         /// <inheritdoc />
-        public IDemocriteNodeWizard SetupInMemoryDefintions(Action<IDemocriteNodeLocalDefinitionsBuilder> config)
+        public IDemocriteNodeWizard AddInMemoryMongoDefinitionProvider(Action<IDemocriteNodeLocalDefinitionsBuilder> config)
         {
             ArgumentNullException.ThrowIfNull(config);
             config(this);
@@ -197,15 +207,18 @@ namespace Democrite.Framework.Node.Configurations
             {
                 ArgumentNullException.ThrowIfNullOrEmpty(defaultAutokey);
 
-                configSection.Value = defaultAutokey;   
+                configSection.Value = defaultAutokey;
             }
 
             return this;
         }
 
         /// <inheritdoc />
-        public sealed override IDemocriteNodeWizard NoCluster()
+        public sealed override IDemocriteNodeWizard NoCluster(bool useLoopback = true)
         {
+            this._orleanSiloBuilder.Services.AddOptionFromInstOrConfig(this.Configuration,
+                                                                       ConfigurationSectionNames.Endpoints,
+                                                                       new ClusterNodeEndPointOptions(useLoopback));
             this._orleanSiloBuilder.UseLocalhostClustering();
             return this;
         }
@@ -223,10 +236,26 @@ namespace Democrite.Framework.Node.Configurations
         }
 
         /// <inheritdoc />
+        public IDemocriteNodeLocalDefinitionsBuilder SetupSequences(params SequenceDefinition[] sequences)
+        {
+            ArgumentNullException.ThrowIfNull(sequences);
+            SetupSequences(s => s.Register(sequences));
+            return this;
+        }
+
+        /// <inheritdoc />
         public IDemocriteNodeLocalDefinitionsBuilder SetupTriggers(Action<IDemocriteNodeTriggersWizard> config)
         {
             ArgumentNullException.ThrowIfNull(config);
             config(this);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IDemocriteNodeLocalDefinitionsBuilder SetupTriggers(params TriggerDefinition[] triggers)
+        {
+            ArgumentNullException.ThrowIfNull(triggers);
+            SetupTriggers(s => s.Register(triggers));
             return this;
         }
 
@@ -239,10 +268,26 @@ namespace Democrite.Framework.Node.Configurations
         }
 
         /// <inheritdoc />
+        public IDemocriteNodeLocalDefinitionsBuilder SetupSignals(params SignalDefinition[] signals)
+        {
+            ArgumentNullException.ThrowIfNull(signals);
+            SetupSignals(s => s.Register(signals));
+            return this;
+        }
+
+        /// <inheritdoc />
         public IDemocriteNodeLocalDefinitionsBuilder SetupDoors(Action<IDemocriteNodeDoorsWizard> config)
         {
             ArgumentNullException.ThrowIfNull(config);
             config(this);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IDemocriteNodeLocalDefinitionsBuilder SetupDoors(params DoorDefinition[] doors)
+        {
+            ArgumentNullException.ThrowIfNull(doors);
+            SetupDoors(s => s.Register(doors));
             return this;
         }
 
@@ -432,27 +477,21 @@ namespace Democrite.Framework.Node.Configurations
 
             base.OnAutoConfigure(configuration, indexedAssemblies, logger);
 
-            var sectionCustomMemory = configuration.GetSection(ConfigurationNodeSectionNames.NodeCustomMemory);
+            AutoConfigBasedOnKeys<INodeCustomMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeCustomMemory,
+                                                                                                  configuration,
+                                                                                                  indexedAssemblies,
+                                                                                                  (s, key) => s.GetServiceByKey<string, IGrainStorage>(key) != null,
+                                                                                                  logger,
+                                                                                                  (c, wizard, key, cfg, service, logger) => c.AutoConfigureCustomStorage(wizard, cfg, service, logger, key),
+                                                                                                  defaultAutoKey: defaultMemoryAutoKey);
 
-            if (sectionCustomMemory != null && sectionCustomMemory.Exists())
-            {
-                foreach (var child in sectionCustomMemory.GetChildren())
-                {
-                    AutoConfigImpl<INodeCustomMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
-                                                                                                   indexedAssemblies,
-                                                                                                   s => s.GetServiceByKey<string, IGrainStorage>(child.Key) != null,
-                                                                                                   
-                                                                                                   ConfigurationNodeSectionNames.NodeCustomMemory + 
-                                                                                                   ConfigurationSectionNames.SectionSeparator + 
-                                                                                                   child.Key + 
-                                                                                                   ConfigurationSectionNames.SectionSeparator + 
-                                                                                                   ConfigurationSectionNames.AutoConfigKey,
-
-                                                                                                   logger,
-                                                                                                   (c, wizard, cfg, service, logger) => c.AutoConfigureCustomStorage(wizard, cfg, service, logger, child.Key),
-                                                                                                   defaultAutoKey: defaultMemoryAutoKey);
-                }
-            }
+            AutoConfigBasedOnKeys<INodeCustomDefinitionProviderAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeDefinitionProvider,
+                                                                                                              configuration,
+                                                                                                              indexedAssemblies,
+                                                                                                              (s, key) => s.GetServiceByKey<string, ISequenceDefinitionSourceProvider>(key) != null,
+                                                                                                              logger,
+                                                                                                              (c, wizard, key, cfg, service, logger) => c.AutoConfigureCustomProvider(wizard, cfg, service, logger, key),
+                                                                                                              defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigImpl<INodeDefaultMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
                                                                                             indexedAssemblies,
@@ -462,6 +501,44 @@ namespace Democrite.Framework.Node.Configurations
                                                                                             defaultAutoKey: defaultMemoryAutoKey);
         }
 
+        /// <summary>
+        /// Helper use to configured services on each on specific key in the configuration
+        /// </summary>
+        private void AutoConfigBasedOnKeys<TAutoConfig, TAutoWizard>(string rootConfig,
+                                                                     IConfiguration configuration,
+                                                                     IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
+                                                                     Func<IServiceCollection, string, bool> predicateConfigurationExist,
+                                                                     ILogger logger,
+                                                                     Action<TAutoConfig, TAutoWizard, string, IConfiguration, IServiceCollection, ILogger>? customConfig = null,
+                                                                     string? defaultAutoKey = ConfigurationSectionNames.DefaultAutoConfigKey)
+            where TAutoConfig : IAutoConfigurator<TAutoWizard>
+            where TAutoWizard : IBuilderDemocriteBaseWizard
+
+        {
+            var rootSection = configuration.GetSection(rootConfig);
+            if (rootSection == null || rootSection.Exists() == false)
+                return;
+
+            foreach (var child in rootSection.GetChildren())
+            {
+                AutoConfigImpl(configuration, 
+                               indexedAssemblies, 
+                               s => predicateConfigurationExist?.Invoke(s, child.Key) ?? false, 
+
+                               rootConfig +
+                               ConfigurationSectionNames.SectionSeparator +
+                               child.Key +
+                               ConfigurationSectionNames.SectionSeparator +
+                               ConfigurationSectionNames.AutoConfigKey,
+
+                               logger,
+                               customConfig == null 
+                                    ? (Action<TAutoConfig, TAutoWizard, IConfiguration, IServiceCollection, ILogger>?)null
+                                    : (c, wizard, cfg, service, logger) => customConfig?.Invoke(c, wizard, child.Key, cfg, service, logger),
+                               defaultAutoKey);
+            }
+        }
+
         /// <inheritdoc />
         protected override void OnManualBuildConfigure()
         {
@@ -469,6 +546,14 @@ namespace Democrite.Framework.Node.Configurations
             AddService<IComponentIdentitCardProviderClient, ClusterNodeComponentIdentitCardProviderClient>();
 
             var serviceCollection = this._orleanSiloBuilder.Services;
+
+            if (!CheckIsExistSetupInServices<IObjectConverter>(serviceCollection))
+                AddService<IObjectConverter, ObjectConverter>();
+
+            // Check external definitions provider
+
+
+            serviceCollection.TryAddSingleton<IDedicatedObjectConverter, SignalMessageDedicatedObjectConverter>();
 
             AddService<ISequenceDefinitionSourceProvider>(this._inMemorySequenceDefinition);
             AddService<IArtifactResourceProviderSource>(this._artefactInMemoryProviderSource);

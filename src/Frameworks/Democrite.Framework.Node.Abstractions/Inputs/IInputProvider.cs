@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Abstractions.Inputs
 {
     using Democrite.Framework.Core.Abstractions.Inputs;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
 
@@ -18,7 +19,7 @@ namespace Democrite.Framework.Node.Abstractions.Inputs
         /// <summary>
         /// Gets the type of the input.
         /// </summary>
-        Type InputType { get; }
+        AbstractType InputType { get; }
 
         #endregion
 

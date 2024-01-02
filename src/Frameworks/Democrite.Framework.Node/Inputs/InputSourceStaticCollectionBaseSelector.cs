@@ -7,6 +7,7 @@ namespace Democrite.Framework.Node.Inputs
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Inputs;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.Linq;
@@ -42,7 +43,7 @@ namespace Democrite.Framework.Node.Inputs
         }
 
         /// <inheritdoc />
-        public Type InputType
+        public AbstractType InputType
         {
             get { return this.Definition.InputType; }
         }

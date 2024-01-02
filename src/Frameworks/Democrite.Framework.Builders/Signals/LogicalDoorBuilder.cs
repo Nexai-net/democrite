@@ -16,7 +16,7 @@ namespace Democrite.Framework.Builders.Signals
     using System.Text.RegularExpressions;
 
     /// <summary>
-    /// Create a <see cref="BooleanLogicalDoorDefinition"/>
+    /// Build a <see cref="BooleanLogicalDoorDefinition"/>
     /// </summary>
     /// <seealso cref="ILogicalDoorBuilder" />
     internal sealed class LogicalDoorBuilder : ILogicalDoorBuilder, IDefinitionBaseBuilder<DoorDefinition>

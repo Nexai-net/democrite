@@ -8,7 +8,10 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Toolbox.Helpers;
 
+    using Microsoft.Extensions.Logging;
+
     using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Base definition of trigger definition
@@ -16,7 +19,12 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     [Serializable]
     [Immutable]
     [ImmutableObject(true)]
-    public abstract class TriggerDefinition
+    [DataContract]
+
+    [KnownType(typeof(CronTriggerDefinition))]
+    [KnownType(typeof(SignalTriggerDefinition))]
+
+    public abstract class TriggerDefinition : IEquatable<TriggerDefinition>, IDefinition
     {
         #region Ctor
 
@@ -43,22 +51,80 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         #region Properties
 
         /// <inheritdoc />
+        [Id(0)]
+        [DataMember]
         public Guid Uid { get; }
 
         /// <inheritdoc />
+        [Id(1)]
+        [DataMember]
         public bool Enabled { get; }
 
         /// <inheritdoc />
+        [Id(2)]
+        [DataMember]
         public TriggerTypeEnum TriggerType { get; }
 
         /// <inheritdoc />
+        [Id(3)]
+        [DataMember]
         public IReadOnlyCollection<Guid> TargetSequenceIds { get; }
 
         /// <inheritdoc />
+        [Id(4)]
+        [DataMember]
         public IReadOnlyCollection<SignalId> TargetSignalIds { get; }
 
         /// <inheritdoc />
+        [Id(5)]
+        [DataMember]
         public InputSourceDefinition? InputSourceDefinition { get; }
+
+        /// <inheritdoc />
+        public bool Equals(TriggerDefinition? other)
+        {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(other, this))
+                return true;
+
+            return this.Uid == other.Uid &&
+                   this.Enabled == other.Enabled &&
+                   this.TriggerType == other.TriggerType &&
+                   (this.InputSourceDefinition?.Equals(other.InputSourceDefinition) ?? other.InputSourceDefinition is null) &&
+                   this.TargetSignalIds.SequenceEqual(other.TargetSignalIds) &&
+                   this.TargetSequenceIds.SequenceEqual(this.TargetSequenceIds);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            if (obj is TriggerDefinition trigger)
+                return Equals(trigger);
+
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.Uid,
+                                    this.TriggerType,
+                                    this.InputSourceDefinition);
+        }
+
+        /// <inheritdoc />
+        public string ToDebugDisplayName()
+        {
+            return "[Id: " + this.Uid + "][Trigger: " + this.TriggerType + "]";
+        }
+
+        /// <inheritdoc />
+        public bool Validate(ILogger logger, bool matchWarningAsError = false)
+        {
+            throw new NotImplementedException();
+        }
 
         #endregion
     }

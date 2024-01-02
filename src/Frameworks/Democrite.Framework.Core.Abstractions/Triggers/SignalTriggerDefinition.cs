@@ -10,8 +10,10 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     [Immutable]
+    [DataContract]
     [Serializable]
     [ImmutableObject(true)]
     public sealed class SignalTriggerDefinition : TriggerDefinition
@@ -21,18 +23,20 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalTriggerDefinition"/> class.
         /// </summary>
+        [System.Text.Json.Serialization.JsonConstructor]
+        [Newtonsoft.Json.JsonConstructor]
         public SignalTriggerDefinition(Guid uid,
                                        IEnumerable<Guid> targetSequenceIds,
                                        IEnumerable<SignalId> targetSignalIds,
                                        bool enabled,
-                                       SignalId? signalId,
-                                       DoorId? doorId,
+                                       SignalId? listenSignal,
+                                       DoorId? listenDoor,
                                        InputSourceDefinition? inputSourceDefinition = null)
 
             : base(uid, TriggerTypeEnum.Signal, targetSequenceIds, targetSignalIds, enabled, inputSourceDefinition)
         {
-            this.ListenSignal = signalId;
-            this.ListenDoor = doorId;
+            this.ListenSignal = listenSignal;
+            this.ListenDoor = listenDoor;
         }
 
         #endregion
@@ -41,10 +45,12 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
 
         /// <inheritdoc />
         [Id(0)]
+        [DataMember]
         public SignalId? ListenSignal { get; }
 
         /// <inheritdoc />
         [Id(1)]
+        [DataMember] 
         public DoorId? ListenDoor { get; }
 
         #endregion

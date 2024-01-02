@@ -10,7 +10,7 @@ namespace Democrite.Framework.Builders.Triggers
     public interface ITriggerInputBuilder
     {
         /// <summary>
-        /// Create input from a serializable static collection.
+        /// Build input from a serializable static collection.
         /// </summary>
         ITriggerStaticCollectionInputBuilder<TTriggerOutput> StaticCollection<TTriggerOutput>(IEnumerable<TTriggerOutput> collection);
     }

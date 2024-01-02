@@ -14,7 +14,6 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
     using Democrite.UnitTests.ToolKit.Extensions;
-    using Democrite.UnitTests.ToolKit.Helpers;
     using Democrite.UnitTests.ToolKit.Tests;
 
     using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +28,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
 
     using System;
     using System.Runtime.CompilerServices;
+    using Democrite.UnitTests.ToolKit.Helpers;
 
     /// <summary>
     /// Base Unit test for any door

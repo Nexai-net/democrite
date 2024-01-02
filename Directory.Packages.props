@@ -61,5 +61,6 @@
 		<PackageVersion Include="H.Pipes" Version="2.0.53" />
 		<PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+		<PackageVersion Include="MongoDB.Bson" Version="2.21.0" />
 	</ItemGroup>
 </Project>

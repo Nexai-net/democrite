@@ -129,14 +129,14 @@ namespace Democrite.Framework.Node.Services
         /// Creates the <see cref="DiagnosticCallLog"/> from specific <see cref="IGrainCallContext"/>
         /// </summary>
         protected virtual IDiagnosticCallLog CreateVGrainCallLog(IGrainCallContext context,
-                                                                OrientationEnum orientation,
-                                                                Type vgrainType,
-                                                                bool isOrleanSystem,
-                                                                bool isDemocriteSystem,
-                                                                Guid? flowUid,
-                                                                Guid? instanceExecId,
-                                                                Guid? parentExecId,
-                                                                Guid? callerId)
+                                                                 OrientationEnum orientation,
+                                                                 Type vgrainType,
+                                                                 bool isOrleanSystem,
+                                                                 bool isDemocriteSystem,
+                                                                 Guid? flowUid,
+                                                                 Guid? instanceExecId,
+                                                                 Guid? parentExecId,
+                                                                 Guid? callerId)
         {
             return new DiagnosticCallLog(flowUid,
                                          instanceExecId,
@@ -144,10 +144,11 @@ namespace Democrite.Framework.Node.Services
                                          SerializeGrainId(context.SourceId),
                                          SerializeGrainId(context.TargetId),
                                          vgrainType.AssemblyQualifiedName,
-                                         string.Format("{0} {1}({2})",
-                                                       context.InterfaceMethod.ReturnParameter,
-                                                       context.MethodName,
-                                                       string.Join(", ", context.InterfaceMethod.GetParameters().Select(p => p.ParameterType.Name))),
+                                         context.InterfaceMethod.GetAbstractMethod().DisplayName,
+                                         //string.Format("{0} {1}({2})",
+                                         //              context.InterfaceMethod.ReturnParameter,
+                                         //              context.MethodName,
+                                         //              string.Join(", ", context.InterfaceMethod.GetParameters().Select(p => p.ParameterType.Name))),
                                          orientation,
                                          DateTime.UtcNow,
                                          isOrleanSystem || context.TargetId.IsSystemTarget(),

@@ -9,12 +9,14 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
 
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Define a input source using a predefined static collection.
     /// </summary>
-    [Serializable]
     [Immutable]
+    [Serializable]
+    [DataContract]
     [ImmutableObject(true)]
     public sealed class InputSourceStaticCollectionDefinition<TInputType> : InputSourceDefinition
     {
@@ -24,7 +26,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         /// Initializes a new instance of the <see cref="InputSourceStaticCollectionDefinition{TInputType}"/> class.
         /// </summary>
         public InputSourceStaticCollectionDefinition(IEnumerable<TInputType?> collection, PullModeEnum pullMode)
-            : base(InputSourceTypeEnum.StaticCollection, typeof(TInputType))
+            : base(InputSourceTypeEnum.StaticCollection, typeof(TInputType).GetAbstractType())
         {
             this.Collection = collection.ToReadOnlyList();
             this.PullMode = pullMode;
@@ -35,9 +37,11 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         #region Properties
 
         /// <inheritdoc />
+        [DataMember]
         public IReadOnlyList<TInputType?> Collection { get; }
 
         /// <inheritdoc />
+        [DataMember]
         public PullModeEnum PullMode { get; }
 
         #endregion
@@ -45,7 +49,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnEqualds(InputSourceDefinition other)
+        protected override bool OnEquals(InputSourceDefinition other)
         {
             return other is InputSourceStaticCollectionDefinition<TInputType> otherTyped &&
                    this.PullMode == otherTyped.PullMode &&

@@ -52,7 +52,8 @@ namespace Democrite.Framework.Toolbox.UnitTests.Supports
             #region Methods
 
             /// <inheritdoc />
-            protected override async Task OnInitializationAsync<TState>(TState? initializationState, CancellationToken token) where TState : default
+            protected override async ValueTask OnInitializedAsync<TState>(TState? initializationState, CancellationToken token) 
+                where TState : default
             {
                 await this._completionSource.Task;
 

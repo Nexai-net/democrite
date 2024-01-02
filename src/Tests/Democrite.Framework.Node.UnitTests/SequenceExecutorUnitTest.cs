@@ -16,8 +16,10 @@ namespace Democrite.Framework.Node.UnitTests
     using Democrite.Framework.Node.Models;
     using Democrite.Framework.Node.UnitTests.Extensions;
     using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
+    using Democrite.Framework.Toolbox.Models;
     using Democrite.Framework.Toolbox.Services;
     using Democrite.Test.Interfaces;
     using Democrite.Test.VGrains;
@@ -35,6 +37,8 @@ namespace Democrite.Framework.Node.UnitTests
 
     using Orleans.Runtime;
     using Orleans.TestingHost;
+
+    using System.Collections;
 
     using Xunit.Abstractions;
 
@@ -73,7 +77,7 @@ namespace Democrite.Framework.Node.UnitTests
         [Fact]
         public async Task Manual_Full_Basic_Run()
         {
-            var def = Sequence.Create()
+            var def = Sequence.Build()
                               .RequiredInput<string>()
                               .Use<ITestExtractEmailTransformer>().Call((a, input, ctx) => a.ExtractEmailsAsync(input, ctx)).Return
                               .Build();
@@ -82,7 +86,8 @@ namespace Democrite.Framework.Node.UnitTests
 
             var sequenceProvider = new Mock<ISequenceDefinitionProvider>(MockBehavior.Strict);
             var vgrainProvider = new Mock<IVGrainProvider>(MockBehavior.Strict);
-            var logProvider = new Mock<ILoggerProvider>(MockBehavior.Strict);
+            var logFactory = new Mock<ILoggerFactory>(MockBehavior.Strict);
+            var objectConvertMock = new Mock<IObjectConverter>(MockBehavior.Strict);
             var timeManager = new TimeManager();
 
             var executionLog = new TestDiagnosticLogConsumer();
@@ -115,7 +120,7 @@ namespace Democrite.Framework.Node.UnitTests
                                return Task.CompletedTask;
                            });
 
-            logProvider.Setup(l => l.CreateLogger(It.IsAny<string>()))
+            logFactory.Setup(l => l.CreateLogger(It.IsAny<string>()))
                        .Returns((string name) => rootLogger.CreateChild(name));
 
             sequenceProvider.Setup(w => w.GetFirstValueByIdAsync(def.Uid)).Returns(ValueTask.FromResult<SequenceDefinition?>(def));
@@ -131,12 +136,13 @@ namespace Democrite.Framework.Node.UnitTests
                          });
 
             var executor = new SequenceExecutorVGrain(rootLogger,
-                                                      logProvider.Object,
+                                                      logFactory.Object,
                                                       diagnosticLogger,
                                                       sequenceProvider.Object,
                                                       vgrainProvider.Object,
                                                       persistentState.Object,
-                                                      timeManager);
+                                                      timeManager,
+                                                      objectConvertMock.Object);
 
             var result = await executor.RunAsync<string[], string>(EMAIL_SAMPLE_TEST, execCtx);
 
@@ -159,7 +165,7 @@ namespace Democrite.Framework.Node.UnitTests
         [Fact(Timeout = 200_000)]
         public async Task TestCluster_Cluster_Basic_Run()
         {
-            var def = Sequence.Create()
+            var def = Sequence.Build()
                               .RequiredInput<string>()
                               .Use<ITestExtractEmailTransformer>().Call((a, input, ctx) => a.ExtractEmailsAsync(input, ctx)).Return
                               .Build();
@@ -235,7 +241,7 @@ namespace Democrite.Framework.Node.UnitTests
             var extractTagStageUid = Guid.NewGuid();
             var tagQualiferStageUid = Guid.NewGuid();
 
-            var def = Sequence.Create()
+            var def = Sequence.Build()
                               .NoInput()
                               .Use<IHtmlProviderTestTransformer>(cfg => cfg.Uid(getHtmlStageUid))
                                                                        .Call((a, ctx) => a.GetHtmlAsync(ctx))

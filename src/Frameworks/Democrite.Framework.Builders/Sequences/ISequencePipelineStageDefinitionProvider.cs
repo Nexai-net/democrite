@@ -7,13 +7,13 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions.Sequence;
 
     /// <summary>
-    /// Create pipeline stage
+    /// Build pipeline stage
     /// </summary>
     public interface ISequencePipelineStageDefinitionProvider
     {
         /// <summary>
         /// Converts to definition.
         /// </summary>
-        ISequenceStageDefinition ToDefinition();
+        SequenceStageBaseDefinition ToDefinition();
     }
 }

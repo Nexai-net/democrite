@@ -12,6 +12,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.Models;
     using Democrite.UnitTests.ToolKit;
 
     using Moq;
@@ -53,10 +54,10 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                 var mockBaseSequenceStage = new Mock<ISequenceStageDefinition>();
                 Check.ThatCode(() => provider.CanHandler(mockBaseSequenceStage.Object)).DoesNotThrow().And.WhichResult().IsFalse();
 
-                var def = typeof(SequenceExecutorFilterThreadStageProviderUnitTests).GetMethod(nameof(SequenceExecutorFilterThreadStageProvider_CanHandler))!.ToCallDefinition();
+                var def = typeof(SequenceExecutorFilterThreadStageProviderUnitTests).GetMethod(nameof(SequenceExecutorFilterThreadStageProvider_CanHandler))!.GetAbstractMethod();
 
                 Check.ThatCode(() => provider.CanHandler(new SequenceStageCallDefinition(null,
-                                                                                         typeof(string),
+                                                                                         (ConcreteType)(typeof(string).GetAbstractType()),
                                                                                          def,
                                                                                          null,
                                                                                          null)))

@@ -5,15 +5,18 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Stage related to VGrain Foreach information
     /// </summary>
     /// <seealso cref="ISequenceStageDefinition" />
     [Serializable]
+    [DataContract]
     [ImmutableObject(true)]
     public sealed class SequenceStageForeachDefinition : SequenceStageBaseDefinition, IFlowHostStageDefinition
     {
@@ -22,9 +25,9 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStageForeachDefinition"/> class.
         /// </summary>
-        public SequenceStageForeachDefinition(Type? input,
+        public SequenceStageForeachDefinition(AbstractType? input,
                                               SequenceDefinition innerFlow,
-                                              Type? output,
+                                              AbstractType? output,
                                               SequenceOptionStageDefinition? options = null,
                                               bool preventReturn = false,
                                               Guid? uid = null)
@@ -42,6 +45,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// <summary>
         /// Gets the flow to apply on each element
         /// </summary>
+        [DataMember(IsRequired = true)]
         public SequenceDefinition InnerFlow { get; }
 
         #endregion

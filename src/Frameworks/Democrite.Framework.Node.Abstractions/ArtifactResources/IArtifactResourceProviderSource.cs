@@ -4,13 +4,14 @@
 
 namespace Democrite.Framework.Node.Abstractions.ArtifactResources
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
 
     /// <summary>
     /// Define an artifact source provider
     /// </summary>
-    public interface IArtifactResourceProviderSource : IProviderStrategySource<IArtifactResource, Guid>
+    public interface IArtifactResourceProviderSource : IProviderStrategySource<IArtifactResource, Guid>, INodeInitService
     {
     }
 }

@@ -31,7 +31,7 @@ namespace Democrite.Framework.Node
 
         private readonly IExternalCodePackageFactory _externalCodePackageFactory;
         private readonly IArtifactResourceProvider _artifactResourceProvider;
-        private readonly ILoggerProvider _loggerProvider;
+        private readonly ILoggerFactory _loggerFactory;
 
         #endregion
 
@@ -41,12 +41,12 @@ namespace Democrite.Framework.Node
         /// Initializes a new instance of the <see cref="VGrainRemoteArtefactCodeController"/> class.
         /// </summary>
         public VGrainRemoteArtefactCodeController(ILogger<VGrainRemoteArtefactCodeController> logger,
-                                                 IArtifactResourceProvider artifactResourceProvider,
-                                                 IExternalCodePackageFactory externalCodePackageFactory,
-                                                 ILoggerProvider loggerProvider)
+                                                  IArtifactResourceProvider artifactResourceProvider,
+                                                  IExternalCodePackageFactory externalCodePackageFactory,
+                                                  ILoggerFactory loggerFactory)
             : base(logger)
         {
-            this._loggerProvider = loggerProvider;
+            this._loggerFactory = loggerFactory;
             this._artifactResourceProvider = artifactResourceProvider;
             this._externalCodePackageFactory = externalCodePackageFactory;
         }
@@ -76,7 +76,7 @@ namespace Democrite.Framework.Node
         /// <inheritdoc />
         public async Task<TOutput?> RunAsync<TOutput, TInput>(TInput? input, IExecutionContext<Guid> executionContext)
         {
-            var logger = executionContext.GetLogger<VGrainRemoteArtefactCodeController>(this._loggerProvider) ?? NullLogger.Instance;
+            var logger = executionContext.GetLogger<VGrainRemoteArtefactCodeController>(this._loggerFactory) ?? NullLogger.Instance;
 
             var artifactResult = await this._artifactResourceProvider.TryGetFirstValueAsync(executionContext.Configuration);
 

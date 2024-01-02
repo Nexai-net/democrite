@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 {
+    using Democrite.Framework.Toolbox.Models;
+
     using System.ComponentModel;
 
     /// <summary>
@@ -27,7 +29,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// </summary>
         public ConditionParameterDefinition(Guid uid,
                                             string name,
-                                            Type type,
+                                            AbstractType type,
                                             ushort order)
         {
             this.Uid = uid;
@@ -53,7 +55,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the type.
         /// </summary>
-        public Type Type { get; }
+        public AbstractType Type { get; }
 
         /// <summary>
         /// Gets the order.

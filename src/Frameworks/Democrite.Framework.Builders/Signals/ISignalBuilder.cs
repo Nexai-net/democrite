@@ -7,7 +7,7 @@ namespace Democrite.Framework.Builders.Signals
     using Democrite.Framework.Core.Abstractions.Signals;
 
     /// <summary>
-    /// Create simple signal
+    /// Build simple signal
     /// </summary>
     /// <seealso cref="ISignalNetworkBasePartBuilder{ISignalBuilder, SignalDefinition}" />
     public interface ISignalBuilder : ISignalNetworkBasePartBuilder<ISignalBuilder>, IDefinitionBaseBuilder<SignalDefinition>

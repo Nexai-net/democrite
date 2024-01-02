@@ -11,7 +11,7 @@ namespace Democrite.Framework.Builders.Sequences
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Create contexted call
+    /// Build contexted call
     /// </summary>
     /// <typeparam name="TSequenceVGrain">The type of the sequence virtual grain.</typeparam>
     /// <typeparam name="TContextInfo">The type of the context information.</typeparam>
@@ -30,7 +30,7 @@ namespace Democrite.Framework.Builders.Sequences
     }
 
     /// <summary>
-    /// Create contexted call
+    /// Build contexted call
     /// </summary>
     /// <typeparam name="TSequenceVGrain">The type of the sequence virtual grain.</typeparam>
     /// <typeparam name="TContextInfo">The type of the context information.</typeparam>

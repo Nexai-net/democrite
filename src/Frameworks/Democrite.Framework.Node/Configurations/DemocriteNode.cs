@@ -23,10 +23,11 @@ namespace Democrite.Framework.Node.Configurations
         /// <summary>
         /// Initializes a new instance of the <see cref="DemocriteNode"/> class.
         /// </summary>
-        private DemocriteNode(IHost host,
-                              DemocriteNodeConfigurationDefinition? config,
-                              IDemocriteExecutionHandler? democriteExecutionHandler)
-            : base(host, config, democriteExecutionHandler)
+        internal DemocriteNode(IHost host,
+                               DemocriteNodeConfigurationDefinition? config,
+                               IDemocriteExecutionHandler? democriteExecutionHandler,
+                               bool hostOwned)
+            : base(host, config, democriteExecutionHandler, hostOwned)
         {
         }
 
@@ -83,7 +84,8 @@ namespace Democrite.Framework.Node.Configurations
 
             return new DemocriteNode(buildedHost,
                                      buildedHost.Services.GetRequiredService<DemocriteNodeConfigurationDefinition>(),
-                                     buildedHost.Services.GetRequiredService<IDemocriteExecutionHandler>());
+                                     buildedHost.Services.GetRequiredService<IDemocriteExecutionHandler>(),
+                                     true);
         }
 
         /// <summary>

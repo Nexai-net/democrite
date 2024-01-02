@@ -11,7 +11,7 @@ namespace Democrite.Framework.Builders.Sequences
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Create a stage using a method call
+    /// Build a stage using a method call
     /// </summary>
     public interface ISequencePipelineStageCallBuilder<TSequenceVGrain> : ISequencePipelineStageBaseBuilder
         where TSequenceVGrain : IVGrain
@@ -33,7 +33,7 @@ namespace Democrite.Framework.Builders.Sequences
     }
 
     /// <summary>
-    /// Create a stage using a method call
+    /// Build a stage using a method call
     /// </summary>
     public interface ISequencePipelineStageCallBuilder<TInputMessage, TSequenceVGrain> : ISequencePipelineStageBaseBuilder
         where TSequenceVGrain : IVGrain

@@ -68,8 +68,7 @@ namespace Democrite.Framework.Node.Inputs
         private static IInputProvider BuildStaticCollection(InputSourceDefinition definition)
         {
             var sourceType = definition.InputType;
-            return (IInputProvider)Activator.CreateInstance(typeof(InputSourceStaticCollectionProvider<>).MakeGenericType(sourceType), new object[] { definition })!;
-
+            return (IInputProvider)Activator.CreateInstance(typeof(InputSourceStaticCollectionProvider<>).MakeGenericType(sourceType.ToType()), new object[] { definition })!;
         }
 
         #endregion

@@ -25,10 +25,11 @@ namespace Democrite.Framework.Client.Configurations
         /// <summary>
         /// Initializes a new instance of the <see cref="DemocriteClient"/> class.
         /// </summary>
-        private DemocriteClient(IHost host,
-                                DemocriteClientConfigurationDefinition? config,
-                                IDemocriteExecutionHandler democriteExecutionHandler)
-            : base(host, config, democriteExecutionHandler)
+        internal DemocriteClient(IHost host,
+                                 DemocriteClientConfigurationDefinition? config,
+                                 IDemocriteExecutionHandler democriteExecutionHandler,
+                                 bool hostOwned)
+            : base(host, config, democriteExecutionHandler, hostOwned)
         {
         }
 
@@ -81,7 +82,8 @@ namespace Democrite.Framework.Client.Configurations
 
             return new DemocriteClient(buildedHost,
                                        buildedHost.Services.GetRequiredService<DemocriteClientConfigurationDefinition>(),
-                                       buildedHost.Services.GetRequiredService<IDemocriteExecutionHandler>());
+                                       buildedHost.Services.GetRequiredService<IDemocriteExecutionHandler>(),
+                                       true);
         }
 
         /// <summary>

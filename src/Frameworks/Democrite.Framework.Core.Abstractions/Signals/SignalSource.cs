@@ -13,7 +13,6 @@ namespace Democrite.Framework.Core.Abstractions.Signals
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// Information about the signal source that result on the current one.

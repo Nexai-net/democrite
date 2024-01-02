@@ -6,9 +6,12 @@ namespace Democrite.Framework.Client
 {
     using Democrite.Framework.Client.Abstractions.Configurations;
     using Democrite.Framework.Client.Configurations;
+    using Democrite.Framework.Client.Model;
     using Democrite.Framework.Cluster.Configurations;
+    using Democrite.Framework.Core.Abstractions;
 
     using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
 
     using System;
@@ -39,6 +42,17 @@ namespace Democrite.Framework.Client
             where THostBuilder : IHostBuilder
         {
             DemocriteClient.Create(hostBuilder, setupConfig, builder, clusterBuilderTools);
+
+            hostBuilder.ConfigureServices(services =>
+            {
+                services.AddHostedService((s) =>
+                {
+                    return new DemocriteClient(s.GetRequiredService<IHost>(),
+                                               s.GetRequiredService<DemocriteClientConfigurationDefinition>(),
+                                               s.GetRequiredService<IDemocriteExecutionHandler>(),
+                                               false);
+                });
+            });
 
             return hostBuilder;
         }

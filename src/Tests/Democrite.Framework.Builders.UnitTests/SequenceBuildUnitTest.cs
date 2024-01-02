@@ -9,8 +9,11 @@ namespace Democrite.Framework.Builders.UnitTests
     using Democrite.Framework.Builders.UnitTests.TestData;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
+    using Democrite.UnitTests.ToolKit.Tests;
 
     using Moq;
+
+    using Newtonsoft.Json;
 
     using NFluent;
 
@@ -60,7 +63,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             //var func = (IBasicTestVGrain act) => act.ExecuteStringAsync;
 
-            var definition = Sequence.Create()
+            var definition = Sequence.Build()
                                      .NoInput()
 
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
@@ -103,7 +106,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Simple()
         {
-            var definition = Sequence.Create()
+            var definition = Sequence.Build()
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
                                      .Use<IBasicTestOtherVGrain>().Call((a, input, ctx) => a.OtherReturnIpAddressFromStringAsync(input, ctx)).Return
@@ -115,7 +118,7 @@ namespace Democrite.Framework.Builders.UnitTests
             Check.That(definition.DisplayName).IsNotNull().And.IsEqualTo(definition.Uid.ToString());
 
             Check.That(definition.Input).IsNull();
-            Check.That(definition.Output).IsNotNull().And.IsEqualTo(typeof(IPAddress));
+            Check.That(definition.Output!.ToType()).IsNotNull().And.IsEqualTo(typeof(IPAddress));
 
             Check.That(definition.Stages).IsNotNull().And.CountIs(2);
 
@@ -126,11 +129,11 @@ namespace Democrite.Framework.Builders.UnitTests
             var firstCall = first as SequenceStageCallDefinition;
             Debug.Assert(firstCall is not null);
 
-            Check.That(firstCall.CallMethodDefinition.Name).IsNotNull();
-            Check.That(firstCall.CallMethodDefinition.Name).IsNotNull().And.IsEqualTo(nameof(IBasicTestVGrain.ExecuteStringAsync));
+            Check.That(firstCall.CallMethodDefinition.MethodName).IsNotNull();
+            Check.That(firstCall.CallMethodDefinition.MethodName).IsNotNull().And.IsEqualTo(nameof(IBasicTestVGrain.ExecuteStringAsync));
 
             Check.That(firstCall.Input).IsNull();
-            Check.That(firstCall.Output).IsNotNull().And.IsEqualTo(typeof(string));
+            Check.That(firstCall.Output!.ToType()).IsNotNull().And.IsEqualTo(typeof(string));
 
             var last = definition.Stages.LastOrDefault();
 
@@ -139,11 +142,11 @@ namespace Democrite.Framework.Builders.UnitTests
             var lastCall = last as SequenceStageCallDefinition;
             Debug.Assert(lastCall is not null);
 
-            Check.That(lastCall.CallMethodDefinition.Name).IsNotNull();
-            Check.That(lastCall.CallMethodDefinition.Name).IsNotNull().And.IsEqualTo(nameof(IBasicTestOtherVGrain.OtherReturnIpAddressFromStringAsync));
+            Check.That(lastCall.CallMethodDefinition.MethodName).IsNotNull();
+            Check.That(lastCall.CallMethodDefinition.MethodName).IsNotNull().And.IsEqualTo(nameof(IBasicTestOtherVGrain.OtherReturnIpAddressFromStringAsync));
 
-            Check.That(lastCall.Input).IsNotNull().And.IsEqualTo(typeof(string));
-            Check.That(lastCall.Output).IsNotNull().And.IsEqualTo(typeof(IPAddress));
+            Check.That(lastCall.Input!.ToType()).IsNotNull().And.IsEqualTo(typeof(string));
+            Check.That(lastCall.Output!.ToType()).IsNotNull().And.IsEqualTo(typeof(IPAddress));
         }
 
         /// <summary>
@@ -152,7 +155,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Foreach()
         {
-            var definition = Sequence.Create()
+            var definition = Sequence.Build()
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.GetUrisAsync(ctx)).Return
                                      .Foreach(IType.From<Uri>(), each =>
@@ -179,14 +182,14 @@ namespace Democrite.Framework.Builders.UnitTests
             var getUriStep = getUris as SequenceStageCallDefinition;
             Check.That(getUriStep).IsNotNull()
                                   .And
-                                  .WhichMember(c => c!.CallMethodDefinition.Name).Verifies(s => s.Contains(nameof(IBasicTestVGrain.GetUrisAsync)));
+                                  .WhichMember(c => c!.CallMethodDefinition.MethodName).Verifies(s => s.Contains(nameof(IBasicTestVGrain.GetUrisAsync)));
 
             Check.That(storage).IsNotNull().And.IsInstanceOf<SequenceStageCallDefinition>();
 
             var storageStep = storage as SequenceStageCallDefinition;
             Check.That(storageStep).IsNotNull()
                                    .And
-                                   .WhichMember(c => c!.CallMethodDefinition.Name).Verifies(s => s.Contains(nameof(ITestStoreVGrain.Storage)));
+                                   .WhichMember(c => c!.CallMethodDefinition.MethodName).Verifies(s => s.Contains(nameof(ITestStoreVGrain.Storage)));
 
             Check.That(foreachStage).IsNotNull().And.IsInstanceOf<SequenceStageForeachDefinition>();
 
@@ -199,8 +202,8 @@ namespace Democrite.Framework.Builders.UnitTests
             Check.That(foreachFlow).IsNotNull();
             Debug.Assert(foreachFlow is not null);
 
-            Check.That(foreachFlow.Input).IsNotNull().And.IsEqualTo(typeof(Uri));
-            Check.That(foreachFlow.Output).IsNotNull().And.IsEqualTo(typeof(IPAddress));
+            Check.That(foreachFlow.Input!.ToType()).IsNotNull().And.IsEqualTo(typeof(Uri));
+            Check.That(foreachFlow.Output!.ToType()).IsNotNull().And.IsEqualTo(typeof(IPAddress));
 
             Check.That(foreachFlow.Stages).IsNotNull().And.CountIs(2);
         }
@@ -213,7 +216,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var inputVariable = ";";
 
-            var definition = Sequence.Create()
+            var definition = Sequence.Build()
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.GetUrisAsync(ctx)).Return
 
@@ -234,7 +237,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
-            var sequenceBuild = Sequence.Create()
+            var sequenceBuild = Sequence.Build()
                                         .NoInput()
                                         .Use<IBasicTestVGrain>();
 
@@ -252,7 +255,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
-            var sequenceBuild = Sequence.Create()
+            var sequenceBuild = Sequence.Build()
                                         .NoInput()
                                         .Use<IBasicTestVGrain>();
 
@@ -270,7 +273,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
-            var sequenceBuild = Sequence.Create()
+            var sequenceBuild = Sequence.Build()
                                         .NoInput()
                                         .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return;
 
@@ -278,6 +281,56 @@ namespace Democrite.Framework.Builders.UnitTests
                  .Throws<InvalidCastException>()
                  .WithProperty(p => p.Message,
                                "Parameter (System.Char) name 'c' must be of type Democrite.Framework.Core.Abstractions." + nameof(IExecutionContext) + " or System.String");
+        }
+
+        /// <summary>
+        /// Complexes the sequence serializer.
+        /// </summary>
+        [Fact]
+        public void Complexe_Sequence_Serializer()
+        {
+            var definition = Sequence.Build()
+                                     .NoInput()
+                                     .Use<IBasicTestVGrain>().Call((a, ctx) => a.GetUrisAsync(ctx)).Return
+                                     .Foreach(IType.From<Uri>(), each =>
+                                     {
+                                         return each.Use<IBasicTestVGrain>().Call((a, uri, ctx) => a.GetHtmlFromUriAsync(uri!, ctx)).Return
+                                                    .Use<IBasicTestOtherVGrain>().Call((a, html, ctx) => a.OtherReturnIpAddressFromStringAsync(html, ctx)).Return;
+                                     })
+                                     .Use<ITestStoreVGrain>().Call((a, input, ctx) => a.Storage(input, ctx)).Return
+                                     .Build();
+
+            SerializationTester.SerializeTester(definition);
+        }
+
+        /// <summary>
+        /// Simple the sequence serializer.
+        /// </summary>
+        [Fact]
+        public void Simple_Sequence_Serializer()
+        {
+            var definition = Sequence.Build()
+                                     .NoInput()
+                                     .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
+                                     .Use<IBasicTestOtherVGrain>().Call((a, input, ctx) => a.OtherReturnIpAddressFromStringAsync(input, ctx)).Return
+                                     .Build();
+
+            SerializationTester.SerializeTester(definition);
+        }
+
+        /// <summary>
+        /// Simple the sequence serializer with input and output.
+        /// </summary>
+        [Fact]
+        public void Simple_Sequence_Serializer_With_Input_And_Output()
+        {
+            var definition = Sequence.Build()
+                                     .RequiredInput<Uri>()
+                                     .Use<IBasicTestVGrain>().Call((a, uri, ctx) => a.GetHtmlFromUriAsync(uri!, ctx)).Return
+                                     .Use<IBasicTestOtherVGrain>().Call((a, html, ctx) => a.OtherReturnIpAddressFromStringAsync(html, ctx)).Return
+                                     .Build();
+
+            SerializationTester.SerializeTester(definition);
         }
 
         #endregion

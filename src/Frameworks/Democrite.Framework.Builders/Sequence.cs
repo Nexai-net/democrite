@@ -2,10 +2,10 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-using Democrite.Framework.Builders.Sequences;
-
 namespace Democrite.Framework.Builders
 {
+    using Democrite.Framework.Builders.Sequences;
+
     using System;
 
     /// <summary>
@@ -16,7 +16,7 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Creates a new instance of <see cref="SequenceBuilder"/>
         /// </summary>
-        public static ISequenceTriggerBuilder Create(Guid? uid = null, Action<SequenceOption>? optionBuilder = null)
+        public static ISequenceTriggerBuilder Build(Guid? uid = null, Action<SequenceOption>? optionBuilder = null)
         {
             var option = new SequenceOption(uid, null);
 

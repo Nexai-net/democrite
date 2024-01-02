@@ -5,10 +5,10 @@
 namespace Democrite.Framework.Node.Signals.Models
 {
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
 
     using System;
+    using System.Collections;
     using System.Collections.Generic;
 
     /// <summary>
