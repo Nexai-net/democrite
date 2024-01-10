@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Exceptions
 {
     using Democrite.Framework.Core.Abstractions.Resources;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
 
@@ -12,8 +13,9 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
     /// Raised when the input provide is not of the expected type
     /// </summary>
     /// <seealso cref="DemocriteBaseException" />
-    public sealed class InvalidOutputDemocriteException : DemocriteBaseException
+    public sealed class InvalidOutputDemocriteException : DemocriteBaseException<InvalidOutputDemocriteException>
     {
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InvalidOutputDemocriteException"/> class.
         /// </summary>
@@ -24,20 +26,86 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
                                                Type outputType,
                                                string? executionInformation = null,
                                                Exception? inner = null)
-            : base(DemocriteExceptionSR.InvalidOutputDemocriteExceptionMessage
+            : this(DemocriteExceptionSR.InvalidOutputDemocriteExceptionMessage
                                        .WithArguments(desiredType,
                                                       outputType,
                                                       executionInformation ?? string.Empty),
 
+                   desiredType.GetAbstractType(),
+                   outputType.GetAbstractType(),
+                   executionInformation,
                    DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Sequence,
                                              DemocriteErrorCodes.PartType.Output,
                                              DemocriteErrorCodes.ErrorType.Invalid,
                                              0),
                    inner)
         {
-            this.Data.Add(nameof(desiredType), desiredType);
-            this.Data.Add(nameof(outputType), outputType);
-            this.Data.Add(nameof(executionInformation), executionInformation ?? string.Empty);
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InvalidOutputDemocriteException"/> class.
+        /// </summary>
+        internal InvalidOutputDemocriteException(string message,
+                                                 AbstractType desiredType,
+                                                 AbstractType outputType,
+                                                 string? executionInformation,
+                                                 ulong errorCode,
+                                                 Exception? innerException)
+            : base(message, errorCode, innerException)
+        {
+            this.Data.Add(nameof(InvalidOutputDemocriteExceptionSurrogate.DesiredType), desiredType);
+            this.Data.Add(nameof(InvalidOutputDemocriteExceptionSurrogate.OutputType), outputType);
+            this.Data.Add(nameof(InvalidOutputDemocriteExceptionSurrogate.ExecutionInformation), executionInformation ?? string.Empty);
+        }
+    }
+
+    [GenerateSerializer]
+    public struct InvalidOutputDemocriteExceptionSurrogate : IDemocriteBaseExceptionSurrogate
+    {
+        [Id(0)]
+        public string Message { get; set; }
+
+        [Id(1)]
+        public ulong ErrorCode { get; set; }
+
+        [Id(2)]
+        public AbstractType DesiredType { get; set; }
+
+        [Id(3)]
+        public AbstractType OutputType { get; set; }
+
+        [Id(4)]
+        public string ExecutionInformation { get; set; }
+
+        [Id(5)]
+        public Exception? InnerException { get; set; }
+    }
+
+    [RegisterConverter]
+    public sealed class InvalidOutputDemocriteExceptionConverter : IConverter<InvalidOutputDemocriteException, InvalidOutputDemocriteExceptionSurrogate>
+    {
+        public InvalidOutputDemocriteException ConvertFromSurrogate(in InvalidOutputDemocriteExceptionSurrogate surrogate)
+        {
+            return new InvalidOutputDemocriteException(surrogate.Message,
+                                                       surrogate.DesiredType,
+                                                       surrogate.OutputType,
+                                                       surrogate.ExecutionInformation,
+                                                       surrogate.ErrorCode,
+                                                       surrogate.InnerException);
+        }
+
+        public InvalidOutputDemocriteExceptionSurrogate ConvertToSurrogate(in InvalidOutputDemocriteException value)
+        {
+            return new InvalidOutputDemocriteExceptionSurrogate()
+            {
+                InnerException = value.InnerException,
+                ErrorCode = value.ErrorCode,
+                Message = value.Message,
+                DesiredType = (AbstractType)value.Data[nameof(InvalidOutputDemocriteExceptionSurrogate.DesiredType)]!,
+                OutputType = (AbstractType)value.Data[nameof(InvalidOutputDemocriteExceptionSurrogate.OutputType)]!,
+                ExecutionInformation = (string)value.Data[nameof(InvalidOutputDemocriteExceptionSurrogate.ExecutionInformation)]!
+            };
         }
     }
 }

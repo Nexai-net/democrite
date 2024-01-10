@@ -27,8 +27,8 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// <summary>
         /// Initializes a new instance of the <see cref="TriggerDefinitionSignalBuilder"/> class.
         /// </summary>
-        public TriggerDefinitionSignalBuilder(TriggerTypeEnum triggerType, SignalId? signalId, DoorId? doorId)
-            : base(triggerType)
+        public TriggerDefinitionSignalBuilder(TriggerTypeEnum triggerType, SignalId? signalId, DoorId? doorId, Guid? fixUid = null)
+            : base(triggerType, fixUid)
         {
             this._signalId = signalId;
             this._doorId = doorId;
@@ -44,7 +44,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
             if (this._signalId == null && this._doorId == null)
                 throw new NullReferenceException("At least a Signal or Door must be register");
 
-            return new SignalTriggerDefinition(Guid.NewGuid(),
+            return new SignalTriggerDefinition(this.Uid,
                                                this.TargetSequenceIds,
                                                this.TargetSignalIds,
                                                true,

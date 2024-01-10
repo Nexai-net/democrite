@@ -2,7 +2,7 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-namespace Democrite.Framework.Toolbox.Extensions
+namespace System.Linq.Expressions
 {
     using Democrite.Framework.Toolbox.Abstractions.Conditions;
     using Democrite.Framework.Toolbox.Abstractions.Enums;
@@ -12,7 +12,6 @@ namespace Democrite.Framework.Toolbox.Extensions
     using System.Collections.Immutable;
     using System.Diagnostics;
     using System.Linq;
-    using System.Linq.Expressions;
     using System.Reflection;
 
     /// <summary>
@@ -117,9 +116,9 @@ namespace Democrite.Framework.Toolbox.Extensions
         /// <summary>
         /// Converts back <see cref="ConditionExpressionDefinition"/> to executable <see cref="LambdaExpression"/>.
         /// </summary>
-        public static LambdaExpression ToExpressionDelegateWithResult<TResult>(this ConditionExpressionDefinition expressionDefinition)
+        public static LambdaExpression ToExpressionDelegateWithResult(this ConditionExpressionDefinition expressionDefinition)
         {
-            return ToExpressionDelegate(expressionDefinition, typeof(TResult));
+            return ToExpressionDelegate(expressionDefinition, typeof(bool));
         }
 
         /// <summary>

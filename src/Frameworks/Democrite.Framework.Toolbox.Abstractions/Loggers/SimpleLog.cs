@@ -12,7 +12,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Loggers
     /// <remarks>
     ///     Attention the message template and values are merged used only this container for simple or in memory logs
     /// </remarks>
-    public sealed class SimpleLog
+    public sealed class SimpleLog : IEquatable<SimpleLog>
     {
         #region Ctor
 
@@ -27,7 +27,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Loggers
 
         #endregion
 
-        #region Methods
+        #region Properties
 
         /// <summary>
         /// Gets the log level.
@@ -38,6 +38,37 @@ namespace Democrite.Framework.Toolbox.Abstractions.Loggers
         /// Gets the message.
         /// </summary>
         public string Message { get; }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        public bool Equals(SimpleLog? other)
+        {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(this, other)) 
+                return true;
+
+            return this.LogLevel == other.LogLevel &&
+                   this.Message == other.Message;
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            if (obj is SimpleLog simple)
+                return Equals(simple);
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.LogLevel, this.Message);
+        }
 
         #endregion
     }

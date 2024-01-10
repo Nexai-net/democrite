@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Models
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
+    using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Core.Diagnostics;
@@ -221,7 +222,7 @@ namespace Democrite.Framework.Node.Models
                     this._sequenceExecutorExecThread.State.Update(this._sequenceExecutorExecThread.State.Cursor,
                                                                   this._sequenceExecutorExecThread.State.CurrentStageExecId,
                                                                   this._sequenceExecutorExecThread.State.Output,
-                                                                  innerState.Select(i => (SequenceExecutorExecThreadState)i.Content.GetCurrentThreadState()));
+                                                                  innerState.Select(i => (SequenceExecutorExecThreadState)i.Token.GetCurrentThreadState()));
                 }
                 finally
                 {
@@ -267,7 +268,7 @@ namespace Democrite.Framework.Node.Models
             #region Properties
 
             /// <inheritdoc />
-            public ISequenceExecutorThreadHandler Content
+            public ISequenceExecutorThreadHandler Token
             {
                 get
                 {
@@ -562,6 +563,7 @@ namespace Democrite.Framework.Node.Models
                     var inputType = input.GetType();
                     if (step.Input != inputType && !inputType.IsAssignableTo(step.Input!.ToType()))
                     {
+                        // TODO : Add flag in step to prevent auto convertion like double to int ...
                         if (this._objectConverter.TryConvert(input, step.Input!.ToType(), out var convertInput))
                             input = convertInput;
                     }

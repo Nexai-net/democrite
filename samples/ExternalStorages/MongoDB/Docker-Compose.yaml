@@ -1,0 +1,34 @@
+services:
+    # databases:
+    #     image: 'mongo:latest'
+    #     ports: 
+    #         - 27017:27017
+
+    # client:
+    #     build: 
+    #         dockerfile: ./Clients/Democrite.Generic.Client/Dockerfile
+
+    #     depends_on:
+    #         - facade
+
+    # facade:
+    #     build: 
+    #         dockerfile: ./Client/Dockerfile
+
+    #     ports:
+    #         - 8080:8080 # orlead Dashboard
+    #         - 4242:4242 # orlead gateway
+
+    #     depends_on:
+    #         # - databases
+    #         - node 
+
+    node:
+        build: 
+            dockerfile: ./Node/Dockerfile
+
+        deploy:
+            replicas : 3
+
+        # depends_on:
+        #     - databases

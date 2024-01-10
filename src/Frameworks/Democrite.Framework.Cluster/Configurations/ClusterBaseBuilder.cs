@@ -5,12 +5,11 @@
 namespace Democrite.Framework.Cluster.Configurations
 {
     using Democrite.Framework.Cluster.Abstractions.Attributes;
-    using Democrite.Framework.Cluster.Abstractions.Configurations;
     using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
     using Democrite.Framework.Cluster.Abstractions.Exceptions;
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Services;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Triggers;
@@ -32,7 +31,9 @@ namespace Democrite.Framework.Cluster.Configurations
     using Orleans;
     using Orleans.Configuration;
     using Orleans.Messaging;
-    using Orleans.Runtime;
+    using Orleans.Serialization;
+    using Orleans.Serialization.Cloning;
+    using Orleans.Serialization.Serializers;
 
     using System.Diagnostics.CodeAnalysis;
 
@@ -420,12 +421,36 @@ namespace Democrite.Framework.Cluster.Configurations
 
             OnFinalizeManualBuildConfigure(logger);
 
+            // custom serializers
+            //if (!CheckIsExistSetupInServices<IDemocriteExceptionSerializer>(serviceCollection))
+            //    AddCustomSerializer<IDemocriteExceptionSerializer, ExceptionSerializer>();
+
             // Create Init and Finalize services
             RegisterNodeService<INodeInitService>(serviceCollection);
             RegisterNodeService<INodeFinalizeService>(serviceCollection);
 
             return OnBuild(logger);
         }
+
+        /// <summary>
+        /// Adds the custom serializer must inherite from orleans interfaces <see cref="IGeneralizedCodec"/>, <see cref="IGeneralizedCopier"/>, <see cref="ITypeFilter"/>
+        /// </summary>
+        public TWizard AddCustomSerializer<TInterfaceSerializer, TSerializerImplementation>()
+            where TInterfaceSerializer : class, IGeneralizedCodec, IGeneralizedCopier, ITypeFilter
+            where TSerializerImplementation : class, TInterfaceSerializer
+        {
+
+            var serviceCollection = GetServiceCollection();
+
+            serviceCollection.AddSingleton<TInterfaceSerializer, TSerializerImplementation>();
+            serviceCollection.AddSingleton<IGeneralizedCodec>(s => s.GetRequiredService<TInterfaceSerializer>());
+            serviceCollection.AddSingleton<IGeneralizedCopier>(s => s.GetRequiredService<TInterfaceSerializer>());
+            serviceCollection.AddSingleton<ITypeFilter>(s => s.GetRequiredService<TInterfaceSerializer>());
+
+            return GetWizard();
+        }
+
+        #region Tools
 
         /// <summary>
         /// Registers in the <paramref name="serviceCollection"/> the related <typeparamref name="TService"/>
@@ -442,7 +467,7 @@ namespace Democrite.Framework.Cluster.Configurations
                                                    .ToArray();
 
 #pragma warning disable CS8603 // Possible null reference return.
-            
+
             foreach (var init in servicesToSetup)
             {
                 if (init.Count() == 1)
@@ -462,8 +487,6 @@ namespace Democrite.Framework.Cluster.Configurations
 #pragma warning restore CS8603 // Possible null reference return.
 
         }
-
-        #region Tools
 
         /// <summary>
         /// Automatics the configure to section not description programmaticaly.

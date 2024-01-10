@@ -42,10 +42,11 @@ namespace Democrite.Framework.Core.Services
         private static readonly Regex s_newRegex = new Regex("^(?<before>.*)(?<rule>{new})(?<after>.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_inputRegex = new Regex("^(?<before>.*)(?<rule>{input(?<props>[a-zA-Z.]+)*})(?<after>.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex s_executionContextRegex = new Regex("^(?<before>.*)(?<rule>{executionContext(?<props>[a-zA-Z.]+)*})(?<after>.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
+        
         private static readonly ConstantExpression s_expressionNullString;
         private static readonly PropertyInfo s_randomShared;
 
+        private static readonly MethodInfo s_changeTypeMethod;
         private static readonly MethodInfo s_dynamicCall;
         private static readonly MethodInfo s_concatMthd;
         private static readonly MethodInfo s_guidParse;
@@ -119,6 +120,7 @@ namespace Democrite.Framework.Core.Services
             {
                 typeof(object),
                 typeof(string),
+                typeof(bool),
                 typeof(bool)
             };
 
@@ -127,6 +129,15 @@ namespace Democrite.Framework.Core.Services
                                                                    m.GetParameters().Select(p => p.ParameterType).SequenceEqual(dynamicCallExpectedCallArg));
             Debug.Assert(dynamicCall != null);
             s_dynamicCall = dynamicCall;
+
+            var changeTypeMethod = typeof(Convert).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                                                  .FirstOrDefault(m => m.Name == nameof(Convert.ChangeType) &&
+                                                                       m.GetParameters().Length == 2 &&
+                                                                       m.GetParameters().First().ParameterType == typeof(object) &&
+                                                                       m.GetParameters().Last().ParameterType == typeof(Type));
+
+            Debug.Assert(changeTypeMethod != null);
+            s_changeTypeMethod = changeTypeMethod;
         }
 
         /// <summary>
@@ -412,7 +423,14 @@ namespace Democrite.Framework.Core.Services
                     return Expression.Convert(varGenExpression, typeof(Guid));
 
                 if (expectLong && varGenExpression != null)
-                    return Expression.Convert(varGenExpression, typeof(long));
+                {
+                    return Expression.Call(null,
+                                           s_changeTypeMethod, 
+                                           varGenExpression,
+                                           Expression.Constant(typeof(long))); 
+                }
+
+                //return Expression.Convert(varGenExpression, typeof(long));
 
                 if (match == null)
                     varGenExpression = Expression.Constant(template);
@@ -474,11 +492,21 @@ namespace Democrite.Framework.Core.Services
                 resultMatch = match;
 
                 var props = match.Groups[PROPS].Value.Trim('{', '}', '.');
-                Expression varGenExpression = Expression.Call(null,
-                                                              s_dynamicCall,
-                                                              parameterExpression,
-                                                              Expression.Constant(props),
-                                                              Expression.Constant(!hasFallbackValue));
+                Expression varGenExpression;
+
+                if (!string.IsNullOrWhiteSpace(props))
+                {
+                    varGenExpression = Expression.Call(null,
+                                                       s_dynamicCall,
+                                                       parameterExpression,
+                                                       Expression.Constant(props),
+                                                       Expression.Constant(false),
+                                                       Expression.Constant(!hasFallbackValue));
+                }
+                else
+                {
+                    varGenExpression = parameterExpression;
+                }
 
                 if (hasFallbackValue)
                 {

@@ -7,7 +7,6 @@ namespace Democrite.Framework.Builders.Steps
     using Democrite.Framework.Core.Abstractions.Sequence;
 
     using System;
-    using System.ComponentModel;
 
     /// <summary>
     /// Base class of <see cref="ISequencePipelineInternalStageStep"/>
@@ -45,7 +44,10 @@ namespace Democrite.Framework.Builders.Steps
         #region Methods
 
         /// <inheritdoc/>
-        public abstract ISequenceStageDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option, bool preventReturn, TContext? contextInfo = default);
+        public abstract ISequenceStageDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
+                                                                        bool preventReturn,
+                                                                        TContext? contextInfo = default,
+                                                                        string? configurationFromInputChainCall = null);
 
         #endregion
     }

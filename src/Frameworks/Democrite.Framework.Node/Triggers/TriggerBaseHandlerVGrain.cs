@@ -121,7 +121,7 @@ namespace Democrite.Framework.Node.Triggers
             {
                 var targetSignals = await this._signalDefinitionProvider.GetValuesAsync(definition.TargetSignalIds.Select(t => t.Uid).ToArray());
 
-                if (input is IEnumerable enumerable)
+                if (input is IEnumerable enumerable && input is not string)
                 {
                     foreach (var item in enumerable)
                         await FireSignalsTargets(targetSignals, item);
@@ -137,7 +137,7 @@ namespace Democrite.Framework.Node.Triggers
             {
                 var targetSequences = await this._sequenceDefinitionProvider.GetValuesAsync(definition.TargetSequenceIds);
 
-                if (input is IEnumerable enumerable)
+                if (input is IEnumerable enumerable && input is not string)
                 {
                     foreach (var item in enumerable)
                         await FireSequencesTargets(targetSequences, item);

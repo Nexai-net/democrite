@@ -22,6 +22,11 @@ namespace Democrite.Framework.Toolbox.Abstractions.Extensions.Types
         bool IsCollection { get; }
 
         /// <summary>
+        /// Gets a value indicating whether this instance is c sharp scalar type.
+        /// </summary>
+        bool IsCSharpScalarType { get; }
+
+        /// <summary>
         /// Gets the type of the item collection.
         /// </summary>
         Type? CollectionItemType { get; }

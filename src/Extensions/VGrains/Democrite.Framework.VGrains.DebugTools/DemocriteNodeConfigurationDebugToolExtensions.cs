@@ -6,8 +6,8 @@
 namespace Democrite.Framework.Node.Configurations
 {
     using Democrite.Framework.Builders;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Node.Abstractions.Configurations;
     using Democrite.Framework.VGrains.DebugTools;
     using Democrite.Framework.VGrains.DebugTools.Grains;
     using Democrite.Framework.VGrains.DebugTools.Models;

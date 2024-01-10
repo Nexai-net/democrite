@@ -22,7 +22,7 @@ namespace Democrite.Framework.Builders.Signals
         /// Uses a relay filter door definition. <br/>
         /// A relay filter door relay signal that valid the setup conditions
         /// </summary>
-        /// <typeparam name="TContent">Content carray by the signal</typeparam>
+        /// <typeparam name="TContent">Token carray by the signal</typeparam>
         public static IDefinitionBaseBuilder<DoorDefinition> UseRelayFilter<TContent>(this IDoorWithListenerBuilder doorWithListenerBuilder,
                                                                                       Expression<Func<TContent, SignalMessage, bool>> filterExpression)
             where TContent : struct

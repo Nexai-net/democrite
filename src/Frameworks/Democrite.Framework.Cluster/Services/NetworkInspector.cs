@@ -6,6 +6,7 @@ namespace Democrite.Framework.Cluster.Services
 {
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Toolbox.Abstractions.Disposables;
+    using Democrite.Framework.Toolbox.Disposables;
     using Democrite.Framework.Toolbox.Helpers;
 
     using System;
@@ -28,6 +29,22 @@ namespace Democrite.Framework.Cluster.Services
         private static readonly Regex s_ipString = new Regex("^(?<Ip>[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})$", RegexOptions.Compiled);
         private static readonly Regex s_ipPortString = new Regex("^(?<Ip>[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):(?<Port>[0-9]{2,6})$", RegexOptions.Compiled);
         private static readonly Regex s_hostPortString = new Regex("^(?<Host>[a-zA-Z0-9-.]+):(?<Port>[0-9]{2,6})$", RegexOptions.Compiled);
+
+        private static readonly Dictionary<Guid, int> s_reservedPortsIndexed;
+        private static int[] s_reservedPorts;
+
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetworkInspector"/> class.
+        /// </summary>
+        static NetworkInspector()
+        {
+            s_reservedPortsIndexed = new Dictionary<Guid, int>();
+            s_reservedPorts = new int[0];
+        }
 
         #endregion
 
@@ -78,13 +95,38 @@ namespace Democrite.Framework.Cluster.Services
         /// <inheritdoc />
         public int GetNextUnusedPort(int minPortIncluded, int maxPortExcluded)
         {
-            return NetworkHelper.GetNextUnusedPort(minPortIncluded, maxPortExcluded);
+            lock (s_reservedPortsIndexed)
+            {
+                return NetworkHelper.GetNextUnusedPort(minPortIncluded, maxPortExcluded, s_reservedPorts);
+            }
         }
 
         /// <inheritdoc />
         public ISecureContextToken<int> GetAndReservedNextUnusedPort(int minPortIncluded, int maxPortExcluded)
         {
-            throw new NotImplementedException();
+            int newPort = -1;
+            lock (s_reservedPortsIndexed)
+            {
+                newPort = NetworkHelper.GetNextUnusedPort(minPortIncluded, maxPortExcluded, s_reservedPorts);
+
+                var id = Guid.NewGuid();
+                s_reservedPortsIndexed.Add(id, newPort);
+                s_reservedPorts = s_reservedPortsIndexed.Values.ToArray();
+
+            }
+            return SecureContextToken.Create(newPort, ReleaseReservedPort);
+        }
+
+        /// <summary>
+        /// Call to releases the reserved port tag by id <paramref name="key"/>
+        /// </summary>
+        private void ReleaseReservedPort(Guid key)
+        {
+            lock (s_reservedPortsIndexed)
+            {
+                if (s_reservedPortsIndexed.Remove(key))
+                    s_reservedPorts = s_reservedPortsIndexed.Values.ToArray();
+            }
         }
 
         #endregion

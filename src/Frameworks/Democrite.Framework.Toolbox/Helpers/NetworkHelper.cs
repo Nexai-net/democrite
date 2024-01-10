@@ -18,7 +18,7 @@ namespace Democrite.Framework.Toolbox.Helpers
         /// <remarks>
         ///     https://stackoverflow.com/questions/138043/find-the-next-tcp-port-in-net
         /// </remarks>
-        public static int GetNextUnusedPort(int min, int max)
+        public static int GetNextUnusedPort(int min, int max, params int[] exceptionList)
         {
             if (max < min)
                 throw new ArgumentException("Max cannot be less than min.");
@@ -31,6 +31,7 @@ namespace Democrite.Framework.Toolbox.Helpers
                                         .Concat(ipProperties.GetActiveTcpListeners())
                                         .Concat(ipProperties.GetActiveUdpListeners())
                                         .Select(endpoint => endpoint.Port)
+                                        .Concat(exceptionList)
                                         .ToArray();
 
             var firstUnused = Enumerable.Range(min, max - min)

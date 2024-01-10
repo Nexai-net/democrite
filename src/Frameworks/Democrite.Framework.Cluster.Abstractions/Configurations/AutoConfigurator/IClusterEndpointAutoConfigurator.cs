@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Configurations;
 
     /// <summary>
     /// Configurator in charge to define how the current cluster part will expose (PORT, GATEWAY ...)

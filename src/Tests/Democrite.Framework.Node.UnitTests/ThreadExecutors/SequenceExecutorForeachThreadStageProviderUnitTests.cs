@@ -114,7 +114,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             var mockSecureToken = new Mock<ISecureContextToken<ISequenceExecutorThreadHandler>>(MockBehavior.Strict);
             var mockThreadHandler = new Mock<ISequenceExecutorThreadHandler>(MockBehavior.Strict);
 
-            mockSecureToken.SetupGet(e => e.Content).Returns(mockThreadHandler.Object);
+            mockSecureToken.SetupGet(e => e.Token).Returns(mockThreadHandler.Object);
             mockSecureToken.Setup(m => m.Dispose());
 
             Func<ISequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>? postCallback = null;
@@ -204,7 +204,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                          var innerMockSecureToken = new Mock<ISecureContextToken<ISequenceExecutorThreadHandler>>(MockBehavior.Strict);
                          var innerThreadHandler = new Mock<ISequenceExecutorThreadHandler>(MockBehavior.Strict);
 
-                         innerMockSecureToken.SetupGet(i => i.Content).Returns(innerThreadHandler.Object);
+                         innerMockSecureToken.SetupGet(i => i.Token).Returns(innerThreadHandler.Object);
 
                          var innerState = new SequenceExecutorExecThreadState(inner.Object.ExecutionContext.FlowUID,
                                                                               Guid.NewGuid(),

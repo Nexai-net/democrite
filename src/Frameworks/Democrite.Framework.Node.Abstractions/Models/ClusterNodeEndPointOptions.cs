@@ -21,7 +21,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// </summary>
         static ClusterNodeEndPointOptions()
         {
-            Default = new ClusterNodeEndPointOptions(false, 0, 0);
+            Default = new ClusterNodeEndPointOptions(false, 0, 0, false);
         }
 
         /// <summary>
@@ -29,11 +29,13 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// </summary>
         public ClusterNodeEndPointOptions(bool loopback = false,
                                           uint siloPort = 0,
-                                          int? gatewayPort = 0)
+                                          int? gatewayPort = 0,
+                                          bool autoGatewayPort = false)
         {
             this.Loopback = loopback;
             this.SiloPort = siloPort;
             this.GatewayPort = gatewayPort;
+            this.AutoGatewayPort = autoGatewayPort;
         }
 
         #endregion
@@ -62,6 +64,11 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// Gets the gateway port use to open communication to external client node-to-client.
         /// </summary>
         public int? GatewayPort { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether an automatic gateway port must by provide.
+        /// </summary>
+        public bool AutoGatewayPort { get; }
 
         #endregion
     }

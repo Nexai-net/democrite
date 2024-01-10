@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Exceptions
 {
     using Democrite.Framework.Core.Abstractions.Resources;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
 
@@ -12,7 +13,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
     /// Raised when definition required is missing
     /// </summary>
     /// <seealso cref="DemocriteBaseException" />
-    public sealed class MissingDefinitionException : DemocriteBaseException
+    public sealed class MissingDefinitionException : DemocriteBaseException<MissingDefinitionException>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MissingDefinitionException"/> class.
@@ -20,12 +21,71 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         public MissingDefinitionException(Type definitionType,
                                           Guid definitionId,
                                           Exception? innerException = null)
-            : base(DemocriteExceptionSR.DefinitionMissingExceptionMessage.WithArguments(definitionType, definitionId),
+            : this(DemocriteExceptionSR.DefinitionMissingExceptionMessage.WithArguments(definitionType, definitionId),
+                   definitionType.GetAbstractType(),
+                   definitionId,
                    DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Definition, DemocriteErrorCodes.PartType.Identifier, DemocriteErrorCodes.ErrorType.Missing),
                    innerException)
         {
-            this.Data.Add(nameof(definitionType), definitionType);
-            this.Data.Add(nameof(definitionId), definitionId);
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MissingDefinitionException"/> class.
+        /// </summary>
+        internal MissingDefinitionException(string message,
+                                            AbstractType definitionType,
+                                            Guid definitionId,
+                                            ulong errorCode,
+                                            Exception? innerException) 
+            : base(message, errorCode, innerException)
+        {
+            this.Data.Add(nameof(MissingDefinitionExceptionSurrogate.DefinitionType), definitionType);
+            this.Data.Add(nameof(MissingDefinitionExceptionSurrogate.DefinitionId), definitionId);
+        }
+    }
+
+    [GenerateSerializer]
+    public struct MissingDefinitionExceptionSurrogate : IDemocriteBaseExceptionSurrogate
+    {
+        [Id(0)]
+        public string Message { get; set; }
+
+        [Id(1)]
+        public ulong ErrorCode { get; set; }
+
+        [Id(2)]
+        public AbstractType DefinitionType { get; set; }
+
+        [Id(3)]
+        public Guid DefinitionId { get; set; }
+
+        [Id(4)]
+        public Exception? InnerException { get; set; }
+    }
+
+    [RegisterConverter]
+    public sealed class MissingDefinitionExceptionConverter : IConverter<MissingDefinitionException, MissingDefinitionExceptionSurrogate>
+    {
+        public MissingDefinitionException ConvertFromSurrogate(in MissingDefinitionExceptionSurrogate surrogate)
+        {
+            return new MissingDefinitionException(surrogate.Message,
+                                                  surrogate.DefinitionType,
+                                                  surrogate.DefinitionId,
+                                                  surrogate.ErrorCode,
+                                                  surrogate.InnerException);
+        }
+
+        public MissingDefinitionExceptionSurrogate ConvertToSurrogate(in MissingDefinitionException value)
+        {
+            return new MissingDefinitionExceptionSurrogate()
+            {
+                InnerException = value.InnerException,
+                Message = value.Message,
+                ErrorCode = value.ErrorCode,
+                DefinitionType = (AbstractType)value.Data[nameof(MissingDefinitionExceptionSurrogate.DefinitionType)]!,
+                DefinitionId = (Guid)value.Data[nameof(MissingDefinitionExceptionSurrogate.DefinitionId)]!
+            };
         }
     }
 }

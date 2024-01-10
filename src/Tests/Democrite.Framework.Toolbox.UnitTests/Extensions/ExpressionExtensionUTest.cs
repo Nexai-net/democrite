@@ -160,7 +160,7 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
 
             // TODO: Allow more type combinaison to improve test efficiency
             fixture.Register<AbstractType>(() => typeof(int).GetAbstractType());
-            fixture.Register<ConditionValueDefinition>(() => new ConditionValueDefinition(typeof(int), Random.Shared.Next(0, 152)));
+            fixture.Register<ConditionValueDefinition>(() => new ConditionValueDefinition(typeof(int).GetAbstractType(), Random.Shared.Next(0, 152)));
             fixture.Register<ConditionBaseDefinition>(() => fixture.Create<ConditionValueDefinition>());
 
             var inst = fixture.Create(partType, new SpecimenContext(fixture));

@@ -4,16 +4,12 @@
 
 namespace Democrite.Framework.Node.Mongo.Configurations
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
-    using Democrite.Framework.Node.Mongo.Configurations.AutoConfigurator;
-    using Democrite.Framework.Node.Mongo.Models;
-    using Democrite.Framework.Node.Mongo.Services;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Core.Abstractions.Enums;
-    using Democrite.Framework.Node.Abstractions.Configurations.Builders;
-    using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Node.Mongo.Configurations.AutoConfigurator;
+    using Democrite.Framework.Node.Mongo.Services;
 
     using Microsoft.Extensions.Configuration;
-
     using Microsoft.Extensions.DependencyInjection;
 
     using MongoDB.Bson.Serialization;

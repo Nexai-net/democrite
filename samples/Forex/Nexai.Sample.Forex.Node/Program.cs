@@ -2,13 +2,14 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
+using Democrite.Framework;
 using Democrite.Framework.Builders;
 using Democrite.Framework.Builders.Signals;
+using Democrite.Framework.Configurations;
 using Democrite.Framework.Core.Abstractions.Enums;
 using Democrite.Framework.Core.Abstractions.Sequence;
 using Democrite.Framework.Core.Abstractions.Triggers;
 using Democrite.Framework.Node.Abstractions.Configurations;
-using Democrite.Framework.Node.Configurations;
 using Democrite.Framework.Toolbox.Abstractions.Enums;
 using Democrite.VGrains.Web.Abstractions;
 
@@ -24,7 +25,7 @@ static SequenceDefinition CreateCollectorSequence(string currencyPair,
                                                   out TriggerDefinition triggerDefinition,
                                                   string cron = "* * * * *")
 {
-    var collectorSequence = Sequence.Create()
+    var collectorSequence = Sequence.Build()
                                     .RequiredInput<Uri>()
                                     .Use<IHtmlCollectorVGrain>().Call((a, url, ctx) => a.FetchPageAsync(url, ctx)).Return
                                     .Use<IPriceInspectorVGrain>().Configure(currencyPair)
@@ -37,7 +38,7 @@ static SequenceDefinition CreateCollectorSequence(string currencyPair,
     triggerDefinition = Trigger.Cron(cron)// "* 9-18 * * mon-fri" // Every minutes between 9h and 18h UTC between monday and friday
                                
                                // Define what will be trigged
-                               .AddTarget(collectorSequence)
+                               .AddTargetSequence(collectorSequence)
 
                                .SetInputSource(input => input.StaticCollection(collectionsources)
                                                              .PullMode(PullModeEnum.Circling)
@@ -108,23 +109,14 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
                                         .UseCronTriggers()
                                         .UseSignals()
 
-                                        .Configure(b => b.ConfigureLogging(logging => logging.AddConsole()))
+                                        .ConfigureLogging(logging => logging.AddConsole())
 
-                                        .SetupInMemoryDefintions(m =>
+                                        .AddInMemoryMongoDefinitionProvider(m =>
                                         {
-
-                                            m.SetupTriggers(t => t.Register(cron2MinEurUsdDefinition)
-                                                                  .Register(cron2MinEurChfDefinition))
-
-                                             .SetupSignals(t => t.Register(valueEurChfStoredAboveAverage)
-                                                                .Register(valueEurUsdStoredAboveAverage)
-                                                                .Register(manualForceDoorFireing))
-
-                                             .SetupDoors(t => t.Register(door))
-
-                                             .SetupSequences(c => c.Register(eurUsdCollectorSequence)
-                                                                   .Register(eurChfCollectorSequence));
-
+                                            m.SetupTriggers(cron2MinEurUsdDefinition, cron2MinEurChfDefinition)
+                                             .SetupSignals(valueEurChfStoredAboveAverage, valueEurUsdStoredAboveAverage, manualForceDoorFireing)
+                                             .SetupDoors(door)
+                                             .SetupSequences(eurUsdCollectorSequence, eurChfCollectorSequence);
                                         })
 
                                         .SetupNodeVGrains(cfg =>
@@ -137,7 +129,7 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
 
 await using (node)
 {
-    await node.StartUntilEndAsync(async (service, handler) =>
+    await node.StartUntilEndAsync(async (service, handler, token) =>
     {
         var factory = service.GetRequiredService<IGrainFactory>();
         var listenerDemoVGrain = factory.GetGrain<ISignalDemoTargetVGrain>(Guid.NewGuid());

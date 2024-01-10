@@ -91,6 +91,12 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             /// </summary>
             [Description("Error code category configuration")]
             Configuration = 0x_09_00_00_00_00_00_00_00,
+
+            /// <summary>
+            /// Error code category Execution
+            /// </summary>
+            [Description("Error code category Execution")]
+            Execution = 0x_10_00_00_00_00_00_00_00,
         }
 
         public enum PartType : ulong
@@ -204,10 +210,12 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
                                   Int32? customErrorCode = 0)
 #pragma warning restore IDE0049 // Simplify Names
         {
-            return (ulong)category &
-                   (ulong)macro &
-                   (ulong)genericType &
-                   (ulong)(customErrorCode ?? 0);
+#pragma warning disable CS0675 // Bitwise-or operator used on a sign-extended operand
+            return (ulong)category |
+                   (ulong)macro |
+                   (ulong)genericType |
+                   ((ulong)(customErrorCode ?? 0));
+#pragma warning restore CS0675 // Bitwise-or operator used on a sign-extended operand
         }
 
         /// <summary>

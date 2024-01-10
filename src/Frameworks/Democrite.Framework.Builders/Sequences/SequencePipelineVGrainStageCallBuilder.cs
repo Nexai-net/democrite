@@ -8,25 +8,28 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Toolbox.Helpers;
 
     using System;
     using System.Linq.Expressions;
     using System.Threading.Tasks;
 
     /// <inheritdoc />
-    internal sealed class SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TContextInfo> : SequencePipelineVGrainStageBaseBuilder<TVGrain, TInput>,
-                                                                                                  ISequencePipelineStageCallBuilder<TInput, TVGrain>,
-                                                                                                  ISequencePipelineStageCallBuilder<TVGrain>,
-                                                                                                  ISequencePipelineStageContextedCallBuilder<TVGrain, TContextInfo>,
-                                                                                                  ISequencePipelineStageContextedCallBuilder<TVGrain, TContextInfo, TInput>
+    internal sealed class SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TConfiguration> : SequencePipelineVGrainStageBaseBuilder<TVGrain, TInput>,
+                                                                                                    ISequencePipelineStageCallBuilder<TInput, TVGrain>,
+                                                                                                    ISequencePipelineStageCallBuilder<TVGrain>,
+                                                                                                    ISequencePipelineStageConfiguredCallBuilder<TVGrain, TConfiguration>,
+                                                                                                    ISequencePipelineStageConfiguredCallBuilder<TVGrain, TConfiguration, TInput>
         where TVGrain : IVGrain
     {
         #region Fields
 
         private readonly Action<ISequencePipelineStageConfigurator<TInput>>? _configAction;
         private readonly ISequencePipelineBaseBuilder _sequenceBuilder;
-        private readonly TContextInfo? _configuration;
 
+        private readonly Expression<Func<TInput, TConfiguration>>? _configurationProvider;
+        private readonly TConfiguration? _configuration;
+        
         private CallStepBuilder? _callDefinition;
 
         #endregion
@@ -37,13 +40,15 @@ namespace Democrite.Framework.Builders.Sequences
         /// Initializes a new instance of the <see cref="SequencePipelineVGrainStageCallBuilder{TWorflowStage, TInput}"/> class.
         /// </summary>
         public SequencePipelineVGrainStageCallBuilder(ISequencePipelineBaseBuilder sequenceBuilder,
-                                                     Action<ISequencePipelineStageConfigurator<TInput>>? configAction,
-                                                     TContextInfo? contextInfo = default)
+                                                      Action<ISequencePipelineStageConfigurator<TInput>>? configAction,
+                                                      TConfiguration? configuration = default,
+                                                      Expression<Func<TInput, TConfiguration>>? configurationProvider = null)
             : base(sequenceBuilder, configAction)
         {
             this._sequenceBuilder = sequenceBuilder;
             this._configAction = configAction;
-            this._configuration = contextInfo;
+            this._configuration = configuration;
+            this._configurationProvider = configurationProvider;
         }
 
         #endregion
@@ -63,49 +68,68 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFinalizerBuilder<TOutputMessage, TVGrain> ISequencePipelineStageCallBuilder<TInput, TVGrain>.Call<TOutputMessage>(Expression<Func<TVGrain, TInput, IExecutionContext, Task<TOutputMessage>>> expr)
+        public ISequencePipelineStageFinalizerBuilder<TOutputMessage, TVGrain> Call<TOutputMessage>(Expression<Func<TVGrain, TInput, IExecutionContext, Task<TOutputMessage>>> expr)
         {
             return (ISequencePipelineStageFinalizerBuilder<TOutputMessage, TVGrain>)CallRecordStep<TOutputMessage>(expr, typeof(TInput));
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFinalizerBuilder<TVGrain> ISequencePipelineStageCallBuilder<TInput, TVGrain>.Call(Expression<Func<TVGrain, TInput, IExecutionContext, Task>> expr)
+        public ISequencePipelineStageFinalizerBuilder<TVGrain> Call(Expression<Func<TVGrain, TInput, IExecutionContext, Task>> expr)
         {
             return CallRecordStep<NoneType>(expr, typeof(TInput));
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageContextedCallBuilder<TVGrain, TCtx> ISequencePipelineStageCallBuilder<TVGrain>.Context<TCtx>(TCtx context)
+        ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx> ISequencePipelineStageCallBuilder<TVGrain>.Configure<TCtx>(TCtx context)
         {
             return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, context);
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageContextedCallBuilder<TVGrain, TCtx, TInput> ISequencePipelineStageCallBuilder<TInput, TVGrain>.Configure<TCtx>(TCtx context)
+        ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx, TInput> ISequencePipelineStageCallBuilder<TInput, TVGrain>.Configure<TCtx>(TCtx context)
         {
             return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, context);
         }
 
+        /// <summary>
+        /// Add execution context configuration from input data
+        /// </summary>
+        public ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx, TInput> ConfigureFromInput<TCtx>(Expression<Func<TInput, TCtx>> executionConfiguration)
+        {
+            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, default, executionConfiguration);
+        }
+
+        /// <summary>
+        /// Use input as execution context configuration
+        /// </summary>
+        /// <remarks>
+        ///     Use full when configuration must depend of the input 
+        /// </remarks>
+        public ISequencePipelineStageConfiguredCallBuilder<TVGrain, TInput, TInput> UseInputAsConfiguration()
+        {
+            return ConfigureFromInput(i => i);
+        }
+
         /// <inheritdoc />
-        ISequencePipelineStageFinalizerBuilder<TOutputMessage, TVGrain> ISequencePipelineStageContextedCallBuilder<TVGrain, TContextInfo>.Call<TOutputMessage>(Expression<Func<TVGrain, IExecutionContext<TContextInfo>, Task<TOutputMessage>>> expr)
+        ISequencePipelineStageFinalizerBuilder<TOutputMessage, TVGrain> ISequencePipelineStageConfiguredCallBuilder<TVGrain, TConfiguration>.Call<TOutputMessage>(Expression<Func<TVGrain, IExecutionContext<TConfiguration>, Task<TOutputMessage>>> expr)
         {
             return (ISequencePipelineStageFinalizerBuilder<TOutputMessage, TVGrain>)CallRecordStep<TOutputMessage>(expr, NoneType.Trait);
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFinalizerBuilder<TOutputMessage, TVGrain> ISequencePipelineStageContextedCallBuilder<TVGrain, TContextInfo, TInput>.Call<TOutputMessage>(Expression<Func<TVGrain, TInput, IExecutionContext<TContextInfo>, Task<TOutputMessage>>> expr)
+        ISequencePipelineStageFinalizerBuilder<TOutputMessage, TVGrain> ISequencePipelineStageConfiguredCallBuilder<TVGrain, TConfiguration, TInput>.Call<TOutputMessage>(Expression<Func<TVGrain, TInput, IExecutionContext<TConfiguration>, Task<TOutputMessage>>> expr)
         {
             return (ISequencePipelineStageFinalizerBuilder<TOutputMessage, TVGrain>)CallRecordStep<TOutputMessage>(expr, typeof(TInput));
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFinalizerBuilder<TVGrain> ISequencePipelineStageContextedCallBuilder<TVGrain, TContextInfo>.Call(Expression<Func<TVGrain, IExecutionContext<TContextInfo>, Task>> expr)
+        ISequencePipelineStageFinalizerBuilder<TVGrain> ISequencePipelineStageConfiguredCallBuilder<TVGrain, TConfiguration>.Call(Expression<Func<TVGrain, IExecutionContext<TConfiguration>, Task>> expr)
         {
             return CallRecordStep<NoneType>(expr, NoneType.Trait);
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFinalizerBuilder<TVGrain> ISequencePipelineStageContextedCallBuilder<TVGrain, TContextInfo, TInput>.Call(Expression<Func<TVGrain, TInput, IExecutionContext<TContextInfo>, Task>> expr)
+        ISequencePipelineStageFinalizerBuilder<TVGrain> ISequencePipelineStageConfiguredCallBuilder<TVGrain, TConfiguration, TInput>.Call(Expression<Func<TVGrain, TInput, IExecutionContext<TConfiguration>, Task>> expr)
         {
             return CallRecordStep<NoneType>(expr, typeof(TInput));
         }
@@ -119,7 +143,10 @@ namespace Democrite.Framework.Builders.Sequences
             ArgumentNullException.ThrowIfNull(this._callDefinition);
 
             var option = BuildConfigDefinition();
-            return this._callDefinition.ToDefinition(option, this.ConfigPreventOutput, this._configuration);
+            return this._callDefinition.ToDefinition<TConfiguration>(option,
+                                                                     this.ConfigPreventOutput,
+                                                                     this._configurationProvider is null ? this._configuration : default,
+                                                                     this._configurationProvider is null ? null : DynamicCallHelper.GetCallChain(this._configurationProvider));
         }
 
         #region Tools
@@ -130,9 +157,9 @@ namespace Democrite.Framework.Builders.Sequences
         private ISequencePipelineStageFinalizerBuilder<TVGrain> CallRecordStep<TOutputMessage>(Expression expr, Type? input)
         {
             this._callDefinition = CallStepBuilder.FromExpression<TVGrain, TOutputMessage>(expr,
-                                                                                          input,
-                                                                                          this._configuration,
-                                                                                          this._configuration != null ? typeof(TContextInfo) : NoneType.Trait);
+                                                                                           input,
+                                                                                           this._configuration != null ? typeof(TConfiguration) : NoneType.Trait,
+                                                                                           this._configurationProvider is null ? this._configuration : null);
 
             return new SequencePipelineVGrainStageBaseBuilder<TVGrain, TOutputMessage>(this);
         }

@@ -50,7 +50,7 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
                                  {
                                      cfg.WizardConfig()
                                         .ClusterFromConfig()
-                                        .Configure(b => b.ConfigureLogging(logging => logging.AddConsole()));
+                                        .ConfigureLogging(c => c.AddConsole());
                                         
                                         ...
 
@@ -82,7 +82,7 @@ var node = DemocriteClient.Create((ctx, configBuilder) => configBuilder.AddJsonF
                                    {
                                          cfg.WizardConfig()
                                             .ClusterFromConfig()
-                                            .Configure(b => b.ConfigureLogging(logging => logging.AddConsole()));
+                                            .ConfigureLogging(c => c.AddConsole());
                                         
                                         ...
 
@@ -100,6 +100,131 @@ await using (node)
 // Add democrite client
 builder.Host.UseDemocriteClient(cfg => { ... });
 ```
+
+### Cluster
+
+Like Orleans, Democrite is build to work in cluster. Client and nodes communicates to each other to solve request.<br />
+This solution provide a strong resilience because if one node falldown automatically his work is relocate to other nodes. <br />
+
+To build a cluster you need a way for each new node to discovert the other and share information like status or workload.<br />
+Different strategy exist, Orleans choose the [database meeting point](https://learn.microsoft.com/en-us/dotnet/orleans/implementation/cluster-management).
+
+#### Local
+
+When you work in local you just need to configure using (NoCluster) :
+
+```csharp
+var node = DemocriteNode.Create(cfg =>
+                                {
+                                     cfg.WizardConfig()
+                                        .NoCluster() // -> Setup the system to only bind to 127.0.0.1 and allow only local client
+```                                     
+
+By default, in opposed of Orleans way, the local configuration allow multiple local nodes to form a cluster.<br />
+I you want to prevent multiple nodes you have to add the following configuration:
+
+```csharp
+var node = DemocriteNode.Create(cfg =>
+                                {
+                                     cfg.WizardConfig()
+                                        .NoCluster() // -> Setup the system to only bind to 127.0.0.1 and allow only local client
+                                        .AddEndpointOptions(new ClusterNodeEndPointOptions(loopback: true, siloPort:50000))
+```   
+
+#### Mongo
+
+> Nuget package : [Democrite.Framework.Node.Mongo](https://www.nuget.org/packages/Democrite.Framework.Node.Mongo)
+
+You can use mongo db as a **Meeting point**.
+
+To do so you just have configure :
+
+```csharp
+var node = DemocriteNode.Create(cfg =>
+                                {
+                                     cfg.WizardConfig()
+                                        // Setup mongo db as cluster meeting point
+                                        .UseMongoCluster(m => m.ConnectionString("127.0.0.1:27017"))
+```   
+
+Same go for the client part
+
+```csharp
+builder.Host.UseDemocriteClient(b =>
+                                {
+                                    b.WizardConfig()
+                                     .UseMongoCluster(m => m.ConnectionString("127.0.0.1:27017"))
+```   
+
+> [!IMPORTANT]
+> Attention by default a democrite node doesn't allow client to connect to it. (Except in NoCluster configuration use to dev) <br/>
+> it's a security to prevent any node to be consumed by client.<br/>
+> To enabled the node to be open to client you have two choose:<br/>
+> 1) Add manually a gateway port : .**AddEndpointOptions(new ClusterNodeEndPointOptions(gatewayPort: 4242))** // It will conflict if you have multiple node in local
+> 2) Let system choose a free port as gateway : .**AddEndpointOptions(new ClusterNodeEndPointOptions(autoGatewayPort: true))**
+
+See the full usage in sample [ExternalStorages/MongoDB](/samples/ExternalStorages/MongoDB/)
+
+### Storages
+
+A Democrite cluster need some information to be stored: <br/>
+1) Cluster information (cf. [Cluster](#cluster))
+2) VGrain State
+3) Reminder clock information
+4) Definitions (Sequences, triggers, signal, ...)
+5) Custom Data
+
+When you write a VGrain you can inherite from **VGrainBase{TVGrainInterface}** or **VGrainBase{TSTATE, TVGrainInterface}**. <br/>
+The second one provide a State management for you. It means the state will be load/create when the VGrain is activate and store when it is desactivate.
+
+> [!TIP]
+> In case of crash, the state storage could not be garanty, to prevent this you can call in you code the method "**PushStateAsync**" <br />
+> The issue with that is the time consumtion
+
+To store the state you need to provide through the constructor a **IPersistentState{TState}**. <br />
+The good practice is to get this instance from dependency injection with tag.
+
+```csharp
+        public CounterVGrain(ILogger<ICounterVGrain> logger,
+                             [PersistentState("Counter")] IPersistentState<CounterState> persistentState) 
+```  
+
+In this example we request a storage place to store a **CounterState** object. <br />
+Using the attribute **PersistentStateAttribute** we customize "How" it will be stored. <br />
+First parameter is the Storage name (for example the table or collection) and you can specify a second parameter as the **Storage configuration Key**. <br />
+
+> [!TIP]
+> You can request by constructor as many storage as you want. <br />
+> It's an easy way to managed the data storage
+
+#### Mongo Storage
+
+> Nuget package : [Democrite.Framework.Node.Mongo](https://www.nuget.org/packages/Democrite.Framework.Node.Mongo)
+
+You can use the mongo extension to provide storage for all the components:
+
+- Cluster information -> cf. [Cluster](#mongo)
+
+- Definitions (Sequences, triggers, signal, ...) 
+```csharp
+    // Define mongo db as definition source
+    .AddMongoDefinitionProvider(o => o.ConnectionString("127.0.0.1:27017"))
+```  
+
+- State/Custom storage (VGrain State, Reminder clock information, Custom Data)
+
+```csharp
+    // Setup mongo db as default storage
+    .SetupNodeMemories(m =>
+    {
+        // Enum StorageTypeEnum provide all sub type
+        // You can customize the database name, the connection string ...
+        // By default it will reuse the LAST connection string configured
+        m.UseMongoStorage(StorageTypeEnum.All); 
+    });
+```  
+
+See the full usage in sample [ExternalStorages/MongoDB](/samples/ExternalStorages/MongoDB/)
 
 ### Virtual Grains (vgrain)
 
@@ -127,7 +252,7 @@ To configure and test **sequences** you need to create and register it in the De
 
 **Build definition**
 ```csharp
-var collectorSequence = Sequence.Create()
+var collectorSequence = Sequence.Build()
                                 // Ask a web URI in input
                                 .RequiredInput<Uri>()
 
@@ -152,12 +277,12 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
                                      cfg.WizardConfig()
                                         .NoCluster()
 
-                                        .Configure(b => b.ConfigureLogging(logging => logging.AddConsole()))
+                                        .ConfigureLogging(c => c.AddConsole())
 
-                                        .SetupInMemoryDefintions(m =>
+                                        .AddInMemoryMongoDefinitionProvider(m =>
                                         {
                                             // Local in node memory setup
-                                            .SetupSequences(c => c.Register(collectorSequence));
+                                            .SetupSequences(collectorSequence);
                                         })
 ```
 
@@ -207,7 +332,7 @@ var triggerDefinition = Trigger.Cron("* 9-18 * * mon-fri")
 var signalTriggerDefinition = Trigger.Signal(inputSignal)
 
                                     // Define what will be trigged
-                                    .AddTarget(collectorSequence)
+                                    .AddTargetSequence(collectorSequence)
 
                                     .SetInputSource(input => input.StaticCollection(collectionsources)
                                                                     .PullMode(PullModeEnum.Circling)
@@ -223,12 +348,12 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
                                      cfg.WizardConfig()
                                         .NoCluster()
 
-                                        .Configure(b => b.ConfigureLogging(logging => logging.AddConsole()))
+                                        .ConfigureLogging(c => c.AddConsole())
 
-                                        .SetupInMemoryDefintions(m =>
+                                        .AddInMemoryMongoDefinitionProvider(m =>
                                         {
                                             // Local in node memory setup
-                                            m.SetupTriggers(t => t.Register(signalTriggerDefinition));
+                                            m.SetupTriggers(signalTriggerDefinition);
                                         })
 ```
 
@@ -289,6 +414,10 @@ Define a **Logic boolean door**:
                 .Build();
 ```
 
+#### Door Types
+- **LogicalAggregator** : Apply a boolean condition based on signal activation (1 if activate on period of time, otherwise 0)
+- **RelayFilterDoor**: Apply a condition a the signal structure itself, use a filter to trigger specific sequence
+
 **Register definition**
 ```csharp
 var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFile("appsettings.json", false),
@@ -297,9 +426,9 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
                                      cfg.WizardConfig()
                                         .NoCluster()
 
-                                        .Configure(b => b.ConfigureLogging(logging => logging.AddConsole()))
+                                        .ConfigureLogging(c => c.AddConsole())
 
-                                        .SetupInMemoryDefintions(m =>
+                                        .AddInMemoryMongoDefinitionProvider(m =>
                                         {
                                             // Local in node memory setup
                                             m.SetupSignals(t => t.Register(signalA))
@@ -355,6 +484,10 @@ If you split the agent implementation and definition in separate projet you coul
 **Extensions**
 - **Democrite.Framework.Node.Cron**: Reference this one by your node project to enable the cron mechanism.
 - **Democrite.Framework.Node.Signals**: Reference this one by your node project to enable the signals mechanism.
+- **Democrite.Framework.Node.Mongo**: Reference this one by your node project to enable the mongo db Storage.
+
+**VGrain**
+- **Democrite.Framework.VGrains.DebugTools**: Reference this one by your node project to enable debug sequences or VGrain.
 
 ### Node
 
@@ -393,7 +526,7 @@ To create a client you just have to follow the example bellow.
 > All nodes and clients need a **meeting point** to know the others and form a cluster, orleans choose the database strategy.
 > By default only one node and one client could be present on the same machine wihtout any db setup.
 > But You could use the orleans fluent method to configure your cluster and client.
-> A simple way will be added in democrite late on.
+> You can now use different database solution for all storage type look for [#Cluster](#cluster) section
 
 In Program.cs:
 
@@ -447,19 +580,55 @@ Fetch reguraly a forex pair value using public web site, store the values and be
 - Democrite client [IDemocriteHandler](#consume-democrite-cluster) usage
 
 
-### Logical Tree
+### External Storage
 
-TBD
+**Use case**
+
+Create a node cluster with a client connected through external storage.
+In storage we will also store definitions of a trigger that will every minute increment a counter tag with a name.
+Through the client you can look for the counter value through a swagger api
+
+**Features Use**
+- Democrite [sequence](#sequences) definition
+- Democrite [Cron Trigger](#triggers) definition
+- Democrite automatic [Virtual Grain Id](#virtual-grain-id)
+- Storage:
+    - Cluster information (client/node)
+    - Definitions
+    - Reminder informations
+- [Orleans persistant state](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-persistence/?pivots=orleans-7-0)
+- [Minimal .net API](https://learn.microsoft.com/en-us/aspnet/core/tutorials/min-web-api?view=aspnetcore-8.0&tabs=visual-studio)
+- Democrite client [IDemocriteHandler](#consume-democrite-cluster) usage
+
+**Mongo**<br />
+In the section [samples/ExternalStorages/MongoDB](/samples/ExternalStorages/MongoDB/)
+
+### Relay Filter Door
+
+In the section [Sample/RelayFilterDoor](/samples/RelayFilterDoor/)
+
+**Use case**
+
+Relay filter door can apply a condition on signal received.
+For example if the signal transport a value of type int i let pass.
+
+**Features Use**
+- Democrite RelayFilterDoor definition
 
 ## Next
 
-v 0.2.1-prerelease :
+(Processing) v 0.2.2-prerelease :
 
-- [ ] Easy cluster external storage to store virtual grain state, reminder, membership ...
-- [ ] **IHostBuilder** integration to allow configuration on existing application.
-- [ ] Load **Definition**, sequence, signals, triggers, ... from an external source like databases using the design pattern strategy through IProviderSource
+- [ ] Fully integrate **Python** VGrain in Democrite environment
 - [ ] Configure trigger input source from an external service (support of pick mode)
 - [ ] Add method to reference the vgrain assembly in the system to be sure this one is loaded by orleans.
+
+**v 0.2.1-prerelease:** <br />
+[Release Note](/docs/ReleaseNotes.md#021-prerelease)
+
+- [x] Easy cluster external storage to store virtual grain state, reminder, membership ...
+- [x] **IHostBuilder** integration to allow configuration on existing application.
+- [x] Load **Definition**, sequence, signals, triggers, ... from an external source like databases using the design pattern strategy through IProviderSource
 
 ## Versions
 

@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Cluster.Configurations.Builders
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Configurations;
 
     using Microsoft.Extensions.Configuration;
 

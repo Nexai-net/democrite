@@ -18,6 +18,7 @@ namespace Democrite.Framework.Node.Signals.Doors
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -65,7 +66,7 @@ namespace Democrite.Framework.Node.Signals.Doors
         {
             await base.OnInitializeAsync(doordDefinition);
 
-            var conditionExpression = doordDefinition.FilterCondition.ToExpressionDelegateWithResult<bool>();
+            var conditionExpression = doordDefinition.FilterCondition.ToExpressionDelegateWithResult();
             this._condition = conditionExpression.Compile();
 
             var parameterIndexed = conditionExpression.Parameters

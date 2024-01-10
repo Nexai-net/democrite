@@ -29,7 +29,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Add execution context
         /// </summary>
-        ISequencePipelineStageContextedCallBuilder<TSequenceVGrain, TCtx> Context<TCtx>(TCtx context);
+        ISequencePipelineStageConfiguredCallBuilder<TSequenceVGrain, TCtx> Configure<TCtx>(TCtx context);
     }
 
     /// <summary>
@@ -49,9 +49,22 @@ namespace Democrite.Framework.Builders.Sequences
         ISequencePipelineStageFinalizerBuilder<TSequenceVGrain> Call(Expression<Func<TSequenceVGrain, TInputMessage, IExecutionContext, Task>> expr);
 
         /// <summary>
-        /// Add execution context
+        /// Add execution context configuration
         /// </summary>
-        ISequencePipelineStageContextedCallBuilder<TSequenceVGrain, TCtx, TInputMessage> Configure<TCtx>(TCtx context);
+        ISequencePipelineStageConfiguredCallBuilder<TSequenceVGrain, TCtx, TInputMessage> Configure<TCtx>(TCtx context);
+
+        /// <summary>
+        /// Add execution context configuration from input data
+        /// </summary>
+        ISequencePipelineStageConfiguredCallBuilder<TSequenceVGrain, TCtx, TInputMessage> ConfigureFromInput<TCtx>(Expression<Func<TInputMessage, TCtx>> executionConfiguration);
+
+        /// <summary>
+        /// Use input as execution context configuration
+        /// </summary>
+        /// <remarks>
+        ///     Use full when configuration must depend of the input 
+        /// </remarks>
+        ISequencePipelineStageConfiguredCallBuilder<TSequenceVGrain, TInputMessage, TInputMessage> UseInputAsConfiguration();
 
     }
 }

@@ -22,12 +22,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="Democrite.Framework.Node"/>
+		<InternalsVisibleTo Include="Democrite.Framework.Node" />
 		
 		<!-- Unit test -->
-		<InternalsVisibleTo Include="Democrite.Framework.Node.UnitTests"/>
-		<InternalsVisibleTo Include="Democrite.Framework.Node.Abstraction.UnitTests"/>
-		<InternalsVisibleTo Include="DynamicProxyGenAssembly2"/>
+		<InternalsVisibleTo Include="Democrite.Framework.Node.UnitTests" />
+		<InternalsVisibleTo Include="Democrite.Framework.Node.Abstraction.UnitTests" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 
 	<ItemGroup>

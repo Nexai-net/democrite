@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Abstractions.Configurations
 {
+    using Democrite.Framework.Configurations;
     using Democrite.VGrains.Web;
     using Democrite.VGrains.Web.Abstractions;
 

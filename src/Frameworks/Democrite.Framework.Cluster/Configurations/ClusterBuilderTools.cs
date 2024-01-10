@@ -4,9 +4,9 @@
 
 namespace Democrite.Framework.Cluster.Configurations
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations;
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Services;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Services;
 

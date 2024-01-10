@@ -4,8 +4,8 @@
 
 namespace Democrite.Framework.Node.Mongo
 {
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Node.Abstractions.Configurations.Builders;
     using Democrite.Framework.Node.Mongo.Services;
 
     using Microsoft.Extensions.Configuration;

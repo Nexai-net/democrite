@@ -2,10 +2,9 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-namespace Democrite.Framework.Node.Abstractions.Exceptions
+namespace Democrite.Framework.Core.Abstractions.Exceptions
 {
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Core.Abstractions.Exceptions;
 
     using System;
 
@@ -13,7 +12,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
     /// Base exception during execution
     /// </summary>
     /// <seealso cref="DemocriteBaseException" />
-    public abstract class DemocriteExecutionBaseException : DemocriteBaseException
+    public abstract class DemocriteExecutionBaseException<TChild> : DemocriteBaseException<TChild>
     {
         #region Ctor
 
@@ -21,12 +20,16 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         /// Initializes a new instance of the <see cref="DemocriteExecutionBaseException"/> class.
         /// </summary>
         public DemocriteExecutionBaseException(string message,
-                                               IExecutionContext executionContext,
+                                               Guid flowUid,
+                                               Guid? parentExecutionId,
+                                               Guid currentExecutionId,
                                                ulong errorCode,
                                                Exception? innerException = null)
             : base(message, errorCode, innerException)
         {
-            this.Data.Add(nameof(IExecutionContext), executionContext);
+            this.Data.Add(nameof(IExecutionContext.FlowUID), flowUid);
+            this.Data.Add(nameof(IExecutionContext.ParentExecutionId), parentExecutionId);
+            this.Data.Add(nameof(IExecutionContext.CurrentExecutionId), currentExecutionId);
         }
 
         #endregion

@@ -6,7 +6,6 @@ namespace Democrite.Framework.Builders.Steps
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
-    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Toolbox;
@@ -14,7 +13,6 @@ namespace Democrite.Framework.Builders.Steps
 
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -55,9 +53,9 @@ namespace Democrite.Framework.Builders.Steps
         /// Analyze the <paramref name="expression"/> to build a <see cref="CallStepBuilder"/>
         /// </summary>
         public static CallStepBuilder FromExpression<TSequenceVGrain, TOutput>(Expression expression,
-                                                                              Type? input,
-                                                                              object? configuration,
-                                                                              Type configurationType)
+                                                                               Type? input,
+                                                                               Type configurationType,
+                                                                               object? configuration = null)
              where TSequenceVGrain : IVGrain
         {
             var vgrainTrait = typeof(TSequenceVGrain);
@@ -116,7 +114,7 @@ namespace Democrite.Framework.Builders.Steps
             if (possibleInputs.Intersect(ctxArgs).Count() == ctxArgs.Count)
                 throw new InvalidCastException(mthd + " MUST take at least IExcutionContext in argument");
 
-            if (configurationType != null)
+            if (configurationType != null && configuration != null)
             {
                 var validators = mthd.GetCustomAttributes()
                                      .OfType<IExecutionContextConfigurationValidator>()
@@ -152,7 +150,8 @@ namespace Democrite.Framework.Builders.Steps
         /// </summary>
         public override SequenceStageBaseDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
                                                                            bool preventReturn,
-                                                                           TContext? contextInfo = default)
+                                                                           TContext? configuration = default,
+                                                                           string? configurationFromInputChainCall = null)
                         where TContext : default
         {
             var def = this._mthd.GetAbstractMethod();
@@ -161,11 +160,12 @@ namespace Democrite.Framework.Builders.Steps
                                                    this._vgrainType?.GetAbstractType() as ConcreteType ?? throw new InvalidDataException("VGrain interface must not be null"),
                                                    def,
                                                    this.Output?.GetAbstractType(),
-                                                   EqualityComparer<TContext>.Default.Equals(contextInfo, default) 
+                                                   EqualityComparer<TContext>.Default.Equals(configuration, default) && string.IsNullOrWhiteSpace(configurationFromInputChainCall)
                                                         ? NoneType.AbstractTrait
                                                         : typeof(TContext).GetAbstractType(),
-                                                   contextInfo,
 
+                                                   configuration: configuration,
+                                                   configurationFromInputChainCall: configurationFromInputChainCall,
                                                    options: option,
                                                    preventReturn,
                                                    option?.StageId);

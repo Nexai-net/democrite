@@ -2,22 +2,18 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-// Keep : Democrite.Framework.Node.Configurations; to easy configuration use
-namespace Democrite.Framework.Node.Configurations
+// Keep : Democrite.Framework.Configurations; to easy configuration use
+namespace Democrite.Framework.Configurations
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations;
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
     using Democrite.Framework.Cluster.Configurations.Builders;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Node.Mongo.Configurations;
     using Democrite.Framework.Node.Mongo.Configurations.AutoConfigurator;
-    using Democrite.Framework.Core.Abstractions.Enums;
-    using Democrite.Framework.Node.Abstractions.Configurations;
-    using Democrite.Framework.Node.Abstractions.Configurations.Builders;
 
+    using Orleans.Providers;
     using Orleans.Providers.MongoDB.Configuration;
 
     using System;
-    using Orleans.Providers;
 
     /// <summary>
     /// Extensions use to setup AdoNet memory cluster from <see cref="IClusterNodeBuilderDemocriteWizardStart"/>

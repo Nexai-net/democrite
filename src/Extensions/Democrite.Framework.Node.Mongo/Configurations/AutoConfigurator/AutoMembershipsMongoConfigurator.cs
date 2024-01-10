@@ -4,9 +4,8 @@
 
 namespace Democrite.Framework.Node.Mongo.Configurations.AutoConfigurator
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations;
     using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Node.Mongo.Models;
     using Democrite.Framework.Node.Mongo.Services;
 
@@ -54,6 +53,7 @@ namespace Democrite.Framework.Node.Mongo.Configurations.AutoConfigurator
                 cl.AddExtensionOption(option);
 
             serviceCollection.PostConfigure<MongoDBMembershipTableOptions>(m => m.DatabaseName ??= nameof(Democrite).ToLower());
+            serviceCollection.PostConfigure<MongoDBGatewayListProviderOptions>(m => m.DatabaseName ??= nameof(Democrite).ToLower());
 
             MongoConfigurator.GetInstance(serviceCollection)
                              .SetupMongoConnectionInformation(serviceCollection,

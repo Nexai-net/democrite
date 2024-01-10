@@ -6,10 +6,8 @@ namespace Democrite.Framework.Toolbox.Models
 {
     using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Extensions;
 
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
@@ -68,7 +66,7 @@ namespace Democrite.Framework.Toolbox.Models
         public bool TryConvert(in object? source, Type targetType, out object? result)
         {
             result = targetType.GetTypeIntoExtension().Default;
-            
+
             if (source is null)
                 return true;
 

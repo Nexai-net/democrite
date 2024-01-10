@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Exceptions
 {
     using Democrite.Framework.Core.Abstractions.Resources;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
 
@@ -14,16 +15,68 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
     /// <remarks>
     ///     Attention this attribute is not herited.
     /// </remarks>
-    public sealed class VGrainIdTemplateMissingException : DemocriteBaseException
+    public sealed class VGrainIdTemplateMissingException : DemocriteBaseException<VGrainIdTemplateMissingException>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="VGrainIdTemplateMissingException"/> class.
         /// </summary>
-        public VGrainIdTemplateMissingException(Type vgrainType)
-            : base(DemocriteExceptionSR.VGrainIdTemplateMissingExceptionMessage.WithArguments(vgrainType),
-                   DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.VGrain, DemocriteErrorCodes.PartType.MetaInformation, DemocriteErrorCodes.ErrorType.Missing))
+        public VGrainIdTemplateMissingException(Type vgrainType, Exception? innerException = null)
+            : this(DemocriteExceptionSR.VGrainIdTemplateMissingExceptionMessage.WithArguments(vgrainType),
+                   vgrainType.GetAbstractType(),
+                   DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.VGrain, DemocriteErrorCodes.PartType.MetaInformation, DemocriteErrorCodes.ErrorType.Missing),
+                   innerException)
         {
-            this.Data.Add(nameof(vgrainType), vgrainType);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VGrainIdTemplateMissingException"/> class.
+        /// </summary>
+        internal VGrainIdTemplateMissingException(string message,
+                                                  AbstractType vgrainType,
+                                                  ulong errorCode,
+                                                  Exception? innerException)
+            : base(message, errorCode, innerException)
+        {
+            this.Data.Add(nameof(VGrainIdTemplateMissingExceptionSurrogate.VGrainType), vgrainType);
+        }
+    }
+
+    [GenerateSerializer]
+    public struct VGrainIdTemplateMissingExceptionSurrogate : IDemocriteBaseExceptionSurrogate
+    {
+        [Id(0)]
+        public string Message { get; set; }
+
+        [Id(1)]
+        public ulong ErrorCode { get; set; }
+
+        [Id(2)]
+        public Exception? InnerException { get; set; }
+
+        [Id(3)]
+        public AbstractType VGrainType { get; set; }
+    }
+
+    [RegisterConverter]
+    public sealed class VGrainIdTemplateMissingExceptionConverter : IConverter<VGrainIdTemplateMissingException, VGrainIdTemplateMissingExceptionSurrogate>
+    {
+        public VGrainIdTemplateMissingException ConvertFromSurrogate(in VGrainIdTemplateMissingExceptionSurrogate surrogate)
+        {
+            return new VGrainIdTemplateMissingException(surrogate.Message,
+                                                        surrogate.VGrainType,
+                                                        surrogate.ErrorCode,
+                                                        surrogate.InnerException);
+        }
+
+        public VGrainIdTemplateMissingExceptionSurrogate ConvertToSurrogate(in VGrainIdTemplateMissingException value)
+        {
+            return new VGrainIdTemplateMissingExceptionSurrogate()
+            {
+                Message = value.Message,
+                ErrorCode = value.ErrorCode,
+                InnerException = value.InnerException,
+                VGrainType = (AbstractType)value.Data[nameof(VGrainIdTemplateMissingExceptionSurrogate.VGrainType)]!
+            };
         }
     }
 }

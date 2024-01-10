@@ -61,6 +61,33 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not found artificat Id({0}) type &apos;{1}&apos;..
+        /// </summary>
+        internal static string ArtifactMissing {
+            get {
+                return ResourceManager.GetString("ArtifactMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Artifact preparation failed - Type : {0}.
+        /// </summary>
+        internal static string ArtifactPreparationFailed {
+            get {
+                return ResourceManager.GetString("ArtifactPreparationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Artificat Id({0}) is of type &apos;{1}&apos; but expect type &apos;{2}&apos;..
+        /// </summary>
+        internal static string ArtifactWrongType {
+            get {
+                return ResourceManager.GetString("ArtifactWrongType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; definition with id &apos;{1}&apos; is missing..
         /// </summary>
         internal static string DefinitionMissingExceptionMessage {
@@ -115,11 +142,29 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid vgrain id get &apos;{0}&apos; expect : {1]..
+        ///   Looks up a localized string similar to Invalid vgrain id get &apos;{0}&apos; expect : {1}..
         /// </summary>
         internal static string InvalidVGrainIdExceptionMessage {
             get {
                 return ResourceManager.GetString("InvalidVGrainIdExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method with signature &quot;{0}&quot; doesn&apos;t have been founded on type &quot;{1}&quot;..
+        /// </summary>
+        internal static string MethodNotFound {
+            get {
+                return ResourceManager.GetString("MethodNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sequence definition id &apos;{0}&apos; is missing from the ISequenceDefinitionManager or parent definition.
+        /// </summary>
+        internal static string SequenceDefinitionMissing {
+            get {
+                return ResourceManager.GetString("SequenceDefinitionMissing", resourceCulture);
             }
         }
         
@@ -142,11 +187,29 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to VGrain implementation of id &quot;{0}&quot; doesn&apos;t have been founded..
+        /// </summary>
+        internal static string VGrainIdNotFounded {
+            get {
+                return ResourceManager.GetString("VGrainIdNotFounded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Attribute &quot;ExpectedVGrainIdFormatAttribute&quot; is missing on type &apos;{0}&apos; (this attribute is not inherited). This attribute is mandatory to generate vgrain id..
         /// </summary>
         internal static string VGrainIdTemplateMissingExceptionMessage {
             get {
                 return ResourceManager.GetString("VGrainIdTemplateMissingExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to VGrain implementation of type &quot;{0}&quot; doesn&apos;t have been founded..
+        /// </summary>
+        internal static string VGrainTypeNotFounded {
+            get {
+                return ResourceManager.GetString("VGrainTypeNotFounded", resourceCulture);
             }
         }
     }

@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Configurations;
 
     /// <summary>
     /// Define a service able to automatically configure the membership table for client/node 

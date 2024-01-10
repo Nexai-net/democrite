@@ -4,8 +4,8 @@
 
 namespace Democrite.Framework.Node.Configurations.AutoConfigurator
 {
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Node.Abstractions.Configurations.Builders;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

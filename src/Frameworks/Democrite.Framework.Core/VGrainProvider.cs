@@ -90,12 +90,12 @@ namespace Democrite.Framework.Core
             {
                 case IdFormatTypeEnum.String:
                     vgrain = this._grainFactory.GetGrain(vgrainType,
-                                                        grainId.GetVGrainIdPrimaryValue<string>());
+                                                         grainId.GetVGrainIdPrimaryValue<string>());
                     break;
 
                 case IdFormatTypeEnum.CompositionStringString:
                     vgrain = this._grainFactory.GetGrain(vgrainType,
-                                                        grainId.GetVGrainIdPrimaryValue<string>() + (!string.IsNullOrEmpty(extension) ? ":" + extension : null));
+                                                         grainId.GetVGrainIdPrimaryValue<string>() + (!string.IsNullOrEmpty(extension) ? ":" + extension : null));
                     break;
 
                 case IdFormatTypeEnum.Guid:
@@ -105,19 +105,19 @@ namespace Democrite.Framework.Core
 
                 case IdFormatTypeEnum.CompositionGuidString:
                     vgrain = this._grainFactory.GetGrain(vgrainType,
-                                                        grainId.GetVGrainIdPrimaryValue<Guid>(),
-                                                        extension);
+                                                         grainId.GetVGrainIdPrimaryValue<Guid>(),
+                                                         extension);
                     break;
 
                 case IdFormatTypeEnum.Long:
                     vgrain = this._grainFactory.GetGrain(vgrainType,
-                                                        grainId.GetVGrainIdPrimaryValue<long>());
+                                                         grainId.GetVGrainIdPrimaryValue<long>());
                     break;
 
                 case IdFormatTypeEnum.CompositionLongString:
                     vgrain = this._grainFactory.GetGrain(vgrainType,
-                                                        grainId.GetVGrainIdPrimaryValue<long>(),
-                                                        extension);
+                                                         grainId.GetVGrainIdPrimaryValue<long>(),
+                                                         extension);
                     break;
 
                 default:

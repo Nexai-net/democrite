@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Client.Configurations
 {
     using Democrite.Framework.Client.Abstractions.Models;
-    using Democrite.Framework.Cluster.Abstractions.Configurations;
+    using Democrite.Framework.Configurations;
 
     /// <summary>
     /// Define the configuration section name used by democrite's node

@@ -117,25 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="VGrainIdNotFounded" xml:space="preserve">
-    <value>VGrain implementation of id "{0}" doesn't have been founded.</value>
-  </data>
-  <data name="VGrainTypeNotFounded" xml:space="preserve">
-    <value>VGrain implementation of type "{0}" doesn't have been founded.</value>
-  </data>
-  <data name="ArtifactMissing" xml:space="preserve">
-    <value>Could not found artificat Id({0}) type '{1}'.</value>
-  </data>
-  <data name="ArtifactPreparationFailed" xml:space="preserve">
-    <value>Artifact preparation failed - Type : {0}</value>
-  </data>
-  <data name="ArtifactWrongType" xml:space="preserve">
-    <value>Artificat Id({0}) is of type '{1}' but expect type '{2}'.</value>
-  </data>
-  <data name="MethodNotFound" xml:space="preserve">
-    <value>Method with signature "{0}" doesn't have been founded on type "{1}".</value>
-  </data>
-  <data name="SequenceDefinitionMissing" xml:space="preserve">
-    <value>Sequence definition id '{0}' is missing from the ISequenceDefinitionManager or parent definition</value>
-  </data>
 </root>

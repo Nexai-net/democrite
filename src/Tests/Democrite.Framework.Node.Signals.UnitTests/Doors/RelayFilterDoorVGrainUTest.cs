@@ -8,10 +8,10 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
 
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Signals.Doors;
-    using Democrite.Framework.Toolbox.Extensions;
 
     using System;
     using System.Collections.Generic;
+    using System.Linq.Expressions;
     using System.Threading.Tasks;
 
     /// <summary>

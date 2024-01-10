@@ -6,10 +6,9 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
 {
     using Democrite.Framework.Client.Abstractions.Models;
     using Democrite.Framework.Client.Configurations;
-    using Democrite.Framework.Cluster.Abstractions.Configurations;
     using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
     using Democrite.Framework.Cluster.Abstractions.Services;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Toolbox.Helpers;
 
     using Microsoft.Extensions.Configuration;

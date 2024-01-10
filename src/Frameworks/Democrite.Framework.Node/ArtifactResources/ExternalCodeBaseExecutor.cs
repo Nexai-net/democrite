@@ -77,12 +77,12 @@ namespace Democrite.Framework.Node.ArtifactResources
                 {
                     if (!await step.SetupAsync(this.ArtifactCodePackageResource, this.Logger, cancellationToken))
                     {
-                        throw new ArtifactPreparationFailedException(step, executionContext);
+                        throw new ArtifactPreparationFailedException(step.ToString()!, executionContext);
                     }
                 }
                 catch (Exception inner)
                 {
-                    throw new ArtifactPreparationFailedException(step, executionContext, inner);
+                    throw new ArtifactPreparationFailedException(step.ToString()!, executionContext, inner);
                 }
             }
         }
@@ -101,12 +101,12 @@ namespace Democrite.Framework.Node.ArtifactResources
                 {
                     if (!await step.UnsetupAsync(this.ArtifactCodePackageResource, this.Logger, cancellationToken))
                     {
-                        throw new ArtifactPreparationFailedException(step, executionContext);
+                        throw new ArtifactPreparationFailedException(step.ToString()!, executionContext);
                     }
                 }
                 catch (Exception inner)
                 {
-                    throw new ArtifactPreparationFailedException(step, executionContext, inner);
+                    throw new ArtifactPreparationFailedException(step.ToString()!, executionContext, inner);
                 }
             }
         }

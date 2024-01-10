@@ -127,7 +127,7 @@
     <value>'{0}' definition with id '{1}' is missing.</value>
   </data>
   <data name="InvalidVGrainIdExceptionMessage" xml:space="preserve">
-    <value>Invalid vgrain id get '{0}' expect : {1].</value>
+    <value>Invalid vgrain id get '{0}' expect : {1}.</value>
   </data>
   <data name="InvalidDefinitionPropertyValueExceptionMessage" xml:space="preserve">
     <value>Property '{0}' of the definition '{1}' expose value '{2}' and expect : {3}</value>
@@ -146,5 +146,26 @@
   </data>
   <data name="InvalidDefinitionErrorMessages" xml:space="preserve">
     <value>[Definition: {0} - {1}] failed due to \n {2}.</value>
+  </data>
+  <data name="ArtifactMissing" xml:space="preserve">
+    <value>Could not found artificat Id({0}) type '{1}'.</value>
+  </data>
+  <data name="ArtifactPreparationFailed" xml:space="preserve">
+    <value>Artifact preparation failed - Type : {0}</value>
+  </data>
+  <data name="ArtifactWrongType" xml:space="preserve">
+    <value>Artificat Id({0}) is of type '{1}' but expect type '{2}'.</value>
+  </data>
+  <data name="MethodNotFound" xml:space="preserve">
+    <value>Method with signature "{0}" doesn't have been founded on type "{1}".</value>
+  </data>
+  <data name="SequenceDefinitionMissing" xml:space="preserve">
+    <value>Sequence definition id '{0}' is missing from the ISequenceDefinitionManager or parent definition</value>
+  </data>
+  <data name="VGrainIdNotFounded" xml:space="preserve">
+    <value>VGrain implementation of id "{0}" doesn't have been founded.</value>
+  </data>
+  <data name="VGrainTypeNotFounded" xml:space="preserve">
+    <value>VGrain implementation of type "{0}" doesn't have been founded.</value>
   </data>
 </root>

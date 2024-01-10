@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Node.UnitTests.Configurations
 {
-    using Democrite.Framework.Node.Abstractions.Configurations;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Node.Configurations;
     using Democrite.Framework.Node.UnitTests.Tools;
     using Democrite.UnitTests.ToolKit.VGrains.Transformers;

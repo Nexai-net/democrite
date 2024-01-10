@@ -59,8 +59,8 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// <summary>
         /// Initializes a new instance of the <see cref="TriggerDefinitionBaseBuilder"/> class.
         /// </summary>
-        public TriggerDefinitionCronBuilder(string cronExpression)
-            : base(TriggerTypeEnum.Cron)
+        public TriggerDefinitionCronBuilder(string cronExpression, Guid? fixUid = null)
+            : base(TriggerTypeEnum.Cron, fixUid)
         {
             this._cronExpression = cronExpression;
         }
@@ -74,7 +74,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         {
             ValidateCronExpression();
 
-            return new CronTriggerDefinition(Guid.NewGuid(),
+            return new CronTriggerDefinition(this.Uid,
                                              this.TargetSequenceIds,
                                              this.TargetSignalIds,
                                              true,

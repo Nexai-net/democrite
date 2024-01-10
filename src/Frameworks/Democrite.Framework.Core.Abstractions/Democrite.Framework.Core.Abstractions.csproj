@@ -17,10 +17,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="Democrite.Framework.Node"/>
+		<InternalsVisibleTo Include="Democrite.Framework.Node" />
 		
 		<!-- Testing Purpose -->
-		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals.UnitTests"/>
+		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals.UnitTests" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 

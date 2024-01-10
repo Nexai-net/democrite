@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="../SharedFrameworkAssemblyInfo.props" />
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<CopyDebugSymbolFilesFromPackages>true</CopyDebugSymbolFilesFromPackages>
+		<CopyDocumentationFilesFromPackages>true</CopyDocumentationFilesFromPackages>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="appsettings.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Democrite.Framework.Node" />
+		<PackageReference Include="Democrite.Framework.Node.Cron" />
+		<PackageReference Include="Democrite.Framework.Node.Mongo" />
+		<PackageReference Include="Democrite.Framework.VGrains.DebugTools" />
+		<PackageReference Include="OrleansDashboard" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Common\Common.csproj" />
+	</ItemGroup>
+
+</Project>

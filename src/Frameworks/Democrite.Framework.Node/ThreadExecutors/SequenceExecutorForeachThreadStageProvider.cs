@@ -6,11 +6,11 @@ namespace Democrite.Framework.Node.ThreadExecutors
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
+    using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Core.Diagnostics;
     using Democrite.Framework.Node.Abstractions;
-    using Democrite.Framework.Node.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Toolbox;
     using Democrite.Framework.Toolbox.Abstractions.Disposables;
@@ -64,13 +64,13 @@ namespace Democrite.Framework.Node.ThreadExecutors
             using (var token = securityThreadHandlerAccessor())
             {
                 // set post process to aggregate result
-                token.Content.RegisterPostProcess(ForeachSequenceStagePostProcess);
+                token.Token.RegisterPostProcess(ForeachSequenceStagePostProcess);
 
                 // Create inner thread by input element
-                if (!token.Content.HasInnerThreads && input is System.Collections.IEnumerable collection)
+                if (!token.Token.HasInnerThreads && input is System.Collections.IEnumerable collection)
                 {
                     var innerThreads = collection.Cast<object>()
-                                                 .Select(subInput => token.Content.CreateInnerThread(new SequenceExecutorExecThreadState(sequenceContext.FlowUID,
+                                                 .Select(subInput => token.Token.CreateInnerThread(new SequenceExecutorExecThreadState(sequenceContext.FlowUID,
                                                                                                                                         step.InnerFlow.Uid,
                                                                                                                                         Guid.NewGuid(),
                                                                                                                                         sequenceContext.CurrentExecutionId,
@@ -82,16 +82,16 @@ namespace Democrite.Framework.Node.ThreadExecutors
                     foreach (var inner in innerThreads)
                         diagnosticLogger.Log(ExecutionContextChangeDiagnosticLog.From(inner.ExecutionContext));
 
-                    var currentState = token.Content.GetCurrentThreadState();
+                    var currentState = token.Token.GetCurrentThreadState();
 
                     // Register inner execution states
-                    token.Content.SetInnerThreads(innerThreads);
+                    token.Token.SetInnerThreads(innerThreads);
 
                     var result = new StageStepResult(null, Task.CompletedTask);
                     return ValueTask.FromResult(result);
                 }
 
-                if (token.Content.HasInnerThreads)
+                if (token.Token.HasInnerThreads)
                 {
                     logger.OptiLog(LogLevel.Error, ERROR_NOT_ALLOW_INNER, sequenceContext);
                     throw new VGrainInvalidOperationDemocriteException(ERROR_NOT_ALLOW_INNER, sequenceContext);
@@ -116,14 +116,14 @@ namespace Democrite.Framework.Node.ThreadExecutors
                 var collectionType = NoneType.Trait;
                 Task task = Task.FromResult(NoneType.Instance);
 
-                if (handlerSafeToken.Content.HasInnerThreads && handlerSafeToken.Content.AllInnerThreadsJobDone)
+                if (handlerSafeToken.Token.HasInnerThreads && handlerSafeToken.Token.AllInnerThreadsJobDone)
                 {
-                    var foreachThreads = handlerSafeToken.Content.PullInnerThreads(true);
+                    var foreachThreads = handlerSafeToken.Token.PullInnerThreads(true);
                     var foreachThreadsHandler = foreachThreads.Select(f => f.GetSecurityThreadHandler()).ToArray();
 
                     try
                     {
-                        var foreachIndexedState = foreachThreadsHandler.ToDictionary(k => k, kv => kv.Content.GetCurrentThreadState());
+                        var foreachIndexedState = foreachThreadsHandler.ToDictionary(k => k, kv => kv.Token.GetCurrentThreadState());
 
                         if (foreachIndexedState.All(i => i.Value.Exception != null))
                         {

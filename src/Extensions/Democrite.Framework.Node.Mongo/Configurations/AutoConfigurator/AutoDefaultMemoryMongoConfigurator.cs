@@ -4,19 +4,15 @@
 
 namespace Democrite.Framework.Node.Mongo.Configurations.AutoConfigurator
 {
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Node.Abstractions.Configurations.Builders;
-    using Democrite.Framework.Node.Configurations;
 
     using Microsoft.Extensions.Configuration;
-
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
     using Orleans.Providers;
     using Orleans.Providers.MongoDB.Configuration;
-
-    using System;
 
     /// <summary>
     /// Auto configure the VGrain state storage

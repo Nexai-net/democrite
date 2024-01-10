@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Node.Mongo.Configurations.AutoConfigurator
 {
-    using Democrite.Framework.Node.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Configurations;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

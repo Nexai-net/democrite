@@ -7,10 +7,10 @@ namespace Democrite.Framework.Node.ThreadExecutors
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
+    using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions;
-    using Democrite.Framework.Node.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Toolbox.Abstractions.Disposables;
     using Democrite.Framework.Toolbox.Disposables;
@@ -87,8 +87,14 @@ namespace Democrite.Framework.Node.ThreadExecutors
                                                                       step.CallMethodDefinition.Arguments);
             }
 
+            object? configuration = null;
+
             if (step.ConfigurationType is not null)
             {
+                configuration = !string.IsNullOrEmpty(step.ConfigurationFromInputChainCall)
+                                           ? DynamicCallHelper.GetValueFrom(input, step.ConfigurationFromInputChainCall, true)
+                                           : step.Configuration;
+
                 var validators = mthd.GetCustomAttributes()
                                      .OfType<IExecutionContextConfigurationValidator>()
                                      .ToArray();
@@ -96,7 +102,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
                 if (validators.Length > 0)
                 {
                     foreach (var validator in validators)
-                        validator.Validate(step.ConfigurationInfo, mthd);
+                        validator.Validate(configuration, mthd);
                 }
             }
 
@@ -114,7 +120,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
                            
                                    if (paramType == typeof(IExecutionContext<>).MakeGenericType(step.ConfigurationType.ToType()))
                                    {
-                                       sequenceContext = sequenceContext.DuplicateWithContext(step.ConfigurationInfo, step.ConfigurationType.ToType());
+                                       sequenceContext = sequenceContext.DuplicateWithContext(configuration, step.ConfigurationType.ToType());
                                        return sequenceContext;
                                    }
                                }

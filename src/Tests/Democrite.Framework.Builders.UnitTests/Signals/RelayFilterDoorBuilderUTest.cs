@@ -11,6 +11,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
     using NFluent;
 
     using System;
+    using System.Linq.Expressions;
 
     /// <summary>
     /// Test for <see cref="RelayFilterDoorBuilder"/>

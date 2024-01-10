@@ -2,10 +2,9 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-namespace Democrite.Framework.Node.Abstractions.Exceptions
+namespace Democrite.Framework.Core.Abstractions.Exceptions
 {
-    using Democrite.Framework.Core.Abstractions.Exceptions;
-    using Democrite.Framework.Node.Abstractions.Resources;
+    using Democrite.Framework.Core.Abstractions.Resources;
     using Democrite.Framework.Toolbox.Models;
 
     using System;
@@ -16,7 +15,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
     /// Raised when method doesn't have been founded on vgrain
     /// </summary>
     /// <seealso cref="DemocriteBaseException" />
-    public sealed class VGrainMethodDemocriteException : DemocriteBaseException
+    public sealed class VGrainMethodDemocriteException : DemocriteBaseException<VGrainMethodDemocriteException>
     {
         #region Ctor
 
@@ -41,7 +40,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         /// </summary>
         public static VGrainMethodDemocriteException MethodNotFounded(string signature, AbstractType vgrainType, Exception? innerException = null)
         {
-            return new VGrainMethodDemocriteException(string.Format(NodeAbstractionExceptionSR.MethodNotFound, signature, vgrainType), innerException);
+            return new VGrainMethodDemocriteException(string.Format(DemocriteExceptionSR.MethodNotFound, signature, vgrainType), innerException);
         }
 
         /// <summary>
@@ -63,5 +62,32 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         }
 
         #endregion
+    }
+
+    [GenerateSerializer]
+    public struct VGrainMethodDemocriteExceptionSurrogate : IDemocriteBaseExceptionSurrogate
+    {
+        [Id(0)]
+        public string Message { get; set; }
+
+        [Id(1)]
+        public ulong ErrorCode { get; set; }
+
+        [Id(2)]
+        public Exception? InnerException { get; set; }
+    }
+
+    [RegisterConverter]
+    public sealed class VGrainMethodDemocriteExceptionConverter : IConverter<VGrainMethodDemocriteException, VGrainMethodDemocriteExceptionSurrogate>
+    {
+        public VGrainMethodDemocriteException ConvertFromSurrogate(in VGrainMethodDemocriteExceptionSurrogate surrogate)
+        {
+           return new VGrainMethodDemocriteException(surrogate.Message, surrogate.InnerException);
+        }
+
+        public VGrainMethodDemocriteExceptionSurrogate ConvertToSurrogate(in VGrainMethodDemocriteException value)
+        {
+            return new VGrainMethodDemocriteExceptionSurrogate() { Message = value.Message, InnerException = value.InnerException };
+        }
     }
 }

@@ -8,6 +8,7 @@ namespace Democrite.Framework.Node.Mongo.Abstractions.Conventions
     using MongoDB.Bson.Serialization.Attributes;
     using MongoDB.Bson.Serialization.Conventions;
 
+    using System.Collections.Concurrent;
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Reflection;
@@ -20,9 +21,47 @@ namespace Democrite.Framework.Node.Mongo.Abstractions.Conventions
     /// <seealso cref="IClassMapConvention" />
     internal sealed class MapDataMemberConvention : ConventionBase, IClassMapConvention
     {
+        #region Fields
+
+        private static readonly HashSet<Type> s_mapTypes;
+        private static readonly string[] s_preventNamespaces;
+
+        #endregion
+
+        #region Ctor        
+
+        /// <summary>
+        /// Initializes the <see cref="MapDataMemberConvention"/> class.
+        /// </summary>
+        static MapDataMemberConvention()
+        {
+            s_mapTypes = new HashSet<Type>();
+            s_preventNamespaces = new string[]
+            {
+              nameof(MongoDB) + "."  + nameof(MongoDB.Bson),
+              nameof(System),
+              nameof(Orleans) + "." + nameof(Orleans.Providers) + "."
+            };
+        }
+
+        #endregion
+
+        #region Methods
+
         /// <inheritdoc />
         public void Apply(BsonClassMap classMap)
         {
+            lock (s_mapTypes)
+            {
+                var type = classMap.ClassType;
+
+                if (s_mapTypes.Add(type) == false)
+                    return;
+
+                if (s_preventNamespaces.Any(p => type.Namespace?.StartsWith(p, StringComparison.OrdinalIgnoreCase) ?? false))
+                    return;
+            }
+
             Debug.WriteLine("***** Map convention discrimintator to " + classMap.ClassType);
 
             var classType = classMap.ClassType;
@@ -105,5 +144,7 @@ namespace Democrite.Framework.Node.Mongo.Abstractions.Conventions
             //        classMap.MapConstructor(ctor);
             //}
         }
+
+        #endregion
     }
 }

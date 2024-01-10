@@ -5,6 +5,7 @@
 namespace System
 {
     using Democrite.Framework.Toolbox.Abstractions.Extensions.Types;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
 
     using System.Collections;
     using System.Collections.Generic;
@@ -232,6 +233,8 @@ namespace System
             if (this.IsCollection)
                 this.CollectionItemType = TypeInfoExtensionBuilder.GetCollectionItemType(this.Trait);
 
+            this.IsCSharpScalarType = CSharpTypeInfo.ScalarTypes.Contains(this.Trait);
+
             this.Default = trait.IsValueType && !trait.IsAbstract && !trait.IsByRefLike && trait != typeof(void)
                                 ? Activator.CreateInstance(trait) 
                                 : null;
@@ -265,6 +268,9 @@ namespace System
 
         /// <inheritdoc />
         public bool IsCollection { get; }
+
+        /// <inheritdoc />
+        public bool IsCSharpScalarType { get; }
 
         /// <inheritdoc />
         public Type? CollectionItemType { get; }

@@ -4,14 +4,11 @@
 
 namespace Democrite.Framework.Node.Mongo.Configurations.AutoConfigurator
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Node.Abstractions.Configurations.Builders;
-    using Democrite.Framework.Node.Configurations;
     using Democrite.Framework.Node.Mongo.Models;
     using Democrite.Framework.Node.Mongo.Services;
 
@@ -20,15 +17,10 @@ namespace Democrite.Framework.Node.Mongo.Configurations.AutoConfigurator
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
-    using MongoDB.Bson.Serialization;
-
     using Orleans.Hosting;
     using Orleans.Providers.MongoDB.Configuration;
-    using Orleans.Providers.MongoDB.StorageProviders;
     using Orleans.Providers.MongoDB.Utils;
     using Orleans.Runtime;
-
-    using System.Xml.Linq;
 
     /// <summary>
     /// Auto configure the VGrain state storage

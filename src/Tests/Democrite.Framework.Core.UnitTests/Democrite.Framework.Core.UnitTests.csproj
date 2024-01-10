@@ -13,6 +13,7 @@
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="Moq" />
 		<PackageReference Include="NFluent" />
+		<PackageReference Include="NSubstitute" />
 		<PackageReference Include="xunit" />
 		<PackageReference Include="xunit.runner.visualstudio">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,6 +28,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
 	  <ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
+	  <ProjectReference Include="..\Democrite.UnitTests.ToolKit\Democrite.UnitTests.ToolKit.csproj" />
 	</ItemGroup>
 
 </Project>

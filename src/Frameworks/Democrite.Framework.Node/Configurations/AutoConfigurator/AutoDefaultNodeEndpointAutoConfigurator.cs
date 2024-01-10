@@ -4,10 +4,10 @@
 
 namespace Democrite.Framework.Node.Configurations.AutoConfigurator
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations;
     using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Node.Abstractions.Models;
+    using Democrite.Framework.Toolbox.Disposables;
     using Democrite.Framework.Toolbox.Extensions;
 
     using Microsoft.Extensions.Configuration;
@@ -64,12 +64,29 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
 
                 logger.OptiLog(LogLevel.Information, "Cluster bind ip {bindAddr}", bindAddr);
 
-                siloBuilder.ConfigureEndpoints(bindAddr,
-                                               endpoint.SiloPort == 0
-                                                    ? networkInspector.GetNextUnusedPort(5000, 65536) //NetworkHelper.GetNextUnusedPort(5000, 65536)
-                                                    : (int)endpoint.SiloPort,
-                                               endpoint.GatewayPort ?? 0,
-                                               listenOnAnyHostAddress: endpoint.Loopback == false);
+                using (var secureContainer = new SafeStructDisposableContainer())
+                {
+                    var siloPort = (int)endpoint.SiloPort;
+                    if (siloPort == 0)
+                    {
+                        var siloPortSecureToken = networkInspector.GetAndReservedNextUnusedPort(5000, 65536);
+                        secureContainer.PushToken(siloPortSecureToken);
+                        siloPort = siloPortSecureToken.Token;
+                    }
+
+                    var gatewayPort = endpoint.GatewayPort ?? 0;
+                    if (gatewayPort == 0 && endpoint.AutoGatewayPort)
+                    {
+                        var gatewayPortSecureToken = networkInspector.GetAndReservedNextUnusedPort(5000, 65536);
+                        secureContainer.PushToken(gatewayPortSecureToken);
+                        gatewayPort = gatewayPortSecureToken.Token;
+                    }
+
+                    siloBuilder.ConfigureEndpoints(bindAddr,
+                                                   siloPort,
+                                                   gatewayPort,
+                                                   listenOnAnyHostAddress: endpoint.Loopback == false);
+                }
             }
         }
     }

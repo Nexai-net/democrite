@@ -2,11 +2,12 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-namespace Democrite.Framework.Client.Configurations
+namespace Democrite.Framework
 {
-    using Democrite.Framework.Client.Abstractions.Configurations;
+    using Democrite.Framework.Client.Configurations;
     using Democrite.Framework.Client.Model;
     using Democrite.Framework.Cluster.Configurations;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Core.Abstractions;
 
     using Microsoft.Extensions.Configuration;

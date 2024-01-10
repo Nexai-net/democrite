@@ -23,11 +23,10 @@ namespace Democrite.Framework.Toolbox.Abstractions.Disposables
     ///     Embed content
     /// </remarks>
     public interface ISecureContextToken<TContent> : ISecureContextToken
-    //where TContent : class
     {
         /// <summary>
         /// Gets the content.
         /// </summary>
-        TContent Content { get; }
+        TContent Token { get; }
     }
 }

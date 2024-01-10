@@ -2,11 +2,14 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-namespace Democrite.Framework.Cluster.Abstractions.Configurations
+namespace Democrite.Framework.Configurations
 {
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Orleans.Serialization.Cloning;
+    using Orleans.Serialization.Serializers;
+    using Orleans.Serialization;
 
     using System;
 
@@ -37,5 +40,12 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations
         /// Manual configuration of services.
         /// </summary>
         TWizard ConfigureServices(Action<IServiceCollection, IConfiguration> config);
+
+        /// <summary>
+        /// Adds the custom serializer must inherite from orleans interfaces <see cref="IGeneralizedCodec"/>, <see cref="IGeneralizedCopier"/>, <see cref="ITypeFilter"/>
+        /// </summary>
+        TWizard AddCustomSerializer<TInterfaceSerializer, TSerializerImplementation>()
+            where TInterfaceSerializer : class, IGeneralizedCodec, IGeneralizedCopier, ITypeFilter
+            where TSerializerImplementation : class, TInterfaceSerializer;
     }
 }

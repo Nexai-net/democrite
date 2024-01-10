@@ -19,31 +19,31 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Configure a trigger based on cron expression <see href="https://fr.wikipedia.org/wiki/Cron"/>
         /// </summary>
-        public static ITriggerDefinitionBuilder Cron(string cronExpressionInUtc)
+        public static ITriggerDefinitionBuilder Cron(string cronExpressionInUtc, Guid? fixUid = null)
         {
             ArgumentException.ThrowIfNullOrEmpty(cronExpressionInUtc);
 
-            return new TriggerDefinitionCronBuilder(cronExpressionInUtc);
+            return new TriggerDefinitionCronBuilder(cronExpressionInUtc, fixUid);
         }
 
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
-        public static ITriggerDefinitionBuilder Signal(SignalId signalDefinition)
+        public static ITriggerDefinitionBuilder Signal(SignalId signalDefinition, Guid? fixUid = null)
         {
             if (signalDefinition.Uid == Guid.Empty)
                 throw new ArgumentException(nameof(signalDefinition) + " must not be default value");
 
-            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal, signalDefinition, null);
+            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal, signalDefinition, null, fixUid);
         }
 
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
-        public static ITriggerDefinitionBuilder Signal(SignalDefinition signalDefinition)
+        public static ITriggerDefinitionBuilder Signal(SignalDefinition signalDefinition, Guid? fixUid = null)
         {
             ArgumentNullException.ThrowIfNull(signalDefinition);
-            return Signal(signalDefinition.SignalId);
+            return Signal(signalDefinition.SignalId, fixUid);
         }
 
         /// <summary>
@@ -61,21 +61,21 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
-        public static ITriggerDefinitionBuilder Door(DoorDefinition doorDefinition)
+        public static ITriggerDefinitionBuilder Door(DoorDefinition doorDefinition, Guid? fixUid = null)
         {
             ArgumentNullException.ThrowIfNull(doorDefinition);
-            return Door(doorDefinition.DoorId);
+            return Door(doorDefinition.DoorId, fixUid);
         }
 
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
-        public static ITriggerDefinitionBuilder Door(DoorId doorDefinition)
+        public static ITriggerDefinitionBuilder Door(DoorId doorDefinition, Guid? fixUid = null)
         {
             if (doorDefinition.Uid == Guid.Empty)
                 throw new ArgumentException(nameof(doorDefinition) + " must not be default value");
 
-            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal, null, doorDefinition);
+            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal, null, doorDefinition, fixUid);
         }
 
         /// <summary>

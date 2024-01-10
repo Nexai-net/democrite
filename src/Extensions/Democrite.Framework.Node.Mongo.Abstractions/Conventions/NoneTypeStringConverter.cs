@@ -50,6 +50,8 @@ namespace Democrite.Framework.Node.Mongo.Abstractions.Conventions
 
         #endregion
 
+        #region Methods
+
         /// <inheritdoc />
         public NoneType Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
         {
@@ -76,5 +78,7 @@ namespace Democrite.Framework.Node.Mongo.Abstractions.Conventions
         {
             return Deserialize(context, args);
         }
+
+        #endregion
     }
 }

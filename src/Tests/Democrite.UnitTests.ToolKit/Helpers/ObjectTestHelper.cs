@@ -7,6 +7,8 @@ namespace Democrite.UnitTests.ToolKit.Helpers
     using AutoFixture;
     using AutoFixture.AutoNSubstitute;
 
+    using Democrite.Framework.Toolbox.Models;
+
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
 
@@ -19,7 +21,40 @@ namespace Democrite.UnitTests.ToolKit.Helpers
     /// </summary>
     public static class ObjectTestHelper
     {
-        #region methods
+        #region Ctor
+
+        /// <summary>
+        /// Initializes the <see cref="ObjectTestHelper"/> class.
+        /// </summary>
+        static ObjectTestHelper()
+        {
+            SimpleTypes = new Type[]
+            {
+                typeof(int),
+                typeof(long),
+                typeof(float),
+                typeof(double),
+                typeof(string),
+                typeof(char),
+                typeof(byte),
+                typeof(uint),
+                typeof(ulong),
+                typeof(Guid),
+            };
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the scalar types.
+        /// </summary>
+        public static IReadOnlyList<Type> SimpleTypes { get; }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Prepares the fixture.
@@ -59,16 +94,22 @@ namespace Democrite.UnitTests.ToolKit.Helpers
         /// </summary>
         public static bool IsSerializable<TType>(bool supportMutableValueType = false,
                                                  bool supportCyclingReference = false,
+                                                 Func<Fixture, TType>? typeProvider = null,
                                                  Func<TType, TType, bool>? overrideComparer = null)
         {
             var shouldIndent = Debugger.IsAttached ? Formatting.Indented : Formatting.None;
             var fixture = PrepareFixture(supportMutableValueType: supportMutableValueType,
                                          supportCyclingReference: supportCyclingReference);
 
-            var data = fixture.Create<TType>();
+            TType data;
+            if (typeProvider is not null)
+                data = typeProvider(fixture);
+            else
+                data = fixture.Create<TType>();
 
             var jsonSerializerSettings = new JsonSerializerSettings()
             {
+                TypeNameHandling = TypeNameHandling.Objects,
                 Formatting = shouldIndent
             };
 
@@ -99,6 +140,20 @@ namespace Democrite.UnitTests.ToolKit.Helpers
             CheckThatObjectAreEquals(data, deserializedData, shouldIndent);
 
             return true;
+        }
+
+        /// <summary>
+        /// Generates the random type of the abstract.
+        /// </summary>
+        /// <param name="sources">The sources of type to search if no source is provide then use the default basic types sources</param>
+        public static AbstractType GenerateRandomAbstractType(params Type[] sources)
+        {
+            IReadOnlyList<Type> types = sources;
+            if (types is null || types.Count == 0)
+                types = SimpleTypes;
+
+            var type = types[Random.Shared.Next(0, types.Count)];
+            return type.GetAbstractType();
         }
 
         /// <summary>

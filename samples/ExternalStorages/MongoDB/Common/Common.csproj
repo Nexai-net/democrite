@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="../SharedFrameworkAssemblyInfo.props" />
+
+	<PropertyGroup>
+		<CopyDebugSymbolFilesFromPackages>true</CopyDebugSymbolFilesFromPackages>
+		<CopyDocumentationFilesFromPackages>true</CopyDocumentationFilesFromPackages>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Democrite.Framework.Core" />
+	</ItemGroup>
+
+</Project>

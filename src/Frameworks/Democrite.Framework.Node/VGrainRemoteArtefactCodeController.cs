@@ -7,6 +7,7 @@ namespace Democrite.Framework.Node
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
+    using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions.ArtifactResources;
     using Democrite.Framework.Node.Abstractions.Exceptions;
     using Democrite.Framework.Node.Resources;

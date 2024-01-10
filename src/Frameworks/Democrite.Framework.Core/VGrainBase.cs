@@ -120,8 +120,8 @@ namespace Democrite.Framework.Core
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
             GC.SuppressFinalize(this);
+            Dispose(true);
         }
 
         #region Tools

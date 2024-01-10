@@ -31,11 +31,13 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// <summary>
         /// Initializes a new instance of the <see cref="ITriggerDefinitionBuilder"/> class.
         /// </summary>
-        protected TriggerDefinitionBaseBuilder(TriggerTypeEnum triggerType)
+        protected TriggerDefinitionBaseBuilder(TriggerTypeEnum triggerType, Guid? fixUid = null)
         {
             this._targetSequenceIds = new HashSet<Guid>();
             this._targetSignalIds = new HashSet<SignalId>();
             this.TriggerType = triggerType;
+
+            this.Uid = fixUid ?? Guid.NewGuid();
         }
 
         #endregion
@@ -51,6 +53,11 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// Gets the type of the trigger.
         /// </summary>
         protected TriggerTypeEnum TriggerType { get; private set; }
+
+        /// <summary>
+        /// Gets the uid.
+        /// </summary>
+        protected Guid Uid { get; }
 
         /// <summary>
         /// Gets target sequence ids.

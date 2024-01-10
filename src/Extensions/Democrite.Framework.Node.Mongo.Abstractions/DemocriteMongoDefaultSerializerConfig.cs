@@ -84,6 +84,15 @@ namespace Democrite.Framework.Node.Mongo.Abstractions
             catch
             {
             }
+
+            try
+            {
+                BsonSerializer.TryRegisterSerializer(new ObjectSerializer(t => true));
+            }
+            catch
+            {
+
+            }
         }
     }
 }

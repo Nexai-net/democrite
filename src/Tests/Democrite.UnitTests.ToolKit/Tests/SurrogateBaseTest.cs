@@ -31,8 +31,8 @@ namespace Democrite.UnitTests.ToolKit.Tests
 
         private readonly Func<TSurrogate, TSurrogate, bool>? _surrogateComparer;
         private readonly Action<TSource>? _onSourcePreparatioForTesting;
+        private readonly Func<Fixture, TSurrogate>? _surrogateCreation;
         private readonly Func<Fixture, TSource>? _sourceCreation;
-
         private readonly Formatting _shouldIndent;
 
         #endregion
@@ -44,12 +44,14 @@ namespace Democrite.UnitTests.ToolKit.Tests
         /// </summary>
         public SurrogateBaseTest(Func<TSurrogate, TSurrogate, bool>? surrogateComparer = null,
                                  Action<TSource>? onSourcePreparatioForTesting = null,
-                                 Func<Fixture, TSource>? sourceCreation = null)
+                                 Func<Fixture, TSource>? sourceCreation = null,
+                                 Func<Fixture, TSurrogate>? surrogateCreation = null)
         {
             // Provide lambda comparer all the class user to customize like those who inherite
             this._surrogateComparer = surrogateComparer;
             this._onSourcePreparatioForTesting = onSourcePreparatioForTesting;
             this._sourceCreation = sourceCreation;
+            this._surrogateCreation = surrogateCreation;
 
             this._shouldIndent = System.Diagnostics.Debugger.IsAttached ? Formatting.Indented : Formatting.None;
         }
@@ -64,9 +66,12 @@ namespace Democrite.UnitTests.ToolKit.Tests
         [Fact]
         public void Ensure_Surrogate_Serialization()
         {
-            ObjectTestHelper.IsSerializable<TSurrogate>(supportCyclingReference: true,
-                                                        supportMutableValueType: true,
-                                                        overrideComparer: CheckThatSurrogateAreEquals) ;
+            var result = ObjectTestHelper.IsSerializable<TSurrogate>(supportCyclingReference: true,
+                                                                     supportMutableValueType: true,
+                                                                     typeProvider: this._surrogateCreation,
+                                                                     overrideComparer: CheckThatSurrogateAreEquals);
+
+            Check.WithCustomMessage("Ensure_Surrogate_Serialization").That(result).IsTrue();
         }
 
         /// <summary>
@@ -75,7 +80,7 @@ namespace Democrite.UnitTests.ToolKit.Tests
         [Fact]
         public void Ensure_Source_Is_Serializable_Using_Surrogate_And_Converter()
         {
-            var fixture = ObjectTestHelper.PrepareFixture();
+            var fixture = ObjectTestHelper.PrepareFixture(supportServiceSubstitution: true);
             var source = SourceCreation(fixture);
 
             OnSourcePreparationForTesting(source);

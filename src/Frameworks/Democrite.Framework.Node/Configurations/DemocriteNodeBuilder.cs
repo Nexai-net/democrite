@@ -2,9 +2,8 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-namespace Democrite.Framework.Node.Configurations
+namespace Democrite.Framework.Configurations
 {
-    using Democrite.Framework.Cluster.Abstractions.Configurations;
     using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Configurations;
@@ -12,7 +11,6 @@ namespace Democrite.Framework.Node.Configurations
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
-    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
@@ -21,14 +19,13 @@ namespace Democrite.Framework.Node.Configurations
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.ArtifactResources;
-    using Democrite.Framework.Node.Abstractions.Configurations;
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Node.Abstractions.Configurations.Builders;
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.ArtifactResources;
     using Democrite.Framework.Node.ArtifactResources.ExecCodePreparationSteps;
     using Democrite.Framework.Node.Components;
+    using Democrite.Framework.Node.Configurations;
     using Democrite.Framework.Node.Extensions;
     using Democrite.Framework.Node.Inputs;
     using Democrite.Framework.Node.Models;
@@ -39,6 +36,7 @@ namespace Democrite.Framework.Node.Configurations
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Loggers;
     using Democrite.Framework.Toolbox.Models;
+    using Democrite.Framework.Toolbox.Models.Converters;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -55,7 +53,6 @@ namespace Democrite.Framework.Node.Configurations
 
     using System;
     using System.Collections.Generic;
-    using System.Net;
 
     /// <see cref="IDemocriteNodeBuilder" /> implementation
     internal sealed class DemocriteNodeBuilder : ClusterBaseBuilder<IDemocriteNodeWizard, IDemocriteNodeConfigurationWizard, DemocriteNodeConfigurationDefinition>,
@@ -218,7 +215,9 @@ namespace Democrite.Framework.Node.Configurations
         {
             this._orleanSiloBuilder.Services.AddOptionFromInstOrConfig(this.Configuration,
                                                                        ConfigurationSectionNames.Endpoints,
-                                                                       new ClusterNodeEndPointOptions(useLoopback));
+                                                                       new ClusterNodeEndPointOptions(useLoopback, 
+                                                                                                      siloPort: EndpointOptions.DEFAULT_SILO_PORT,
+                                                                                                      gatewayPort: EndpointOptions.DEFAULT_GATEWAY_PORT));
             this._orleanSiloBuilder.UseLocalhostClustering();
             return this;
         }
@@ -552,9 +551,9 @@ namespace Democrite.Framework.Node.Configurations
 
             // Check external definitions provider
 
-
-            serviceCollection.TryAddSingleton<IDedicatedObjectConverter, SignalMessageDedicatedObjectConverter>();
-
+            serviceCollection.AddSingleton<IDedicatedObjectConverter, SignalMessageDedicatedObjectConverter>();
+            serviceCollection.AddSingleton<IDedicatedObjectConverter, ScalarDedicatedConverter>();
+            
             AddService<ISequenceDefinitionSourceProvider>(this._inMemorySequenceDefinition);
             AddService<IArtifactResourceProviderSource>(this._artefactInMemoryProviderSource);
             AddService<ITriggerDefinitionProviderSource>(this._triggerDefinitionProviderSource);

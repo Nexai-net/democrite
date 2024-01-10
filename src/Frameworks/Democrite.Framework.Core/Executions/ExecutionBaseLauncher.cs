@@ -153,13 +153,12 @@ namespace Democrite.Framework.Core.Executions
                 exception = ex;
             }
 
-            if (exception is not OperationCanceledException &&
+            if (exception is null &&
+                exception is not OperationCanceledException &&
                 executionTask != null &&
                 executionTask.Exception != null)
             {
-                exception = exception is null
-                                ? exception = executionTask.Exception
-                                : new AggregateException(exception, executionTask.Exception);
+                exception = executionTask.Exception;
             }
 
             TExpectedOutput? output = default;
