@@ -18,14 +18,12 @@ namespace Democrite.Framework.Configurations
     using Democrite.Framework.Core.Diagnostics;
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Node.Abstractions;
-    using Democrite.Framework.Node.Abstractions.ArtifactResources;
+    using Democrite.Framework.Node.Abstractions.Artifacts;
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Models;
-    using Democrite.Framework.Node.ArtifactResources;
-    using Democrite.Framework.Node.ArtifactResources.ExecCodePreparationSteps;
+    using Democrite.Framework.Node.Artifacts;
     using Democrite.Framework.Node.Components;
-    using Democrite.Framework.Node.Configurations;
     using Democrite.Framework.Node.Extensions;
     using Democrite.Framework.Node.Inputs;
     using Democrite.Framework.Node.Models;
@@ -40,7 +38,6 @@ namespace Democrite.Framework.Configurations
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
@@ -61,7 +58,7 @@ namespace Democrite.Framework.Configurations
                                                  IDemocriteNodeWizard,
                                                  IDemocriteNodeConfigurationWizard,
                                                  IDemocriteNodeSequenceWizard,
-                                                 IDemocriteNodeArtifacResourceBuilder,
+                                                 IDemocriteNodeArtifactsWizard,
                                                  IDemocriteNodeMemoryBuilder,
                                                  IDemocriteNodeTriggersWizard,
                                                  IDemocriteNodeSignalsWizard,
@@ -73,7 +70,7 @@ namespace Democrite.Framework.Configurations
 
         private readonly InMemoryTriggerDefinitionProviderSource _triggerDefinitionProviderSource;
         private readonly InMemoryDoorDefinitionProviderSource _doorDefinitionProviderSource;
-        private readonly InMemoryArtifactResourceProviderSource _artefactInMemoryProviderSource;
+        private readonly InMemoryArtifactProviderSource _artefactInMemoryProviderSource;
         private readonly InMemorySignalDefinitionProviderSource _signalDefinitionProviderSource;
         private readonly InMemorySequenceDefinitionProvider _inMemorySequenceDefinition;
         private readonly INetworkInspector _networkInspector;
@@ -100,7 +97,7 @@ namespace Democrite.Framework.Configurations
             ArgumentNullException.ThrowIfNull(clusterBuilderTools.NetworkInspector);
 
             this._inMemorySequenceDefinition = new InMemorySequenceDefinitionProvider();
-            this._artefactInMemoryProviderSource = new InMemoryArtifactResourceProviderSource();
+            this._artefactInMemoryProviderSource = new InMemoryArtifactProviderSource();
             this._triggerDefinitionProviderSource = new InMemoryTriggerDefinitionProviderSource();
             this._signalDefinitionProviderSource = new InMemorySignalDefinitionProviderSource();
             this._doorDefinitionProviderSource = new InMemoryDoorDefinitionProviderSource();
@@ -215,7 +212,7 @@ namespace Democrite.Framework.Configurations
         {
             this._orleanSiloBuilder.Services.AddOptionFromInstOrConfig(this.Configuration,
                                                                        ConfigurationSectionNames.Endpoints,
-                                                                       new ClusterNodeEndPointOptions(useLoopback, 
+                                                                       new ClusterNodeEndPointOptions(useLoopback,
                                                                                                       siloPort: EndpointOptions.DEFAULT_SILO_PORT,
                                                                                                       gatewayPort: EndpointOptions.DEFAULT_GATEWAY_PORT));
             this._orleanSiloBuilder.UseLocalhostClustering();
@@ -291,10 +288,18 @@ namespace Democrite.Framework.Configurations
         }
 
         /// <inheritdoc />
-        public IDemocriteNodeLocalDefinitionsBuilder SetupArtifactResources(Action<IDemocriteNodeArtifacResourceBuilder> config)
+        public IDemocriteNodeLocalDefinitionsBuilder SetupArtifacts(Action<IDemocriteNodeArtifactsWizard> config)
         {
             ArgumentNullException.ThrowIfNull(config);
             config(this);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IDemocriteNodeLocalDefinitionsBuilder SetupArtifacts(params ArtifactDefinition[] artifacts)
+        {
+            ArgumentNullException.ThrowIfNull(artifacts);
+            SetupArtifacts(a => a.Register(artifacts));
             return this;
         }
 
@@ -353,34 +358,35 @@ namespace Democrite.Framework.Configurations
 
         #endregion
 
-        #region IClusterBuilderDemocriteArtifacResourceBuilder
+        #region IClusterBuilderDemocriteArtifactBuilder
+
+        ///// <inheritdoc />
+        //public IDemocriteNodeArtifactsWizard AddResourceSelector()
+        //{
+        //    throw new NotImplementedException();
+        //}
 
         /// <inheritdoc />
-        public IDemocriteNodeArtifacResourceBuilder AddResourceSelector()
+        public IDemocriteNodeArtifactsWizard AddSourceProvider<TSource>(TSource singletonInstances)
+            where TSource : class, IArtifactProviderSource
         {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public IDemocriteNodeArtifacResourceBuilder AddSourceProvider<TSource>(TSource singletonInstances)
-            where TSource : class, IArtifactResourceProviderSource
-        {
-            AddService<IArtifactResourceProviderSource>(singletonInstances);
+            AddService<IArtifactProviderSource>(singletonInstances);
             return this;
         }
 
         /// <inheritdoc />
-        public IDemocriteNodeArtifacResourceBuilder AddSourceProvider<TSource>()
-            where TSource : class, IArtifactResourceProviderSource
+        public IDemocriteNodeArtifactsWizard AddSourceProvider<TSource>()
+            where TSource : class, IArtifactProviderSource
         {
-            AddService<IArtifactResourceProviderSource, TSource>();
+            AddService<IArtifactProviderSource, TSource>();
             return this;
         }
 
         /// <inheritdoc />
-        public IDemocriteNodeArtifacResourceBuilder AddLocalArtifact(IArtifactResource artifactResource)
+        public IDemocriteNodeArtifactsWizard Register(params ArtifactDefinition[] artifactResource)
         {
-            this._artefactInMemoryProviderSource.AddOrUpdate(artifactResource);
+            foreach (var artifactDefinition in artifactResource)
+                this._artefactInMemoryProviderSource.AddOrUpdate(artifactDefinition);
             return this;
         }
 
@@ -520,9 +526,9 @@ namespace Democrite.Framework.Configurations
 
             foreach (var child in rootSection.GetChildren())
             {
-                AutoConfigImpl(configuration, 
-                               indexedAssemblies, 
-                               s => predicateConfigurationExist?.Invoke(s, child.Key) ?? false, 
+                AutoConfigImpl(configuration,
+                               indexedAssemblies,
+                               s => predicateConfigurationExist?.Invoke(s, child.Key) ?? false,
 
                                rootConfig +
                                ConfigurationSectionNames.SectionSeparator +
@@ -531,7 +537,7 @@ namespace Democrite.Framework.Configurations
                                ConfigurationSectionNames.AutoConfigKey,
 
                                logger,
-                               customConfig == null 
+                               customConfig == null
                                     ? (Action<TAutoConfig, TAutoWizard, IConfiguration, IServiceCollection, ILogger>?)null
                                     : (c, wizard, cfg, service, logger) => customConfig?.Invoke(c, wizard, child.Key, cfg, service, logger),
                                defaultAutoKey);
@@ -553,9 +559,9 @@ namespace Democrite.Framework.Configurations
 
             serviceCollection.AddSingleton<IDedicatedObjectConverter, SignalMessageDedicatedObjectConverter>();
             serviceCollection.AddSingleton<IDedicatedObjectConverter, ScalarDedicatedConverter>();
-            
+
             AddService<ISequenceDefinitionSourceProvider>(this._inMemorySequenceDefinition);
-            AddService<IArtifactResourceProviderSource>(this._artefactInMemoryProviderSource);
+            AddService<IArtifactProviderSource>(this._artefactInMemoryProviderSource);
             AddService<ITriggerDefinitionProviderSource>(this._triggerDefinitionProviderSource);
             AddService<ISignalDefinitionProviderSource>(this._signalDefinitionProviderSource);
             AddService<IDoorDefinitionProviderSource>(this._doorDefinitionProviderSource);
@@ -563,18 +569,18 @@ namespace Democrite.Framework.Configurations
             if (!CheckIsExistSetupInServices<IInputSourceProviderFactory>(serviceCollection))
                 AddService<IInputSourceProviderFactory, InputSourceProviderFactory>();
 
-            if (!CheckIsExistSetupInServices<IExternalCodePackageFactory>(serviceCollection))
-                AddService<IExternalCodePackageFactory, ExternalCodePackageFactory>();
+            if (!CheckIsExistSetupInServices<IArtifactExecutorFactory>(serviceCollection))
+                AddService<IArtifactExecutorFactory, ArtifactExecutorFactory>();
 
             if (!CheckIsExistSetupInServices<ITriggerDefinitionProvider>(serviceCollection))
                 AddService<IDoorDefinitionProvider, DoorDefinitionProvider>();
 
-            if (!CheckIsExistSetupInServices<IArtifactResourceProvider>(serviceCollection))
-                AddService<IArtifactResourceProvider, ArtifactResourceProvider>();
+            if (!CheckIsExistSetupInServices<IArtifactProvider>(serviceCollection))
+                AddService<IArtifactProvider, ArtifactsProvider>();
 
             // Artefacts
-            serviceCollection.AddSingletonKeyedService<string, IExternalCodeExecutorPreparationStep, PreparationLocalCheckStep>(PreparationLocalCheckStep.KEY);
-            serviceCollection.AddSingletonKeyedService<string, IExternalCodeExecutorPreparationStep, PreparationExecutorCheckStep>(PreparationExecutorCheckStep.KEY);
+            //serviceCollection.AddSingletonKeyedService<string, IExternalCodeExecutorPreparationStep, PreparationLocalCheckStep>(PreparationLocalCheckStep.KEY);
+            //serviceCollection.AddSingletonKeyedService<string, IExternalCodeExecutorPreparationStep, PreparationExecutorCheckStep>(PreparationExecutorCheckStep.KEY);
 
             this._orleanSiloBuilder.AddIncomingGrainCallFilter<IncomingGrainCallTracer>()
                                    .AddIncomingGrainCallFilter<GrainPopulateCancellationTokenCallFilter>();

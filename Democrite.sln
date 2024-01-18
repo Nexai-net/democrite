@@ -93,6 +93,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Mo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Mongo", "src\Extensions\Democrite.Framework.Node.Mongo\Democrite.Framework.Node.Mongo.csproj", "{ADAF23A8-3574-4F9E-94C9-BF046AA26CF2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dist", "Dist", "{D52F0DA3-F60F-40AA-BDDD-EFE133485A3F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Python", "Python", "{8CD6E17A-6E84-47B9-B069-C5ED19253ED1}"
+	ProjectSection(SolutionItems) = preProject
+		src\Extensions\Dist\Python\democrite.py = src\Extensions\Dist\Python\democrite.py
+		src\Extensions\Dist\Python\pyproject.toml = src\Extensions\Dist\Python\pyproject.toml
+		src\Extensions\Dist\Python\README.md = src\Extensions\Dist\Python\README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -261,6 +270,8 @@ Global
 		{AA1C66AC-4910-443E-ABA9-76F1E581EA78} = {D53F80C8-5B1F-4153-989A-A10DD890B9D2}
 		{A181A232-49C5-47EF-A199-3BE0A19192A3} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
 		{ADAF23A8-3574-4F9E-94C9-BF046AA26CF2} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
+		{D52F0DA3-F60F-40AA-BDDD-EFE133485A3F} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
+		{8CD6E17A-6E84-47B9-B069-C5ED19253ED1} = {D52F0DA3-F60F-40AA-BDDD-EFE133485A3F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {89BCBB25-4DD3-406C-91A9-BB2F978C23F2}

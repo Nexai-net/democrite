@@ -58,6 +58,7 @@ namespace Democrite.Framework.Cluster.Configurations
         private readonly IFileSystemHandler _fileSystemHandler;
         private readonly INetworkInspector _networkInspector;
         private readonly IAssemblyLoader _assemblyLoader;
+        private readonly IHashService _hashService;
 
         private readonly HostBuilderContext _context;
 
@@ -92,6 +93,7 @@ namespace Democrite.Framework.Cluster.Configurations
             this._fileSystemHandler = clusterBuilderTools.FileSystemHandler;
             this._assemblyLoader = clusterBuilderTools.AssemblyLoader;
             this._networkInspector = clusterBuilderTools.NetworkInspector;
+            this._hashService = clusterBuilderTools.HashService;
 
             this._context = context;
 
@@ -392,6 +394,7 @@ namespace Democrite.Framework.Cluster.Configurations
             AddService<IAssemblyInspector>(this._assemblyInspector);
             AddService<INetworkInspector>(this._networkInspector);
             AddService<IAssemblyLoader>(this._assemblyLoader);
+            AddService<IHashService>(this._hashService);
 
             serviceCollection.SetupCoreServices();
 

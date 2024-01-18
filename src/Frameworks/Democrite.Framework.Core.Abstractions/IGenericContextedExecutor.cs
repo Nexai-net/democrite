@@ -29,6 +29,11 @@ namespace Democrite.Framework.Core.Abstractions
         Task RunAsync(IExecutionContext<TContextInfo> executionContext);
 
         /// <summary>
+        /// Execute and wait the end
+        /// </summary>
+        Task RunWithInputAsync<TInput>(TInput? input, IExecutionContext<TContextInfo> executionContext);
+
+        /// <summary>
         /// Fire the specific execution without expecting result
         /// </summary>
         [OneWay]

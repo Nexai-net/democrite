@@ -151,7 +151,7 @@
     <value>Could not found artificat Id({0}) type '{1}'.</value>
   </data>
   <data name="ArtifactPreparationFailed" xml:space="preserve">
-    <value>Artifact preparation failed - Type : {0}</value>
+    <value>Artifact preparation failed - Due to {0}</value>
   </data>
   <data name="ArtifactWrongType" xml:space="preserve">
     <value>Artificat Id({0}) is of type '{1}' but expect type '{2}'.</value>
@@ -167,5 +167,11 @@
   </data>
   <data name="VGrainTypeNotFounded" xml:space="preserve">
     <value>VGrain implementation of type "{0}" doesn't have been founded.</value>
+  </data>
+  <data name="ArtifactExecutionException" xml:space="preserve">
+    <value>Artifact execution failed (Uid: {0}) : {1}</value>
+  </data>
+  <data name="ArtifactRemoteException" xml:space="preserve">
+    <value>Remote communication to artifact "{0}" failed due to : {1}</value>
   </data>
 </root>

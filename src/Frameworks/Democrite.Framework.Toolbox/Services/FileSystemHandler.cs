@@ -10,6 +10,8 @@ namespace Democrite.Framework.Toolbox.Services
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <inheritdoc cref="IFileSystemHandler"/>
     public sealed class FileSystemHandler : IFileSystemHandler
@@ -44,7 +46,7 @@ namespace Democrite.Framework.Toolbox.Services
         }
 
         /// <inheritdoc />
-        public IReadOnlyCollection<Uri> SearchFiles(string root, string searchPattern, bool recursive)
+        public IReadOnlyCollection<Uri> SearchFiles(in string root, in string searchPattern, bool recursive)
         {
             var rootUri = new Uri(root, UriKind.Absolute);
             return Directory.GetFiles(root, searchPattern, recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
@@ -68,12 +70,20 @@ namespace Democrite.Framework.Toolbox.Services
             if (uri.IsAbsoluteUri)
                 return uri;
 
+            return MakeUriAbsolute(uri.OriginalString);
+        }
+
+        /// <remarks>
+        ///     // Add method to set working dir
+        /// </remarks>
+        public Uri MakeUriAbsolute(in string uri)
+        {
             var currentDir = Directory.GetCurrentDirectory();
 
             if (!currentDir.EndsWith("/"))
                 currentDir += "/";
 
-            return new Uri(new Uri(currentDir), uri.OriginalString);
+            return new Uri(new Uri(currentDir), uri);
         }
 
         /// <inheritdoc />
@@ -82,6 +92,42 @@ namespace Democrite.Framework.Toolbox.Services
             var attr = File.GetAttributes(target.LocalPath);
 
             return attr.HasFlag(FileAttributes.Directory) == false;
+        }
+
+        /// <inheritdoc />
+        public ValueTask<string> GetTemporaryFolderAsync(bool global, CancellationToken token)
+        {
+            if (global)
+            {
+                var globalTempPath = Path.Combine(Path.GetTempPath(), nameof(Democrite));
+                return ValueTask.FromResult(globalTempPath);
+            }
+
+            var localTempFolder = MakeUriAbsolute(".tmp");
+            return ValueTask.FromResult(localTempFolder.OriginalString);
+        }
+
+        /// <inheritdoc />
+        public ValueTask<bool> Delete(Uri file)
+        {
+            var exists = Exists(file);
+            File.Delete(file.OriginalString);
+            return ValueTask.FromResult(exists);
+        }
+
+        /// <inheritdoc />
+        public bool CopyFrom(Uri source, Uri target, bool overrideTarget)
+        {
+            var dir = Path.GetDirectoryName(target.OriginalString);
+
+            if (string.IsNullOrEmpty(dir))
+                return false;
+
+            if (Directory.Exists(dir) == false)
+                Directory.CreateDirectory(dir);
+
+            File.Copy(source.OriginalString, target.OriginalString, overrideTarget);
+            return true;
         }
 
         #endregion

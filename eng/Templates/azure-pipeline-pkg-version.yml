@@ -1,0 +1,43 @@
+# Template used to compile the pkg number version
+
+parameters:
+  - name: ReleasePublic
+    displayName: Release Public
+    type: boolean
+    default: false
+    values:
+    - true
+    - false
+
+variables:
+  - group: democrite-frameworks-variables
+
+  - name: PkgVersionMajor
+    value: $(PackageVersionMajor)
+
+  - name: PkgVersionMinor
+    value: $(PackageVersionMinor)
+
+  - name: PkgVersionPatch
+    value: $(PackageVersionPatch)
+
+  - ${{ if eq(parameters.ReleasePublic, true) }}:
+    - name: PkgVersionBuild
+      value: ""
+
+    - name: PkgVersionPrerelease
+      value: ""
+
+  - ${{ if ne(parameters.ReleasePublic, true) }}:
+
+    - name: PkgVersionBuild
+      value: ".$(Build.BuildId)"
+    
+    - name: PkgVersionPrerelease
+      value: "-prerelease"
+
+  - name: FinalPkgVersionNumber
+    value: ${{ variables.PkgVersionMajor }}.${{ variables.PkgVersionMinor }}.${{ variables.PkgVersionPatch }}${{ variables.PkgVersionBuild }}
+
+  - name : FinalPkgVersion
+    value: ${{ variables.FinalPkgVersionNumber }}${{ variables.PkgVersionPrerelease }}

@@ -23,6 +23,33 @@ namespace Democrite.Framework.Core.Abstractions
             where TVGrain : IVGrain;
 
         /// <summary>
+        /// Prepare a direct call to an vgrain method.
+        /// </summary>
+        /// <remarks>
+        ///     Using this call technique ensure to respect the auto-gen vgrain id and <see cref="IExecutionContext"/> information.
+        /// </remarks>
+        IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>(Guid id, string? customIdPart = null)
+            where TVGrain : IVGrain;
+
+        /// <summary>
+        /// Prepare a direct call to an vgrain method.
+        /// </summary>
+        /// <remarks>
+        ///     Using this call technique ensure to respect the auto-gen vgrain id and <see cref="IExecutionContext"/> information.
+        /// </remarks>
+        IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>(long id, string? customIdPart = null)
+            where TVGrain : IVGrain;
+
+        /// <summary>
+        /// Prepare a direct call to an vgrain method.
+        /// </summary>
+        /// <remarks>
+        ///     Using this call technique ensure to respect the auto-gen vgrain id and <see cref="IExecutionContext"/> information.
+        /// </remarks>
+        IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>(string id)
+            where TVGrain : IVGrain;
+
+        /// <summary>
         /// Prepare an execution with schema a <see cref="SequenceDefinition"/>.
         /// </summary>
         IExecutionLauncher Sequence(Guid sequenceId);

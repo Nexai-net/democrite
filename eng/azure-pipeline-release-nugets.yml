@@ -13,44 +13,24 @@ variables:
   - group: democrite-frameworks-variables
   - group: azure-api
 
+  - template: Templates/azure-pipeline-pkg-version.yml
+
   - name: SolutionFolder
     value: "./"
     
   - name: PublishNuget
     value: ".publish/nuget"
 
-  - name: PkgVersionMajor
-    value: $(PackageVersionMajor)
-
-  - name: PkgVersionMinor
-    value: $(PackageVersionMinor)
-
-  - name: PkgVersionPatch
-    value: $(PackageVersionPatch)
-
   - ${{ if eq(variables['ReleasePublic'], true) }}:
-    - name: PkgVersionBuild
-      value: ""
 
     - name: NugetPackageFilter
       value: "Democrite.Framework.*.nupkg"
 
-    - name: PkgVersionPrerelease
-      value: ""
 
   - ${{ if ne(variables['ReleasePublic'], true) }}:
 
-    - name: PkgVersionBuild
-      value: ".$(Build.BuildId)"
-    
     - name: NugetPackageFilter
       value: "Democrite.Framework.*.symbols.nupkg"
-
-    - name: PkgVersionPrerelease
-      value: "-prerelease"
-
-  - name : FinalPkgVersion
-    value: ${{ variables.PkgVersionMajor }}.${{ variables.PkgVersionMinor }}.${{ variables.PkgVersionPatch }}${{ variables.PkgVersionBuild }}${{ variables.PkgVersionPrerelease }}
 
 steps:
   - task: UseDotNet@2

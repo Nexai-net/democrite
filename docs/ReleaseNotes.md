@@ -9,6 +9,21 @@ Release Notes
 
 # Alpha
 
+## 0.2.2-prerelease
+
+In this version we mainly:
+- Add Python VGrain support
+
+### Features
+
+- **Artifact** : Extended resource needed to democrite node to work (code, png, licences, pfx ...)
+    - Create, build and add artifact
+    - Define code artifact to be used as grain
+
+- **Code Artifact** : Artifact use to configure the external code, for example python scripts
+- **External Code Remote controller** : Controller using artifact code definition to launch, maintain and communicate to another program
+- **Python Package** : Package deployed on [Pypi](https://pypi.org/project/democrite/) and [TestPypi](https://test.pypi.org/project/democrite/) (cf. [Python/README.md](/src/Extensions/Dist/Python/README.md))
+
 ## 0.2.1-prerelease
 
 In this version we mainly:

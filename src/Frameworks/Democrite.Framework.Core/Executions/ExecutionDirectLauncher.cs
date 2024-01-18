@@ -11,6 +11,8 @@ namespace Democrite.Framework.Core.Executions
 
     using Microsoft.Extensions.Logging;
 
+    using Orleans.Runtime;
+
     using System;
     using System.Linq.Expressions;
     using System.Text;
@@ -25,6 +27,7 @@ namespace Democrite.Framework.Core.Executions
         #region Fields
 
         private readonly LambdaExpression _expression;
+        private readonly IdSpan? _forcedGrainId;
         private readonly TConfig? _config;
         private readonly TInput? _input;
 
@@ -39,7 +42,8 @@ namespace Democrite.Framework.Core.Executions
                                        IVGrainProvider vgrainProvider,
                                        TConfig? config,
                                        TInput? input,
-                                       Expression expression)
+                                       Expression expression,
+                                       IdSpan? forcedGrainId)
             : base(logger, vgrainProvider)
         {
             ArgumentNullException.ThrowIfNull(expression);
@@ -47,6 +51,7 @@ namespace Democrite.Framework.Core.Executions
             if (expression.NodeType != ExpressionType.Lambda)
                 throw new NotSupportedException("Only expression type lambda are accepted.");
 
+            this._forcedGrainId = forcedGrainId;
             this._expression = (LambdaExpression)expression;
             this._config = config;
             this._input = input;
@@ -89,7 +94,6 @@ namespace Democrite.Framework.Core.Executions
 
                 errorContext.Append(")");
             }
-
 
             if (NoneType.IsEqualTo<TInput>() == false)
             {

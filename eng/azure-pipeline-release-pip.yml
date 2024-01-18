@@ -1,0 +1,68 @@
+# process -> https://packaging.python.org/en/latest/tutorials/packaging-projects/
+
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+  - name: ReleasePublic
+    displayName: Release Public
+    type: boolean
+    default: false
+    values:
+    - true
+    - false
+
+variables:
+  - template: Templates/azure-pipeline-pkg-version.yml
+
+  - name: localReleasePublic
+    value: $(ReleasePublic)
+
+  - ${{ if eq(parameters.ReleasePublic, true) }}:
+    - group: pip-repository-variables-release
+  
+  - ${{ if ne(parameters.ReleasePublic, true) }}:
+    - group: pip-repository-variables-test
+
+  - name: repoAlias
+    ${{ if eq(parameters.ReleasePublic, true) }}:
+      value: pypi
+    ${{ else }}:
+      value: testpypi
+
+
+
+  - name: PythonPkgFolder
+    value: "./src/Extensions/Dist/Python/"
+
+steps:
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+    displayName: 'Use Python 3.x'
+
+  - script: python -m pip install --upgrade pip
+    displayName: 'Install pip & dependencies'
+  
+  - script: python -m pip install --upgrade build
+    displayName: 'Python package builder'
+
+  - script: sed -i 's/__VERSION__/${{ variables.FinalPkgVersionNumber }}/' pyproject.toml
+    workingDirectory: ${{ variables.PythonPkgFolder }}
+    displayName: 'Setup pkg version : ${{ variables.FinalPkgVersionNumber }}'
+  
+  - script: python -m build
+    workingDirectory: ${{ variables.PythonPkgFolder }}
+    displayName: 'Build python package'
+
+  - script: python -m pip install --upgrade twine
+    workingDirectory: ${{ variables.PythonPkgFolder }}
+    displayName: 'Python package twine'
+
+  # https://twine.readthedocs.io/en/stable/#twine-upload
+  - script: python3 -m twine upload -r ${{ variables.repoAlias }} -u '$(pythonRepoUsername)' -p '$(pythonRepoPassword)' dist/* 
+    workingDirectory: ${{ variables.PythonPkgFolder }}
+    displayName: 'Upload package to repository ${{ variables.repoAlias }}'

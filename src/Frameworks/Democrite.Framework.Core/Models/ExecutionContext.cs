@@ -129,7 +129,16 @@ namespace Democrite.Framework.Core.Models
         {
             lock (this)
             {
-                return GetLogger<T>(loggerFactory, this.FlowUID, this.CurrentExecutionId);
+                return GetLogger(loggerFactory, this.FlowUID, this.CurrentExecutionId, typeof(T).Name);
+            }
+        }
+
+        /// <inheritdoc />
+        public ILogger GetLogger(ILoggerFactory loggerFactory, Type type)
+        {
+            lock (this)
+            {
+                return GetLogger(loggerFactory, this.FlowUID, this.CurrentExecutionId, type.Name);
             }
         }
 
@@ -185,10 +194,9 @@ namespace Democrite.Framework.Core.Models
         #region Tools
 
         /// <inheritdoc cref="IExecutionContext.GetLogger{T}(ILoggerProvider)" />
-        private static ILogger GetLogger<T>(ILoggerFactory loggerFactory, Guid flowUid, Guid currentExecutionId)
-            where T : IVGrain
+        private static ILogger GetLogger(ILoggerFactory loggerFactory, Guid flowUid, Guid currentExecutionId, string category)
         {
-            return loggerFactory.CreateLogger(string.Format("[Flow {0}][VGrain {1} - {2}]", flowUid, currentExecutionId, typeof(T).Name));
+            return loggerFactory.CreateLogger(string.Format("[Flow {0}][VGrain {1} - {2}]", flowUid, currentExecutionId, category));
         }
 
         /// <inheritdoc />

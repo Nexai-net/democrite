@@ -9,6 +9,8 @@ namespace Democrite.Framework.Core.Executions
 
     using Microsoft.Extensions.Logging;
 
+    using Orleans.Runtime;
+
     using System;
     using System.Linq.Expressions;
     using System.Threading.Tasks;
@@ -21,6 +23,7 @@ namespace Democrite.Framework.Core.Executions
 
         private readonly ILogger<IDemocriteExecutionHandler> _logger;
         private readonly IVGrainProvider _vgrainProvider;
+        private readonly IdSpan? _targetForceGrainId;
 
         #endregion
 
@@ -30,10 +33,12 @@ namespace Democrite.Framework.Core.Executions
         /// Initializes a new instance of the <see cref="ExecutionDirectBuilder{TVGrain}"/> class.
         /// </summary>
         public ExecutionDirectBuilder(IVGrainProvider vgrainProvider,
-                                      ILogger<IDemocriteExecutionHandler> logger)
+                                      ILogger<IDemocriteExecutionHandler> logger,
+                                      IdSpan? targetForceGrainId = null)
         {
             this._vgrainProvider = vgrainProvider;
             this._logger = logger;
+            this._targetForceGrainId = targetForceGrainId;
         }
 
         #endregion
@@ -47,7 +52,8 @@ namespace Democrite.Framework.Core.Executions
                                                                                     this._vgrainProvider,
                                                                                     null,
                                                                                     null,
-                                                                                    call);
+                                                                                    call,
+                                                                                    this._targetForceGrainId);
         }
 
         /// <inheritdoc />
@@ -57,7 +63,8 @@ namespace Democrite.Framework.Core.Executions
                                                                                      this._vgrainProvider,
                                                                                      null,
                                                                                      null,
-                                                                                     call);
+                                                                                     call,
+                                                                                     this._targetForceGrainId);
         }
 
         /// <inheritdoc />
@@ -65,15 +72,17 @@ namespace Democrite.Framework.Core.Executions
         {
             return new ExecutionDirectBuilderWithConfiguration<TVGrain, TConfig>(this._vgrainProvider,
                                                                                 this._logger,
-                                                                                config);
+                                                                                config,
+                                                                                this._targetForceGrainId);
         }
 
         /// <inheritdoc />
         public IExecutionDirectBuilder<TVGrain, TInput> SetInput<TInput>(TInput? input)
         {
             return new ExecutionDirectBuilder<TVGrain, TInput>(this._vgrainProvider,
-                                                              this._logger,
-                                                              input);
+                                                               this._logger,
+                                                               input,
+                                                               this._targetForceGrainId);
         }
 
         #endregion
@@ -88,6 +97,7 @@ namespace Democrite.Framework.Core.Executions
         private readonly ILogger<IDemocriteExecutionHandler> _logger;
         private readonly IVGrainProvider _vgrainProvider;
         private readonly TInput? _input;
+        private readonly IdSpan? _targetForceGrainId;
 
         #endregion
 
@@ -98,11 +108,13 @@ namespace Democrite.Framework.Core.Executions
         /// </summary>
         public ExecutionDirectBuilder(IVGrainProvider vgrainProvider,
                                       ILogger<IDemocriteExecutionHandler> logger,
-                                      TInput? intput)
+                                      TInput? intput,
+                                      IdSpan? targetForceGrainId)
         {
             this._vgrainProvider = vgrainProvider;
             this._logger = logger;
             this._input = intput;
+            this._targetForceGrainId = targetForceGrainId;
         }
 
         #endregion
@@ -116,7 +128,8 @@ namespace Democrite.Framework.Core.Executions
                                                                                   this._vgrainProvider,
                                                                                   null,
                                                                                   this._input,
-                                                                                  call);
+                                                                                  call,
+                                                                                  this._targetForceGrainId);
         }
 
         /// <inheritdoc />
@@ -126,7 +139,8 @@ namespace Democrite.Framework.Core.Executions
                                                                                    this._vgrainProvider,
                                                                                    null,
                                                                                    this._input,
-                                                                                   call);
+                                                                                   call,
+                                                                                   this._targetForceGrainId);
         }
 
         /// <inheritdoc />
@@ -135,7 +149,8 @@ namespace Democrite.Framework.Core.Executions
             return new ExecutionDirectBuilderWithConfiguration<TVGrain, TInput, TConfig>(this._vgrainProvider,
                                                                                         this._logger,
                                                                                         this._input,
-                                                                                        config);
+                                                                                        config,
+                                                                                        this._targetForceGrainId);
         }
 
         #endregion
@@ -150,6 +165,7 @@ namespace Democrite.Framework.Core.Executions
         private readonly ILogger<IDemocriteExecutionHandler> _logger;
         private readonly IVGrainProvider _vgrainProvider;
         private readonly TConfig? _config;
+        private readonly IdSpan? _targetForceGrainId;
 
         #endregion
 
@@ -160,11 +176,13 @@ namespace Democrite.Framework.Core.Executions
         /// </summary>
         public ExecutionDirectBuilderWithConfiguration(IVGrainProvider vgrainProvider,
                                                        ILogger<IDemocriteExecutionHandler> logger,
-                                                       TConfig? config)
+                                                       TConfig? config,
+                                                       IdSpan? targetForceGrainId)
         {
             this._vgrainProvider = vgrainProvider;
             this._logger = logger;
             this._config = config;
+            this._targetForceGrainId = targetForceGrainId;
         }
 
         #endregion
@@ -178,7 +196,8 @@ namespace Democrite.Framework.Core.Executions
                                                                                    this._vgrainProvider,
                                                                                    this._config,
                                                                                    null,
-                                                                                   call);
+                                                                                   call, 
+                                                                                   this._targetForceGrainId);
         }
 
         /// <inheritdoc />
@@ -188,7 +207,8 @@ namespace Democrite.Framework.Core.Executions
                                                                                     this._vgrainProvider,
                                                                                     this._config,
                                                                                     null,
-                                                                                    call);
+                                                                                    call, 
+                                                                                    this._targetForceGrainId);
         }
 
         /// <inheritdoc />
@@ -197,7 +217,8 @@ namespace Democrite.Framework.Core.Executions
             return new ExecutionDirectBuilderWithConfiguration<TVGrain, TInput, TConfig>(this._vgrainProvider,
                                                                                         this._logger,
                                                                                         input,
-                                                                                        this._config);
+                                                                                        this._config,
+                                                                                        this._targetForceGrainId);
         }
 
         #endregion
@@ -212,6 +233,7 @@ namespace Democrite.Framework.Core.Executions
         private readonly ILogger<IDemocriteExecutionHandler> _logger;
         private readonly IVGrainProvider _vgrainProvider;
         private readonly TConfig? _config;
+        private readonly IdSpan? _targetForceGrainId;
         private readonly TInput? _input;
 
         #endregion
@@ -224,14 +246,15 @@ namespace Democrite.Framework.Core.Executions
         public ExecutionDirectBuilderWithConfiguration(IVGrainProvider vgrainProvider,
                                                        ILogger<IDemocriteExecutionHandler> logger,
                                                        TInput? intput,
-                                                       TConfig? config)
+                                                       TConfig? config,
+                                                       IdSpan? targetForceGrainId)
         {
             this._vgrainProvider = vgrainProvider;
             this._logger = logger;
             this._input = intput;
             this._config = config;
+            this._targetForceGrainId = targetForceGrainId;
         }
-
 
         #endregion
 
@@ -244,7 +267,8 @@ namespace Democrite.Framework.Core.Executions
                                                                                  this._vgrainProvider,
                                                                                  this._config,
                                                                                  this._input,
-                                                                                 call);
+                                                                                 call,
+                                                                                 this._targetForceGrainId);
         }
 
         /// <inheritdoc />
@@ -254,7 +278,8 @@ namespace Democrite.Framework.Core.Executions
                                                                                   this._vgrainProvider,
                                                                                   this._config,
                                                                                   this._input,
-                                                                                  call);
+                                                                                  call,
+                                                                                  this._targetForceGrainId);
         }
 
         #endregion

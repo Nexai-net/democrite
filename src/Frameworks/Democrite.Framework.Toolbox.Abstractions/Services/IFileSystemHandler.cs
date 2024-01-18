@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Services
 {
+    using System.Threading;
+
     /// <summary>
     /// Handler used to search, load, open file/directory on the file system
     /// </summary>
@@ -15,7 +17,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Services
         /// <summary>
         /// Searches files from <paramref name="root"/> directory following <paramref name="searchPattern"/> pattern.
         /// </summary>
-        IReadOnlyCollection<Uri> SearchFiles(string root, string searchPattern, bool recursive);
+        IReadOnlyCollection<Uri> SearchFiles(in string root, in string searchPattern, bool recursive);
 
         /// <summary>
         /// Opens target file <paramref name="uri"/> in read mode
@@ -33,8 +35,28 @@ namespace Democrite.Framework.Toolbox.Abstractions.Services
         Uri MakeUriAbsolute(Uri uri);
 
         /// <summary>
+        /// Makes <paramref name="uri"/> in absolute.
+        /// </summary>
+        Uri MakeUriAbsolute(in string uri);
+
+        /// <summary>
         /// Determines whether the specified target is a file nor a directory.
         /// </summary>
         bool IsFile(Uri target);
+
+        /// <summary>
+        /// Deletes the specified file if exist
+        /// </summary>
+        ValueTask<bool> Delete(Uri file);
+
+        /// <summary>
+        /// Gets a folder where temporary data could be write
+        /// </summary>
+        ValueTask<string> GetTemporaryFolderAsync(bool global, CancellationToken token);
+
+        /// <summary>
+        /// Copies from <paramref name="source"/> to <paramref name="target"/>
+        /// </summary>
+        bool CopyFrom(Uri source, Uri target, bool overrideTarget);
     }
 }

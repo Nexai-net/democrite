@@ -19,7 +19,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         /// <summary>
         /// Initializes a new instance of the <see cref="InvalidOutputDemocriteException"/> class.
         /// </summary>
-        /// <param name="desiredType">Type of the output desired.</param>
+        /// <param name="desiredType">ArtifactType of the output desired.</param>
         /// <param name="outputType">The execuption result provided.</param>
         /// <param name="executionInformation">The execution source information to understand when this occured, sequence input, stage, ...</param>
         public InvalidOutputDemocriteException(Type desiredType,

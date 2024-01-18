@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Inputs
 {
     /// <summary>
-    /// Type of input source
+    /// ArtifactType of input source
     /// </summary>
     public enum InputSourceTypeEnum
     {

@@ -31,7 +31,7 @@ namespace Democrite.Framework.Core.Helpers
         /// </summary>
         static VGrainMetaDataHelper()
         {
-            // Regex used to identify system/framework vgrain using Type.AssemblyQualifiedName or Type.Assembly.FullName
+            // Regex used to identify system/framework vgrain using ArtifactType.AssemblyQualifiedName or ArtifactType.Assembly.FullName
             s_systemVGrainIdentifer = new[]
             {
                 new Regex(",\\sOrleans.Core[a-zA-Z.]*,\\sVersion=", RegexOptions.IgnoreCase | RegexOptions.Compiled),

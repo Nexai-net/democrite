@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Configurations
 {
+    using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Triggers;
@@ -62,6 +63,11 @@ namespace Democrite.Framework.Configurations
         /// <summary>
         /// Setups the artifact resource, external source code (python, c++, exe, dll, png, ...)
         /// </summary>
-        IDemocriteNodeLocalDefinitionsBuilder SetupArtifactResources(Action<IDemocriteNodeArtifacResourceBuilder> artifactResourceBuilder);
+        IDemocriteNodeLocalDefinitionsBuilder SetupArtifacts(Action<IDemocriteNodeArtifactsWizard> artifactResourceBuilder);
+
+        /// <summary>
+        /// Setups artifacts resources, external source code (python, c++, exe, dll, png, ...)
+        /// </summary>
+        IDemocriteNodeLocalDefinitionsBuilder SetupArtifacts(params ArtifactDefinition[] artifactResourceDefinitions);
     }
 }

@@ -11,6 +11,8 @@ namespace Democrite.Framework.Core
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
 
+    using Orleans.Runtime;
+
     using System;
 
     /// <summary>
@@ -46,7 +48,26 @@ namespace Democrite.Framework.Core
         public IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>()
             where TVGrain : IVGrain
         {
-            return new ExecutionDirectBuilder<TVGrain>(this._vgrainProvider, this._logger);
+            return VGrainImpl<TVGrain>(null);
+        }
+
+        /// <inheritdoc />
+        public IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>(Guid id, string? customIdPart = null)
+            where TVGrain : IVGrain
+        {
+            return VGrainImpl<TVGrain>(GrainIdKeyExtensions.CreateGuidKey(id, customIdPart));
+        }
+
+        /// <inheritdoc />
+        public IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>(long id, string? customIdPart = null) where TVGrain : IVGrain
+        {
+            return VGrainImpl<TVGrain>(GrainIdKeyExtensions.CreateIntegerKey(id, customIdPart));
+        }
+
+        /// <inheritdoc />
+        public IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>(string id) where TVGrain : IVGrain
+        {
+            return VGrainImpl<TVGrain>(IdSpan.Create(id));
         }
 
         /// <inheritdoc />
@@ -69,9 +90,20 @@ namespace Democrite.Framework.Core
         public IExecutionBuilder<object> SequenceWithInput(Guid sequenceId)
         {
             return new ExecutionBuilderLauncher<ISequenceExecutorVGrain, object>(sequenceId,
-                                                                           this._vgrainProvider,
-                                                                           this._logger);
+                                                                                 this._vgrainProvider,
+                                                                                 this._logger);
         }
+
+        #region Tools
+
+        /// <inheritdoc />
+        private IExecutionDirectBuilder<TVGrain> VGrainImpl<TVGrain>(IdSpan? forcedGrainId)
+            where TVGrain : IVGrain
+        {
+            return new ExecutionDirectBuilder<TVGrain>(this._vgrainProvider, this._logger, forcedGrainId);
+        }
+
+        #endregion
 
         #endregion
     }

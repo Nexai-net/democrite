@@ -17,6 +17,8 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="RemoteExecutionResponse{TContent}"/> class.
         /// </summary>
+        [System.Text.Json.Serialization.JsonConstructor]
+        [Newtonsoft.Json.JsonConstructor]
         public RemoteExecutionResponse(Guid executionId,
                                        TContent? content,
                                        string errorCode,

@@ -61,6 +61,15 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Artifact execution failed (Uid: {0}) : {1}.
+        /// </summary>
+        internal static string ArtifactExecutionException {
+            get {
+                return ResourceManager.GetString("ArtifactExecutionException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not found artificat Id({0}) type &apos;{1}&apos;..
         /// </summary>
         internal static string ArtifactMissing {
@@ -70,11 +79,20 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Artifact preparation failed - Type : {0}.
+        ///   Looks up a localized string similar to Artifact preparation failed - Due to {0}.
         /// </summary>
         internal static string ArtifactPreparationFailed {
             get {
                 return ResourceManager.GetString("ArtifactPreparationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote communication to artifact &quot;{0}&quot; failed due to : {1}.
+        /// </summary>
+        internal static string ArtifactRemoteException {
+            get {
+                return ResourceManager.GetString("ArtifactRemoteException", resourceCulture);
             }
         }
         

@@ -11,7 +11,24 @@ namespace Democrite.Framework.Toolbox.Services
     /// <inheritdoc />
     public sealed class TimeManager : ITimeManager
     {
+        #region Ctor
+
+        /// <summary>
+        /// Initializes the <see cref="TimeManager"/> class.
+        /// </summary>
+        static TimeManager()
+        {
+            Instance = new TimeManager();
+        }
+
+        #endregion
+
         #region Properties
+
+        /// <summary>
+        /// Gets a instance.
+        /// </summary>
+        public static TimeManager Instance { get; }
 
         /// <inheritdoc />
         public DateOnly Today

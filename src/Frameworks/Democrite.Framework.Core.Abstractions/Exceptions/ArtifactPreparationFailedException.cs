@@ -23,11 +23,11 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         /// <summary>
         /// Initializes a new instance of the <see cref="ArtifactPreparationFailedException"/> class.
         /// </summary>
-        public ArtifactPreparationFailedException(string externalCodeExecutorPreparationStep,
+        public ArtifactPreparationFailedException(string details,
                                                   IExecutionContext executionContext,
                                                   Exception? innerException = null)
-            : this(DemocriteExceptionSR.ArtifactPreparationFailed.WithArguments(externalCodeExecutorPreparationStep),
-                   externalCodeExecutorPreparationStep?.ToString() ?? string.Empty,
+            : this(DemocriteExceptionSR.ArtifactPreparationFailed.WithArguments(details),
+                   details?.ToString() ?? string.Empty,
                    executionContext.FlowUID,
                    executionContext.ParentExecutionId,
                    executionContext.CurrentExecutionId,
@@ -42,7 +42,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         /// Initializes a new instance of the <see cref="ArtifactPreparationFailedException"/> class.
         /// </summary>
         internal ArtifactPreparationFailedException(string message,
-                                                    string externalCodeExecutorPreparationStepString,
+                                                    string details,
                                                     Guid flowUid,
                                                     Guid? parentExecutionId,
                                                     Guid currentExecutionId,
@@ -50,7 +50,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
                                                     Exception? innerException = null) 
             : base(message, flowUid, parentExecutionId, currentExecutionId, errorCode, innerException)
         {
-            this.Data.Add(nameof(ArtifactPreparationFailedExceptionSurrogate.ExternalCodeExecutorPreparationStep), externalCodeExecutorPreparationStepString);
+            this.Data.Add(nameof(ArtifactPreparationFailedExceptionSurrogate.Details), details);
         }
 
         #endregion
@@ -78,7 +78,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         public Exception? InnerException { get; set; }
 
         [Id(6)]
-        public string ExternalCodeExecutorPreparationStep { get; set; }
+        public string Details { get; set; }
     }
 
     [RegisterConverter]
@@ -87,7 +87,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         public ArtifactPreparationFailedException ConvertFromSurrogate(in ArtifactPreparationFailedExceptionSurrogate surrogate)
         {
            return new ArtifactPreparationFailedException(surrogate.Message,
-                                                         surrogate.ExternalCodeExecutorPreparationStep,
+                                                         surrogate.Details,
                                                          surrogate.FlowUid,
                                                          surrogate.ParentExecutionId,
                                                          surrogate.CurrentExecutionId,
@@ -102,7 +102,7 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
                 Message = value.Message,
                 InnerException = value.InnerException,
                 ErrorCode = value.ErrorCode,
-                ExternalCodeExecutorPreparationStep = (string)value.Data[nameof(ArtifactPreparationFailedExceptionSurrogate.ExternalCodeExecutorPreparationStep)]!,
+                Details = (string)value.Data[nameof(ArtifactPreparationFailedExceptionSurrogate.Details)]!,
                 FlowUid = (Guid)value.Data[nameof(IExecutionContext.FlowUID)]!,
                 ParentExecutionId = (Guid?)value.Data[nameof(IExecutionContext.ParentExecutionId)],
                 CurrentExecutionId = (Guid)value.Data[nameof(IExecutionContext.CurrentExecutionId)]!,

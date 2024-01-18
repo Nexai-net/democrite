@@ -98,7 +98,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// Gets the full name of the vgrain interface.
         /// </summary>
         /// <remarks>
-        ///     MUST be resolvable by Type.Create
+        ///     MUST be resolvable by ArtifactType.Create
         /// </remarks>
         [Id(4)]
         public string VGrainInterfaceFullName { get; }

@@ -17,7 +17,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="Democrite.Framework.Builders.UnitTests"/>
+		<InternalsVisibleTo Include="Democrite.Framework.Builders.UnitTests" />
 	</ItemGroup>
 
 	<ItemGroup>

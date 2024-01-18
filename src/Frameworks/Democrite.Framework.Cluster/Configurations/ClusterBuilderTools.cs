@@ -25,7 +25,8 @@ namespace Democrite.Framework.Cluster.Configurations
             Default = new ClusterBuilderTools(new AssemblyInspector(),
                                               new AssemblyLoader(),
                                               new FileSystemHandler(),
-                                              new NetworkInspector());
+                                              new NetworkInspector(),
+                                              HashSHA256Service.Instance);
         }
 
         /// <summary>
@@ -34,12 +35,14 @@ namespace Democrite.Framework.Cluster.Configurations
         public ClusterBuilderTools(IAssemblyInspector assemblyInspector,
                                    IAssemblyLoader assemblyLoader,
                                    IFileSystemHandler fileSystemHandler,
-                                   INetworkInspector networkInspector)
+                                   INetworkInspector networkInspector,
+                                   IHashService hashService)
         {
             this.AssemblyInspector = assemblyInspector;
             this.AssemblyLoader = assemblyLoader;
             this.FileSystemHandler = fileSystemHandler;
             this.NetworkInspector = networkInspector;
+            this.HashService = hashService;
         }
 
         #endregion
@@ -65,6 +68,11 @@ namespace Democrite.Framework.Cluster.Configurations
         /// Gets the network inspector.
         /// </summary>
         public INetworkInspector NetworkInspector { get; }
+
+        /// <summary>
+        /// Gets the default hash service.
+        /// </summary>
+        public IHashService HashService { get; }
 
         /// <summary>
         /// Gets the default.

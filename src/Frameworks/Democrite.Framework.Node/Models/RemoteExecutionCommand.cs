@@ -17,8 +17,9 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="RemoteExecutionCommand{TContent}"/> class.
         /// </summary>
-        public RemoteExecutionCommand(Guid executionId, TContent? content)
+        public RemoteExecutionCommand(Guid flowUid, Guid executionId, TContent? content)
         {
+            this.FlowUid = flowUid;
             this.ExecutionId = executionId;
             this.Content = content;
         }
@@ -36,6 +37,11 @@ namespace Democrite.Framework.Node.Models
         /// Gets the content.
         /// </summary>
         public TContent? Content { get; }
+
+        /// <summary>
+        /// Gets the flow uid.
+        /// </summary>
+        public Guid FlowUid { get; }
 
         #endregion
     }

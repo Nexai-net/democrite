@@ -201,6 +201,12 @@ namespace Democrite.Framework.Node
         }
 
         /// <inheritdoc />
+        public Task RunWithInputAsync<TInput>(TInput? input, IExecutionContext<Guid> executionContext)
+        {
+            return RunAsync<NoneType, TInput>(input, executionContext);
+        }
+
+        /// <inheritdoc />
         public Task<TOutput?> RunAsync<TOutput>(IExecutionContext<Guid> executionContext)
         {
             return RunAsync<TOutput, NoneType>(NoneType.Instance, executionContext);

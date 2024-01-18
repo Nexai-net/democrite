@@ -7,6 +7,7 @@ namespace Democrite.Framework.Toolbox.Services
     using Democrite.Framework.Toolbox.Abstractions.Services;
 
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Security.Cryptography;
@@ -109,9 +110,15 @@ namespace Democrite.Framework.Toolbox.Services
 
             var allFiles = fileSystemHandler.SearchFiles(target.LocalPath, "*", recursive);
 
-            var hashFilesHashages = allFiles.OrderBy(f => f.LocalPath)
-                                            .Select(f => GetHash(f, fileSystemHandler, false, token).AsTask())
-                                            .ToArray();
+            return await GetHash(allFiles, fileSystemHandler, token);
+        }
+
+        /// <inheritdoc />
+        public async ValueTask<string> GetHash(IReadOnlyCollection<Uri> files, IFileSystemHandler fileSystemHandler, CancellationToken token = default)
+        {
+            var hashFilesHashages = files.OrderBy(f => f.LocalPath)
+                                         .Select(f => GetHash(f, fileSystemHandler, false, token).AsTask())
+                                         .ToArray();
 
             var results = await Task.WhenAll(hashFilesHashages);
 

@@ -465,6 +465,22 @@ This allow :
 > You can access those grain usign the classic orleans [IGrainFactory]() way. <br />
 > **BUT** it is better to use [IDemocriteExecutionHandler](#consume-democrite-cluster) who will use correctly and automatically the correct GrainId.
 
+### External Code VGrain
+
+With Democrite we can use other satellite program or script to perform jobs.<br />
+
+To do so you need simple steps:
+- Create Code artifact definitions
+- Using through a vgrain
+    - Use generic vgrain in the library **IGenericArtifactExecutableVGrain**
+    - Create your own vgrain by inherite from **ArtifactExecutableBaseVGrain<>** instead of **VGrainBase**
+
+#### Python
+
+A python package exist to handle the communication protocol with democrite [README.md](/src/Extensions/Dist/Python/README.md) <br />
+You can found a full sample [Here](/samples/PythonVGrains/) <br />
+
+
 ## Quick Start
 
 ### Nuget Packages

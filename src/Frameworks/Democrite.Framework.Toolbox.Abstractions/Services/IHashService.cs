@@ -34,5 +34,10 @@ namespace Democrite.Framework.Toolbox.Abstractions.Services
         /// Gets the hash of the <paramref name="target"/> file or folder
         /// </summary>
         ValueTask<string> GetHash(Uri target, IFileSystemHandler fileSystemHandler, bool recursive = false, CancellationToken token = default);
+
+        /// <summary>
+        /// Gets the hash of the files combined
+        /// </summary>
+        ValueTask<string> GetHash(IReadOnlyCollection<Uri> files, IFileSystemHandler fileSystemHandler, CancellationToken token = default);
     }
 }

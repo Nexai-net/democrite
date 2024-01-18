@@ -18,7 +18,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         /// <summary>
         /// Initializes a new instance of the <see cref="InvalidInputDemocriteException"/> class.
         /// </summary>
-        /// <param name="inputType">Type of the input provide.</param>
+        /// <param name="inputType">ArtifactType of the input provide.</param>
         /// <param name="expectedType">The expected type.</param>
         /// <param name="executionInformation">The execution source information to understand when this occured, sequence input, stage, ...</param>
         public InvalidInputDemocriteException(Type inputType,

@@ -106,7 +106,6 @@ namespace Democrite.Framework.Toolbox.Services
         /// <inheritdoc />
         public IReadOnlyCollection<string> Arguments { get; }
 
-
         /// <inheritdoc />
         public IObservable<string> StandardOutputObservable { get; }
 
@@ -155,14 +154,6 @@ namespace Democrite.Framework.Toolbox.Services
                     this._process.OutputDataReceived += Process_OutputDataReceived;
                     this._process.ErrorDataReceived += Process_ErrorDataReceived;
 
-                    var processTask = this._process.WaitForExitAsync(this._cancellationToken);
-
-                    this._processTask = processTask.ContinueWith(t =>
-                                                   {
-                                                       this.ExitCode = this._process.ExitCode;
-                                                       this._process = null;
-                                                   });
-
                     this._process.EnableRaisingEvents = true;
 
                     if (!this._process.Start())
@@ -172,6 +163,14 @@ namespace Democrite.Framework.Toolbox.Services
 
                     this._process.BeginOutputReadLine();
                     this._process.BeginErrorReadLine();
+
+                    var processTask = this._process.WaitForExitAsync(this._cancellationToken);
+
+                    this._processTask = processTask.ContinueWith(t =>
+                    {
+                        this.ExitCode = this._process.ExitCode;
+                        this._process = null;
+                    });
                 }
             }
             catch (Exception ex)
@@ -201,8 +200,11 @@ namespace Democrite.Framework.Toolbox.Services
                 process = this._process;
             }
 
-            if (process == null)
+            if (process == null && this.ExitCode == null)
                 throw new InvalidOperationException("Run process first");
+
+            if (process == null)
+                return Task.CompletedTask;
 
             return Task.Run(() => process.Kill(true), cancellationToken);
         }

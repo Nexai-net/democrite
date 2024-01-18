@@ -1,0 +1,20 @@
+[project]
+name = "democrite"
+version = "__VERSION__"
+authors = [
+  { name="Nexai", email="info@nexai.net" },
+]
+
+description = "Library use to construct VGrain to democrite servers"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/Nexai-net/democrite"
+Issues = "https://github.com/Nexai-net/democrite/issues"

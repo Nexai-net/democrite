@@ -131,5 +131,13 @@ namespace System.Collections.Generic
 
             return collection.AddLast(newNodeContent);
         }
+
+        /// <summary>
+        /// Aggregates the strings.
+        /// </summary>
+        public static string AggregateStrings(this IEnumerable<string> strings) 
+        {
+            return string.Join(Environment.NewLine, strings);
+        }
     }
 }
