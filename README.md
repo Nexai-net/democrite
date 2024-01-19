@@ -631,13 +631,35 @@ For example if the signal transport a value of type int i let pass.
 **Features Use**
 - Democrite RelayFilterDoor definition
 
+### PyhtonVGrains
+
+In the section [Sample/PythonVGrains](/samples/PythonVGrains/)
+
+**Use case**
+
+Use Python scripts inside democrite environment like VGrain standard
+
+> [!CAUTION]
+> In version 0.2.2 only local python script deployed with the democrite node as 'Content' is supported <br />
+> You goal is to be able to support different package provider, <br/>
+> in different format late on. (From api, zip, shared folder, resource embedded ...)
+
+**Features Use**
+- Democrite Artifact Definition, Packaging
+- External code executor (allow democrite to used external program as solver)
+
 ## Next
 
-(Processing) v 0.2.2-prerelease :
+(Processing) v 0.2.3-prerelease :
 
-- [ ] Fully integrate **Python** VGrain in Democrite environment
 - [ ] Configure trigger input source from an external service (support of pick mode)
 - [ ] Add method to reference the vgrain assembly in the system to be sure this one is loaded by orleans.
+- [ ] Call sequence from sequence
+- [ ] Condition stage to execute different stages base on a simple condition
+
+**v 0.2.2-prerelease:** <br />
+[Release Node](/docs/ReleaseNotes.md#022-prerelease)
+- [x] Fully integrate **Python** VGrain in Democrite environment
 
 **v 0.2.1-prerelease:** <br />
 [Release Note](/docs/ReleaseNotes.md#021-prerelease)
