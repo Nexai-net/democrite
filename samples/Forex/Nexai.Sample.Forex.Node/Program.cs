@@ -10,6 +10,7 @@ using Democrite.Framework.Core.Abstractions.Enums;
 using Democrite.Framework.Core.Abstractions.Sequence;
 using Democrite.Framework.Core.Abstractions.Triggers;
 using Democrite.Framework.Node.Abstractions.Configurations;
+using Democrite.Framework.Node.Configurations;
 using Democrite.Framework.Toolbox.Abstractions.Enums;
 using Democrite.VGrains.Web.Abstractions;
 
@@ -25,7 +26,7 @@ static SequenceDefinition CreateCollectorSequence(string currencyPair,
                                                   out TriggerDefinition triggerDefinition,
                                                   string cron = "* * * * *")
 {
-    var collectorSequence = Sequence.Build()
+    var collectorSequence = Sequence.Build("Fetch:" + currencyPair)
                                     .RequiredInput<Uri>()
                                     .Use<IHtmlCollectorVGrain>().Call((a, url, ctx) => a.FetchPageAsync(url, ctx)).Return
                                     .Use<IPriceInspectorVGrain>().Configure(currencyPair)
@@ -35,14 +36,13 @@ static SequenceDefinition CreateCollectorSequence(string currencyPair,
                                                                          .Call((a, data, ctx) => a.StoreAsync(data, ctx)).Return
                                     .Build();
 
-    triggerDefinition = Trigger.Cron(cron)// "* 9-18 * * mon-fri" // Every minutes between 9h and 18h UTC between monday and friday
+    triggerDefinition = Trigger.Cron(cron, "CronTick:" + currencyPair)// "* 9-18 * * mon-fri" // Every minutes between 9h and 18h UTC between monday and friday
                                
                                // Define what will be trigged
                                .AddTargetSequence(collectorSequence)
 
-                               .SetInputSource(input => input.StaticCollection(collectionsources)
-                                                             .PullMode(PullModeEnum.Circling)
-                                                             .Build())
+                               .SetOutput(input => input.StaticCollection(collectionsources)
+                                                             .PullMode(PullModeEnum.Circling))
                                .Build();
 
     return collectorSequence;
@@ -71,28 +71,28 @@ var valueEurChfStoredAboveAverage = Signal.Create("CurrencyPair_eur-chf_Stored_A
 var manualForceDoorFireing = Signal.Create("Manual_Force_Door_Fireing");
 
 var door = Door.Create("CheckPairAboveAverage")
-                     .Listen(valueEurUsdStoredAboveAverage, valueEurChfStoredAboveAverage)
-
-                     // Basic
-                     .UseLogicalAggregator(LogicEnum.And, TimeSpan.FromSeconds(10))
-
-                     // Advanced
-                     //.UseLogicalAggregator(b =>
-                     //{
-                     //    return b.Interval(TimeSpan.FromSeconds(0.5))
-                     //            .AssignVariableName("A", valueEurUsdStoredAboveAverage)
-                     //            .AssignVariableName("B", valueEurChfStoredAboveAverage)
-                     //            .AssignVariableName("C", manualForceDoorFireing)
-
-                     //            /* Fire (if A and B are signal in an interval of 0.5 second except if i was already fire in less than 0.5 sseconds)
-
-                     //                    Or
-
-                     //                    C
-                     //             */
-                     //            .Formula("(A & B & !this) | C");
-                     //})
-                     .Build();
+               .Listen(valueEurUsdStoredAboveAverage, valueEurChfStoredAboveAverage)
+               
+               // Basic
+               .UseLogicalAggregator(LogicEnum.And, TimeSpan.FromSeconds(10))
+               
+               // Advanced
+               //.UseLogicalAggregator(b =>
+               //{
+               //    return b.Interval(TimeSpan.FromSeconds(0.5))
+               //            .AssignVariableName("A", valueEurUsdStoredAboveAverage)
+               //            .AssignVariableName("B", valueEurChfStoredAboveAverage)
+               //            .AssignVariableName("C", manualForceDoorFireing)
+               
+               //            /* Fire (if A and B are signal in an interval of 0.5 second except if i was already fire in less than 0.5 sseconds)
+               
+               //                    Or
+               
+               //                    C
+               //             */
+               //            .Formula("(A & B & !this) | C");
+               //})
+               .Build();
 
 var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFile("appsettings.json", false),
                                  cfg =>
@@ -102,16 +102,17 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
 
                                         .SetupNodeMemories(m =>
                                         {
-                                            m.UseInMemoryTriggerReminderMemory()
-                                             .UseInMemoryVGrainStateMemory();
+                                            m.UseInMemory(StorageTypeEnum.All);
                                         })
+
+                                        .ExposeNodeToClient()
 
                                         .UseCronTriggers()
                                         .UseSignals()
 
                                         .ConfigureLogging(logging => logging.AddConsole())
 
-                                        .AddInMemoryMongoDefinitionProvider(m =>
+                                        .AddInMemoryDefinitionProvider(m =>
                                         {
                                             m.SetupTriggers(cron2MinEurUsdDefinition, cron2MinEurChfDefinition)
                                              .SetupSignals(valueEurChfStoredAboveAverage, valueEurUsdStoredAboveAverage, manualForceDoorFireing)

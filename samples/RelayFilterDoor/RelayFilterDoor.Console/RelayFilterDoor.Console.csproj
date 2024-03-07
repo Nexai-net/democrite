@@ -10,6 +10,6 @@
 	  <PackageReference Include="Democrite.Framework.Builders" />
 	  <PackageReference Include="Democrite.Framework.Node" />
 	  <PackageReference Include="Democrite.Framework.Node.Signals" />
-	  <PackageReference Include="Democrite.Framework.VGrains.DebugTools" />
+	  <PackageReference Include="Democrite.Framework.Bag.DebugTools" />
 	</ItemGroup>
 </Project>

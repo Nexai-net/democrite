@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<Import Project="../SharedFrameworkAssemblyInfo.props" />
 
@@ -13,14 +13,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="appsettings.json">
+		<Resource Include="appsettings.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+		</Resource>
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Democrite.Framework.Client" />
-		<PackageReference Include="Democrite.Framework.Node.Mongo" />
+		<PackageReference Include="Democrite.Framework.Extensions.Mongo" />
 		<PackageReference Include="Swashbuckle.AspNetCore" />
 	</ItemGroup>
 

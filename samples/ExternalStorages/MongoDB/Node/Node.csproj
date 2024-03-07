@@ -21,8 +21,8 @@
 	<ItemGroup>
 		<PackageReference Include="Democrite.Framework.Node" />
 		<PackageReference Include="Democrite.Framework.Node.Cron" />
-		<PackageReference Include="Democrite.Framework.Node.Mongo" />
-		<PackageReference Include="Democrite.Framework.VGrains.DebugTools" />
+		<PackageReference Include="Democrite.Framework.Extensions.Mongo" />
+		<PackageReference Include="Democrite.Framework.Bag.DebugTools" />
 		<PackageReference Include="OrleansDashboard" />
 	</ItemGroup>
 

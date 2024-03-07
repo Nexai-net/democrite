@@ -10,8 +10,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Democrite.Framework.VGrains.Web.Abstractions" />
-		<PackageReference Include="Democrite.Framework.VGrains.Web" />
+		<PackageReference Include="Democrite.Framework.Bag.Web.Abstractions" />
+		<PackageReference Include="Democrite.Framework.Bag.Web" />
 		<PackageReference Include="Democrite.Framework.Node.Signals" />
 		<PackageReference Include="Democrite.Framework.Node.Cron" />
 		<PackageReference Include="Democrite.Framework.Builders" />

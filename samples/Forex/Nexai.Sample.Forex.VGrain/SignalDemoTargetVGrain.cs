@@ -5,6 +5,7 @@
 namespace Nexai.Sample.Forex.VGrain
 {
     using Democrite.Framework.Core;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Toolbox.Extensions;
 
@@ -48,12 +49,12 @@ namespace Nexai.Sample.Forex.VGrain
         /// <inheritdoc />
         public async Task SubscribeToAsync(SignalDefinition signalDefinition)
         {
-            this._subscriptionId = await this._signalService.SubscribeAsync(signalDefinition.SignalId, this);
+            this._subscriptionId = await this._signalService.SubscribeAsync(signalDefinition.SignalId, this, default);
         }
 
         public async Task SubscribeToAsync(DoorDefinition doorDefinition)
         {
-            this._subscriptionId = await this._signalService.SubscribeAsync(doorDefinition.DoorId, this);
+            this._subscriptionId = await this._signalService.SubscribeAsync(doorDefinition.DoorId, this, default);
         }
 
         /// <inheritdoc />

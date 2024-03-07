@@ -10,7 +10,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Democrite.Framework.Core.Abstractions" />
-		<PackageReference Include="Democrite.Framework.VGrains.Web.Abstractions" />
+		<PackageReference Include="Democrite.Framework.Bag.Web.Abstractions" />
 	</ItemGroup>
 
 </Project>

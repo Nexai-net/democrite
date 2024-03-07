@@ -10,7 +10,6 @@ using Common;
 using Democrite.Framework;
 using Democrite.Framework.Configurations;
 using Democrite.Framework.Core.Abstractions.Enums;
-using Democrite.Framework.Node.Configurations;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -21,9 +20,12 @@ var node = DemocriteNode.Create((host, cfg) => cfg.AddJsonFile("appsettings.json
                                 b =>
                                 {
                                     b.WizardConfig()
-                                     
+
                                      // Setup mongo db as cluster meeting point
                                      .UseMongoCluster()
+
+                                     // Expose the current node to client communication
+                                     .ExposeNodeToClient()
 
                                      // Setup cron handlers
                                      .UseCronTriggers()

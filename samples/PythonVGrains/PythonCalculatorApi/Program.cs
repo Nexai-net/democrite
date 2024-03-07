@@ -59,7 +59,7 @@
                                               b.WizardConfig()
                                                .NoCluster()
                                                .ConfigureLogging(c => c.AddConsole())
-                                               .AddInMemoryMongoDefinitionProvider(p =>
+                                               .AddInMemoryDefinitionProvider(p =>
                                                {
                                                    p.SetupArtifacts(oneShotDef, deamonDef, complexDef, noResultDef);
                                                });

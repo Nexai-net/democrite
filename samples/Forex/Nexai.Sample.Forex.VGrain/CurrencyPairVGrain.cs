@@ -8,7 +8,6 @@ namespace Nexai.Sample.Forex.VGrain
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 
@@ -64,7 +63,7 @@ namespace Nexai.Sample.Forex.VGrain
                 if (this.State!.Count % 10 == 0)
                     await PushStateAsync(context.CancellationToken);
 
-                await this._signalService.Fire("CurrencyPair_" + this.State!.Configuration + "_Stored_Above_Average", this);
+                await this._signalService.Fire("CurrencyPair_" + this.State!.Configuration + "_Stored_Above_Average", context.CancellationToken, this);
             }
         }
 

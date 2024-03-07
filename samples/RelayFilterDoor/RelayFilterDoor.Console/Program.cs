@@ -6,7 +6,6 @@ using Democrite.Framework.Builders.Signals;
 using Democrite.Framework.Configurations;
 using Democrite.Framework.Core.Abstractions.Enums;
 using Democrite.Framework.Core.Abstractions.Signals;
-using Democrite.Framework.Node.Configurations;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -26,11 +25,10 @@ var loopDoor = Door.Create("loopEvery10sec")
                    })
                    .Build();
 
-var numberDoorSource = Trigger.Door(loopDoor)
+var numberDoorSource = Trigger.Door(loopDoor, "NumberSource")
                               .AddTargetSignal(signalAndTriggerPopulate.SignalId)
-                              .SetInputSource(s => s.StaticCollection(new[] { 0, 1, 2, 3, 4, 5 })
-                                                    .PullMode(PullModeEnum.Circling)
-                                                    .Build())
+                              .SetOutput(s => s.StaticCollection(new[] { 0, 1, 2, 3, 4, 5 })
+                                                    .PullMode(PullModeEnum.Circling))
                               .Build();
 
 var oodDoor = Door.Create("oodDoorFilter")
@@ -73,7 +71,7 @@ var node = DemocriteNode.Create(b =>
 
      .ShowDoors(allDoors)
 
-     .AddInMemoryMongoDefinitionProvider(b =>
+     .AddInMemoryDefinitionProvider(b =>
      {
          b.SetupSignals(signalInit,
                         signalEveryMin,
@@ -92,7 +90,7 @@ await using (node)
     await node.StartUntilEndAsync((service, execHandler, token) =>
     {
         var signalService = service.GetRequiredService<ISignalService>();
-        signalService.Fire(signalInit.SignalId);
+        signalService.Fire(signalInit.SignalId, token);
 
         return Task.CompletedTask;
     });

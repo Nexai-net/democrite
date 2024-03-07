@@ -5,6 +5,7 @@
 namespace Nexai.Sample.Forex.VGrain.Abstractions
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
 
     /// <summary>

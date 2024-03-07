@@ -10,8 +10,8 @@
 
 	<ItemGroup>
 	  <PackageReference Include="Democrite.Framework.Builders" />
-	  <PackageReference Include="Democrite.Framework.Node.Mongo.Abstractions" />
-	  <PackageReference Include="Democrite.Framework.VGrains.DebugTools" />
+	  <PackageReference Include="Democrite.Framework.Extensions.Mongo.Abstractions" />
+	  <PackageReference Include="Democrite.Framework.Bag.DebugTools" />
 	  <PackageReference Include="MongoDB.Driver" />
 	</ItemGroup>
 

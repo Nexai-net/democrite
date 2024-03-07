@@ -8,27 +8,26 @@
 
 using Common;
 
+using Democrite.Framework.Bag.DebugTools;
 using Democrite.Framework.Builders;
 using Democrite.Framework.Core.Abstractions.Enums;
-using Democrite.Framework.Node.Mongo.Abstractions;
-using Democrite.Framework.Node.Mongo.Models;
-using Democrite.Framework.VGrains.DebugTools;
+using Democrite.Framework.Extensions.Mongo.Abstractions;
+using Democrite.Framework.Extensions.Mongo.Models;
 
 using MongoDB.Driver;
 
 var increaseSequenceUid = new Guid("3E05942C-AB97-4F3E-92CF-2BE0D3E68DC9");
-var increaseSequence = Sequence.Build(increaseSequenceUid)
+var increaseSequence = Sequence.Build("DebugDisplay", fixUid: increaseSequenceUid)
                                .RequiredInput<string>()
                                .Use<ICounterVGrain>().Call((g, key, ctx) => g.Increase(key, ctx)).Return
                                .Use<IDisplayInfoVGrain>().Call((g, o, ctx) => g.DisplayCallInfoAsync(o, ctx)).Return   
                                .Build();
 
 var timeUid = new Guid("67B799EB-01D8-4475-88F4-95C912AC4611");
-var timer = Trigger.Cron("* * * * *", timeUid)
+var timer = Trigger.Cron("* * * * *", "MinutTimer", fixUid: timeUid)
                    .AddTargetSequence(increaseSequence)
-                   .SetInputSource(t => t.StaticCollection(new[] { "A", "B", "Other" })
-                                         .PullMode(PullModeEnum.Random)
-                                         .Build())
+                   .SetOutput(t => t.StaticCollection(new[] { "A", "B", "Other" })
+                                       .PullMode(PullModeEnum.Random))
                    .Build();
 
 DemocriteMongoDefaultSerializerConfig.SetupSerializationConfiguration();
