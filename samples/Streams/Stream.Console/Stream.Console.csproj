@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="../SharedFrameworkAssmblyInfo.props" />
+
+	<PropertyGroup>
+		<OutputType>exe</OutputType>
+	</PropertyGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="Democrite.Framework.Bag.DebugTools" />
+	  <PackageReference Include="Democrite.Framework.Bag.Toolbox" />
+	  <PackageReference Include="Democrite.Framework.Builders" />
+	  <PackageReference Include="Democrite.Framework.Node" />
+	  <PackageReference Include="Democrite.Framework.Node.Cron" />
+	  <PackageReference Include="Democrite.Framework.Node.Signals" />
+	  <PackageReference Include="Democrite.Framework.Node.StreamQueue" />
+	</ItemGroup>
+</Project>

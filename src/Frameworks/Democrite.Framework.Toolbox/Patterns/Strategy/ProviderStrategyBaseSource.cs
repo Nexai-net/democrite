@@ -16,6 +16,7 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
     using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
+    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -25,11 +26,13 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <seealso cref="IProviderStrategySource{T, TKey}" />
-    public abstract class ProviderStrategyBaseSource<TValue, TKey> : SupportBaseInitialization, IProviderStrategySource<TValue, TKey>
+    public abstract class ProviderStrategyBaseSource<TValue, TKey> : SupportBaseInitialization<IServiceProvider>, IProviderStrategySource<TValue, TKey>
         where TValue : class
         where TKey : notnull
     {
         #region Fields
+
+        private readonly IServiceProvider _serviceProvider;
 
         private readonly Dictionary<TKey, TValue> _cachedData;
         private readonly ReaderWriterLockSlim _dataCacheLock;
@@ -43,8 +46,11 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         /// <summary>
         /// Initializes a new instance of the <see cref="ProviderStrategyBaseSource{TValue, TKey}"/> class.
         /// </summary>
-        protected ProviderStrategyBaseSource(IEnumerable<(TKey key, TValue value)>? initValues = null)
+        protected ProviderStrategyBaseSource(IServiceProvider serviceProvider, 
+                                             IEnumerable<(TKey key, TValue value)>? initValues = null)
         {
+            this._serviceProvider = serviceProvider;
+
             var readOnlyInitValues = initValues?.Select(kv => new KeyValuePair<TKey, TValue>(kv.key, kv.value))
                                                ?? EnumerableHelper<KeyValuePair<TKey, TValue>>.ReadOnly;
 
@@ -87,25 +93,48 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         #region Methods
 
         /// <inheritdoc />
-        public virtual ValueTask<(bool Success, TValue? Result)> TryGetDataAsync(TKey key, CancellationToken token)
+        public virtual async ValueTask<IReadOnlyCollection<TValue>> GetAllValuesAsync(CancellationToken token)
         {
+            await EnsureProviderIsInitialized();
+
+            this._dataCacheLock.EnterReadLock();
+            try
+            {
+                var result = this._cachedData.Select(kv => kv.Value)
+                                             .ToArray();
+
+                return result;
+            }
+            finally
+            {
+                this._dataCacheLock.ExitReadLock();
+            }
+        }
+
+        /// <inheritdoc />
+        public virtual async ValueTask<(bool Success, TValue? Result)> TryGetDataAsync(TKey key, CancellationToken token)
+        {
+            await EnsureProviderIsInitialized();
+
             this._dataCacheLock.EnterReadLock();
             try
             {
                 if (this._cachedData.TryGetValue(key, out var cachedValue))
-                    return ValueTask.FromResult<(bool Success, TValue? Result)>((Success: true, Result: cachedValue));
+                    return (Success: true, Result: cachedValue);
             }
             finally
             {
                 this._dataCacheLock.ExitReadLock();
             }
 
-            return ValueTask.FromResult<(bool Success, TValue? Result)>((false, default(TValue)));
+            return (false, default(TValue));
         }
 
         /// <inheritdoc />
-        public virtual ValueTask<IReadOnlyCollection<TValue>> GetValuesAsync(Expression<Func<TValue, bool>> filterExpression, Func<TValue, bool> filter, CancellationToken token)
+        public virtual async ValueTask<IReadOnlyCollection<TValue>> GetValuesAsync(Expression<Func<TValue, bool>> filterExpression, Func<TValue, bool> filter, CancellationToken token)
         {
+            await EnsureProviderIsInitialized();
+
             this._dataCacheLock.EnterReadLock();
             try
             {
@@ -113,7 +142,7 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
                                              .Select(kv => kv.Value)
                                              .ToArray();
 
-                return ValueTask.FromResult<IReadOnlyCollection<TValue>>(result);
+                return result;
             }
             finally
             {
@@ -122,8 +151,10 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         }
 
         /// <inheritdoc />
-        public virtual ValueTask<TValue?> GetFirstValueAsync(Expression<Func<TValue, bool>> filterExpression, Func<TValue, bool> filter, CancellationToken token)
+        public virtual async ValueTask<TValue?> GetFirstValueAsync(Expression<Func<TValue, bool>> filterExpression, Func<TValue, bool> filter, CancellationToken token)
         {
+            await EnsureProviderIsInitialized();
+
             this._dataCacheLock.EnterReadLock();
             try
             {
@@ -131,7 +162,7 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
                                              .Select(kv => kv.Value)
                                              .FirstOrDefault();
 
-                return ValueTask.FromResult(result);
+                return result;
             }
             finally
             {
@@ -140,8 +171,10 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         }
 
         /// <inheritdoc />
-        public virtual ValueTask<IReadOnlyCollection<TValue>> GetValuesAsync(IEnumerable<TKey> keys, CancellationToken token)
+        public virtual async ValueTask<IReadOnlyCollection<TValue>> GetValuesAsync(IEnumerable<TKey> keys, CancellationToken token)
         {
+            await EnsureProviderIsInitialized();
+
             this._dataCacheLock.EnterReadLock();
             try
             {
@@ -150,7 +183,7 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
                                   .Select(k => this._cachedData[k])
                                   .ToReadOnly();
 
-                return ValueTask.FromResult(results);
+                return results;
             }
             finally
             {
@@ -159,23 +192,42 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         }
 
         /// <inheritdoc />
-        public virtual ValueTask ForceUpdateAsync(CancellationToken token)
+        public async ValueTask ForceUpdateAsync(CancellationToken token)
+        {
+            await EnsureProviderIsInitialized();
+            await ForceUpdateAfterInitAsync(token);
+        }
+
+        /// <inheritdoc />
+        protected sealed override async ValueTask OnInitializingAsync(IServiceProvider? serviceProvider, CancellationToken token) 
+        {
+            await OnProviderInitializedAsync(serviceProvider, token);
+            await ForceUpdateAfterInitAsync(token);
+        }
+
+        /// <summary>
+        /// Forces the update (all initialization have been done doing it could create a dead lock).
+        /// </summary>
+        protected virtual ValueTask ForceUpdateAfterInitAsync(CancellationToken token)
         {
             return ValueTask.CompletedTask;
         }
 
-        /// <inheritdoc />
-        protected sealed override async ValueTask OnInitializedAsync<TState>(TState? _, CancellationToken token) 
-            where TState : default
-        {
-            await OnInitializedAsync(token);
-            await ForceUpdateAsync(token);
-        }
-
         #region Tools
 
+        /// <summary>
+        /// Ensures the provider is initialized.
+        /// </summary>
+        protected ValueTask EnsureProviderIsInitialized()
+        {
+            if (this.IsInitialized)
+                return ValueTask.CompletedTask;
+
+            return InitializationAsync(this._serviceProvider, default);
+        }
+
         /// <inheritdoc />
-        protected virtual ValueTask OnInitializedAsync(CancellationToken token)
+        protected virtual ValueTask OnProviderInitializedAsync(IServiceProvider? serviceProvider, CancellationToken token)
         {
             return ValueTask.CompletedTask;
         }

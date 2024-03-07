@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Cron
 {
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Triggers;
+    using Democrite.Framework.Node.Triggers;
 
     using Microsoft.Extensions.Logging;
 
@@ -19,15 +20,8 @@ namespace Democrite.Framework.Node.Cron
     /// Virtual Grain Service instanciate and launch on all silo start used to start <see cref="ICronTriggerHandlerVGrain"/> by cron setups
     /// </summary>
     [DemocriteSystemVGrain]
-    internal sealed class CronVGrainService : GrainService, ICronVGrainService
+    internal sealed class CronVGrainService : TriggerBaseGrainService<ICronTriggerHandlerVGrain>, ICronVGrainService
     {
-        #region Fields
-
-        private readonly ITriggerDefinitionProvider _triggerDefinitionProvider;
-        private readonly IGrainFactory _grainFactory;
-
-        #endregion
-
         #region Ctor
 
         /// <summary>
@@ -37,53 +31,10 @@ namespace Democrite.Framework.Node.Cron
                                  Silo silo,
                                  ILoggerFactory loggerFactory,
                                  IGrainFactory grainFactory,
-                                 ITriggerDefinitionProvider triggerDefinitionProvider)
-            : base(id, silo, loggerFactory)
+                                 ITriggerDefinitionProvider triggerDefinitionProvider) 
+            : base(id, silo, loggerFactory, grainFactory, triggerDefinitionProvider, TriggerTypeEnum.Cron)
         {
-            this._triggerDefinitionProvider = triggerDefinitionProvider;
-            this._grainFactory = grainFactory;
-
-            this._triggerDefinitionProvider.DataChanged -= TriggerDefinitionProvider_DataChanged;
-            this._triggerDefinitionProvider.DataChanged += TriggerDefinitionProvider_DataChanged;
         }
-
-        #endregion
-
-        #region Methods
-
-        /// <inheritdoc />
-        public override async Task Start()
-        {
-            await base.Start();
-            await LaunchTriggerHandlersAsync();
-        }
-
-        #region Tools
-
-        /// <summary>
-        /// Raised when the <see cref="ITriggerDefinitionProvider"/> notify a change in the definitions.
-        /// </summary>
-        private async void TriggerDefinitionProvider_DataChanged(object? sender, IReadOnlyCollection<Guid> definitionThatChanged)
-        {
-            await LaunchTriggerHandlersAsync();
-        }
-
-        /// <summary>
-        /// Activate the trigger handlers <see cref="ICronTriggerHandlerVGrain"/> if missing on the cluster.
-        /// </summary>
-        private async Task LaunchTriggerHandlersAsync()
-        {
-            var crons = await this._triggerDefinitionProvider.GetValuesAsync(t => t.TriggerType == TriggerTypeEnum.Cron);
-
-            var cronTriggerVGrainTasks = crons.Select(c => this._grainFactory.GetGrain<ICronTriggerHandlerVGrain>(c.Uid))
-                                              .Select(grain => grain.UpdateAsync())
-                                              .ToArray();
-
-            if (cronTriggerVGrainTasks.Any())
-                await Task.WhenAll(cronTriggerVGrainTasks);
-        }
-
-        #endregion
 
         #endregion
     }

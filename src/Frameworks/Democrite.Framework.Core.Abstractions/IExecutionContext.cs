@@ -4,6 +4,9 @@
 
 namespace Democrite.Framework.Core.Abstractions
 {
+    using Democrite.Framework.Core.Abstractions.Models.Surrogates;
+    using Democrite.Framework.Core.Abstractions.Repositories;
+
     using Microsoft.Extensions.Logging;
 
     /// <summary>
@@ -66,6 +69,36 @@ namespace Democrite.Framework.Core.Abstractions
         /// Duplicates current <see cref="IExecutionContext"/> and attach the context info <paramref name="contextInfo"/>
         /// </summary>
         IExecutionContext DuplicateWithContext(object? contextInfo, Type contextType);
+
+        /// <summary>
+        /// Try to the pusll data stored in the context carried throught flow execution
+        /// </summary>
+        TContextData? TryGetContextData<TContextData>(IDemocriteSerializer serializer) where TContextData : struct;
+
+        /// <summary>
+        /// Try to the push data stored in the context carried throught flow execution
+        /// </summary>
+        /// <remarks>
+        ///     A data is identify by its type, except when <paramref name="override"/> is true the data will not be replaced
+        /// </remarks>
+        bool TryPushContextData<TContextData>(TContextData contextData,
+                                              bool @override,
+                                              IDemocriteSerializer serializer) where TContextData : struct;
+
+        /// <summary>
+        /// Clear all context data
+        /// </summary>
+        void ClearContextData();
+
+        /// <summary>
+        /// Clear all context data of type <paramref name="dataType"/>
+        /// </summary>
+        void ClearContextData(Type dataType);
+
+        /// <summary>
+        /// Clear all context data of type <paramref name="dataType"/>
+        /// </summary>
+        void ClearContextData<TContextData>() where TContextData : struct;
 
         #endregion
     }

@@ -208,7 +208,7 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
 
             if (s_autoValidation.TryGetValue(monoStep.GetType(), out var validator))
             {
-                Check.ThatCode(() => validator(currentVersion, currentFlow!, stageDef, level, currentLevelIndex, stageValidator, flowStages)).DoesNotThrow();
+                validator(currentVersion, currentFlow!, stageDef, level, currentLevelIndex, stageValidator, flowStages);
                 return;
             }
 

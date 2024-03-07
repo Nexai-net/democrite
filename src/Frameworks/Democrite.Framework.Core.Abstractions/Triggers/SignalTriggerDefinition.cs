@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Triggers
 {
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Core.Abstractions.Signals;
 
@@ -26,14 +27,14 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public SignalTriggerDefinition(Guid uid,
-                                       IEnumerable<Guid> targetSequenceIds,
-                                       IEnumerable<SignalId> targetSignalIds,
+                                       string displayName,
+                                       IEnumerable<TriggerTargetDefinition> targets,
                                        bool enabled,
                                        SignalId? listenSignal,
                                        DoorId? listenDoor,
-                                       InputSourceDefinition? inputSourceDefinition = null)
+                                       DataSourceDefinition? triggerGlobalOutputDefinition = null)
 
-            : base(uid, TriggerTypeEnum.Signal, targetSequenceIds, targetSignalIds, enabled, inputSourceDefinition)
+            : base(uid, displayName, TriggerTypeEnum.Signal, targets, enabled, triggerGlobalOutputDefinition)
         {
             this.ListenSignal = listenSignal;
             this.ListenDoor = listenDoor;

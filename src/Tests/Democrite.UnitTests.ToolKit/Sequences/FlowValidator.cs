@@ -69,7 +69,7 @@ namespace Democrite.UnitTests.ToolKit.Sequences
         }
 
         /// <summary>
-        /// Create a dedicated stage hierarchy
+        /// Get a dedicated stage hierarchy
         /// </summary>
         private static FlowValidator FlowHierachy(IReadOnlyCollection<FlowStage> stages)
         {
@@ -82,7 +82,7 @@ namespace Democrite.UnitTests.ToolKit.Sequences
         }
 
         /// <summary>
-        /// Create a dedicated stage hierarchy
+        /// Get a dedicated stage hierarchy
         /// </summary>
         private static void FlowHierachy(FlowStage? parent,
                                          IReadOnlyDictionary<Guid, IReadOnlyCollection<FlowStage>> indexedChildrenByParent)

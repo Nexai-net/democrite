@@ -9,8 +9,6 @@ namespace Democrite.Framework.Core
     using Democrite.Framework.Toolbox.Patterns.Strategy;
 
     using System;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// <see cref="SequenceDefinition"/> provider register in memory
@@ -18,6 +16,18 @@ namespace Democrite.Framework.Core
     /// <seealso cref="ISequenceDefinitionSourceProvider" />
     public sealed class InMemorySequenceDefinitionProvider : ProviderStrategyBaseSource<SequenceDefinition, Guid>, ISequenceDefinitionSourceProvider
     {
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InMemorySequenceDefinitionProvider"/> class.
+        /// </summary>
+        public InMemorySequenceDefinitionProvider(IServiceProvider serviceProvider)
+            : base(serviceProvider)
+        {
+        }
+
+        #endregion
+
         #region Methods
 
         /// <summary>

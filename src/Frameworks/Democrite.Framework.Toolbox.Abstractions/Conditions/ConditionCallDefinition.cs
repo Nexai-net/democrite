@@ -94,9 +94,9 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <inheritdoc />
         protected override int OnGetHashCode()
         {
-            return (this.Instance?.GetHashCode() ?? 0) ^
-                   (this.MethodName?.GetHashCode() ?? 0) ^
-                   (this.Arguments.OrderBy(a => (a?.GetHashCode() ?? 0)).Aggregate(0, (acc, a) => acc + (a?.GetHashCode() ?? 0)));
+            return HashCode.Combine(this.Instance,
+                                    this.MethodName,
+                                    (this.Arguments.OrderBy(a => (a?.GetHashCode() ?? 0)).Aggregate(0, (acc, a) => acc + (a?.GetHashCode() ?? 0))));
         }
 
         #endregion

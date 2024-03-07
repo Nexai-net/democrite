@@ -9,17 +9,17 @@ namespace Democrite.Framework.Node.UnitTests
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
+    using Democrite.Framework.Core.Extensions;
     using Democrite.Framework.Core.Models;
     using Democrite.Framework.Core.Services;
     using Democrite.Framework.Node.Abstractions.Models;
-    using Democrite.Framework.Node.Models;
+    using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Node.UnitTests.Extensions;
     using Democrite.Framework.Toolbox;
     using Democrite.Framework.Toolbox.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
-    using Democrite.Framework.Toolbox.Models;
     using Democrite.Framework.Toolbox.Services;
     using Democrite.Test.Interfaces;
     using Democrite.Test.VGrains;
@@ -29,16 +29,17 @@ namespace Democrite.Framework.Node.UnitTests
     using Democrite.UnitTests.ToolKit.Services;
     using Democrite.UnitTests.ToolKit.VGrains.Transformers;
 
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
     using Moq;
 
     using NFluent;
 
+    using NSubstitute;
+
     using Orleans.Runtime;
     using Orleans.TestingHost;
-
-    using System.Collections;
 
     using Xunit.Abstractions;
 
@@ -77,7 +78,7 @@ namespace Democrite.Framework.Node.UnitTests
         [Fact]
         public async Task Manual_Full_Basic_Run()
         {
-            var def = Sequence.Build()
+            var def = Sequence.Build("Baisc")
                               .RequiredInput<string>()
                               .Use<ITestExtractEmailTransformer>().Call((a, input, ctx) => a.ExtractEmailsAsync(input, ctx)).Return
                               .Build();
@@ -88,6 +89,8 @@ namespace Democrite.Framework.Node.UnitTests
             var vgrainProvider = new Mock<IVGrainProvider>(MockBehavior.Strict);
             var logFactory = new Mock<ILoggerFactory>(MockBehavior.Strict);
             var objectConvertMock = new Mock<IObjectConverter>(MockBehavior.Strict);
+            var democriteSerializerMock = Substitute.For<IDemocriteSerializer>();
+            var threadStageExecutorProviderMock = (ISequenceExecutorThreadStageProvider)SequenceExecutorThreadStageProviderMock.Create();
             var timeManager = new TimeManager();
 
             var executionLog = new TestDiagnosticLogConsumer();
@@ -123,7 +126,7 @@ namespace Democrite.Framework.Node.UnitTests
             logFactory.Setup(l => l.CreateLogger(It.IsAny<string>()))
                        .Returns((string name) => rootLogger.CreateChild(name));
 
-            sequenceProvider.Setup(w => w.GetFirstValueByIdAsync(def.Uid)).Returns(ValueTask.FromResult<SequenceDefinition?>(def));
+            sequenceProvider.Setup(w => w.GetFirstValueByIdAsync(def.Uid, It.IsAny<CancellationToken>())).Returns(ValueTask.FromResult<SequenceDefinition?>(def));
 
             vgrainProvider.Setup(w => w.GetVGrainAsync(It.IsAny<Type>(), It.IsAny<object?>(), It.IsAny<IExecutionContext>(), It.IsAny<ILogger>()))
                          .Returns((Type type, object? input, IExecutionContext ctxVGrain, ILogger logger) =>
@@ -142,13 +145,15 @@ namespace Democrite.Framework.Node.UnitTests
                                                       vgrainProvider.Object,
                                                       persistentState.Object,
                                                       timeManager,
-                                                      objectConvertMock.Object);
+                                                      objectConvertMock.Object,
+                                                      democriteSerializerMock,
+                                                      threadStageExecutorProviderMock);
 
             var result = await executor.RunAsync<string[], string>(EMAIL_SAMPLE_TEST, execCtx);
 
             Check.That(result).IsNotNull().And.ContainsExactly(EMAIL_A, EMAIL_B).And.CountIs(2);
 
-            sequenceProvider.Verify(w => w.GetFirstValueByIdAsync(def.Uid), Times.Exactly(2));
+            sequenceProvider.Verify(w => w.GetFirstValueByIdAsync(def.Uid, It.IsAny<CancellationToken>()), Times.Exactly(2));
             vgrainProvider.Verify(w => w.GetVGrainAsync(It.IsAny<Type>(), It.IsAny<object?>(), It.IsAny<IExecutionContext>(), It.IsAny<ILogger>()), Times.Once);
 
             Check.That(stateStack).IsNotNull().And.CountIs(2);
@@ -165,7 +170,7 @@ namespace Democrite.Framework.Node.UnitTests
         [Fact(Timeout = 200_000)]
         public async Task TestCluster_Cluster_Basic_Run()
         {
-            var def = Sequence.Build()
+            var def = Sequence.Build("Baisc")
                               .RequiredInput<string>()
                               .Use<ITestExtractEmailTransformer>().Call((a, input, ctx) => a.ExtractEmailsAsync(input, ctx)).Return
                               .Build();
@@ -241,7 +246,7 @@ namespace Democrite.Framework.Node.UnitTests
             var extractTagStageUid = Guid.NewGuid();
             var tagQualiferStageUid = Guid.NewGuid();
 
-            var def = Sequence.Build()
+            var def = Sequence.Build("Foreach")
                               .NoInput()
                               .Use<IHtmlProviderTestTransformer>(cfg => cfg.Uid(getHtmlStageUid))
                                                                        .Call((a, ctx) => a.GetHtmlAsync(ctx))
@@ -324,7 +329,7 @@ namespace Democrite.Framework.Node.UnitTests
             where TResult : IExecutionResult
         {
             var defManager = new Mock<ISequenceDefinitionProvider>();
-            defManager.Setup(s => s.GetFirstValueByIdAsync(def.Uid)).ReturnsAsync(def);
+            defManager.Setup(s => s.GetFirstValueByIdAsync(def.Uid, It.IsAny<CancellationToken>())).ReturnsAsync(def);
 
             var executionLog = new TestDiagnosticLogConsumer();
 
@@ -340,6 +345,11 @@ namespace Democrite.Framework.Node.UnitTests
                 controller = remote.Build();
             });
 
+            var localServiceBuilder = new ServiceCollection();
+            DemocriteCoreServicesExtensions.SetupCoreServices(localServiceBuilder);
+
+            var localServices = localServiceBuilder.BuildServiceProvider();
+
             builder.AddSiloBuilderConfigurator<DemocriteTestClusterServicesConfiguration>();
 
             var cluster = builder.Build();
@@ -350,7 +360,7 @@ namespace Democrite.Framework.Node.UnitTests
 
                 await cluster.DeployAsync();
 
-                var client = new DemocriteExecutionHandler(new VGrainProvider(cluster.GrainFactory, new VGrainIdFactory()));
+                var client = new DemocriteExecutionHandler(new VGrainProvider(cluster.GrainFactory, localServices.GetRequiredService<IVGrainIdFactory>()));// new VGrainIdFactory()));
 
                 var result = await exec(client);
 

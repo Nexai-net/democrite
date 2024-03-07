@@ -35,4 +35,21 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurat
                            IServiceCollection serviceCollection,
                            ILogger logger);
     }
+
+    /// <summary>
+    /// Root definition of a auto configurator
+    /// </summary>
+    public interface IAutoKeyConfigurator<TWizard> : IAutoConfigurator
+             where TWizard : IBuilderDemocriteBaseWizard
+    {
+        /// <summary>
+        /// Automatics configure democrite section.
+        /// </summary>
+        void AutoConfigure(TWizard democriteBuilderWizard,
+                           IConfiguration configuration,
+                           IServiceCollection serviceCollection,
+                           ILogger logger,
+                           string sourceConfigurationKey,
+                           string targetKey);
+    }
 }

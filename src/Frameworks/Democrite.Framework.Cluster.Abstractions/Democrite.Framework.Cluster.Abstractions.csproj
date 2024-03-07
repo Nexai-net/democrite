@@ -7,7 +7,7 @@
 		<IsPackable>true</IsPackable>
 		<Description>Democrite generic cluster library use by node and client side.</Description>
 
-		<PackageTags>Democrite;Multi-VGrain;Framework;Cluster;Abstract</PackageTags>
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agents;Framework;Cluster;Abstract</PackageTags>
 
 	</PropertyGroup>
 	

@@ -38,7 +38,7 @@ namespace Democrite.Framework.Toolbox.Models
             this._objectConverterOptions = converterOptions ?? new ObjectConverterOptions();
 
             this._converters = converters.SelectMany(c => c.ManagedSourceTypes
-                                                           .SelectMany(t => t.GetTypeIntoExtension().GetAllCompatibleTypes())
+                                                           .SelectMany(t => t.GetTypeInfoExtension().GetAllCompatibleTypes())
                                                            .Select(t => (Type: t, Converter: c)))
                                          .Distinct()
                                          .GroupBy(kv => kv.Type)
@@ -58,14 +58,14 @@ namespace Democrite.Framework.Toolbox.Models
                 return true;
             }
 
-            result = (TConvertedObject?)typeof(TConvertedObject).GetTypeIntoExtension().Default;
+            result = (TConvertedObject?)typeof(TConvertedObject).GetTypeInfoExtension().Default;
             return false;
         }
 
         /// <inheritdoc />
         public bool TryConvert(in object? source, Type targetType, out object? result)
         {
-            result = targetType.GetTypeIntoExtension().Default;
+            result = targetType.GetTypeInfoExtension().Default;
 
             if (source is null)
                 return true;

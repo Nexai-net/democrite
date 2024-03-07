@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
 {
     using AutoFixture;
 
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Signals.Doors;
 

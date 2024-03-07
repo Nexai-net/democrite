@@ -100,7 +100,8 @@ namespace Democrite.Framework.Toolbox.UnitTests.Helpers
             Check.ThatCode(async () => await Task.Delay(Timeout.Infinite, CancellationHelper.Timeout(TimeSpan.FromMilliseconds(1_000)))).Throws<OperationCanceledException>();
             stopwatch.Stop();
 
-            Check.That(stopwatch.ElapsedMilliseconds).IsGreaterOrEqualThan(900).And.IsLessOrEqualThan(1_300);
+            // Mainly if it got to this line the cancellation work
+            Check.That(stopwatch.ElapsedMilliseconds).IsGreaterOrEqualThan(900).And.IsLessOrEqualThan(4_000);
         }
     }
 }

@@ -4,9 +4,8 @@
 
 namespace Democrite.UnitTests.ToolKit.Remoting
 {
-    using Democrite.Framework.Toolbox;
     using Democrite.Framework.Toolbox.Abstractions.Extensions.Types;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.UnitTests.ToolKit.Extensions;
     using Democrite.UnitTests.ToolKit.Models;
 
@@ -237,7 +236,7 @@ namespace Democrite.UnitTests.ToolKit.Remoting
 
                 if (returnType != null && (resultInst?.GetType().IsAssignableTo(returnType) ?? false) == false)
                 {
-                    var extendInfo = returnType.GetTypeIntoExtension();
+                    var extendInfo = returnType.GetTypeInfoExtension();
 
                     if (extendInfo.IsTask || extendInfo.IsValueTask)
                     {

@@ -14,7 +14,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
     /// Base implementation of <see cref="IArtifactResourceDefinition"/>
     /// </summary>
     /// <seealso cref="IArtifactResourceDefinition" />
-    public abstract class ArtifactDefinition : ISupportDebugDisplayName
+    public abstract class ArtifactDefinition : ISupportDebugDisplayName, IDefinition
     {
         #region Ctor
 
@@ -78,6 +78,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
             return $"{this.Uid}-{this.DisplayName}-{this.Version}-{this.Description?.Take(21)}";
         }
 
+        /// <inheritdoc />
         public bool Validate(ILogger logger, bool matchWarningAsError = false)
         {
             throw new NotImplementedException();

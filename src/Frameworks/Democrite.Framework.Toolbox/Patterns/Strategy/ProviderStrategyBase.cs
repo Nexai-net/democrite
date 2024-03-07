@@ -63,7 +63,16 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         #region Methods
 
         /// <inheritdoc />
-        public virtual async ValueTask<T?> GetFirstValueByIdAsync(TKey key)
+        public async ValueTask<IReadOnlyCollection<T>> GetAllValuesAsync(CancellationToken token)
+        {
+            var tasks = this._providerSource.Select(source => source.GetAllValuesAsync(token).AsTask())
+                                            .ToList();
+
+            return await GetResults(tasks);
+        }
+
+        /// <inheritdoc />
+        public virtual async ValueTask<T?> GetFirstValueByIdAsync(TKey key, CancellationToken token)
         {
             foreach (var source in this._providerSource)
             {
@@ -76,43 +85,43 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         }
 
         /// <inheritdoc />
-        public virtual ValueTask<IReadOnlyCollection<T>> GetValuesAsync(params TKey[] keys)
+        public virtual ValueTask<IReadOnlyCollection<T>> GetValuesAsync(CancellationToken token, params TKey[] keys)
         {
             if (keys.Length == 0)
                 return ValueTask.FromResult(EnumerableHelper<T>.ReadOnly);
-            return GetValuesAsync(((IReadOnlyCollection<TKey>)keys));
+            return GetValuesAsync((IReadOnlyCollection<TKey>)keys, token);
         }
 
         /// <inheritdoc />
-        public async ValueTask<IReadOnlyCollection<T>> GetValuesAsync(IReadOnlyCollection<TKey> keys)
+        public async ValueTask<IReadOnlyCollection<T>> GetValuesAsync(IReadOnlyCollection<TKey> keys, CancellationToken token)
         {
             if (keys.Count == 0)
                 return EnumerableHelper<T>.ReadOnly;
 
-            var tasks = this._providerSource.Select(source => source.GetValuesAsync(keys).AsTask())
+            var tasks = this._providerSource.Select(source => source.GetValuesAsync(keys, token).AsTask())
                                             .ToList();
 
             return await GetResults(tasks);
         }
 
         /// <inheritdoc />
-        public async ValueTask<IReadOnlyCollection<T>> GetValuesAsync(Expression<Func<T, bool>> filter)
+        public async ValueTask<IReadOnlyCollection<T>> GetValuesAsync(Expression<Func<T, bool>> filter, CancellationToken token)
         {
             var predicate = filter.Compile();
-            var tasks = this._providerSource.Select(source => source.GetValuesAsync(filter, predicate).AsTask())
+            var tasks = this._providerSource.Select(source => source.GetValuesAsync(filter, predicate, token).AsTask())
                                             .ToList();
 
             return await GetResults(tasks);
         }
 
         /// <inheritdoc />
-        public async ValueTask<T?> GetFirstValueAsync(Expression<Func<T, bool>> filter)
+        public async ValueTask<T?> GetFirstValueAsync(Expression<Func<T, bool>> filter, CancellationToken token)
         {
             var predicate = filter.Compile();
 
             foreach (var source in this._providerSource)
             {
-                var result = await source.GetFirstValueAsync(filter, predicate);
+                var result = await source.GetFirstValueAsync(filter, predicate, token);
                 if (!EqualityComparer<T>.Default.Equals(result, default))
                     return result;
             }
@@ -121,14 +130,14 @@ namespace Democrite.Framework.Toolbox.Patterns.Strategy
         }
 
         /// <inheritdoc />
-        public virtual async ValueTask<(bool Result, T? value)> TryGetFirstValueAsync(TKey key)
+        public virtual async ValueTask<(bool Result, T? value)> TryGetFirstValueAsync(TKey key, CancellationToken token)
         {
-            var value = await GetFirstValueByIdAsync(key);
+            var value = await GetFirstValueByIdAsync(key, token);
             return (value is not null, value);
         }
 
         /// <inheritdoc />
-        public ValueTask ForceUpdateAsync()
+        public ValueTask ForceUpdateAsync(CancellationToken token)
         {
             throw new NotImplementedException();
         }

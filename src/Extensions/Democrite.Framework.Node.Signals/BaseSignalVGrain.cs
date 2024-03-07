@@ -21,7 +21,7 @@ namespace Democrite.Framework.Node.Signals
     /// </summary>
     [DemocriteSystemVGrain]
     internal abstract class BaseSignalVGrain<TVGrainInterface> : VGrainBase<SignalHandlerState, SignalHandlerStateSurrogate, SignalHandlerStateSurrogateConverter, TVGrainInterface>
-         where TVGrainInterface : IVGrain
+         where TVGrainInterface : IVGrain, ISignalHandler
     {
         #region Fields
 
@@ -47,15 +47,15 @@ namespace Democrite.Framework.Node.Signals
         #region Methods
 
         /// <inheritdoc />
-        public ValueTask InitializeAsync()
+        public ValueTask InitializeAsync(GrainCancellationToken token)
         {
-            return EnsureInitializedAsync();
+            return EnsureInitializedAsync(token.CancellationToken);
         }
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(GrainId grainId)
+        public async Task<Guid> SubscribeAsync(GrainId grainId, GrainCancellationToken token)
         {
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(token.CancellationToken);
             var subscriptionId = this.State!.AddOrUpdateSuscription(grainId);
 
             await PushStateAsync(default);
@@ -64,10 +64,9 @@ namespace Democrite.Framework.Node.Signals
         }
 
         /// <inheritdoc />
-        public async Task UnsuscribeAsync(Guid subscritionId)
+        public async Task UnsuscribeAsync(Guid subscritionId, GrainCancellationToken token)
         {
-            await EnsureInitializedAsync();
-
+            await EnsureInitializedAsync(token.CancellationToken);
             this.State!.RemoveSuscription(subscritionId);
         }
 
@@ -78,7 +77,7 @@ namespace Democrite.Framework.Node.Signals
         /// </summary>
         protected async Task<Guid> FireSignal(SignalMessage signal)
         {
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(default);
 
             var subscriptions = this.State!.Subscriptions;
 
@@ -94,7 +93,18 @@ namespace Democrite.Framework.Node.Signals
         /// <summary>
         /// Ensures this instance is initialized.
         /// </summary>
-        protected virtual ValueTask EnsureInitializedAsync()
+        protected async ValueTask EnsureInitializedAsync(CancellationToken token)
+        {
+            using (var tokenGrp = CancellationTokenSource.CreateLinkedTokenSource(token, this.VGrainLifecycleToken))
+            {
+                await OnEnsureInitializedAsync(tokenGrp.Token);
+            }
+        }
+
+        /// <summary>
+        /// Ensures this instance is initialized.
+        /// </summary>
+        protected virtual ValueTask OnEnsureInitializedAsync(CancellationToken token)
         {
             return ValueTask.CompletedTask;
         }
@@ -103,7 +113,7 @@ namespace Democrite.Framework.Node.Signals
         public sealed override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             await base.OnActivateAsync(cancellationToken);
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(cancellationToken);
         }
 
         #endregion

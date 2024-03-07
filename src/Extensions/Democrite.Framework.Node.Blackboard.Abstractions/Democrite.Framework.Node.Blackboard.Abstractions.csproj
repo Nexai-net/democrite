@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>true</IsPackable>
+		<Description>
+			Democrite node abstraction part extension providing blackboard algorithme to democrite cluster.<br. />A blackboard is a shared memory space with a controller that managed and react based on data.
+		</Description>
+
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Node;Extension;Blackboard</PackageTags>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Democrite.Framework.Node.Blackboard" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="IBlackboardTemplate.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>IBlackboardTemplate.tt</DependentUpon>
+	  </None>
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Compile Update="IBlackboardTemplate.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>IBlackboardTemplate.tt</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\BlackboardErrorSR.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>BlackboardErrorSR.resx</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <EmbeddedResource Update="Resources\BlackboardErrorSR.resx">
+	    <Generator>ResXFileCodeGenerator</Generator>
+	    <LastGenOutput>BlackboardErrorSR.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <None Update="IBlackboardTemplate.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>IBlackboardTemplate.cs</LastGenOutput>
+	  </None>
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+</Project>

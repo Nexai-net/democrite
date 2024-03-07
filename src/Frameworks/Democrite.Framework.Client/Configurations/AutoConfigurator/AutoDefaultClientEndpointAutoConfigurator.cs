@@ -21,7 +21,7 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     using System.Net;
 
     /// <summary>
-    /// Create open endpoint if no configuration have been provided
+    /// Get open endpoint if no configuration have been provided
     /// </summary>
     /// <seealso cref="IClusterEndpointAutoConfigurator" />
     internal sealed class AutoDefaultClientEndpointAutoConfigurator : IClusterEndpointAutoConfigurator

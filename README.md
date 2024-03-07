@@ -9,7 +9,7 @@
     </tr>
 </table>
 
-[![Release](https://img.shields.io/github/v/release/nexai-net/democrite)](https://github.com/nexai-net/democrite/releases) [![MIT License](https://img.shields.io/github/license/nexai-net/democrite?color=%230b0&style=flat-square)](https://github.com/nexai-net/democrite/blob/main/LICENSE) [![Help Wanted](https://img.shields.io/github/issues/nexai-net/democrite/help%20wanted?color=%232EA043&label=help%20wanted&style=flat-square)](https://github.com/nexai-net/democrite/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) [![Good First Issues](https://img.shields.io/github/issues/nexai-net/democrite/good%20first%20issue?color=%23512BD4&label=good%20first%20issue&style=flat-square)](https://github.com/nexai-net/democrite/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+[![Nuget Democrite](https://img.shields.io/nuget/dt/democrite.framework.core.svg?label=Nuget%20Democrite%20Framework%20downloads)](https://www.nuget.org/packages?q=democrite) [![MIT License](https://img.shields.io/github/license/nexai-net/democrite?color=%230b0&style=flat-square)](https://github.com/nexai-net/democrite/blob/main/LICENSE) [![Help Wanted](https://img.shields.io/github/issues/nexai-net/democrite/help%20wanted?color=%232EA043&label=help%20wanted&style=flat-square)](https://github.com/nexai-net/democrite/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) [![Good First Issues](https://img.shields.io/github/issues/nexai-net/democrite/good%20first%20issue?color=%23512BD4&label=good%20first%20issue&style=flat-square)](https://github.com/nexai-net/democrite/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
 ### Democrite is an open-source framework for building robust, scalable and distributed 'multi-agent like' system based on [Microsoft Orleans](https://github.com/dotnet/orleans).
 
@@ -21,7 +21,7 @@ Democrite offers an automated orchestration and configuration system, enabling d
 It incorporates built-in [Features](#features) to manage virtual grains and facilitate communication between them. This simplifies the creation of various [Sequences](#sequences) of virtual grains that can be transformed an input to output. Democrite utilizes [Signals](#signals) to transmit information and [Triggers](#triggers) to initiate different [Sequences](#sequences), thereby chaining processes through a graph. Most [Features](#features) are describe in a serializable structure.
 
 <p align="center">
-    <img src="assets/full-schema.png" width="500px" />
+    <img src="assets/full-schema-0.3.png" width="650px" />
 </p>
 
 Democrite functions as a layer on top of [Microsoft Orleans](https://docs.microsoft.com/dotnet/orleans/), ensuring that all features of Orleans are retained.
@@ -237,7 +237,6 @@ With Democrite, there is no need to explicitly call the grain yourself, it will 
 
 This is the reason we refer to them as **Virtual Grains** (**VGrain**), to denote a behavior that prevent direct call consumption.
 
-
 ### Sequences
 
 A **Sequence** is a series of virtual grains executed sequentially, where the output of one can be used as input for the next **VGrain**. <br />
@@ -355,6 +354,39 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
                                             // Local in node memory setup
                                             m.SetupTriggers(signalTriggerDefinition);
                                         })
+```
+
+### Stream
+
+Use an EBS (Entreprise Bus Service) as storage an diffuseur of job to to.
+
+Orlean can nativaly used different type of **ESB**. <br /> 
+With Democrite we create connector through trigger to push and pull.
+
+Send to stream :
+```csharp
+// PUSH
+var trigger = Trigger.Cron("*/25 * * * * *", "TGR: Push Every 25 sec")
+                     
+                     .AddTargetStream(streamDef) // <----- Add stream as target
+
+                     .SetOutput(s => s.StaticCollection(Enumerable.Range(0, 50))
+                                            .PullMode(PullModeEnum.Broadcast))
+                     .Build();
+
+```
+
+Consume from stream :
+```csharp
+// PUSH
+var fromStreamTrigger = Trigger.Stream(streamDef) // <----- Trigger that fire until theire is a message in the stream queue
+                               .AddTargetSequence(consumeSeq.Uid)
+
+                               // Limit the number of concurrent execution, Prevent consuming all messages without resources in the cluster to process them (CPU, RAM, ...)
+                               .MaxConcurrentProcess(2)
+
+                               .Build();
+
 ```
 
 ### Signals
@@ -480,6 +512,12 @@ To do so you need simple steps:
 A python package exist to handle the communication protocol with democrite [README.md](/src/Extensions/Dist/Python/README.md) <br />
 You can found a full sample [Here](/samples/PythonVGrains/) <br />
 
+### Blackboard
+
+A blackboard is a temporary shared space with specific controllers to solve a problem. <br />
+The goal is to group specific analyze result and have controllers deciding the next step to acheived to a solution.
+
+You can found a full sample [Here](/samples/Blackboard/) <br />
 
 ## Quick Start
 
@@ -497,13 +535,18 @@ You can found a full sample [Here](/samples/PythonVGrains/) <br />
 
 If you split the agent implementation and definition in separate projet you could only reference the nuget package **Democrite.Framework.Core**
 
-**Extensions**
+**Framework Feature**
 - **Democrite.Framework.Node.Cron**: Reference this one by your node project to enable the cron mechanism.
 - **Democrite.Framework.Node.Signals**: Reference this one by your node project to enable the signals mechanism.
-- **Democrite.Framework.Node.Mongo**: Reference this one by your node project to enable the mongo db Storage.
+- **Democrite.Framework.Node.StreamQueue**: Reference this one by your node project to enable the stream mechanism.
+- **Democrite.Framework.Node.Blackboard**: Reference this one by your node project to enable the stream mechanism.
 
-**VGrain**
-- **Democrite.Framework.VGrains.DebugTools**: Reference this one by your node project to enable debug sequences or VGrain.
+**Extensions**
+- **Democrite.Framework.Extensions.Mongo**: Reference this one by your node project to enable the mongo db Storage.
+
+**Bags**
+- **Democrite.Framework.Bag.DebugTools**: Reference this one by your node project to enable debug sequences or VGrain (Like Display, ...).
+- **Democrite.Framework.Bag.Toolbox**: Reference this one by your node project to enable basic tools sequences or VGrain (like delay, ...).
 
 ### Node
 
@@ -650,12 +693,22 @@ Use Python scripts inside democrite environment like VGrain standard
 
 ## Next
 
-(Processing) v 0.2.3-prerelease :
+(Processing) v 0.3.1-prerelease :
 
-- [ ] Configure trigger input source from an external service (support of pick mode)
 - [ ] Add method to reference the vgrain assembly in the system to be sure this one is loaded by orleans.
+- [ ] Force grain redirection for a precise sequence execution
 - [ ] Call sequence from sequence
+- [ ] Create sequence definition in runtime
 - [ ] Condition stage to execute different stages base on a simple condition
+
+**v 0.3-prerelease:** <br/>
+[Release Node](/docs/ReleaseNotes.md#03-prerelease)
+- [x] **Blackboard** extensions
+- [x] Create bags as container of generic (toolbox, debug)
+- [x] **Repository** : global & simple storage system not linked to a grain state
+- [x] Process through a **foreach** a sub properties collection in a sequence
+- [x] Trigger use to push or pull data from a **stream**
+- [x] Fire signal from **sequence**
 
 **v 0.2.2-prerelease:** <br />
 [Release Node](/docs/ReleaseNotes.md#022-prerelease)
@@ -672,7 +725,8 @@ Use Python scripts inside democrite environment like VGrain standard
 
 | Democrite Version | Minimal .net version | Minimal orlean version |
 | --- | --- | --- |
-| Lastest | .net 7.0 | 7.0.3 |
+| Lastest | .net 7.0 | 7.2.4 |
+| 0.2.1 | .net 7.0 | 7.0.3 |
 
 
 ## References

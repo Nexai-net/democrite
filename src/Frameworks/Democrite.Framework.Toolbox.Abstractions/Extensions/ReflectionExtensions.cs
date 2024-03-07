@@ -6,8 +6,6 @@ namespace System.Reflection
 {
     using System;
     using System.Collections.Generic;
-    using System.Reflection;
-    using System.Reflection.PortableExecutable;
     using System.Security.Cryptography;
     using System.Text;
 
@@ -18,7 +16,7 @@ namespace System.Reflection
     {
         #region Fields
 
-        private static readonly Dictionary<MethodInfo, string> s_methodUniqueId;
+        private static readonly Dictionary<MethodBase, string> s_methodUniqueId;
         private static readonly HashSet<string> s_methodUniqueIdHashset;
 
         private static readonly ReaderWriterLockSlim s_methodUniqueIdLocker;
@@ -33,7 +31,7 @@ namespace System.Reflection
         static ReflectionExtensions()
         {
             s_methodUniqueIdLocker = new ReaderWriterLockSlim();
-            s_methodUniqueId = new Dictionary<MethodInfo, string>();
+            s_methodUniqueId = new Dictionary<MethodBase, string>();
             s_methodUniqueIdHashset = new HashSet<string>();
         }
 
@@ -49,7 +47,7 @@ namespace System.Reflection
         ///     We use TypeFullName + MethodFUllName hash by MD5.
         ///     We use cache to guaranty it's unique if the Hash produce is the same a Guid is introduce to add hazard
         /// </remarks>
-        public static string GetUniqueId(this MethodInfo methodInfo, bool raisedErrorIfDuplicate = false)
+        public static string GetUniqueId(this MethodBase methodInfo, bool raisedErrorIfDuplicate = false)
         {
             s_methodUniqueIdLocker.EnterReadLock();
 
@@ -102,12 +100,12 @@ namespace System.Reflection
         /// <summary>
         /// Gets the display name.
         /// </summary>
-        public static string GetDisplayName(this MethodInfo methodInfo)
+        public static string GetDisplayName(this MethodBase methodInfo)
         {
             var keyBuilder = new StringBuilder();
 
             keyBuilder.Append("[");
-            keyBuilder.Append(methodInfo.DeclaringType?.GetTypeIntoExtension().FullShortName);
+            keyBuilder.Append(methodInfo.DeclaringType?.GetTypeInfoExtension().FullShortName);
             keyBuilder.Append("] ");
 
             BuildMethodDisplayName(methodInfo, keyBuilder);
@@ -120,10 +118,14 @@ namespace System.Reflection
         /// <summary>
         /// Builds a display name for method <paramref name="methodInfo"/>
         /// </summary>
-        private static void BuildMethodDisplayName(this MethodInfo methodInfo, StringBuilder keyBuilder)
+        private static void BuildMethodDisplayName(this MethodBase methodInfo, StringBuilder keyBuilder)
         {
-            keyBuilder.Append(methodInfo.ReturnType.FullName);
-            keyBuilder.Append(" ");
+            if (methodInfo is MethodInfo mInfo)
+            {
+                keyBuilder.Append(mInfo.ReturnType.FullName);
+                keyBuilder.Append(" ");
+            }
+
             keyBuilder.Append(methodInfo.Name);
 
             if (methodInfo.IsGenericMethod)
@@ -161,7 +163,7 @@ namespace System.Reflection
         /// <summary>
         /// Builds the method unique identifier.
         /// </summary>
-        private static string BuildMethodUniqueId(MethodInfo methodInfo, Guid? randomFactor)
+        private static string BuildMethodUniqueId(MethodBase methodInfo, Guid? randomFactor)
         {
             var keyBuilder = new StringBuilder();
 
@@ -180,7 +182,7 @@ namespace System.Reflection
 
                 keyBuilder.Clear();
 
-                var shortName = methodInfo.DeclaringType?.GetTypeIntoExtension().FullShortName ?? string.Empty;
+                var shortName = methodInfo.DeclaringType?.GetTypeInfoExtension().FullShortName ?? string.Empty;
                 keyBuilder.EnsureCapacity((keyBytes.Length * 2) + shortName.Length + 1);
 
                 keyBuilder.Append(shortName);

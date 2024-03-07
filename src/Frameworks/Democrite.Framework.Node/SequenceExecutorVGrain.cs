@@ -9,9 +9,12 @@ namespace Democrite.Framework.Node
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Exceptions;
+    using Democrite.Framework.Core.Abstractions.Repositories;
+    using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.Models;
+    using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Toolbox;
     using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Abstractions.Services;
@@ -24,23 +27,23 @@ namespace Democrite.Framework.Node
     using Orleans.Runtime;
 
     using System;
+    using System.Collections.Concurrent;
     using System.Diagnostics;
-    using System.Runtime.InteropServices;
-    using System.Runtime.Serialization;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
     /// Excutor in charge of a specific sequence
     /// </summary>
     /// <seealso cref="ISequenceExecutorVGrain" />
-    [Guid("5F886D59-E817-4970-A108-F34A38B87B45")]
     [DemocriteSystemVGrain]
     internal sealed class SequenceExecutorVGrain : VGrainBase<SequenceExecutorState, SequenceExecutorStateSurrogate, SequenceExecutorStateConverter, ISequenceExecutorVGrain>, ISequenceExecutorVGrain
     {
         #region Fields
 
-        private readonly IReadOnlyCollection<ISequenceExecutorThreadStageProvider> _stageProviders;
         private readonly ISequenceDefinitionProvider _sequenceDefinitionManager;
+        private readonly ISequenceExecutorThreadStageProvider _stageProvider;
+        private readonly IDemocriteSerializer _democriteSerializer;
         private readonly IDiagnosticLogger _diagnosticLogger;
         private readonly IObjectConverter _objectConverter;
         private readonly IVGrainProvider _vgrainProvider;
@@ -59,17 +62,19 @@ namespace Democrite.Framework.Node
                                       IDiagnosticLogger diagnosticLogger,
                                       ISequenceDefinitionProvider sequenceDefinitionManager,
                                       IVGrainProvider vgrainProvider,
-                                      [PersistentState("SequenceExecutor", nameof(Democrite))] IPersistentState<SequenceExecutorStateSurrogate> sequenceExecutorState,
+                                      [PersistentState("SequenceExecutor", DemocriteConstants.DefaultDemocriteStateConfigurationKey)] IPersistentState<SequenceExecutorStateSurrogate> sequenceExecutorState,
                                       ITimeManager timeManager,
                                       IObjectConverter objectConverter,
-                                      IEnumerable<ISequenceExecutorThreadStageProvider>? stageProviders = null)
+                                      IDemocriteSerializer democriteSerializer,
+                                      ISequenceExecutorThreadStageProvider stageProvider)
             : base(logger, sequenceExecutorState)
         {
+            this._democriteSerializer = democriteSerializer;
             this._loggerFactory = loggerFactory;
             this._sequenceDefinitionManager = sequenceDefinitionManager;
             this._diagnosticLogger = diagnosticLogger;
             this._vgrainProvider = vgrainProvider;
-            this._stageProviders = stageProviders?.ToReadOnly() ?? EnumerableHelper<ISequenceExecutorThreadStageProvider>.ReadOnlyArray;
+            this._stageProvider = stageProvider;
             this._timeManager = timeManager;
             this._objectConverter = objectConverter;
         }
@@ -111,11 +116,14 @@ namespace Democrite.Framework.Node
 
             var execLogger = executionContext.GetLogger<SequenceExecutorVGrain>(this._loggerFactory);
 
+            var execCancelToken = executionContext.CancellationToken;
+
             try
             {
-                var sequenceDefintion = await this._sequenceDefinitionManager.GetFirstValueByIdAsync(state.SequenceDefinitionId);
+                var sequenceDefintion = await this._sequenceDefinitionManager.GetFirstValueByIdAsync(state.SequenceDefinitionId, execCancelToken);
 
-                ArgumentNullException.ThrowIfNull(sequenceDefintion);
+                if (sequenceDefintion is null)
+                    throw new MissingDefinitionException(typeof(SequenceDefinition), state.SequenceDefinitionId.ToString());
 
                 execLogger.OptiLog(LogLevel.Information,
                                    "Start sequence '{sequenceDefinitionDisplayName}' (Id: {sequenceDefinitionUID})",
@@ -134,9 +142,11 @@ namespace Democrite.Framework.Node
                     Debug.Assert(state.MainThread != null);
 
                     var mainExecutionThread = await SequenceExecutorExecThread.BuildFromAsync(state.MainThread,
-                                                                                              id => this._sequenceDefinitionManager.GetFirstValueByIdAsync(id),
-                                                                                              this._stageProviders,
-                                                                                              this._objectConverter);
+                                                                                              id => this._sequenceDefinitionManager.GetFirstValueByIdAsync(id, execCancelToken),
+                                                                                              this._stageProvider,
+                                                                                              this._objectConverter,
+                                                                                              this._timeManager,
+                                                                                              this._democriteSerializer);
 
                     do
                     {
@@ -195,6 +205,11 @@ namespace Democrite.Framework.Node
                                    executionContext.Configuration,
                                    ex);
                 throw;
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(this.RuntimeIdentity))
+                    DeactivateOnIdle();
             }
 
             return defaultResult;

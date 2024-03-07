@@ -4,14 +4,10 @@
 
 namespace Democrite.Framework.Core.Abstractions.Triggers
 {
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
-
-    using System;
-
     /// <summary>
     /// Provider source of <see cref="TriggerDefinition"/>
     /// </summary>
-    public interface ITriggerDefinitionProviderSource : IProviderStrategySource<TriggerDefinition, Guid>, INodeInitService
+    public interface ITriggerDefinitionProviderSource : IDefinitionSourceProvider<TriggerDefinition>
     {
     }
 }

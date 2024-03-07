@@ -31,6 +31,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Models
         public AbstractMethod(string displayName,
                               string methodName,
                               string methodUniqueId,
+                              bool isConstructor,
                               AbstractType? returnType,
                               IEnumerable<AbstractType> arguments,
                               IEnumerable<AbstractType> genericArguments)
@@ -43,6 +44,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Models
             this.HasArguments = this.Arguments.Any();
             this.GenericArguments = genericArguments?.ToArray() ?? Array.Empty<AbstractType>();
             this.HasGenericArguments = this.GenericArguments.Any();
+            this.IsConstructor = isConstructor;
         }
 
         #endregion
@@ -97,6 +99,12 @@ namespace Democrite.Framework.Toolbox.Abstractions.Models
         [DataMember]
         public bool HasGenericArguments { get; }
 
+        /// <summary>
+        /// Gets a value indicating whether this instance is constructor.
+        /// </summary>
+        [DataMember]
+        public bool IsConstructor { get; }
+
         #endregion
 
         #region Methods
@@ -117,6 +125,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Models
                    this.HasArguments == other.HasArguments &&
                    this.HasGenericArguments == other.HasGenericArguments &&
                    this.Arguments.SequenceEqual(other.Arguments) &&
+                   this.IsConstructor == other.IsConstructor &&
                    this.GenericArguments.SequenceEqual(other.GenericArguments);
         }
 
@@ -150,6 +159,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Models
                                                      this.ReturnType,
                                                      this.HasArguments,
                                                      this.HasGenericArguments),
+                                    this.IsConstructor,
                                     this.GenericArguments?.Aggregate(0, (acc, i) => acc ^ i.GetHashCode()),
                                     this.Arguments?.Aggregate(0, (acc, i) => acc ^ i.GetHashCode()));
         }

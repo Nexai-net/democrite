@@ -24,13 +24,13 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// Fires the signal configured
         /// </summary>
         [OneWay]
-        Task<Guid> Fire(GrainId? sourceId, VGrainMetaData? sourceMetaData);
+        Task<Guid> Fire(GrainId? sourceId, VGrainMetaData? sourceMetaData, GrainCancellationToken token);
 
         /// <summary>
         /// Fires the signal configured
         /// </summary>
         [OneWay]
-        Task<Guid> Fire<TData>(GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData) 
+        Task<Guid> Fire<TData>(GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData, GrainCancellationToken token) 
             where TData : struct;
     }
 }

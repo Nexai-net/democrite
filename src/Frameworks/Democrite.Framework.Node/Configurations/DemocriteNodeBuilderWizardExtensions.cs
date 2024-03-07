@@ -30,6 +30,14 @@ namespace Democrite.Framework.Configurations
         }
 
         /// <summary>
+        /// Exposes the node to be consumed by clients.
+        /// </summary>
+        public static IDemocriteNodeWizard ExposeNodeToClient(this IDemocriteNodeWizard wizard, int? gatewayPort = 0)
+        {
+            return wizard.AddEndpointOptions(new ClusterNodeEndPointOptions(gatewayPort: gatewayPort, autoGatewayPort: gatewayPort == null || gatewayPort == 0));
+        }
+
+        /// <summary>
         /// Adds the endpoint options used to define how node open through network.
         /// </summary>
         public static IDemocriteNodeWizard AddEndpointOptions(this IDemocriteNodeWizard wizard, ClusterNodeEndPointOptions option)

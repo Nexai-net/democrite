@@ -112,7 +112,6 @@ namespace Democrite.Framework.Core.Diagnostics
 
                     this._logger.OptiLog(LogLevel.Critical, "[{class}] - '{method}' - Exception: {exception}", nameof(DiagnosticLogger), nameof(SendLog), ex);
                 }
-
             }, timeoutToken).ConfigureAwait(false);
         }
 

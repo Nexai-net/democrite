@@ -4,10 +4,14 @@
 
 namespace Democrite.Framework.Builders.Sequences
 {
+    using Democrite.Framework.Builders.Steps;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
+    using Democrite.Framework.Toolbox.Abstractions.Expressions;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
 
     using System;
+    using System.Linq.Expressions;
 
     /// <summary>
     /// Stage about loop throught <typeparamref name="TInput"/> to apply a processing sequence on each item
@@ -18,7 +22,10 @@ namespace Democrite.Framework.Builders.Sequences
     {
         #region Fields
 
+        private readonly AccessExpressionDefinition? _memberAccess;
         private readonly ISequenceBuilder _sequenceBuilder;
+        private readonly AbstractMethod? _setMethod;
+        private readonly bool _relayInput;
 
         #endregion
 
@@ -27,10 +34,17 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Initializes a new instance of the <see cref="SequencePipelineForeachStageBuilder"/> class.
         /// </summary>
-        public SequencePipelineForeachStageBuilder(ISequenceBuilder sequenceBuilder, Action<ISequencePipelineStageConfigurator<TInput>>? configAction)
+        public SequencePipelineForeachStageBuilder(ISequenceBuilder sequenceBuilder,
+                                                   AccessExpressionDefinition? memberAccess = null,
+                                                   AbstractMethod? setMethod = null,
+                                                   bool relayInput = false,
+                                                   Action<ISequencePipelineStageConfigurator<TInput>>? configAction = null)
             : base(configAction)
         {
             this._sequenceBuilder = sequenceBuilder;
+            this._memberAccess = memberAccess;
+            this._relayInput = relayInput;
+            this._setMethod = setMethod;
         }
 
         #endregion
@@ -43,10 +57,15 @@ namespace Democrite.Framework.Builders.Sequences
             var innerDefinition = this._sequenceBuilder.Build();
             var cfg = BuildConfigDefinition();
 
-            return new SequenceStageForeachDefinition(typeof(TInput).GetAbstractType(),
+            var input = typeof(TInput).GetAbstractType();
+
+            return new SequenceStageForeachDefinition(input,
                                                       innerDefinition,
+                                                      output: this._relayInput ? input : innerDefinition.Output,
                                                       innerDefinition.Output,
-                                                      cfg);
+                                                      memberAccess: this._memberAccess,
+                                                      setMethod: this._setMethod,
+                                                      options: cfg);
         }
 
         #endregion

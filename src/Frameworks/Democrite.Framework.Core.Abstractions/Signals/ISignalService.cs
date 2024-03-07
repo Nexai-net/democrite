@@ -4,6 +4,10 @@
 
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
+    using Democrite.Framework.Core.Abstractions.Doors;
+
+    using Orleans.Concurrency;
+
     /// <summary>
     /// Service in charge to give acces to all signal functionality like fire and/or subscribe
     /// </summary>
@@ -16,7 +20,8 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         ///     Unique id of the fire used to trace the firering results.
         /// </returns>
         /// <exception cref="SignalNotFoundException" />
-        Task<Guid> Fire(string signalName, IVGrainInformationProvider? vgrainInformationProvider = null);
+        [OneWay]
+        Task<Guid> Fire(string signalName, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null);
 
         /// <summary>
         /// Fires the specified signal by his name.
@@ -25,7 +30,8 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         ///     Unique id of the fire used to trace the firering results.
         /// </returns>
         /// <exception cref="SignalNotFoundException" />
-        Task<Guid> Fire<TData>(string signalName, TData data, IVGrainInformationProvider? vgrainInformationProvider = null)
+        [OneWay]
+        Task<Guid> Fire<TData>(string signalName, TData data, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null)
             where TData : struct;
 
         /// <summary>
@@ -35,7 +41,8 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         ///     Unique id of the fire used to trace the firering results.
         /// </returns>
         /// <exception cref="SignalNotFoundException" />
-        Task<Guid> Fire<TData>(in SignalId signalId, in TData data, IVGrainInformationProvider? vgrainInformationProvider = null)
+        [OneWay]
+        Task<Guid> Fire<TData>(in SignalId signalId, in TData data, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null)
             where TData : struct;
 
         /// <summary>
@@ -45,7 +52,8 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         ///     Unique id of the fire used to trace the firering results.
         /// </returns>
         /// <exception cref="SignalNotFoundException" />
-        Task<Guid> Fire(string signalName, object? data, IVGrainInformationProvider? vgrainInformationProvider = null);
+        [OneWay]
+        Task<Guid> Fire(string signalName, object? data, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null);
 
         /// <summary>
         /// Fires the specified signal by his name.
@@ -54,7 +62,8 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         ///     Unique id of the fire used to trace the firering results.
         /// </returns>
         /// <exception cref="SignalNotFoundException" />
-        Task<Guid> Fire(in SignalId signalId, object? data, IVGrainInformationProvider? vgrainInformationProvider = null);
+        [OneWay]
+        Task<Guid> Fire(in SignalId signalId, object? data, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null);
 
         /// <summary>
         /// Fires the specified signal by his name.
@@ -63,21 +72,22 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         ///     Unique id of the fire used to trace the firering results.
         /// </returns>
         /// <exception cref="SignalNotFoundException" />
-        Task<Guid> Fire(in SignalId signalId, IVGrainInformationProvider? vgrainInformationProvider = null);
+        [OneWay]
+        Task<Guid> Fire(in SignalId signalId, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null);
 
         /// <summary>
         /// Subscribes to signal by name
         /// </summary>
-        Task<Guid> SubscribeAsync(string signalDoorName, ISignalReceiver receiver);
+        Task<Guid> SubscribeAsync(string signalDoorName, ISignalReceiver receiver, CancellationToken token);
 
         /// <summary>
         /// Subscribes to signal by <see cref="SignalId"/>
         /// </summary>
-        Task<Guid> SubscribeAsync(in SignalId signalid, ISignalReceiver receiver);
+        Task<Guid> SubscribeAsync(SignalId signalid, ISignalReceiver receiver, CancellationToken token);
 
         /// <summary>
         /// Subscribes to signal by <see cref="SignalId"/>
         /// </summary>
-        Task<Guid> SubscribeAsync(in DoorId signalid, ISignalReceiver receiver);
+        Task<Guid> SubscribeAsync(DoorId signalid, ISignalReceiver receiver, CancellationToken token);
     }
 }

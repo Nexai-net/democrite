@@ -139,5 +139,13 @@ namespace System.Collections.Generic
         {
             return string.Join(Environment.NewLine, strings);
         }
+
+        /// <summary>
+        /// Filter the not null elements
+        /// </summary>
+        public static IEnumerable<TData> NotNull<TData>(this IEnumerable<TData?> source)
+        {
+            return source.Where(s => s is not null).Select(s => s!);
+        }
     }
 }

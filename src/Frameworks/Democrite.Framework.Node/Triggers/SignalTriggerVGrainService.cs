@@ -5,6 +5,8 @@
 namespace Democrite.Framework.Node.Triggers
 {
     using Democrite.Framework.Core.Abstractions.Triggers;
+    using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 
@@ -70,12 +72,17 @@ namespace Democrite.Framework.Node.Triggers
         /// </summary>
         private async Task EnsureSignalTriggerAreSetups()
         {
-            var signalTriggers = await this._triggerDefinitionProvider.GetValuesAsync(t => t.TriggerType == TriggerTypeEnum.Signal);
-
-            foreach (var signalTrigger in signalTriggers)
+            using (var timeoutToken = CancellationHelper.DisposableTimeout(TimeSpan.FromSeconds(10)))
             {
-                var triggerHandler = this._grainFactory.GetGrain<ISignalTriggerVGrain>(signalTrigger.Uid);
-                await triggerHandler.UpdateAsync();
+                var signalTriggers = await this._triggerDefinitionProvider.GetValuesAsync(t => t.TriggerType == TriggerTypeEnum.Signal, timeoutToken.Content);
+
+                var initTask = signalTriggers.Select(signalTrigger =>
+                {
+                    var triggerHandler = this._grainFactory.GetGrain<ISignalTriggerVGrain>(signalTrigger.Uid);
+                    return triggerHandler.UpdateAsync();
+                }).ToArray();
+
+                await initTask.SafeWhenAllAsync(timeoutToken.Content);
             }
         }
 

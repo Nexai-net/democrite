@@ -125,7 +125,7 @@ namespace Democrite.UnitTests.ToolKit.Remoting
                     {
                         var result = resolution.Invoke(inst, msg.ArgumentRoot?.Flattern().ToArray() ?? EnumerableHelper<object>.ReadOnlyArray);
 
-                        var resultInfo = result?.GetType().GetTypeIntoExtension();
+                        var resultInfo = result?.GetType().GetTypeInfoExtension();
                         object? returnObj = null;
 
                         if (resultInfo?.IsValueTask ?? false)

@@ -42,7 +42,7 @@ namespace Democrite.Framework.Toolbox.Extensions
                                        [CallerLineNumber] int lineNumber = 0)
         {
             if (logger.IsEnabled(logLevel))
-                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, new object?[] { arg });
+                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, arg);
         }
 
         /// <inheritdoc cref="OptiLog(ILogger, LogLevel, string, string, int)"/>
@@ -75,7 +75,7 @@ namespace Democrite.Framework.Toolbox.Extensions
                                            [CallerLineNumber] int lineNumber = 0)
         {
             if (logger.IsEnabled(logLevel))
-                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, new object?[] { arg, arg2 });
+                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, arg, arg2);
         }
 
         /// <inheritdoc cref="OptiLog(ILogger, LogLevel, string, string, int)"/>
@@ -111,7 +111,7 @@ namespace Democrite.Framework.Toolbox.Extensions
                                                    [CallerLineNumber] int lineNumber = 0)
         {
             if (logger.IsEnabled(logLevel))
-                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, new object?[] { arg, arg2, arg3 });
+                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, arg, arg2, arg3);
         }
 
         /// <inheritdoc cref="OptiLog(ILogger, LogLevel, string, string, int)
@@ -150,7 +150,7 @@ namespace Democrite.Framework.Toolbox.Extensions
                                                    [CallerLineNumber] int lineNumber = 0)
         {
             if (logger.IsEnabled(logLevel))
-                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, new object?[] { arg, arg2, arg3, arg4 });
+                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, arg, arg2, arg3, arg4);
         }
 
         /// <inheritdoc cref="OptiLog(ILogger, LogLevel, string, string, int)
@@ -167,32 +167,64 @@ namespace Democrite.Framework.Toolbox.Extensions
                                                        [CallerLineNumber] int lineNumber = 0)
         {
             if (logger.IsEnabled(logLevel))
-                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, new object?[] { arg, arg2, arg3, arg4, arg5 });
+                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, arg, arg2, arg3, arg4, arg5);
         }
 
         /// <inheritdoc cref="OptiLog(ILogger, LogLevel, string, string, int)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void OptiLog(this ILogger logger,
-                                   LogLevel logLevel,
-                                   string message,
-                                   string? arg,
-                                   string? arg2,
-                                   string? arg3,
-                                   string? arg4,
-                                   NoneType? unusedInferenceBreaker = null,
-                                   [CallerMemberName] string? callerMemberName = null,
-                                   [CallerLineNumber] int lineNumber = 0)
+        public static void OptiLog<T1, T2, T3, T4, T5, T6>(this ILogger logger,
+                                                           LogLevel logLevel,
+                                                           string message,
+                                                           T1? arg,
+                                                           T2? arg2,
+                                                           T3? arg3,
+                                                           T4? arg4,
+                                                           T5? arg5,
+                                                           T6? arg6,
+                                                           NoneType? unusedInferenceBreaker = null,
+                                                           [CallerMemberName] string? callerMemberName = null,
+                                                           [CallerLineNumber] int lineNumber = 0)
         {
-            OptiLog<string, string, string, string>(logger,
-                                                    logLevel,
-                                                    message,
-                                                    arg,
-                                                    arg2,
-                                                    arg3,
-                                                    arg4,
-                                                    unusedInferenceBreaker,
-                                                    callerMemberName,
-                                                    lineNumber);
+            if (logger.IsEnabled(logLevel))
+                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, arg, arg2, arg3, arg4, arg5, arg6);
+        }
+
+        /// <inheritdoc cref="OptiLog(ILogger, LogLevel, string, string, int)
+        public static void OptiLog<T1, T2, T3, T4, T5, T6, T7>(this ILogger logger,
+                                                               LogLevel logLevel,
+                                                               string message,
+                                                               T1? arg,
+                                                               T2? arg2,
+                                                               T3? arg3,
+                                                               T4? arg4,
+                                                               T5? arg5,
+                                                               T6? arg6,
+                                                               T7? arg7,
+                                                               NoneType? unusedInferenceBreaker = null,
+                                                               [CallerMemberName] string? callerMemberName = null,
+                                                               [CallerLineNumber] int lineNumber = 0)
+        {
+            if (logger.IsEnabled(logLevel))
+                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, arg, arg2, arg3, arg4, arg5, arg6, arg7);
+        }
+
+        /// <inheritdoc cref="OptiLog(ILogger, LogLevel, string, string, int)
+        public static void OptiLog<T1, T2, T3, T4, T5, T6, T7, T8>(this ILogger logger,
+                                                                   LogLevel logLevel,
+                                                                   string message,
+                                                                   T1? arg,
+                                                                   T2? arg2,
+                                                                   T3? arg3,
+                                                                   T4? arg4,
+                                                                   T5? arg5,
+                                                                   T6? arg6,
+                                                                   T7? arg7,
+                                                                   T8? arg8,
+                                                                   NoneType? unusedInferenceBreaker = null,
+                                                                   [CallerMemberName] string? callerMemberName = null,
+                                                                   [CallerLineNumber] int lineNumber = 0)
+        {
+            if (logger.IsEnabled(logLevel))
+                WriteLog(logger, logLevel, message, callerMemberName, lineNumber, arg, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
         }
 
         /// <summary>
@@ -203,7 +235,7 @@ namespace Democrite.Framework.Toolbox.Extensions
                                      string template,
                                      string? callerMemberName,
                                      int lineNumber,
-                                     object?[] readOnlyArray)
+                                     params object?[] readOnlyArray)
         {
             logger.Log(logLevel,
                        "[{sourceFile}:{lineNumber}] - " + template,

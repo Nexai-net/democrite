@@ -27,20 +27,20 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// </summary>
         protected SignalNetworkBasePartDefinition(Guid uid,
                                                   string name,
+                                                  string displayName,
                                                   string? group = null)
         {
             this.Uid = uid;
             this.Name = name;
             this.Group = group;
+            this.DisplayName = displayName;
         }
 
         #endregion
 
         #region Properties
 
-        /// <summary>
-        /// Gets the unique id.
-        /// </summary>
+        /// <inheritdoc />
         [Id(0)]
         public Guid Uid { get; }
 
@@ -50,10 +50,14 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         [Id(1)]
         public string Name { get; }
 
+        /// <inheritdoc />
+        [Id(2)]
+        public string DisplayName { get; }
+
         /// <summary>
         /// Gets the group.
         /// </summary>
-        [Id(2)]
+        [Id(3)]
         public string? Group { get; }
 
         #endregion

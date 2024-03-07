@@ -16,6 +16,18 @@ namespace Democrite.Framework.Node.Signals
     /// <seealso cref="ISignalDefinitionProviderSource" />
     public sealed class InMemorySignalDefinitionProviderSource : ProviderStrategyBaseSource<SignalDefinition, Guid>, ISignalDefinitionProviderSource
     {
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InMemorySignalDefinitionProviderSource"/> class.
+        /// </summary>
+        public InMemorySignalDefinitionProviderSource(IServiceProvider serviceProvider)
+            : base(serviceProvider)
+        {
+        }
+
+        #endregion
+
         #region Methods
 
         /// <summary>

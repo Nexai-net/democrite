@@ -8,16 +8,22 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Models;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.ThreadExecutors;
+    using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Models;
     using Democrite.UnitTests.ToolKit;
 
+    using Microsoft.Extensions.DependencyInjection;
+
     using Moq;
 
     using NFluent;
+
+    using NSubstitute;
 
     using System;
     using System.Linq;
@@ -35,7 +41,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
         [Fact]
         public void SequenceExecutorFilterThreadStageProvider_Ctor_Dispose()
         {
-            using (var provider = new SequenceExecutorFilterThreadStageProvider())
+            using (var provider = new SequenceExecutorFilterThreadStageProvider(Substitute.For<IServiceProvider>()))
             {
 
             }
@@ -47,7 +53,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
         [Fact]
         public void SequenceExecutorFilterThreadStageProvider_CanHandler()
         {
-            using (var provider = new SequenceExecutorFilterThreadStageProvider())
+            using (var provider = new SequenceExecutorFilterThreadStageProvider(Substitute.For<IServiceProvider>()))
             {
                 Check.ThatCode(() => provider.CanHandler(null)).DoesNotThrow().And.WhichResult().IsFalse();
 
@@ -57,7 +63,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                 var def = typeof(SequenceExecutorFilterThreadStageProviderUnitTests).GetMethod(nameof(SequenceExecutorFilterThreadStageProvider_CanHandler))!.GetAbstractMethod();
 
                 Check.ThatCode(() => provider.CanHandler(new SequenceStageCallDefinition(null,
-                                                                                         (ConcreteType)(typeof(string).GetAbstractType()),
+                                                                                         (ConcretType)(typeof(string).GetAbstractType()),
                                                                                          def,
                                                                                          null,
                                                                                          null)))
@@ -79,7 +85,17 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
         [Fact]
         public async Task SequenceExecutorFilterThreadStageProvider_ExecAsync()
         {
-            using (var provider = new SequenceExecutorFilterThreadStageProvider())
+            var democriteSerializerMock = Substitute.For<IDemocriteSerializer>();
+            var timeManagerMock = Substitute.For<ITimeManager>();
+
+            var serviceCollection = new ServiceCollection();
+
+            serviceCollection.AddSingleton(democriteSerializerMock)
+                             .AddSingleton(timeManagerMock);
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
+            using (var provider = new SequenceExecutorFilterThreadStageProvider(serviceProvider))
             {
                 // Use 'x' min/maj as flag to identify the expected result
                 Expression<Func<string, bool>> filterExpression = (string input) => !string.IsNullOrEmpty(input) &&

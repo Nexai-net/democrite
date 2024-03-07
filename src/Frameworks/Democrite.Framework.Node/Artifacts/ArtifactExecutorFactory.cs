@@ -103,7 +103,7 @@ namespace Democrite.Framework.Node.Artifacts
                 this._lock.Release();
             }
 
-            // Create a system thread safe to ensure the resources link to the artefact are not already used.
+            // Get a system thread safe to ensure the resources link to the artefact are not already used.
             using (locker.Lock())
             {
                 var rootPath = await GetLocalFolderPathAsync(artifactCodePackageResource, token);
@@ -323,11 +323,11 @@ namespace Democrite.Framework.Node.Artifacts
         /// <summary>
         /// Installs in local the artifact data from temp local folder
         /// </summary>
-        private ValueTask InstallInLocalAsync(ArtifactExecutableDefinition artifactCodePackageResource,
-                                              string tmpLocalResourceRootFolder,
-                                              Uri root,
-                                              IExecutionContext executionContext,
-                                              CancellationToken token)
+        private async ValueTask InstallInLocalAsync(ArtifactExecutableDefinition artifactCodePackageResource,
+                                                    string tmpLocalResourceRootFolder,
+                                                    Uri root,
+                                                    IExecutionContext executionContext,
+                                                    CancellationToken token)
         {
             var sourceUri = this._fileSystemHandler.MakeUriAbsolute(tmpLocalResourceRootFolder);
 
@@ -336,11 +336,9 @@ namespace Democrite.Framework.Node.Artifacts
                 var source = new Uri(sourceUri, sourceFile);
                 var target = new Uri(root, sourceFile);
 
-                if (!this._fileSystemHandler.CopyFrom(source, target, true))
+                if (!await this._fileSystemHandler.CopyFromAsync(source, target, true))
                     throw new ArtifactPreparationFailedException("Could not copy '{0}' from '{1}' to '{2}'".WithArguments(sourceFile, source, target), executionContext);
             }
-
-            return ValueTask.CompletedTask;
         }
 
         /// <summary>
@@ -381,7 +379,7 @@ namespace Democrite.Framework.Node.Artifacts
         }
 
         /// <summary>
-        /// Extracts the executor and version. The information <see cref="IArtifactCodePackageResource.Excutor"/> are normally stored in format "exec:version"
+        /// Extracts the executor and version. The information <see cref="IArtifactCodePackageResource.Executor"/> are normally stored in format "exec:version"
         /// </summary>
         private static void ExtractExecutorAndVersion(in string executorWithVersion, out string exec, out string? version)
         {

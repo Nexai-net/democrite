@@ -16,13 +16,13 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Creates a new instance of <see cref="SequenceBuilder"/>
         /// </summary>
-        public static ISequenceTriggerBuilder Build(Guid? uid = null, Action<SequenceOption>? optionBuilder = null)
+        public static ISequenceTriggerBuilder Build(string displayName, Guid? fixUid = null, Action<SequenceOption>? optionBuilder = null)
         {
-            var option = new SequenceOption(uid, null);
+            var option = new SequenceOption(fixUid, null);
 
             optionBuilder?.Invoke(option);
 
-            var builder = new SequenceBuilder(uid ?? Guid.NewGuid(), option.DisplayName, option.ToDefinition());
+            var builder = new SequenceBuilder(fixUid ?? Guid.NewGuid(), "SEQ:" + displayName, option.ToDefinition());
             return builder;
         }
     }

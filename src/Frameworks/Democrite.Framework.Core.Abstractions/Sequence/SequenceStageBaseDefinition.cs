@@ -26,6 +26,8 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
     [KnownType(typeof(SequenceStageCallDefinition))]
     [KnownType(typeof(SequenceStageFilterDefinition))]
     [KnownType(typeof(SequenceStageForeachDefinition))]
+    [KnownType(typeof(SequenceStagePushToContextDefinition))]
+    [KnownType(typeof(SequenceStageFireSignalDefinition))]
 
     public abstract class SequenceStageBaseDefinition : Equatable<ISequenceStageDefinition>,
                                                         ISupportDebugDisplayName,

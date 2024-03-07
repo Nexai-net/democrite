@@ -68,7 +68,7 @@ namespace Democrite.Framework.Toolbox.Communications
         /// <summary>
         /// The client leave event
         /// </summary>
-        public event Action<ComClient> ClientLeaveEvent;
+        public event Action<ComClient>? ClientLeaveEvent;
 
         #endregion
 
@@ -94,7 +94,7 @@ namespace Democrite.Framework.Toolbox.Communications
 
                 var sizeArray = BitConverter.GetBytes((ushort)data.Length);
                 sizeArray.CopyTo(sizeBuffer);
-                data.CopyTo(sizeBuffer.Slice(quantitySize));
+                data.CopyTo(sizeBuffer[quantitySize..]);
 
                 var stream = this._tcpClient.GetStream();
                 stream.Write(sizeBuffer);

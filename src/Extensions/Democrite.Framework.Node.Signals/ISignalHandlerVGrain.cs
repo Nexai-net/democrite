@@ -18,6 +18,6 @@ namespace Democrite.Framework.Node.Signals
         /// <summary>
         /// Initializes the signal handler
         /// </summary>
-        ValueTask InitializeAsync();
+        ValueTask InitializeAsync(GrainCancellationToken token);
     }
 }

@@ -7,24 +7,19 @@ namespace Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator
     using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
     using Democrite.Framework.Configurations;
 
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.DependencyInjection;
-
-    using Microsoft.Extensions.Logging;
-
     /// <summary>
     /// Auto setup default definition provider
     /// </summary>
     /// <seealso cref="IAutoConfigurator{IClusterNodeBuilderDemocriteMemoryBuilder}" />
-    public interface INodeCustomDefinitionProviderAutoConfigurator : IAutoConfigurator<IDemocriteNodeMemoryBuilder>
+    public interface INodeCustomDefinitionProviderAutoConfigurator : IAutoKeyConfigurator<IDemocriteNodeMemoryBuilder>
     {
-        /// <summary>
-        /// Automatics configure democrite section.
-        /// </summary>
-        void AutoConfigureCustomProvider(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
-                                         IConfiguration configuration,
-                                         IServiceCollection serviceCollection,
-                                         ILogger logger,
-                                         string key);
+        ///// <summary>
+        ///// Automatics configure democrite section.
+        ///// </summary>
+        //void AutoConfigureCustomProvider(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
+        //                                 IConfiguration configuration,
+        //                                 IServiceCollection serviceCollection,
+        //                                 ILogger logger,
+        //                                 string key);
     }
 }

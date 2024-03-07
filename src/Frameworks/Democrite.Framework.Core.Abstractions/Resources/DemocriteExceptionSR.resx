@@ -174,4 +174,19 @@
   <data name="ArtifactRemoteException" xml:space="preserve">
     <value>Remote communication to artifact "{0}" failed due to : {1}</value>
   </data>
+  <data name="MemoryRepositoryStorageEtagMismatchExceptionMessage" xml:space="preserve">
+    <value>Etag {0} provided doesn't match the one in place '{1}'</value>
+  </data>
+  <data name="VGrainIdValidationFaildExceptionMessage" xml:space="preserve">
+    <value>A valitor ({0}) on grain {1} reject the grain id provided  '{2}'</value>
+  </data>
+  <data name="DefinitionExceptionMessage" xml:space="preserve">
+    <value>'{0}' definition with id '{1}' fail due to : {2}</value>
+  </data>
+  <data name="DemocriteSecurityIssueExceptionMessage" xml:space="preserve">
+    <value>Access blocked by security level {0}  Reason -&gt; {1}.</value>
+  </data>
+  <data name="StageExecutorNotFoundException" xml:space="preserve">
+    <value>Stage executor was not found to solved stage definition type '{0}'.</value>
+  </data>
 </root>

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>true</IsPackable>
+		<Description>Democrite vgrains abstraction bag related to web manipulation.</Description>
+
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agents;Framework;VGrain;Extension;bag</PackageTags>
+
+	</PropertyGroup>
+
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\..\src\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
+	</ItemGroup>
+	
+</Project>

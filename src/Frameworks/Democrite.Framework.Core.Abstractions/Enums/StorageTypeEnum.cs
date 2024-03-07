@@ -27,8 +27,14 @@ namespace Democrite.Framework.Core.Abstractions.Enums
         /// </summary>
         Reminders = 4,
 
+        /// <summary>
+        /// Define a storage used to store reminder information.
+        /// </summary>
+        Repositories = 8,
+
         All = StorageTypeEnum.Democrite | 
               StorageTypeEnum.Reminders | 
-              StorageTypeEnum.Default
+              StorageTypeEnum.Default |
+              StorageTypeEnum.Repositories
     }
 }

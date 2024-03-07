@@ -27,7 +27,7 @@ namespace Democrite.Framework.Node.Abstractions
                                              IExecutionContext sequenceContext,
                                              ILogger logger,
                                              IDiagnosticLogger diagnosticLogger,
-                                             IVGrainProvider vgrainProvider,
+                                             IVGrainProvider vgrainProvider, // Provider is inject to be able to change implementation at runtime
                                              Func<ISecureContextToken<ISequenceExecutorThreadHandler>> securityThreadHandlerAccessor);
     }
 }

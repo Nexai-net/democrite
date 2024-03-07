@@ -10,14 +10,5 @@ namespace Democrite.Framework.Configurations
     /// <seealso cref="IBuilderDemocriteBaseWizard" />
     public interface IDemocriteNodeMemoryBuilder : IBuilderDemocriteBaseWizard, IDemocriteBaseGenericBuilder
     {
-        /// <summary>
-        /// Uses InMemory storage to save vgrain states.
-        /// </summary>
-        IDemocriteNodeMemoryBuilder UseInMemoryVGrainStateMemory();
-
-        /// <summary>
-        /// Uses InMemory storage to save trigger/reminder information.
-        /// </summary>
-        IDemocriteNodeMemoryBuilder UseInMemoryTriggerReminderMemory();
     }
 }

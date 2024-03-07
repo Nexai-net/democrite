@@ -8,6 +8,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
     using System.ComponentModel;
     using System.Runtime.Serialization;
 
+    [DataContract]
     [Serializable]
     [ImmutableObject(true)]
 #pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
@@ -40,11 +41,13 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the instance.
         /// </summary>
+        [DataMember]
         public ConditionBaseDefinition? Instance { get; }
 
         /// <summary>
         /// Gets the name of the member.
         /// </summary>
+        [DataMember]
         public string MemberName { get; }
 
         #endregion
@@ -78,7 +81,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <inheritdoc />
         protected override int OnGetHashCode()
         {
-            return (this.Instance?.GetHashCode() ?? 0) ^ (this.MemberName?.GetHashCode() ?? 0);
+            return HashCode.Combine(this.Instance, this.MemberName);
         }
 
         #endregion

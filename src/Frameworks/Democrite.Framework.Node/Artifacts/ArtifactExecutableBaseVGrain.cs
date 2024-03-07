@@ -31,7 +31,7 @@ namespace Democrite.Framework.Node.Artifacts
         #region Fields
 
         private readonly IArtifactExecutorFactory _artifactExecutorFactory;
-        private readonly IArtifactProvider _artifactProvider;
+        private readonly IArtifactDefinitionProvider _artifactProvider;
         private readonly ILoggerFactory _loggerFactory;
 
         #endregion
@@ -42,7 +42,7 @@ namespace Democrite.Framework.Node.Artifacts
         /// Initializes a new instance of the <see cref="ArtifactExecutableBaseVGrain"/> class.
         /// </summary>
         protected ArtifactExecutableBaseVGrain(ILogger<TGrainInterface> logger,
-                                               IArtifactProvider artifactProvider,
+                                               IArtifactDefinitionProvider artifactProvider,
                                                IArtifactExecutorFactory artifactExecutorFactory,
                                                ILoggerFactory loggerFactory)
             : base(logger)
@@ -81,7 +81,7 @@ namespace Democrite.Framework.Node.Artifacts
 
             var artifactId = GetArtifactId(input, executionContext);
 
-            var artifactResult = await this._artifactProvider.TryGetFirstValueAsync(artifactId);
+            var artifactResult = await this._artifactProvider.TryGetFirstValueAsync(artifactId, executionContext.CancellationToken);
 
             if (artifactResult.Result == false || artifactResult.value == null)
                 throw new ArtifactMissingException(artifactId, nameof(ArtifactExecutableDefinition), executionContext);

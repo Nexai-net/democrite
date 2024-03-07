@@ -71,11 +71,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Toolbox
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.UnitTests.ToolKit", "src\Tests\Democrite.UnitTests.ToolKit\Democrite.UnitTests.ToolKit.csproj", "{25AD23F9-36C7-462D-834E-81C6D18737B9}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VGrains", "VGrains", "{D53F80C8-5B1F-4153-989A-A10DD890B9D2}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bags", "Bags", "{D53F80C8-5B1F-4153-989A-A10DD890B9D2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.VGrains.Web", "src\Extensions\VGrains\Democrite.Framework.VGrains.Web\Democrite.Framework.VGrains.Web.csproj", "{D7908BB4-28E9-4401-A477-DAD299AC494F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Bag.Web", "src\Extensions\Bags\Democrite.Framework.Bag.Web\Democrite.Framework.Bag.Web.csproj", "{D7908BB4-28E9-4401-A477-DAD299AC494F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.VGrains.Web.Abstractions", "src\Extensions\VGrains\Democrite.Framework.VGrains.Web.Abstractions\Democrite.Framework.VGrains.Web.Abstractions.csproj", "{A5546B4F-0D53-44B2-8357-10E49EA09847}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Bag.Web.Abstractions", "src\Extensions\Bags\Democrite.Framework.Bag.Web.Abstractions\Democrite.Framework.Bag.Web.Abstractions.csproj", "{A5546B4F-0D53-44B2-8357-10E49EA09847}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Test.VGrains", "src\Tests\Democrite.Test.VGrains\Democrite.Test.VGrains.csproj", "{9D5E6CB2-9B3E-4EE6-9AFF-096DE4DE5EDC}"
 EndProject
@@ -87,11 +87,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Core.Ab
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Abstraction.UnitTests", "src\Tests\Democrite.Framework.Node.Abstraction.UnitTests\Democrite.Framework.Node.Abstraction.UnitTests.csproj", "{DDB1B1B2-F1EB-4D19-8325-0CFEFECBBC46}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.VGrains.DebugTools", "src\Extensions\VGrains\Democrite.Framework.VGrains.DebugTools\Democrite.Framework.VGrains.DebugTools.csproj", "{AA1C66AC-4910-443E-ABA9-76F1E581EA78}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Bag.DebugTools", "src\Extensions\Bags\Democrite.Framework.Bag.DebugTools\Democrite.Framework.Bag.DebugTools.csproj", "{AA1C66AC-4910-443E-ABA9-76F1E581EA78}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Mongo.Abstractions", "src\Extensions\Democrite.Framework.Node.Mongo.Abstractions\Democrite.Framework.Node.Mongo.Abstractions.csproj", "{A181A232-49C5-47EF-A199-3BE0A19192A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Extensions.Mongo.Abstractions", "src\Extensions\Democrite.Framework.Extensions.Mongo.Abstractions\Democrite.Framework.Extensions.Mongo.Abstractions.csproj", "{A181A232-49C5-47EF-A199-3BE0A19192A3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Mongo", "src\Extensions\Democrite.Framework.Node.Mongo\Democrite.Framework.Node.Mongo.csproj", "{ADAF23A8-3574-4F9E-94C9-BF046AA26CF2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Extensions.Mongo", "src\Extensions\Democrite.Framework.Extensions.Mongo\Democrite.Framework.Extensions.Mongo.csproj", "{ADAF23A8-3574-4F9E-94C9-BF046AA26CF2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dist", "Dist", "{D52F0DA3-F60F-40AA-BDDD-EFE133485A3F}"
 EndProject
@@ -101,6 +101,26 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Python", "Python", "{8CD6E1
 		src\Extensions\Dist\Python\pyproject.toml = src\Extensions\Dist\Python\pyproject.toml
 		src\Extensions\Dist\Python\README.md = src\Extensions\Dist\Python\README.md
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.StreamQueue", "src\Extensions\Democrite.Framework.Node.StreamQueue\Democrite.Framework.Node.StreamQueue.csproj", "{FEB1A5CA-7673-4D1C-8CE3-3158E6768839}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Bag.Toolbox", "src\Extensions\Bags\Democrite.Framework.Bag.Toolbox\Democrite.Framework.Bag.Toolbox.csproj", "{D574B461-68DC-4F4D-A3E2-E4AD3CE2CAD8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Bag.Toolbox.Abstractions", "src\Extensions\Bags\Democrite.Framework.Bag.Toolbox.Abstractions\Democrite.Framework.Bag.Toolbox.Abstractions.csproj", "{96FF1BDB-3E6B-4A43-B930-35A87CE5C7D5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Blackboard", "src\Extensions\Democrite.Framework.Node.Blackboard\Democrite.Framework.Node.Blackboard.csproj", "{8A35D700-999C-4966-BBDE-23DE9428FC59}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Blackboard.Abstractions", "src\Extensions\Democrite.Framework.Node.Blackboard.Abstractions\Democrite.Framework.Node.Blackboard.Abstractions.csproj", "{CAFA45C5-80FF-4546-B07F-DCB6121CD7DE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Blackboard.Builders", "src\Extensions\Democrite.Framework.Node.Blackboard.Builders\Democrite.Framework.Node.Blackboard.Builders.csproj", "{8A695046-2272-4495-BE95-7D2261077132}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Blackboard.UnitTests", "src\Tests\Democrite.Framework.Node.Blackboard.UnitTests\Democrite.Framework.Node.Blackboard.UnitTests.csproj", "{C8472607-4485-4E07-B1C6-ACFE76F23077}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Blackboard.Abstraction.UnitTests", "src\Tests\Democrite.Framework.Node.Blackboard.Abstraction.UnitTests\Democrite.Framework.Node.Blackboard.Abstraction.UnitTests.csproj", "{6C5EEEC8-CE48-4F3B-9325-E38BDC1ACBCD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.DataModel", "src\Frameworks\Democrite.Framework.DataModel\Democrite.Framework.DataModel.csproj", "{A4C1A1DE-69CC-4240-84CD-9088709186F6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Extensions.Mongo.Builders", "src\Extensions\Democrite.Framework.Extensions.Mongo.Builders\Democrite.Framework.Extensions.Mongo.Builders.csproj", "{C482919A-AD5A-4942-8FB1-841472495983}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -232,6 +252,46 @@ Global
 		{ADAF23A8-3574-4F9E-94C9-BF046AA26CF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADAF23A8-3574-4F9E-94C9-BF046AA26CF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADAF23A8-3574-4F9E-94C9-BF046AA26CF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FEB1A5CA-7673-4D1C-8CE3-3158E6768839}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEB1A5CA-7673-4D1C-8CE3-3158E6768839}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEB1A5CA-7673-4D1C-8CE3-3158E6768839}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEB1A5CA-7673-4D1C-8CE3-3158E6768839}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D574B461-68DC-4F4D-A3E2-E4AD3CE2CAD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D574B461-68DC-4F4D-A3E2-E4AD3CE2CAD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D574B461-68DC-4F4D-A3E2-E4AD3CE2CAD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D574B461-68DC-4F4D-A3E2-E4AD3CE2CAD8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96FF1BDB-3E6B-4A43-B930-35A87CE5C7D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96FF1BDB-3E6B-4A43-B930-35A87CE5C7D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96FF1BDB-3E6B-4A43-B930-35A87CE5C7D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96FF1BDB-3E6B-4A43-B930-35A87CE5C7D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A35D700-999C-4966-BBDE-23DE9428FC59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A35D700-999C-4966-BBDE-23DE9428FC59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A35D700-999C-4966-BBDE-23DE9428FC59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A35D700-999C-4966-BBDE-23DE9428FC59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAFA45C5-80FF-4546-B07F-DCB6121CD7DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAFA45C5-80FF-4546-B07F-DCB6121CD7DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAFA45C5-80FF-4546-B07F-DCB6121CD7DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAFA45C5-80FF-4546-B07F-DCB6121CD7DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A695046-2272-4495-BE95-7D2261077132}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A695046-2272-4495-BE95-7D2261077132}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A695046-2272-4495-BE95-7D2261077132}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A695046-2272-4495-BE95-7D2261077132}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8472607-4485-4E07-B1C6-ACFE76F23077}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8472607-4485-4E07-B1C6-ACFE76F23077}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8472607-4485-4E07-B1C6-ACFE76F23077}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8472607-4485-4E07-B1C6-ACFE76F23077}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C5EEEC8-CE48-4F3B-9325-E38BDC1ACBCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C5EEEC8-CE48-4F3B-9325-E38BDC1ACBCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C5EEEC8-CE48-4F3B-9325-E38BDC1ACBCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C5EEEC8-CE48-4F3B-9325-E38BDC1ACBCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4C1A1DE-69CC-4240-84CD-9088709186F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4C1A1DE-69CC-4240-84CD-9088709186F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4C1A1DE-69CC-4240-84CD-9088709186F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4C1A1DE-69CC-4240-84CD-9088709186F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C482919A-AD5A-4942-8FB1-841472495983}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C482919A-AD5A-4942-8FB1-841472495983}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C482919A-AD5A-4942-8FB1-841472495983}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C482919A-AD5A-4942-8FB1-841472495983}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -272,6 +332,16 @@ Global
 		{ADAF23A8-3574-4F9E-94C9-BF046AA26CF2} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
 		{D52F0DA3-F60F-40AA-BDDD-EFE133485A3F} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
 		{8CD6E17A-6E84-47B9-B069-C5ED19253ED1} = {D52F0DA3-F60F-40AA-BDDD-EFE133485A3F}
+		{FEB1A5CA-7673-4D1C-8CE3-3158E6768839} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
+		{D574B461-68DC-4F4D-A3E2-E4AD3CE2CAD8} = {D53F80C8-5B1F-4153-989A-A10DD890B9D2}
+		{96FF1BDB-3E6B-4A43-B930-35A87CE5C7D5} = {D53F80C8-5B1F-4153-989A-A10DD890B9D2}
+		{8A35D700-999C-4966-BBDE-23DE9428FC59} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
+		{CAFA45C5-80FF-4546-B07F-DCB6121CD7DE} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
+		{8A695046-2272-4495-BE95-7D2261077132} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
+		{C8472607-4485-4E07-B1C6-ACFE76F23077} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
+		{6C5EEEC8-CE48-4F3B-9325-E38BDC1ACBCD} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
+		{A4C1A1DE-69CC-4240-84CD-9088709186F6} = {6BF28FB3-9FA0-4A68-A66F-B7701CD93C69}
+		{C482919A-AD5A-4942-8FB1-841472495983} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {89BCBB25-4DD3-406C-91A9-BB2F978C23F2}

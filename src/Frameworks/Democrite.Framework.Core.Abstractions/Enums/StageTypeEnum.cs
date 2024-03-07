@@ -13,6 +13,8 @@ namespace Democrite.Framework.Core.Abstractions.Enums
         Call,
         Foreach,
         Filter,
-        Convert
+        Convert,
+        PushToContext,
+        FireSignal
     }
 }

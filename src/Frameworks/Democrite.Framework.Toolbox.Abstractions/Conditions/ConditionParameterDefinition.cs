@@ -7,11 +7,13 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
     using Democrite.Framework.Toolbox.Models;
 
     using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Define one expression parameters
     /// </summary>
     /// <seealso cref="ConditionBaseDefinition" />
+    [DataContract]
     [Serializable]
     [ImmutableObject(true)]
     public sealed class ConditionParameterDefinition : ConditionBaseDefinition
@@ -45,21 +47,25 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the uid.
         /// </summary>
+        [DataMember]
         public Guid Uid { get; }
 
         /// <summary>
         /// Gets the name of the varibale used in the expression.
         /// </summary>
+        [DataMember]
         public string Name { get; }
 
         /// <summary>
         /// Gets the type.
         /// </summary>
+        [DataMember]
         public AbstractType Type { get; }
 
         /// <summary>
         /// Gets the order.
         /// </summary>
+        [DataMember]
         public ushort Order { get; }
 
         #endregion
@@ -79,7 +85,10 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <inheritdoc />
         protected override int OnGetHashCode()
         {
-            return HashCode.Combine(this.Uid, this.Name, this.Type, this.Order);
+            return HashCode.Combine(this.Uid,
+                                    this.Name,
+                                    this.Type,
+                                    this.Order);
         }
 
         #endregion

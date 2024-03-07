@@ -5,7 +5,6 @@
 namespace Democrite.Framework.Core.Abstractions.Triggers
 {
     using Democrite.Framework.Core.Abstractions.Inputs;
-    using Democrite.Framework.Core.Abstractions.Signals;
 
     using System.ComponentModel;
     using System.Runtime.Serialization;
@@ -28,19 +27,21 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public CronTriggerDefinition(Guid uid,
-                                     IEnumerable<Guid> targetSequenceIds,
-                                     IEnumerable<SignalId> targetSignalIds,
+                                     string displayName,
+                                     IEnumerable<TriggerTargetDefinition> targets,
                                      bool enabled,
                                      string cronExpression,
-                                     InputSourceDefinition? inputSourceDefinition = null)
+                                     bool useSecond,
+                                     DataSourceDefinition? triggerGlobalOutputDefinition = null)
             : base(uid,
+                   displayName,
                    TriggerTypeEnum.Cron,
-                   targetSequenceIds,
-                   targetSignalIds,
+                   targets,
                    enabled,
-                   inputSourceDefinition)
+                   triggerGlobalOutputDefinition)
         {
             this.CronExpression = cronExpression;
+            this.UseSecond = useSecond;
         }
 
         #endregion
@@ -51,6 +52,11 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         [Id(0)]
         [DataMember]
         public string CronExpression { get; }
+
+        /// <inheritdoc />
+        [Id(1)]
+        [DataMember]
+        public bool UseSecond { get; }
 
         #endregion
     }

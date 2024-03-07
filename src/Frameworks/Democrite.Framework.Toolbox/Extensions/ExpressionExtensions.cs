@@ -6,7 +6,11 @@ namespace System.Linq.Expressions
 {
     using Democrite.Framework.Toolbox.Abstractions.Conditions;
     using Democrite.Framework.Toolbox.Abstractions.Enums;
+    using Democrite.Framework.Toolbox.Abstractions.Expressions;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
+    using Democrite.Framework.Toolbox.Models;
 
     using System;
     using System.Collections.Immutable;
@@ -26,6 +30,8 @@ namespace System.Linq.Expressions
         private static readonly IReadOnlyDictionary<MathOperatorEnum, Func<Expression?, Expression, Expression>> s_mathOperatorExpressionBuild;
         private static readonly IReadOnlyDictionary<int, Type> s_functionTemplateTypes;
         private static readonly IReadOnlyDictionary<int, Type> s_actionTemplateTypes;
+
+        private static readonly Type s_memberInputConstantBindingDefinition = typeof(MemberInputConstantBindingDefinition<>);
 
         #endregion
 
@@ -84,6 +90,253 @@ namespace System.Linq.Expressions
         #region Methods
 
         /// <summary>
+        /// Creates the access to direct object
+        /// </summary>
+        public static AccessExpressionDefinition CreateAccess<TTargetEntity>(this TTargetEntity? directObject)
+        {
+            return new AccessExpressionDefinition((ConcretType)typeof(TTargetEntity).GetAbstractType(), new TypedArgument<TTargetEntity?>(directObject, null), null, null);
+        }
+
+        /// <summary>
+        /// Creates the access from an expression
+        /// </summary>
+        public static AccessExpressionDefinition CreateAccess<TTargetEntity, TFrom>(this Expression<Func<TFrom, TTargetEntity>> lambdaAccessExpression)
+        {
+            return CreateAccess((LambdaExpression)lambdaAccessExpression);
+        }
+
+        /// <summary>
+        /// Creates the access from an expression
+        /// </summary>
+        public static AccessExpressionDefinition CreateAccess<TTargetEntity>(this Expression<Func<TTargetEntity>> lambdaAccessExpression)
+        {
+            return CreateAccess((LambdaExpression)lambdaAccessExpression);
+        }
+
+        /// <summary>
+        /// Creates the access from an expression
+        /// </summary>
+        public static AccessExpressionDefinition CreateAccess(this LambdaExpression lambdaAccessExpression)
+        {
+            ArgumentNullException.ThrowIfNull(lambdaAccessExpression);
+
+            MemberInitializationDefinition? initMember = null;
+            string? callChain = null;
+
+            if (lambdaAccessExpression.NodeType != ExpressionType.Lambda)
+                throw new InvalidOperationException("Only lambda type could be used as configuration provider");
+
+            var nodeType = lambdaAccessExpression.Body.NodeType;
+            if (nodeType == ExpressionType.Constant)
+            {
+                var cstExpression = (ConstantExpression)lambdaAccessExpression.Body;
+                var cstValue = cstExpression.Value;
+                return new AccessExpressionDefinition((ConcretType)cstExpression.Type.GetAbstractType(), TypedArgument.From(cstValue, cstExpression.Type), null, null);
+            }
+
+            if (nodeType == ExpressionType.MemberInit)
+            {
+                initMember = lambdaAccessExpression.SerializeMemberInitialization();
+            }
+            else if (nodeType == ExpressionType.MemberAccess)
+            {
+                var memberExpr = (MemberExpression)lambdaAccessExpression.Body;
+                if (memberExpr.Expression is ParameterExpression)
+                {
+                    callChain = DynamicCallHelper.GetCallChain(lambdaAccessExpression.Body)!;
+                }
+                else
+                {
+                    var cstValue = memberExpr.ExtractConstantValue(out var objType);
+                    return new AccessExpressionDefinition((ConcretBaseType)objType!.GetAbstractType(), TypedArgument.From(cstValue, objType!), null, null);
+                }
+            }
+            else if (nodeType == ExpressionType.Parameter)
+            {
+                callChain = DynamicCallHelper.GetCallChain(lambdaAccessExpression.Body)!;
+            }
+            else
+            {
+                throw new NotSupportedException("Expression access is not supported " + lambdaAccessExpression);
+            }
+
+            return new AccessExpressionDefinition((ConcretBaseType)lambdaAccessExpression.ReturnType.GetAbstractType(), null, callChain, initMember);
+        }
+
+        /// <summary>
+        /// Creates the expression to access the information
+        /// </summary>
+        public static Expression CreateExpression(this AccessExpressionDefinition access, IReadOnlyDictionary<int, ParameterExpression>? parameters = null)
+        {
+#pragma warning disable IDE0031 // Use null propagation
+            if (access.MemberInit is not null)
+                access.MemberInit.ToMemberInitializationLambdaExpression(parameters ?? new Dictionary<int, ParameterExpression>());
+#pragma warning restore IDE0031 // Use null propagation
+
+            if (!string.IsNullOrEmpty(access.ChainCall))
+                return DynamicCallHelper.CompileCallChainAccess(parameters!.Single().Value, access.ChainCall, containRoot: true).Body;
+
+            return Expression.Constant(access.DirectObject?.GetValue(), access.TargetType.ToType());
+        }
+
+        /// <summary>
+        /// Extracts the constant value from a <see cref="MemberExpression"/>
+        /// </summary>
+        public static object? ExtractConstantValue(this MemberExpression member, out Type? objectType)
+        {
+            objectType = null;
+
+            if (member.Expression is ConstantExpression context)
+            {
+                var cstValue = context.Type.GetValueFromPropertyOrField(context.Value, member.Member.Name, out objectType);
+                return cstValue;
+            }
+
+            if (member.Expression is MemberExpression nestedMember)
+            {
+                var contextInst = ExtractConstantValue(nestedMember, out objectType);
+
+                ArgumentNullException.ThrowIfNull(objectType);
+
+                var cstValue = objectType!.GetValueFromPropertyOrField(contextInst, member.Member.Name, out objectType);
+                return cstValue;
+            }
+
+            throw new NotSupportedException("Could not resolved the expression to extract the value");
+        }
+
+        /// <summary>
+        /// Serialize a member initialization from <paramref name="expression"/>
+        /// </summary>
+        public static MemberInitializationDefinition SerializeMemberInitialization<TInput, TOutput>(this Expression<Func<TInput, TOutput>> expression)
+        {
+            return SerializeMemberImplInitialization(expression, typeof(TOutput), expression.Parameters.ToArray());
+        }
+
+        /// <summary>
+        /// Serialize a member initialization from <paramref name="expression"/>
+        /// </summary>
+        public static MemberInitializationDefinition SerializeMemberInitialization(this LambdaExpression expression)
+        {
+            return SerializeMemberImplInitialization(expression, expression.ReturnType, expression.Parameters.ToArray());
+        }
+
+        /// <summary>
+        /// Serializes the member initialization.
+        /// </summary>
+        private static MemberInitializationDefinition SerializeMemberImplInitialization(this LambdaExpression expression, Type output, params ParameterExpression[] inputs)
+
+        {
+            if (expression.Body.NodeType != ExpressionType.MemberInit)
+                throw new InvalidCastException("Lambda expression must be a member type initialization");
+
+            var indexedInputs = inputs.Select((input, indx) => (input, indx))
+                                      .ToDictionary(kv => kv.input, kv => kv.indx);
+
+            var memberInit = (MemberInitExpression)expression.Body;
+
+            var info = SerializeMemberInitializationImpl(indexedInputs, memberInit);
+
+            return new MemberInitializationDefinition((ConcretType)output.GetAbstractType(),
+                                                      inputs.Select(i => (ConcretType)i.Type.GetAbstractType()),
+                                                      info.method,
+                                                      info.bindings);
+        }
+
+        private static (AbstractMethod? method, IReadOnlyCollection<MemberBindingDefinition> bindings) SerializeMemberInitializationImpl(Dictionary<ParameterExpression, int> indexedInputs,
+                                                                                                                                         MemberInitExpression memberInit)
+        {
+            var memberBindings = new List<MemberBindingDefinition>();
+
+            var ctorMethd = memberInit.NewExpression.Constructor?.GetAbstractMethod();
+
+            foreach (var binding in memberInit.Bindings)
+            {
+                if (binding.BindingType == MemberBindingType.Assignment && binding is MemberAssignment assign)
+                {
+                    if (assign.Expression is ConstantExpression constant)
+                    {
+                        memberBindings.Add((MemberBindingDefinition)Activator.CreateInstance(s_memberInputConstantBindingDefinition.MakeGenericType(constant.Type),
+                                                                                             new object?[] { false, assign.Member.Name, constant.Value })!);
+                        continue;
+                    }
+
+                    if (assign.Expression is MemberExpression member)
+                    {
+                        var access = CreateAccess(Expression.Lambda(member, indexedInputs.OrderBy(kv => kv.Value).Select(kv => kv.Key))!);
+                        memberBindings.Add(new MemberInputAccessBindingDefinition(false, assign.Member.Name, access));
+                        continue;
+
+                        //if (member.Expression is ParameterExpression accessInput)
+                        //{
+                        //    var paramIndex = indexedInputs[accessInput];
+                        //    memberBindings.Add(new MemberInputCallChainBindingDefinition(false, assign.Member.Name, DynamicCallHelper.GetCallChain(member)!, paramIndex));
+                        //    continue;
+                        //}
+                        //else
+                        //{
+                        //    var cstValue = member.ExtractConstantValue(out var objType);
+
+                        //    ArgumentNullException.ThrowIfNull(objType);
+
+                        //    var def = (MemberBindingDefinition)Activator.CreateInstance(s_memberInputConstantBindingDefinition.MakeGenericType(objType),
+                        //                                                                new object?[] { false, assign.Member.Name, cstValue })!;
+                        //    memberBindings.Add(def);
+                        //    continue;
+                        //}
+                    }
+
+                    if (assign.Expression is ParameterExpression parameter)
+                    {
+                        var paramIndex = indexedInputs[parameter];
+                        memberBindings.Add(new MemberInputParameterBindingDefinition(false, assign.Member.Name, paramIndex));
+                        continue;
+                    }
+
+                    if (assign.Expression is MemberInitExpression initNested)
+                    {
+                        var info = SerializeMemberInitializationImpl(indexedInputs, initNested);
+                        memberBindings.Add(new MemberInputNestedInitBindingDefinition(false,
+                                                                                      assign.Member.Name,
+                                                                                      initNested.NewExpression.Type.GetAbstractType(),
+                                                                                      info.method,
+                                                                                      info.bindings));
+                        continue;
+                    }
+
+                    if (assign.Expression.NodeType == ExpressionType.Convert && assign.Expression is UnaryExpression convertExpression)
+                    {
+                        var access = CreateAccess(Expression.Lambda(convertExpression.Operand, indexedInputs.OrderBy(kv => kv.Value).Select(kv => kv.Key))!);
+                        memberBindings.Add(new MemberInputConvertBindingDefinition(false,
+                                                                                   assign.Member.Name,
+                                                                                   (ConcretType)convertExpression.Type.GetAbstractType(),
+                                                                                   access));
+                        continue;
+                    }
+
+                    throw new NotSupportedException("Expression could not be serialized " + assign);
+                }
+                //else if (binding.BindingType == MemberBindingType.MemberBinding)
+                //{
+                //}
+                else
+                {
+                    throw new NotSupportedException("NotSupported yet " + binding.BindingType);
+                }
+            }
+
+            return (ctorMethd, memberBindings);
+        }
+
+        /// <summary>
+        /// Converts back a <see cref="MemberInitializationDefinition"/> to an expression 
+        /// </summary>
+        public static Expression<Func<TInput, TOutput>> ToMemberInitializationExpression<TInput, TOutput>(this MemberInitializationDefinition def)
+        {
+            return (Expression<Func<TInput, TOutput>>)ToMemberInitializationLambdaExpression(def);
+        }
+
+        /// <summary>
         /// Serializes predicate function
         /// </summary>
         /// <remarks>
@@ -91,7 +344,7 @@ namespace System.Linq.Expressions
         /// </remarks>
         public static ConditionExpressionDefinition Serialize<TInputA, TInputB>(this Expression<Func<TInputA, TInputB, bool>> expression)
         {
-            return SerializeLambda(expression);
+            return SerializeConditionalLambda(expression);
         }
 
         /// <summary>
@@ -102,7 +355,7 @@ namespace System.Linq.Expressions
         /// </remarks>
         public static ConditionExpressionDefinition Serialize<TInput>(this Expression<Func<TInput, bool>> expression)
         {
-            return SerializeLambda(expression);
+            return SerializeConditionalLambda(expression);
         }
 
         /// <summary>
@@ -257,7 +510,7 @@ namespace System.Linq.Expressions
         /// <remarks>
         ///     Tolerate only some action to be able to execute the predicte on all condition and different computeur
         /// </remarks>
-        private static ConditionExpressionDefinition SerializeLambda(this LambdaExpression expression)
+        private static ConditionExpressionDefinition SerializeConditionalLambda(this LambdaExpression expression)
         {
             var inputParameter = expression.Parameters
                                            .Select((p, indx) => (parameter: p, definition: new ConditionParameterDefinition(Guid.NewGuid(), p.Name ?? string.Empty, p.Type.GetAbstractType(), (ushort)indx)))
@@ -343,11 +596,15 @@ namespace System.Linq.Expressions
                     return new ConditionMathOperationDefinition(SerializeConditions(((BinaryExpression)body).Left, sourceInputExpressions),
                                                                 body.NodeType.ToMathOperand(),
                                                                 SerializeConditions(((BinaryExpression)body).Right, sourceInputExpressions)!);
+
+                case ExpressionType.Convert:
+                    return new ConditionConvertDefinition(SerializeConditions(((UnaryExpression)body).Operand, sourceInputExpressions)!, ((UnaryExpression)body).Type.GetAbstractType());
+
                 case ExpressionType.And:
-                    throw new NotImplementedException(body.NodeType.ToString());
+                //throw new NotImplementedException(body.NodeType.ToString());
 
                 case ExpressionType.Or:
-                    throw new NotImplementedException(body.NodeType.ToString());
+                // throw new NotImplementedException(body.NodeType.ToString());
 
                 default:
                     throw new NotImplementedException("Action not tolerate in condition serialization : " + body.NodeType);
@@ -462,7 +719,101 @@ namespace System.Linq.Expressions
                 return action(leftExpressions, rightExpressions);
             }
 
+            if (body is ConditionConvertDefinition cnv)
+            {
+                var fromExpression = SerializeConditionsToExpression(cnv.From, sourceInputExpressions);
+                return Expression.Convert(fromExpression, cnv.To.ToType());
+            }
+
             throw new NotSupportedException("Serialize expression restoration not restorable");
+        }
+
+        /// <summary>
+        /// Converts back a <see cref="MemberInitializationDefinition"/> to an expression 
+        /// </summary>
+        public static LambdaExpression ToMemberInitializationLambdaExpression(this MemberInitializationDefinition def)
+        {
+            var indexedArgs = def.Inputs.Select((input, index) => (input, index))
+                                        .ToDictionary(k => k.index, kv => Expression.Parameter(kv.input.ToType(), "Arg" + kv.index));
+
+            return ToMemberInitializationLambdaExpression(def, indexedArgs);
+        }
+
+        /// <summary>
+        /// Converts back a <see cref="MemberInitializationDefinition"/> to an expression 
+        /// </summary>
+        public static LambdaExpression ToMemberInitializationLambdaExpression(this MemberInitializationDefinition def, IReadOnlyDictionary<int, ParameterExpression> indexedArgs)
+        {
+            NewExpression ctorExp = null!;
+
+            if (def.Ctor is null)
+            {
+                ctorExp = Expression.New(def.NewType!);
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+
+            var initType = def.NewType.ToType();
+
+            var init = Expression.MemberInit(ctorExp, def.Bindings.Select(bind => CreateBindingExpression(initType, indexedArgs, bind)));
+
+            return Expression.Lambda(init, indexedArgs.OrderBy(kv => kv.Key).Select(kv => kv.Value));
+        }
+
+        /// <summary>
+        /// Creates back binding expression from <see cref="MemberBindingDefinition"/>
+        /// </summary>
+        private static MemberBinding CreateBindingExpression(Type outputType, IReadOnlyDictionary<int, ParameterExpression> indexedArgs, MemberBindingDefinition bind)
+        {
+            var prop = outputType.GetMember(bind.MemberName).First();
+            if (bind is MemberInputConstantBindingDefinition constBind)
+                return Expression.Bind(prop, Expression.Constant(constBind.GetValue()));
+
+            if (bind is MemberInputParameterBindingDefinition param)
+                return Expression.Bind(prop, indexedArgs[param.ParameterIndex]);
+
+            if (bind is MemberInputCallChainBindingDefinition inputCallChain)
+            {
+                var expr = DynamicCallHelper.CompileCallChainAccess(indexedArgs[inputCallChain.ParameterIndex], inputCallChain.CallChain, containRoot: true);
+                return Expression.Bind(prop, expr.Body);
+            }
+
+            if (bind is MemberInputNestedInitBindingDefinition nestedInit)
+            {
+                NewExpression ctorExp = null!;
+
+                if (nestedInit.Ctor is null)
+                {
+                    ctorExp = Expression.New(nestedInit.NewType!);
+                }
+                else
+                {
+                    throw new NotSupportedException();
+                }
+
+                var initType = nestedInit.NewType.ToType();
+
+                return Expression.Bind(prop,
+                                       Expression.MemberInit(ctorExp,
+                                                             nestedInit.Bindings
+                                                                       .Select(bind => CreateBindingExpression(initType, indexedArgs, bind))));
+            }
+
+            if (bind is MemberInputAccessBindingDefinition accessInit)
+            {
+                var accessExpression = accessInit.Access.CreateExpression(indexedArgs);
+                return Expression.Bind(prop, accessExpression);
+            }
+
+            if (bind is MemberInputConvertBindingDefinition convert)
+            {
+                var accessExpression = convert.Access.CreateExpression(indexedArgs);
+                return Expression.Bind(prop, Expression.Convert(accessExpression, convert.NewType.ToType()));
+            }
+
+            throw new NotImplementedException();
         }
 
         #endregion

@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Models.Surrogates
 {
-    using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Models;
 
     using Orleans;
 
@@ -28,14 +28,7 @@ namespace Democrite.Framework.Core.Abstractions.Models.Surrogates
         [Id(2)]
         public Guid? ParentExecutionId { get; set; }
 
-        public static ExecutionContextSurrogate From(IExecutionContext executionContext)
-        {
-            return new ExecutionContextSurrogate
-            {
-                FlowUID = executionContext.FlowUID,
-                CurrentExecutionId = executionContext.CurrentExecutionId,
-                ParentExecutionId = executionContext.ParentExecutionId,
-            };
-        }
+        [Id(3)]
+        public IReadOnlyCollection<IContextDataContainer> ContextDataContainers { get; set; } 
     }
 }

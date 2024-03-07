@@ -165,14 +165,14 @@ namespace Democrite.Framework.Toolbox.Services
                     break;
                 }
 
-                await StopAsync(token);
+                //await StopAsync(token);
             }
             catch (OperationCanceledException)
             {
             }
             finally
             {
-                Interlocked.Decrement(ref this._runningCount);
+                Interlocked.Exchange(ref this._runningCount, 0);
             }
         }
 
@@ -195,8 +195,10 @@ namespace Democrite.Framework.Toolbox.Services
             catch (OperationCanceledException)
             {
             }
-
-            this._runningTask = null;
+            finally
+            {
+                this._runningTask = null;
+            }
         }
 
         /// <summary>
@@ -223,6 +225,7 @@ namespace Democrite.Framework.Toolbox.Services
                 Debug.Assert(this._localRunningCancellationTokenSource == null);
                 Debug.Assert(this._runningTask == null);
 
+                this._localRunningCancellationTokenSource?.Cancel();
                 this._localRunningCancellationTokenSource = new CancellationTokenSource();
 
                 var localTickDelay = this._tickDelay;
@@ -264,7 +267,7 @@ namespace Democrite.Framework.Toolbox.Services
         #region Fields
 
         private readonly Func<CancellationToken, Task> _callback;
-        
+
         #endregion
 
         #region Ctor
@@ -276,7 +279,7 @@ namespace Democrite.Framework.Toolbox.Services
                             CancellationToken lifeTimeToken,
                             TimeSpan? tickDelay,
                             TimeSpan? startDelay,
-                            bool waitExecutionEnd) 
+                            bool waitExecutionEnd)
             : base(lifeTimeToken, tickDelay, startDelay, waitExecutionEnd)
         {
             this._callback = callback;
@@ -351,7 +354,7 @@ namespace Democrite.Framework.Toolbox.Services
                           CancellationToken lifeTimeToken,
                           TimeSpan? tickDelay,
                           TimeSpan? startDelay,
-                          bool waitExecutionEnd) 
+                          bool waitExecutionEnd)
             : base(lifeTimeToken, tickDelay, startDelay, waitExecutionEnd)
         {
             this._callback = callback;

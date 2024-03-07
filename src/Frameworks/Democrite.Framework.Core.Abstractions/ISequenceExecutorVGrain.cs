@@ -12,7 +12,7 @@ namespace Democrite.Framework.Core.Abstractions
     /// </summary>
 
     [VGrainIdFormat(IdFormatTypeEnum.Guid,
-                    FirstParameterTemplate = "{executionContext." + nameof(IExecutionContext.FlowUID) + "}")]
+                    FirstParameterTemplate = "{executionContext." + nameof(IExecutionContext.CurrentExecutionId) + "}")]
 
     public interface ISequenceExecutorVGrain : IVGrain, IGrainWithGuidKey, IGenericContextedExecutor<Guid>
     {

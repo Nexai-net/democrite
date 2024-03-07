@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
+    using Democrite.Framework.Core.Abstractions.Doors;
+
     /// <summary>
     /// Virtual grain in charge to handled behavior describe by <see cref="RelayFilterDoorDefinition"/>
     /// </summary>

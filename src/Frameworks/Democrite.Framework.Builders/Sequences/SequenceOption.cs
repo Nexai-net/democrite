@@ -30,11 +30,6 @@ namespace Democrite.Framework.Builders.Sequences
         public Guid Uid { get; private set; }
 
         /// <summary>
-        /// Gets or sets the display name.
-        /// </summary>
-        public string? DisplayName { get; set; }
-
-        /// <summary>
         /// Gets the diagnostic.
         /// </summary>
         public SequenceOptionDiagnostic Diagnostic { get; }

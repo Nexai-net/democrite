@@ -13,6 +13,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
     /// <summary>
     /// Define a group math mathOperator link by <see cref="MathOperatorEnum"/>
     /// </summary>
+    [DataContract]
     [Serializable]
     [ImmutableObject(true)]
 #pragma warning disable CS0660 // Type defines mathOperator == or mathOperator != but does not override Object.Equals(object o)
@@ -48,16 +49,19 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the left.
         /// </summary>
+        [DataMember]
         public ConditionBaseDefinition? Left { get; }
 
         /// <summary>
         /// Gets the operand.
         /// </summary>
+        [DataMember]
         public MathOperatorEnum MathOperator { get; }
 
         /// <summary>
         /// Gets the right.
         /// </summary>
+        [DataMember]
         public ConditionBaseDefinition Right { get; }
 
         #endregion

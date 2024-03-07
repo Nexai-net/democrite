@@ -1,0 +1,286 @@
+﻿// Copyright (c) Nexai.
+// The Democrite licenses this file to you under the MIT license.
+// Produce by nexai & community (cf. docs/Teams.md)
+
+namespace Democrite.Framework.Core.Repositories
+{
+    using Democrite.Framework.Core.Abstractions.Repositories;
+
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Options;
+
+    using Orleans.Serialization;
+    using Orleans.Serialization.Codecs;
+    using Orleans.Serialization.Configuration;
+    using Orleans.Serialization.Serializers;
+    using Orleans.Serialization.Session;
+    using Orleans.Storage;
+
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
+    using System.Text;
+    using System.Threading.Tasks;
+
+    public sealed class DemocriteSerializer : IDemocriteSerializer
+    {
+        #region Fields
+
+        private static readonly Type s_genericConverterGenTraits;
+
+        private readonly IReadOnlyDictionary<Type, GenericConverter> _converterLinks;
+        private readonly IGrainStorageSerializer _grainStorageSerializer;
+        private readonly IServiceProvider _serviceProvider;
+
+        private readonly Dictionary<Type, IGenericConverter?> _converterCached;
+        private readonly ReaderWriterLockSlim _converterCacheLocker;
+
+        #endregion
+
+        #region Ctor
+
+        static DemocriteSerializer()
+        {
+            s_genericConverterGenTraits = typeof(GenericConverter<,,>);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DemocriteSerializer"/> class.
+        /// </summary>
+        public DemocriteSerializer(IGrainStorageSerializer grainStorageSerializer,
+                                   IOptions<TypeManifestOptions> manifests,
+                                   IServiceProvider serviceProvider)
+        {
+            this._grainStorageSerializer = grainStorageSerializer;
+            this._serviceProvider = serviceProvider;
+
+            this._converterCacheLocker = new ReaderWriterLockSlim();
+
+            this._converterCached = new Dictionary<Type, IGenericConverter?>();
+
+            this._converterLinks = manifests.Value.Converters
+                                            .Select(cnv => (Converter: cnv, ConverterInterface: cnv.GetInterfaces().First(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IConverter<,>))))
+                                            .Where(kv => kv.ConverterInterface is not null)
+                                            .SelectMany(kv => new[]
+                                            {
+                                                (Type: kv.ConverterInterface.GetGenericArguments().First(),
+                                                 Source: kv.ConverterInterface.GetGenericArguments().First(),
+                                                 Surrogate: kv.ConverterInterface.GetGenericArguments().Last(),
+                                                 Cnv: kv.Converter,
+                                                 ToSurrogate: true),
+
+                                                (Type: kv.ConverterInterface.GetGenericArguments().Last(),
+                                                 Source: kv.ConverterInterface.GetGenericArguments().First(),
+                                                 Surrogate: kv.ConverterInterface.GetGenericArguments().Last(),
+                                                 Cnv: kv.Converter,
+                                                 ToSurrogate: false),
+
+                                            })
+
+                                            .Select(kv =>
+                                            {
+                                                var converterIsGeneric = kv.Cnv.IsGenericType;
+
+                                                return (Type: converterIsGeneric && kv.Type.IsGenericType ? kv.Type.GetGenericTypeDefinition() : kv.Type,
+                                                        Source: converterIsGeneric && kv.Source.IsGenericType ? kv.Source.GetGenericTypeDefinition() : kv.Source,
+                                                        Surrogate: converterIsGeneric && kv.Surrogate.IsGenericType ? kv.Surrogate.GetGenericTypeDefinition() : kv.Surrogate,
+                                                        Cnv: kv.Cnv.IsGenericType ? kv.Cnv.GetGenericTypeDefinition() : kv.Cnv,
+                                                        ToSurrogate: kv.ToSurrogate);
+                                            })
+
+                                            .ToDictionary(lnk => lnk.Type,
+                                                          lnk => new GenericConverter(lnk.Source, lnk.Cnv, lnk.Surrogate, lnk.ToSurrogate));
+        }
+
+        #endregion
+
+        #region Nested
+
+        private record class GenericConverter(Type Source,
+                                              Type Converter,
+                                              Type Surrogate,
+                                              bool ToSurrogate);
+
+        private interface IGenericConverter
+        {
+            object Convert(object value);
+        }
+
+        private sealed class GenericConverter<TConverter, TSource, TSurrogate> : IGenericConverter//: GenericConverter
+            where TSurrogate : struct
+            where TConverter : IConverter<TSource, TSurrogate>
+        {
+            #region Fields
+
+            private readonly TConverter _converter;
+
+            #endregion
+
+            #region Ctor
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="GenericConverter{TConverter, TSource, TSurrogate}"/> class.
+            /// </summary>
+            public GenericConverter(bool toSurrogate, IServiceProvider serviceProvider)
+            {
+                this.ToSurrogate = toSurrogate;
+                this._converter = ActivatorUtilities.CreateInstance<TConverter>(serviceProvider);
+            }
+
+            #endregion
+
+            #region Properties
+
+            /// <summary>
+            /// Converts to surrogate.
+            /// </summary>
+            public bool ToSurrogate { get; }
+
+            #endregion
+
+            #region Methods
+
+            public object Convert(object value)
+            {
+                if (this.ToSurrogate)
+                    return ConvertToSurrogate(value);
+                return ConvertFromSurrogate(value);
+            }
+
+            public object ConvertFromSurrogate(object value)
+            {
+                return this._converter.ConvertFromSurrogate((TSurrogate)value)!;
+            }
+
+            public object ConvertToSurrogate(object value)
+            {
+                return this._converter.ConvertToSurrogate((TSource)value)!;
+            }
+
+            #endregion 
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        public ReadOnlyMemory<byte> SerializeToBinary<TObj>(in TObj obj)
+        {
+            if (obj is null)
+                return default;
+
+            var serializable = ToSerializableObject(obj);
+
+            if (serializable is null)
+                return default;
+
+            var data = this._grainStorageSerializer.Serialize(serializable);
+            return data;
+        }
+
+        /// <inheritdoc />
+        public object? ToSerializableObject<TObj>(in TObj obj)
+        {
+            if (obj is null)
+                return default;
+
+            object result = obj;
+            var converter = TryGetConvert(obj);
+            if (converter is not null)
+                result = converter.Convert(obj);
+
+            return result;
+        }
+
+        /// <inheritdoc />
+        public TObj Deserialize<TObj>(in ReadOnlyMemory<byte> serializeIbj)
+        {
+            var obj = this._grainStorageSerializer.Deserialize<object>(serializeIbj);
+
+            if (obj is TObj correctCastObj)
+                return correctCastObj;
+
+            var converter = TryGetConvert(obj);
+            if (converter is not null)
+                return (TObj)converter.Convert(obj);
+
+            throw new InvalidCastException("Could not convert data type " + obj.GetType() + " to " + typeof(TObj));
+        }
+
+        #region Tools
+
+        private IGenericConverter? TryGetConvert<TObj>(TObj obj)
+        {
+            var trait = obj!.GetType();
+
+            this._converterCacheLocker.EnterReadLock();
+            try
+            {
+                if (this._converterCached.TryGetValue(trait, out var converter))
+                    return converter;
+            }
+            finally
+            {
+                this._converterCacheLocker?.ExitReadLock();
+            }
+
+            this._converterCacheLocker.EnterWriteLock();
+            try
+            {
+                if (this._converterCached.TryGetValue(trait, out var converter))
+                    return converter;
+
+                GenericConverter? cnv = null;
+                IGenericConverter? cnvResult = null;
+                
+                if (this._converterLinks.TryGetValue(trait, out cnv) || (trait.IsGenericType && this._converterLinks.TryGetValue(trait.GetGenericTypeDefinition(), out cnv)))
+                {
+                    var converterType = cnv.Converter;
+                    var sourceType = cnv.Source;
+                    var surrogateType = cnv.Surrogate;
+
+                    if (trait.IsGenericType && converterType.IsGenericType)
+                        converterType = converterType.MakeGenericType(trait.GetGenericArguments());
+
+                    if (trait.IsGenericType && sourceType.IsGenericType)
+                        sourceType = sourceType.MakeGenericType(trait.GetGenericArguments());
+
+                    if (trait.IsGenericType && surrogateType.IsGenericType)
+                        surrogateType = surrogateType.MakeGenericType(trait.GetGenericArguments());
+
+                    var cnvType = s_genericConverterGenTraits.MakeGenericType(converterType, sourceType, surrogateType);
+
+                    cnvResult = (IGenericConverter?)ActivatorUtilities.CreateInstance(this._serviceProvider, cnvType, cnv.ToSurrogate);
+                }
+
+                this._converterCached.Add(trait, cnvResult);
+
+                return cnvResult;
+            }
+            finally
+            {
+                this._converterCacheLocker?.ExitWriteLock();
+            }
+        }
+
+        private static TSurrogate ConvertToSurrogate<TConverter, TSource, TSurrogate>(in TSource source, TConverter converter)
+            where TSurrogate : struct
+            where TConverter : IConverter<TSource, TSurrogate>
+        {
+            return converter.ConvertToSurrogate(source);
+        }
+
+        private static TSource ConvertFomSurrogate<TConverter, TSource, TSurrogate>(in TSurrogate surrogate, TConverter converter)
+            where TSurrogate : struct
+            where TConverter : IConverter<TSource, TSurrogate>
+        {
+            return converter.ConvertFromSurrogate(surrogate);
+        }
+
+        #endregion
+
+        #endregion
+    }
+}

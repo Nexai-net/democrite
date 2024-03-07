@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Signals.Doors
 {
     using Democrite.Framework.Core.Abstractions.Attributes;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Extensions;
@@ -62,12 +63,14 @@ namespace Democrite.Framework.Node.Signals.Doors
         #region Methods
 
         /// <inheritdoc />
-        protected sealed override async ValueTask OnInitializeAsync(RelayFilterDoorDefinition doordDefinition)
+        protected sealed override async ValueTask OnInitializeAsync(RelayFilterDoorDefinition doordDefinition, CancellationToken token)
         {
-            await base.OnInitializeAsync(doordDefinition);
+            await base.OnInitializeAsync(doordDefinition, token);
 
             var conditionExpression = doordDefinition.FilterCondition.ToExpressionDelegateWithResult();
             this._condition = conditionExpression.Compile();
+
+            token.ThrowIfCancellationRequested();
 
             var parameterIndexed = conditionExpression.Parameters
                                                       .Select((v, indx) => (Parameter: v, Index: indx))
@@ -79,6 +82,7 @@ namespace Democrite.Framework.Node.Signals.Doors
             parameterIndexed.Remove(s_signalMessageTrait);
 
             System.Diagnostics.Debug.Assert(parameterIndexed.Count < 2);
+            token.ThrowIfCancellationRequested();
 
             if (parameterIndexed.Count == 1)
             {
@@ -115,6 +119,7 @@ namespace Democrite.Framework.Node.Signals.Doors
 
                 args[this._signalMessageParameterIndex] = signal;
 
+                token.ThrowIfCancellationRequested();
                 if ((bool)this._condition!.DynamicInvoke(args)!)
                 {
                     signalRelay = signal;

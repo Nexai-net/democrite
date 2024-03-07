@@ -15,7 +15,7 @@ namespace Democrite.Framework.Toolbox.Models
     [DataObject]
     [Serializable]
     [ImmutableObject(true)]
-    public sealed class CollectionType : ConcreteBaseType
+    public sealed class CollectionType : ConcretBaseType
     {
         #region Ctor
 
@@ -54,7 +54,7 @@ namespace Democrite.Framework.Toolbox.Models
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnConcretEquals(ConcreteBaseType otherConcret)
+        protected override bool OnConcretEquals(ConcretBaseType otherConcret)
         {
             return otherConcret is CollectionType collection &&
                    (this.ItemAbstractType?.Equals(collection.ItemAbstractType) ?? collection.ItemAbstractType is null);

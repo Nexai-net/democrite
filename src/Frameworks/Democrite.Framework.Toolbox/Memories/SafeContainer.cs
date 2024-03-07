@@ -113,14 +113,32 @@ namespace Democrite.Framework.Toolbox.Memories
         /// <summary>
         /// Gets a copy of item contains
         /// </summary>
-        public IReadOnlyCollection<TItem> GetContainerCopy()
+        public IReadOnlyCollection<TItem> GetContainerCopy(Func<TItem, bool>? filter = null)
         {
             if (this.IsDisposed)
                 return EnumerableHelper<TItem>.ReadOnlyArray;
 
             lock (this._items)
             {
+                if (filter != null)
+                    return this._items.Values.Where(filter!).ToArray();
                 return this._items.Values.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating if the collection match predicate
+        /// </summary>
+        public bool Any(Func<TItem, bool>? filter = null)
+        {
+            if (this.IsDisposed)
+                return false;
+
+            lock (this._items)
+            {
+                if (filter is not null)
+                    return this._items.Values.Any(filter);
+                return this._items.Values.Any();
             }
         }
 

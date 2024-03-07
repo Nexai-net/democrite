@@ -106,11 +106,29 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; definition with id &apos;{1}&apos; fail due to : {2}.
+        /// </summary>
+        internal static string DefinitionExceptionMessage {
+            get {
+                return ResourceManager.GetString("DefinitionExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; definition with id &apos;{1}&apos; is missing..
         /// </summary>
         internal static string DefinitionMissingExceptionMessage {
             get {
                 return ResourceManager.GetString("DefinitionMissingExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Access blocked by security level {0}  Reason -&gt; {1}..
+        /// </summary>
+        internal static string DemocriteSecurityIssueExceptionMessage {
+            get {
+                return ResourceManager.GetString("DemocriteSecurityIssueExceptionMessage", resourceCulture);
             }
         }
         
@@ -169,6 +187,15 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Etag {0} provided doesn&apos;t match the one in place &apos;{1}&apos;.
+        /// </summary>
+        internal static string MemoryRepositoryStorageEtagMismatchExceptionMessage {
+            get {
+                return ResourceManager.GetString("MemoryRepositoryStorageEtagMismatchExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Method with signature &quot;{0}&quot; doesn&apos;t have been founded on type &quot;{1}&quot;..
         /// </summary>
         internal static string MethodNotFound {
@@ -196,6 +223,15 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Stage executor was not found to solved stage definition type &apos;{0}&apos;..
+        /// </summary>
+        internal static string StageExecutorNotFoundException {
+            get {
+                return ResourceManager.GetString("StageExecutorNotFoundException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to VGrainType could not be generated on vgrain {0} and have no fallback values.
         /// </summary>
         internal static string VGrainIdGenerationExceptionMessage {
@@ -219,6 +255,15 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         internal static string VGrainIdTemplateMissingExceptionMessage {
             get {
                 return ResourceManager.GetString("VGrainIdTemplateMissingExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A valitor ({0}) on grain {1} reject the grain id provided  &apos;{2}&apos;.
+        /// </summary>
+        internal static string VGrainIdValidationFaildExceptionMessage {
+            get {
+                return ResourceManager.GetString("VGrainIdValidationFaildExceptionMessage", resourceCulture);
             }
         }
         

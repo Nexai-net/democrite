@@ -39,7 +39,7 @@ namespace Democrite.Framework
         #region Methods
 
         /// <summary>
-        /// Create and setup a new democrite cluster client
+        /// Get and setup a new democrite cluster client
         /// </summary>
         public static DemocriteClient Create(string[] args,
                                              Action<IDemocriteClientBuilder>? builder,
@@ -49,7 +49,7 @@ namespace Democrite.Framework
         }
 
         /// <summary>
-        /// Create and setup a new democrite cluster client
+        /// Get and setup a new democrite cluster client
         /// </summary>
         public static DemocriteClient Create(Action<HostBuilderContext, IConfigurationBuilder>? setupConfig,
                                              Action<IDemocriteClientBuilder>? builder,
@@ -59,7 +59,7 @@ namespace Democrite.Framework
         }
 
         /// <summary>
-        /// Create and setup a new democrite cluster client
+        /// Get and setup a new democrite cluster client
         /// </summary>
         public static DemocriteClient Create(Action<IDemocriteClientBuilder>? builder = null,
                                              ClusterBuilderTools? clusterBuilderTools = null)
@@ -68,7 +68,7 @@ namespace Democrite.Framework
         }
 
         /// <summary>
-        /// Create and setup a new democrite cluster client
+        /// Get and setup a new democrite cluster client
         /// </summary>
         public static DemocriteClient Create(string[]? args,
                                              Action<HostBuilderContext, IConfigurationBuilder>? setupConfig,
@@ -88,7 +88,7 @@ namespace Democrite.Framework
         }
 
         /// <summary>
-        /// Create and setup a new democrite cluster client
+        /// Get and setup a new democrite cluster client
         /// </summary>
         internal static void Create<THostBuilder>(THostBuilder hostBuilder,
                                                   Action<HostBuilderContext, IConfigurationBuilder>? setupConfig = null,

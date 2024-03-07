@@ -4,13 +4,13 @@
 
 namespace System
 {
+    using Democrite.Framework.Toolbox.Abstractions.Attributes;
     using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Models;
 
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// Extensions method used to create <see cref="AbstractType"/> and <see cref="AbstractMethod"/>
@@ -22,8 +22,11 @@ namespace System
         private static readonly Dictionary<Type, AbstractType> s_abstractTypeCache;
         private static readonly ReaderWriterLockSlim s_abstractTypeCachedLocker;
 
-        private static readonly Dictionary<MethodInfo, AbstractMethod> s_abstractMethodCache;
+        private static readonly Dictionary<MethodBase, AbstractMethod> s_abstractMethodCache;
         private static readonly ReaderWriterLockSlim s_abstractMethodCachedLocker;
+
+        private static readonly Dictionary<string, MethodInfo> s_methodInfoFromAbstractCache;
+        private static readonly ReaderWriterLockSlim s_methodInfoFromAbstractCacheLocker;
 
         #endregion
 
@@ -37,16 +40,69 @@ namespace System
             s_abstractTypeCache = new Dictionary<Type, AbstractType>();
             s_abstractTypeCachedLocker = new ReaderWriterLockSlim();
 
-            s_abstractMethodCache = new Dictionary<MethodInfo, AbstractMethod>();
+            s_abstractMethodCache = new Dictionary<MethodBase, AbstractMethod>();
             s_abstractMethodCachedLocker = new ReaderWriterLockSlim();
+
+            s_methodInfoFromAbstractCache = new Dictionary<string, MethodInfo>();
+            s_methodInfoFromAbstractCacheLocker = new ReaderWriterLockSlim();
         }
 
         #endregion
 
         #region Methods
 
-        /// <inheritdoc />
-        public static AbstractMethod GetAbstractMethod(this MethodInfo methodInfo)
+        /// <summary>
+        /// Converts to method.
+        /// </summary>
+        public static MethodBase ToMethod(this AbstractMethod method, Type type)
+        {
+            MethodInfo? mthd = null;
+
+            s_methodInfoFromAbstractCacheLocker.EnterReadLock();
+            try
+            {
+                if (s_methodInfoFromAbstractCache.TryGetValue(method.MethodUniqueId, out var cacheMthd))
+                    return cacheMthd;
+            }
+            finally
+            {
+                s_methodInfoFromAbstractCacheLocker.ExitReadLock();
+            }
+
+            s_methodInfoFromAbstractCacheLocker.EnterWriteLock();
+            try
+            {
+                if (s_methodInfoFromAbstractCache.TryGetValue(method.MethodUniqueId, out var cacheMthd))
+                    return cacheMthd;
+
+                mthd = type.GetAllMethodInfos(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                           .FirstOrDefault(m => method.IsEqualTo(m, true));
+
+                if (mthd != null)
+                {
+                    if (mthd.IsGenericMethodDefinition && method.HasGenericArguments)
+                    {
+                        mthd = mthd.MakeGenericMethod(method.GenericArguments
+                                                            .Select(g => g.ToType())
+                                                            .ToArray());
+                    }
+
+                    if (!s_methodInfoFromAbstractCache.ContainsKey(method.MethodUniqueId))
+                        s_methodInfoFromAbstractCache.Add(method.MethodUniqueId, mthd);
+                }
+
+                return mthd;
+            }
+            finally
+            {
+                s_methodInfoFromAbstractCacheLocker.ExitWriteLock();
+            }
+        }
+
+        /// <summary>
+        /// Convert a <see cref="MethodBase"/> (Constructor or method classic) into serializable structure <see cref="AbstractMethod"/>
+        /// </summary>
+        public static AbstractMethod GetAbstractMethod(this MethodBase methodInfo)
         {
             ArgumentNullException.ThrowIfNull(methodInfo);
 
@@ -97,19 +153,71 @@ namespace System
                 s_abstractTypeCachedLocker.ExitReadLock();
             }
 
-            var buildedType = BuildAbstractType(type);
+            s_abstractTypeCachedLocker.EnterWriteLock();
+            try
+            {
+                var buildedType = GetThreadSafeAbstractType(type);
+                return buildedType!;
+            }
+            finally
+            {
+                s_abstractTypeCachedLocker.ExitWriteLock();
+            }
+        }
 
-            if (buildedType is not null &&
-                buildedType.Category != AbstractTypeCategoryEnum.Generic &&
-                buildedType.Category != AbstractTypeCategoryEnum.GenericRef)
+        /// <summary>
+        /// Gets all compatible abstract types (Parent, interfaces, ...)
+        /// </summary>
+        public static IReadOnlyCollection<AbstractType> GetAllCompatibleAbstractTypes(this Type type)
+        {
+            var resultAbstractTypes = new List<AbstractType>();
+            var parentTypes = type.GetTypeInfoExtension().GetAllCompatibleTypes()
+                                  .ToList();
+
+            s_abstractTypeCachedLocker.EnterReadLock();
+            try
+            {
+                for (var i = 0; i < parentTypes.Count; i++)
+                {
+                    var ptype = parentTypes[i];
+
+                    if (s_abstractTypeCache.TryGetValue(ptype, out var abstractType))
+                    {
+                        resultAbstractTypes.Add(abstractType);
+                        parentTypes.RemoveAt(i);
+                        i--;
+                    }
+                }
+            }
+            finally
+            {
+                s_abstractTypeCachedLocker.ExitReadLock();
+            }
+
+            // Test if remain parent to be build
+            if (parentTypes.Count > 0)
             {
                 s_abstractTypeCachedLocker.EnterWriteLock();
                 try
                 {
-                    if (s_abstractTypeCache.TryGetValue(type, out var abstractType))
-                        return abstractType;
+                    // Test again to get from cache if some have been added since
+                    for (var i = 0; i < parentTypes.Count; i++)
+                    {
+                        var ptype = parentTypes[i];
 
-                    s_abstractTypeCache.Add(type, buildedType);
+                        if (s_abstractTypeCache.TryGetValue(ptype, out var abstractType))
+                        {
+                            resultAbstractTypes.Add(abstractType);
+                            parentTypes.RemoveAt(i);
+                            i--;
+                        }
+                    }
+
+                    foreach (var ptype in parentTypes)
+                    {
+                        var abstractType = GetThreadSafeAbstractType(ptype);
+                        resultAbstractTypes.Add(abstractType);
+                    }
                 }
                 finally
                 {
@@ -117,16 +225,24 @@ namespace System
                 }
             }
 
-            return buildedType!;
+            return resultAbstractTypes;
         }
 
         /// <summary>
         /// Determines whether if <see cref="AbstractType"/> is equal to <see cref="Type"/>
         /// </summary>
-        public static bool IsEqualTo(this AbstractType abstractType, Type type)
+        public static bool IsEqualTo(this AbstractType abstractType, Type type, bool checkhierachy = false)
         {
             var other = type.GetAbstractType();
-            return abstractType?.Equals(other) ?? abstractType is null;
+            var match = abstractType?.Equals(other) ?? abstractType is null;
+
+            if (!match && checkhierachy && abstractType is not null)
+            {
+                return type.GetAllCompatibleAbstractTypes()
+                           .Any(m => abstractType.IsEqualTo(m!, checkhierachy: false));
+            }
+
+            return match;
         }
 
         /// <summary>
@@ -146,7 +262,7 @@ namespace System
                 result = IsEqualTo(abstractMethod, specializedMethod, false);
             }
 
-            return result;  
+            return result;
         }
 
         #region Tools
@@ -154,14 +270,15 @@ namespace System
         /// <summary>
         /// Builds the type of the abstract.
         /// </summary>
+        [ThreadSafe]
         private static AbstractType BuildAbstractType(Type type)
         {
-            var extendInfo = type.GetTypeIntoExtension();
+            var extendInfo = type.GetTypeInfoExtension();
             if (type.IsGenericTypeDefinition || type.IsGenericTypeParameter)
             {
                 return new GenericType(extendInfo.FullShortName,
                                        type.ContainsGenericParameters && type.IsGenericTypeParameter
-                                            ? type.GetGenericParameterConstraints().Select(c => GetAbstractType(c))
+                                            ? type.GetGenericParameterConstraints().Select(c => GetThreadSafeAbstractType(c))
                                             : Array.Empty<AbstractType>());
             }
 
@@ -171,22 +288,25 @@ namespace System
                                           type.Namespace,
                                           type.AssemblyQualifiedName!,
                                           type.IsInterface,
-                                          extendInfo.CollectionItemType!.GetAbstractType());
+                                          extendInfo.CollectionItemType!.GetThreadSafeAbstractType());
             }
 
-            return new ConcreteType(extendInfo.FullShortName,
+            return new ConcretType(extendInfo.FullShortName,
                                     type.Namespace,
                                     type.AssemblyQualifiedName!,
                                     type.IsInterface,
                                     type.GetGenericArguments()
-                                        .Select(x => GetAbstractType(x)));
+                                        .Select(x => GetThreadSafeAbstractType(x)));
         }
 
-        private static AbstractMethod BuildAbstractMethod(MethodInfo methodInfo)
+        private static AbstractMethod BuildAbstractMethod(MethodBase methodInfo)
         {
             ArgumentNullException.ThrowIfNull(methodInfo);
 
-            var returnType = methodInfo.ReturnType?.GetAbstractType() ?? typeof(void).GetAbstractType();
+            AbstractType? returnType = null;
+
+            if (methodInfo is MethodInfo mInfo)
+                returnType = mInfo.ReturnType?.GetAbstractType() ?? typeof(void).GetAbstractType();
 
             var arguments = methodInfo.GetParameters()
                                       .Select(p => p.ParameterType.GetAbstractType())
@@ -207,11 +327,35 @@ namespace System
             return new AbstractMethod(methodDisplayName,
                                       methodInfo.Name,
                                       methodUniqueId,
+                                      methodInfo is ConstructorInfo,
                                       returnType,
                                       arguments,
                                       genericArgs);
         }
 
+        /// <summary>
+        /// Gets the type of the thread safe abstract.
+        /// </summary>
+        [ThreadSafe]
+        private static AbstractType GetThreadSafeAbstractType(this Type type)
+        {
+            ArgumentNullException.ThrowIfNull(type);
+
+            if (s_abstractTypeCache.TryGetValue(type, out var abstractType))
+                return abstractType;
+
+            var buildedType = BuildAbstractType(type);
+
+            if (buildedType is not null &&
+                buildedType.Category != AbstractTypeCategoryEnum.Generic &&
+                buildedType.Category != AbstractTypeCategoryEnum.GenericRef)
+            {
+                if (s_abstractTypeCache.TryGetValue(type, out var newBuildedAbstractType))
+                    return newBuildedAbstractType;
+            }
+
+            return buildedType!;
+        }
         #endregion
 
         #endregion

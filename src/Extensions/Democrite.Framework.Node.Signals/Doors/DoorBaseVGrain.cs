@@ -6,10 +6,10 @@ namespace Democrite.Framework.Node.Signals.Doors
 {
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Signals;
-    using Democrite.Framework.Node.Signals;
     using Democrite.Framework.Toolbox.Abstractions.Attributes;
     using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Extensions;
@@ -122,61 +122,9 @@ namespace Democrite.Framework.Node.Signals.Doors
         #region Methods
 
         /// <inheritdoc />
-        public async Task InitializeAsync(DoorDefinition doorDefinition)
+        public Task InitializeAsync(DoorDefinition doorDefinition, GrainCancellationToken token)
         {
-            ArgumentNullException.ThrowIfNull(doorDefinition);
-
-            await this._concurrencyLock.WaitAsync();
-
-            try
-            {
-                if (EqualityComparer<DoorDefinition>.Default.Equals(this._doordDefinition, doorDefinition))
-                    return;
-
-                this._doordDefinition = (TDoordDef)doorDefinition;
-
-                // Ensure grain and definition always match
-                System.Diagnostics.Debug.Assert(doorDefinition.Uid == this.GetPrimaryKey());
-
-                try
-                {
-                    foreach (var signalSource in doorDefinition.SignalSourceIds)
-                    {
-                        var subscrptionId = await this._signalService.SubscribeAsync(signalSource, this);
-                        this._subscriptionIds.Add(subscrptionId);
-                    }
-
-                    foreach (var doorSource in doorDefinition.DoorSourceIds)
-                    {
-                        var subscrptionId = await this._signalService.SubscribeAsync(doorSource, this);
-                        this._subscriptionIds.Add(subscrptionId);
-                    }
-
-                    await this._concurrencyStateLock.WaitAsync();
-                    try
-                    {
-                        this.State!.InitializeSignalSupport(doorDefinition);
-                    }
-                    finally
-                    {
-                        this._concurrencyStateLock.Release();
-                    }
-
-                    if (this._signalVGrain == null)
-                        this._signalVGrain = this._grainFactory.GetGrain<IDoorSignalVGrain>(doorDefinition.DoorId.Uid);
-
-                    await OnInitializeAsync(this._doordDefinition);
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.OptiLog(LogLevel.Error, "Door initialization failed {exception}", ex);
-                    throw;
-                }
-            }
-            finally
-            {
-                this._concurrencyLock.Release();
-            }
+            return InitializeImplAsync(doorDefinition, token.CancellationToken);
         }
 
         /// <inheritdoc />
@@ -241,11 +189,11 @@ namespace Democrite.Framework.Node.Signals.Doors
 
             var doorId = this.GetPrimaryKey();
 
-            var info = await this._doorDefinitionProvider.GetFirstValueByIdAsync(doorId) ?? throw new DoorNotFoundException(doorId.ToString());
+            var info = await this._doorDefinitionProvider.GetFirstValueByIdAsync(doorId, ct) ?? throw new DoorNotFoundException(doorId.ToString());
 
             this._identityCard = await base.RegisterAsComponentAsync<IComponentDoorIdentityCard>(info.Uid);
 
-            await InitializeAsync(info);
+            await InitializeImplAsync(info, ct);
         }
 
         /// <summary>
@@ -294,7 +242,7 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// </summary>
         /// <remarks>ThreadSafe</remarks>
         [ThreadSafe]
-        protected virtual ValueTask OnInitializeAsync(TDoordDef doordDefinition)
+        protected virtual ValueTask OnInitializeAsync(TDoordDef doordDefinition, CancellationToken token)
         {
             return ValueTask.CompletedTask;
         }
@@ -376,6 +324,66 @@ namespace Democrite.Framework.Node.Signals.Doors
         #region Tools
 
         /// <summary>
+        /// Initializes implementation
+        /// </summary>
+        private async Task InitializeImplAsync(DoorDefinition doorDefinition, CancellationToken token)
+        {
+            ArgumentNullException.ThrowIfNull(doorDefinition);
+
+            await this._concurrencyLock.WaitAsync(token);
+
+            try
+            {
+                if (EqualityComparer<DoorDefinition>.Default.Equals(this._doordDefinition, doorDefinition))
+                    return;
+
+                this._doordDefinition = (TDoordDef)doorDefinition;
+
+                // Ensure grain and definition always match
+                System.Diagnostics.Debug.Assert(doorDefinition.Uid == this.GetPrimaryKey());
+
+                try
+                {
+                    foreach (var signalSource in doorDefinition.SignalSourceIds)
+                    {
+                        var subscrptionId = await this._signalService.SubscribeAsync(signalSource, this, token);
+                        this._subscriptionIds.Add(subscrptionId);
+                    }
+
+                    foreach (var doorSource in doorDefinition.DoorSourceIds)
+                    {
+                        var subscrptionId = await this._signalService.SubscribeAsync(doorSource, this, token);
+                        this._subscriptionIds.Add(subscrptionId);
+                    }
+
+                    await this._concurrencyStateLock.WaitAsync(token);
+                    try
+                    {
+                        this.State!.InitializeSignalSupport(doorDefinition);
+                    }
+                    finally
+                    {
+                        this._concurrencyStateLock.Release();
+                    }
+
+                    if (this._signalVGrain == null)
+                        this._signalVGrain = this._grainFactory.GetGrain<IDoorSignalVGrain>(doorDefinition.DoorId.Uid);
+
+                    await OnInitializeAsync(this._doordDefinition, token);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.OptiLog(LogLevel.Error, "Door initialization failed {exception}", ex);
+                    throw;
+                }
+            }
+            finally
+            {
+                this._concurrencyLock.Release();
+            }
+        }
+
+        /// <summary>
         /// Call when door received some signal to compute decision if yes or not the door must trigged
         /// </summary>
         /// <returns>
@@ -393,32 +401,35 @@ namespace Democrite.Framework.Node.Signals.Doors
                 {
                     stillToProcess = false;
 
-                    var token = CancellationHelper.Timeout(this._stimulationTimeout);
-                    var stimulationResult = await OnDoorStimulateAsync(doordDef, token);
-
-                    if (stimulationResult.Result == false)
-                        break;
-
-                    token.ThrowIfCancellationRequested();
-
-                    if (this._signalVGrain != null)
+                    using (var timeoutToken = CancellationHelper.DisposableTimeout(this._stimulationTimeout))
+                    using (var token = CancellationTokenSource.CreateLinkedTokenSource(this.VGrainLifecycleToken, timeoutToken.Content))
                     {
-                        if (stimulationResult.ResponsibleSignals != null && stimulationResult.ResponsibleSignals.Count > 0)
-                            MarkAsUsed(stimulationResult.ResponsibleSignals);
+                        var stimulationResult = await OnDoorStimulateAsync(doordDef, token.Token);
 
-                        var fireId = Guid.NewGuid();
+                        if (stimulationResult.Result == false)
+                            break;
 
-                        var source = CreateSignalSource(fireId, stimulationResult, doordDef);
+                        token.Token.ThrowIfCancellationRequested();
 
-                        var signal = new SignalMessage(fireId,
-                                                       this.TimeHandler.UtcNow,
-                                                       source);
+                        if (this._signalVGrain != null)
+                        {
+                            if (stimulationResult.ResponsibleSignals != null && stimulationResult.ResponsibleSignals.Count > 0)
+                                MarkAsUsed(stimulationResult.ResponsibleSignals);
 
-                        token.ThrowIfCancellationRequested();
-                        await this._signalVGrain.Fire(signal);
+                            var fireId = Guid.NewGuid();
 
-                        hadFire = true;
-                        stillToProcess = stimulationResult.NeedRebound;
+                            var source = CreateSignalSource(fireId, stimulationResult, doordDef);
+
+                            var signal = new SignalMessage(fireId,
+                                                           this.TimeHandler.UtcNow,
+                                                           source);
+
+                            token.Token.ThrowIfCancellationRequested();
+                            await this._signalVGrain.Fire(signal);
+
+                            hadFire = true;
+                            stillToProcess = stimulationResult.NeedRebound;
+                        }
                     }
                 }
                 while (stillToProcess);

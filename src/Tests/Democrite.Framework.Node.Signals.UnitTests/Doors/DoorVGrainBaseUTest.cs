@@ -7,13 +7,14 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
     using AutoFixture;
 
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Node.Signals.Doors;
     using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
     using Democrite.UnitTests.ToolKit.Extensions;
+    using Democrite.UnitTests.ToolKit.Helpers;
     using Democrite.UnitTests.ToolKit.Tests;
 
     using Microsoft.Extensions.DependencyInjection;
@@ -21,14 +22,12 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
     using NFluent;
 
     using NSubstitute;
-    using NSubstitute.ClearExtensions;
     using NSubstitute.ReceivedExtensions;
 
     using Orleans.Runtime;
 
     using System;
     using System.Runtime.CompilerServices;
-    using Democrite.UnitTests.ToolKit.Helpers;
 
     /// <summary>
     /// Base Unit test for any door
@@ -85,19 +84,19 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             var provider = serviceCollection.BuildServiceProvider();
             var mockSignalService = provider.GetRequiredService<ISignalService>();
 
-            mockSignalService.SubscribeAsync(Arg.Is<SignalId>(s => signals.Contains(s)), Arg.Any<ISignalReceiver>())
+            mockSignalService.SubscribeAsync(Arg.Is<SignalId>(s => signals.Contains(s)), Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>())
                              .Returns(Task.FromResult(Guid.NewGuid()));
 
-            mockSignalService.SubscribeAsync(Arg.Is<DoorId>(s => doors.Contains(s)), Arg.Any<ISignalReceiver>())
+            mockSignalService.SubscribeAsync(Arg.Is<DoorId>(s => doors.Contains(s)), Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>())
                              .Returns(Task.FromResult(Guid.NewGuid()));
 
             await fixture.InitVGrain(door);
 
             await mockSignalService.Received(signals.Length)
-                                   .SubscribeAsync(Arg.Any<SignalId>(), Arg.Any<ISignalReceiver>());
+                                   .SubscribeAsync(Arg.Any<SignalId>(), Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>());
 
             await mockSignalService.Received(doors.Length)
-                                   .SubscribeAsync(Arg.Any<DoorId>(), Arg.Is(door));
+                                   .SubscribeAsync(Arg.Any<DoorId>(), Arg.Is(door), Arg.Any<CancellationToken>());
         }
 
         /// <summary>
@@ -125,7 +124,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             var def = provider.GetRequiredService<TDoorDefinition>();
             var doorIdentityCard = provider.GetRequiredService<IComponentDoorIdentityCard>();
 
-            mockSignalService.SubscribeAsync(signal, Arg.Any<ISignalReceiver>())
+            mockSignalService.SubscribeAsync(signal, Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>())
                              .Returns(Task.FromResult(Guid.NewGuid()));
 
             // Disabled door logic to apply to test multiple signal receiving without interruption
@@ -134,7 +133,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             await fixture.InitVGrain(door);
 
             await mockSignalService.Received(1)
-                                   .SubscribeAsync(Arg.Any<SignalId>(), Arg.Any<ISignalReceiver>());
+                                   .SubscribeAsync(Arg.Any<SignalId>(), Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>());
 
             // StartAt signal testing
             var state = GetDoorState(door);
@@ -233,13 +232,13 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             var mockOutputSignal = provider.GetRequiredService<IDoorSignalVGrain>();
             var def = provider.GetRequiredService<TDoorDefinition>();
 
-            mockSignalService.SubscribeAsync(signal, Arg.Any<ISignalReceiver>())
+            mockSignalService.SubscribeAsync(signal, Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>())
                              .Returns(Task.FromResult(Guid.NewGuid()));
 
             await fixture.InitVGrain(door);
 
             await mockSignalService.Received(1)
-                                   .SubscribeAsync(Arg.Any<SignalId>(), Arg.Any<ISignalReceiver>());
+                                   .SubscribeAsync(Arg.Any<SignalId>(), Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>());
 
             // StartAt signal testing
             var state = GetDoorState(door);
@@ -344,7 +343,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             mockServiceCollection.AddSingleton<DoorDefinition>(def)
                                  .AddSingleton(def);
 
-            mockDefinitionProvider.GetFirstValueByIdAsync(Arg.Is(def.Uid)).Returns(ValueTask.FromResult<DoorDefinition?>(def));
+            mockDefinitionProvider.GetFirstValueByIdAsync(Arg.Is(def.Uid), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult<DoorDefinition?>(def));
 
             var forceGrainId = GrainId.Create(GrainType.Create(typeof(TDoorGrain).Name), GrainIdKeyExtensions.CreateGuidKey(def.Uid));
 

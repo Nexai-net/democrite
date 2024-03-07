@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Builders.Signals
 {
+    using Democrite.Framework.Builders.Doors;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Toolbox.Abstractions.Enums;
     using Democrite.Framework.Toolbox.Helpers;
@@ -73,9 +75,9 @@ namespace Democrite.Framework.Builders.Signals
         /// <param name="interval">The interval use to interpret the signal. Default 1s window</param>
         /// <param name="onlyOneByInterval">Allow only one door firering by interval</param>
         public static IDefinitionBaseBuilder<DoorDefinition> UseLogicalAggregator(this IDoorWithListenerBuilder doorWithListenerBuilder,
-                                                                                     LogicEnum aggregationCondition = LogicEnum.And,
-                                                                                     TimeSpan? interval = null,
-                                                                                     bool onlyOneByInterval = false)
+                                                                                  LogicEnum aggregationCondition = LogicEnum.And,
+                                                                                  TimeSpan? interval = null,
+                                                                                  bool onlyOneByInterval = false)
         {
             var fixedInterval = interval ?? TimeSpan.FromSeconds(1);
 

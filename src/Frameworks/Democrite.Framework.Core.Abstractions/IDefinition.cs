@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions
 {
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Toolbox.Abstractions.Supports;
 
     using Microsoft.Extensions.Logging;
@@ -11,14 +12,14 @@ namespace Democrite.Framework.Core.Abstractions
     /// <summary>
     /// Define a serializable entity used to provide execution information to democrite engine
     /// </summary>
-    public interface IDefinition : ISupportDebugDisplayName
+    public interface IDefinition : ISupportDebugDisplayName, IEntityWithId<Guid>
     {
         #region Properties
 
         /// <summary>
-        /// Gets the definition unique identifier
+        /// Gets the display name used in log or storage to easily identify the definition
         /// </summary>
-        Guid Uid { get; }
+        string DisplayName { get; }
 
         #endregion
 

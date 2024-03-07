@@ -7,9 +7,13 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Builders;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
+    using Democrite.Framework.Core.Abstractions.Signals;
+
+    using System.Linq.Expressions;
+    using System.Runtime;
 
     /// <summary>
-    /// Build a sequence pipeline steps builder
+    /// Get a sequence pipeline steps builder
     /// </summary>
     public interface ISequencePipelineBaseBuilder : IDefinitionBaseBuilder<SequenceDefinition>
     {
@@ -30,18 +34,99 @@ namespace Democrite.Framework.Builders.Sequences
         ISequencePipelineBuilder<TOutput> EnqueueStage<TOutput>(ISequencePipelineStageDefinitionProvider stage);
 
         /// <summary>
-        /// Build a sub <see cref="SequenceBuilder"/>
+        /// Get a sub <see cref="SequenceBuilder"/>
         /// </summary>
         /// <remarks>
         ///     used to link all sub sequence definition to an origine one
         /// </remarks>
-        ISequenceBuilder CreateSubSequence(string? displayName);
+        ISequenceBuilder CreateSubSequence(string displayName);
     }
 
     /// <summary>
-    /// Build a sequence pipeline steps builder
+    /// Builder dedicated to signal setup in the sequence
     /// </summary>
-    public interface ISequencePipelineBuilder : ISequencePipelineBaseBuilder
+    public interface ISequencePipelineSignalBuilder<TBuilderOutput>
+    {
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        TBuilderOutput FireSignal(string signalName);
+
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        TBuilderOutput FireSignal(Guid signalName);
+
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        TBuilderOutput FireSignal(SignalId signalName);
+
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        TBuilderOutput FireSignal<TMessage>(string signalName, TMessage message)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal one by message
+        /// </summary>
+        TBuilderOutput FireSignals<TMessage>(string signalName, IEnumerable<TMessage> messages)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        TBuilderOutput FireSignal<TMessage>(Guid signalName, TMessage message)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal one by message
+        /// </summary>
+        TBuilderOutput FireSignals<TMessage>(Guid signalName, IEnumerable<TMessage> messages)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        TBuilderOutput FireSignal<TMessage>(SignalId signalName, TMessage message)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal one by message
+        /// </summary>
+        TBuilderOutput FireSignals<TMessage>(SignalId signalName, IEnumerable<TMessage> messages)
+            where TMessage : struct;
+
+    }
+
+    /// <summary>
+    /// Builder dedicated to push to data context setup in the sequence
+    /// </summary>
+    public interface ISequencePipelineDataContextlBuilder<TBuilderOutput>
+    {
+        /// <summary>
+        /// Add a new stage that inject in content to <see cref="IExecutionContext"/>
+        /// </summary>
+        ISequencePipelineBuilder PushToContext<TInfo>(Expression<Func<TInfo>> data, bool @override = true);
+
+        /// <summary>
+        /// Add a new stage that clear context content to <see cref="IExecutionContext"/>
+        /// </summary>
+        TBuilderOutput ClearContextMetadata<TInfo>();
+
+        /// <summary>
+        /// Add a new stage that clear context content to <see cref="IExecutionContext"/>
+        /// </summary>
+        TBuilderOutput ClearAllContextMetadata();
+    }
+
+    /// <summary>
+    /// Get a sequence pipeline steps builder
+    /// </summary>
+    public interface ISequencePipelineBuilder : ISequencePipelineBaseBuilder,
+                                                ISequencePipelineSignalBuilder<ISequencePipelineBuilder>,
+                                                ISequencePipelineDataContextlBuilder<ISequencePipelineBuilder>
     {
         /// <summary>
         /// Add a new <see cref="IVGrain"/> in the pipeline to transform action based on input to produce normally and output
@@ -53,13 +138,57 @@ namespace Democrite.Framework.Builders.Sequences
     /// Pipeline builder with a <typeparamref name="TPreviousMessage"/> message
     /// </summary>
     /// <typeparam name="TPreviousMessage">The type of the previous message.</typeparam>
-    public interface ISequencePipelineBuilder<TPreviousMessage> : ISequencePipelineBaseBuilder
+    public interface ISequencePipelineBuilder<TPreviousMessage> : ISequencePipelineBaseBuilder,
+                                                                  ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TPreviousMessage>>,
+                                                                  ISequencePipelineDataContextlBuilder<ISequencePipelineBuilder<TPreviousMessage>>
+
     {
         /// <summary>
         /// Add a new <see cref="IVGrain"/> in the pipeline to transform action based on input to produce normally and output
         /// </summary>
         ISequencePipelineStageCallBuilder<TPreviousMessage, TVGrain> Use<TVGrain>(Action<ISequencePipelineStageConfigurator<TPreviousMessage>>? cfg = null)
             where TVGrain : IVGrain;
+
+        /// <summary>
+        /// Add a new stage that inject in content to <see cref="IExecutionContext"/>
+        /// </summary>
+        ISequencePipelineBuilder<TPreviousMessage> PushToContext<TInfo>(Expression<Func<TPreviousMessage, TInfo>> data, bool @override = true);
+
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        ISequencePipelineBuilder<TPreviousMessage> FireSignal<TMessage>(string signalName, Expression<Func<TPreviousMessage, TMessage>> message)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal one by message
+        /// </summary>
+        ISequencePipelineBuilder<TPreviousMessage> FireSignals<TMessage>(string signalName, Expression<Func<TPreviousMessage, IEnumerable<TMessage>>> messages)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        ISequencePipelineBuilder<TPreviousMessage> FireSignal<TMessage>(Guid signalName, Expression<Func<TPreviousMessage, TMessage>> message)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal one by message
+        /// </summary>
+        ISequencePipelineBuilder<TPreviousMessage> FireSignals<TMessage>(Guid signalId, Expression<Func<TPreviousMessage, IEnumerable<TMessage>>> messages)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        ISequencePipelineBuilder<TPreviousMessage> FireSignal<TMessage>(SignalId signalName, Expression<Func<TPreviousMessage, TMessage>> message)
+            where TMessage : struct;
+
+        /// <summary>
+        /// Fire a designated signal one by message
+        /// </summary>
+        ISequencePipelineBuilder<TPreviousMessage> FireSignals<TMessage>(SignalId signalId, Expression<Func<TPreviousMessage, IEnumerable<TMessage>>> messages)
+            where TMessage : struct;
 
         /// <summary>
         /// Add a new converter <see cref="ITransformerConvertVGrain{TInput}"/> in the pipeline to transform input into output

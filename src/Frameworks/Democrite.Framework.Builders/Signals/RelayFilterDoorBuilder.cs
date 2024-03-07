@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Builders.Signals
 {
+    using Democrite.Framework.Builders.Doors;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Toolbox.Abstractions.Conditions;
     using Democrite.Framework.Toolbox.Extensions;

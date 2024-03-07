@@ -7,6 +7,7 @@ namespace Democrite.Framework.Node.Triggers
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Abstractions.Streams;
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Triggers;
@@ -37,12 +38,13 @@ namespace Democrite.Framework.Node.Triggers
         /// Initializes a new instance of the <see cref="SignalTriggerVGrain"/> class.
         /// </summary>
         public SignalTriggerVGrain(ILogger<ISignalTriggerVGrain> logger,
-                                   [PersistentState(nameof(Triggers), nameof(Democrite))] IPersistentState<TriggerState> persistentState,
+                                   [PersistentState(nameof(Triggers), DemocriteConstants.DefaultDemocriteStateConfigurationKey)] IPersistentState<TriggerState> persistentState,
                                    ITriggerDefinitionProvider triggerDefinitionProvider,
                                    ISequenceDefinitionProvider sequenceDefinitionProvider,
                                    ISignalDefinitionProvider signalDefinitionProvider,
                                    IDemocriteExecutionHandler democriteExecutionHandler,
-                                   IInputSourceProviderFactory inputSourceProviderFactory,
+                                   IDataSourceProviderFactory inputSourceProviderFactory,
+                                   IStreamQueueDefinitionProvider streamQueueDefinitionProvider,
                                    ISignalService signalService)
             : base(logger,
                    persistentState,
@@ -51,6 +53,7 @@ namespace Democrite.Framework.Node.Triggers
                    signalDefinitionProvider,
                    democriteExecutionHandler,
                    inputSourceProviderFactory,
+                   streamQueueDefinitionProvider,
                    signalService)
         {
             this._localSignalService = signalService;
@@ -61,16 +64,15 @@ namespace Democrite.Framework.Node.Triggers
         #region Methods
 
         /// <inheritdoc />
-        public override async Task UpdateAsync()
+        protected override async Task OnEnsureTriggerDefinitionAsync(CancellationToken token)
         {
-            await base.UpdateAsync();
-
             var definition = this.TriggerDefinition;
 
-            if (definition.ListenSignal != null)
-                await this._localSignalService.SubscribeAsync(definition.ListenSignal.Value, this);
-            else if (definition.ListenDoor != null)
-                await this._localSignalService.SubscribeAsync(definition.ListenDoor.Value, this);
+            if (definition.ListenSignal is not null)
+                await this._localSignalService.SubscribeAsync(definition.ListenSignal.Value, this, token);
+            
+            if (definition.ListenDoor is not null)
+                await this._localSignalService.SubscribeAsync(definition.ListenDoor.Value, this, token);
         }
 
         /// <inheritdoc />

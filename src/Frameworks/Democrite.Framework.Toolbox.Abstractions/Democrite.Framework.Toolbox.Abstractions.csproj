@@ -7,7 +7,7 @@
 
 		<IsPackable>true</IsPackable>
 		<Description>ToolBox that contains description's tool and model that could be used on any .net project.</Description>
-
+		<PackageTags>toolbox;dotnet;helpers</PackageTags>
 	</PropertyGroup>
 
 	<ItemGroup>

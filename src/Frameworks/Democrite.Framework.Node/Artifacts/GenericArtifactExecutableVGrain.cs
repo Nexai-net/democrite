@@ -28,7 +28,7 @@ namespace Democrite.Framework.Node.Artifacts
         /// Initializes a new instance of the <see cref="GenericArtifactExecutableVGrain"/> class.
         /// </summary>
         public GenericArtifactExecutableVGrain(ILogger<IGenericArtifactExecutableVGrain> logger,
-                                               IArtifactProvider artifactProvider,
+                                               IArtifactDefinitionProvider artifactProvider,
                                                IArtifactExecutorFactory artifactExecutorFactory,
                                                ILoggerFactory loggerFactory)
             : base(logger, artifactProvider, artifactExecutorFactory, loggerFactory)

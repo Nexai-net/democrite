@@ -14,10 +14,11 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
     /// <summary>
     /// Cron trigger builder
     /// </summary>
-    internal sealed class TriggerDefinitionCronBuilder : TriggerDefinitionBaseBuilder, ITriggerDefinitionFinalizeBuilder
+    internal sealed class TriggerDefinitionCronBuilder : TriggerDefinitionWithInputBaseBuilder, ITriggerDefinitionFinalizeBuilder
     {
         #region Fields
 
+        private static readonly Regex s_allExceptSpacesReg = new Regex("[^\\s]+");
         private const string VALUE_GRP = "Values";
 
         private static readonly Regex s_values;
@@ -59,8 +60,10 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// <summary>
         /// Initializes a new instance of the <see cref="TriggerDefinitionBaseBuilder"/> class.
         /// </summary>
-        public TriggerDefinitionCronBuilder(string cronExpression, Guid? fixUid = null)
-            : base(TriggerTypeEnum.Cron, fixUid)
+        public TriggerDefinitionCronBuilder(string cronExpression,
+                                            string displayName,
+                                            Guid? fixUid = null)
+            : base(TriggerTypeEnum.Cron, displayName, fixUid)
         {
             this._cronExpression = cronExpression;
         }
@@ -72,35 +75,53 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// <inheritdoc />
         public override TriggerDefinition Build()
         {
-            ValidateCronExpression();
+            int nbRefPart = 0;
+            ValidateCronExpression(ref nbRefPart);
 
             return new CronTriggerDefinition(this.Uid,
-                                             this.TargetSequenceIds,
-                                             this.TargetSignalIds,
+                                             this.DisplayName,       
+                                             this.Targets,
                                              true,
                                              this._cronExpression,
-                                             base.TriggerInputDefinition);
+                                             nbRefPart == 6,
+                                             base.TriggerGlobalOutputDefinition);
         }
 
         /// <summary>
         /// Validates the cron expression.
         /// </summary>
-        /// <exception cref="InvalidDataException">Cron expression must have 5 parts separate with space : minute hour day month dayOfWeak</exception>
+        /// <exception cref="InvalidDataException">Cron expression must have 5/6 parts separate with space : (second) minute hour day month dayOfWeak</exception>
         /// <exception cref="InvalidDataException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        private void ValidateCronExpression()
+        private void ValidateCronExpression(ref int nbRefPart)
         {
-            var segments = this._cronExpression.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            ArgumentNullException.ThrowIfNull(this._cronExpression);
 
-            if (segments.Length != 5)
-                throw new InvalidDataException("Cron expression must have 5 parts separate with space : minute hour day month dayOfWeak");
+            var segmentsReg = s_allExceptSpacesReg.Matches(this._cronExpression);
 
-            ValidateCronExpressionPart("minutes", segments[0], 0, 60);
-            ValidateCronExpressionPart("hours", segments[1], 0, 60);
-            ValidateCronExpressionPart("days", segments[2], 0, 24);
+            var segments = segmentsReg.Where(s => s.Success && !string.IsNullOrEmpty(s.Value))
+                                      .Select(s => s.Value)
+                                      .ToArray();
 
-            ValidateCronExpressionPart("months", segments[3], 0, 12, s_months);
-            ValidateCronExpressionPart("dayofweak", segments[4], 0, 6, s_daysOfWeek);
+            nbRefPart = segments.Length;
+
+            if (segments.Length != 5 && segments.Length != 6)
+                throw new InvalidDataException("Cron expression must have 5/6 parts separate with space : (second) minute hour day month dayOfWeak");
+
+            int startIndx = 0;
+
+            if (segments.Length == 6)
+            {
+                ValidateCronExpressionPart("second", segments[0], 0, 60);
+                startIndx++;
+            }
+
+            ValidateCronExpressionPart("minutes", segments[startIndx + 0], 0, 60);
+            ValidateCronExpressionPart("hours", segments[startIndx + 1], 0, 60);
+            ValidateCronExpressionPart("days", segments[startIndx + 2], 0, 24);
+
+            ValidateCronExpressionPart("months", segments[startIndx + 3], 0, 12, s_months);
+            ValidateCronExpressionPart("dayofweak", segments[startIndx + 4], 0, 6, s_daysOfWeek);
 
         }
 

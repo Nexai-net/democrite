@@ -8,7 +8,9 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
 
     using System;
     using System.ComponentModel;
+    using System.Runtime.Serialization;
 
+    [DataContract]
     [Serializable]
     [ImmutableObject(true)]
     [JsonObject(ItemTypeNameHandling = TypeNameHandling.All)]
@@ -38,11 +40,13 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the parameters.
         /// </summary>
+        [DataMember]
         public IReadOnlyCollection<ConditionParameterDefinition> Parameters { get; }
 
         /// <summary>
         /// Gets the condition.
         /// </summary>
+        [DataMember]
         [JsonProperty(ItemTypeNameHandling = TypeNameHandling.All)]
         public ConditionBaseDefinition Condition { get; }
 

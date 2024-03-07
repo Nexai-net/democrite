@@ -4,10 +4,14 @@
 
 namespace Democrite.Framework.Configurations
 {
+    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
     using Democrite.Framework.Core.Abstractions.Artifacts;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Abstractions.Streams;
     using Democrite.Framework.Core.Abstractions.Triggers;
+    using Democrite.Framework.Node.Abstractions.Configurations;
 
     using System;
 
@@ -20,6 +24,17 @@ namespace Democrite.Framework.Configurations
     /// </remarks>
     public interface IDemocriteNodeLocalDefinitionsBuilder
     {
+        #region Properties
+
+        /// <summary>
+        /// Gets the gneric builder tool.
+        /// </summary>
+        public IDemocriteExtensionBuilderTool ConfigurationTools { get; }
+
+        #endregion
+
+        #region Methods
+
         /// <summary>
         /// Setup callable sequence
         /// </summary>
@@ -69,5 +84,17 @@ namespace Democrite.Framework.Configurations
         /// Setups artifacts resources, external source code (python, c++, exe, dll, png, ...)
         /// </summary>
         IDemocriteNodeLocalDefinitionsBuilder SetupArtifacts(params ArtifactDefinition[] artifactResourceDefinitions);
+
+        /// <summary>
+        /// Setups the stream queues.
+        /// </summary>
+        IDemocriteNodeLocalDefinitionsBuilder SetupStreamQueues(Action<IDemocriteNodeStreamQueueWizard> streamQueueResourceBuilder);
+
+        /// <summary>
+        /// Setups the stream queues.
+        /// </summary>
+        IDemocriteNodeLocalDefinitionsBuilder SetupStreamQueues(params StreamQueueDefinition[] streamQueueDefinitions);
+
+        #endregion
     }
 }

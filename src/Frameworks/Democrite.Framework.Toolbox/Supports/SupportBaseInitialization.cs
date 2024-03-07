@@ -13,7 +13,7 @@ namespace Democrite.Framework.Toolbox.Supports
     /// Base Implementation of <see cref="ISupportInitialization"/>
     /// </summary>
     /// <seealso cref="ISupportInitialization" />
-    public abstract class SupportBaseInitialization : SafeDisposable, ISupportInitialization
+    public abstract class SupportBaseInternalInitialization : SafeDisposable
     {
         #region Fields
 
@@ -29,7 +29,7 @@ namespace Democrite.Framework.Toolbox.Supports
         /// <summary>
         /// Initializes a new instance of the <see cref="SupportBaseInitialization"/> class.
         /// </summary>
-        protected SupportBaseInitialization()
+        protected SupportBaseInternalInitialization()
         {
             this._initializingTask = new TaskCompletionSource();
         }
@@ -55,7 +55,15 @@ namespace Democrite.Framework.Toolbox.Supports
         #region Methods
 
         /// <inheritdoc />
-        public async ValueTask InitializationAsync<TState>(TState? initializationState = default, CancellationToken token = default)
+        public ValueTask InitializationAsync(CancellationToken token = default)
+        {
+            return InitializationImplAsync<NoneType>(NoneType.Instance, token);
+        }
+
+        /// <summary>
+        /// Internal implementation that support state injection
+        /// </summary>
+        internal protected async ValueTask InitializationImplAsync<TState>(TState? initializationState, CancellationToken token = default)
         {
             var initTask = this._initializingTask.Task;
             if (this.IsInitialized)
@@ -71,7 +79,7 @@ namespace Democrite.Framework.Toolbox.Supports
             {
                 try
                 {
-                    await OnInitializedAsync(initializationState, token);
+                    await OnInitializingImplAsync(initializationState, token);
                     Interlocked.Increment(ref this._initialized);
 
                     var tmpTask = this._initializingTask;
@@ -92,7 +100,65 @@ namespace Democrite.Framework.Toolbox.Supports
         }
 
         /// <inheritdoc cref="ISupportInitialization.InitializationAsync{TState}(TState?, CancellationToken)" />
-        protected abstract ValueTask OnInitializedAsync<TState>(TState? initializationState, CancellationToken token);
+        internal protected abstract ValueTask OnInitializingImplAsync<TState>(TState? initializationState, CancellationToken token);
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Base class to support initialization without state input
+    /// </summary>
+    /// <seealso cref="SupportBaseInternalInitialization" />
+    /// <seealso cref="ISupportInitialization" />
+    public abstract class SupportBaseInitialization : SupportBaseInternalInitialization, ISupportInitialization
+    {
+        /// <inheritdoc />
+        protected internal sealed override ValueTask OnInitializingImplAsync<TState>(TState? initializationState, CancellationToken token) 
+            where TState : default
+        {
+            return OnInitializedAsync(token);
+        }
+
+        /// <summary>
+        /// Initialization without state
+        /// </summary>
+        protected abstract ValueTask OnInitializedAsync(CancellationToken token);
+    }
+
+    /// <summary>
+    /// Base Implementation of <see cref="ISupportInitialization"/>
+    /// </summary>
+    /// <seealso cref="ISupportInitialization" />
+    public abstract class SupportBaseInitialization<TState> : SupportBaseInternalInitialization, ISupportInitialization<TState>
+    {
+        #region Methods
+
+        /// <inheritdoc />
+        protected internal sealed override ValueTask OnInitializingImplAsync<TStateAsk>(TStateAsk? initializationState, CancellationToken token)
+            where TStateAsk : default
+        {
+            var isNoneType = NoneType.IsEqualTo<TState>();
+
+            TState? castInitState = default;
+
+            if (initializationState is TState localCastInitState)
+                castInitState = localCastInitState;
+
+            if (!isNoneType && initializationState is not null && EqualityComparer<TState>.Default.Equals(castInitState, default))
+                throw new InvalidCastException("Expect state to be a " + typeof(TState) + " not a " + typeof(TStateAsk));
+
+            return OnInitializingAsync(isNoneType || initializationState is null ? default : castInitState,
+                                      token);
+        }
+
+        /// <inheritdoc cref="ISupportInitialization.InitializationAsync{TState}(TState?, CancellationToken)" />
+        protected abstract ValueTask OnInitializingAsync(TState? initializationState, CancellationToken token);
+
+        /// <inheritdoc />
+        public ValueTask InitializationAsync(TState? initializationState = default, CancellationToken token = default)
+        {
+            return base.InitializationImplAsync(initializationState, token);
+        }
 
         #endregion
     }

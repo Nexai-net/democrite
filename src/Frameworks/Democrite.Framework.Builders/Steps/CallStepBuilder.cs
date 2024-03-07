@@ -9,6 +9,7 @@ namespace Democrite.Framework.Builders.Steps
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Toolbox.Abstractions.Expressions;
     using Democrite.Framework.Toolbox.Models;
 
     using System;
@@ -19,7 +20,7 @@ namespace Democrite.Framework.Builders.Steps
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Build a call step, it correspond to the vgrain entry point
+    /// Get a call step, it correspond to the vgrain entry point
     /// </summary>
     /// <seealso cref="ISequencePipelineInternalStageStep" />
     public sealed class CallStepBuilder : StepBaseBuilder
@@ -139,7 +140,7 @@ namespace Democrite.Framework.Builders.Steps
             if (parameter.ParameterType == NoneType.Trait)
                 return;
 
-            if (!possibleInputs.Contains(parameter.ParameterType))
+            if (!possibleInputs.Any(t => t.IsAssignableTo(parameter.ParameterType)))
             {
                 throw new InvalidCastException("Parameter (" + parameter.ParameterType + ") name '" + parameter.Name + "' must be of type " + string.Join(" or ", possibleInputs));
             }
@@ -150,22 +151,17 @@ namespace Democrite.Framework.Builders.Steps
         /// </summary>
         public override SequenceStageBaseDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
                                                                            bool preventReturn,
-                                                                           TContext? configuration = default,
-                                                                           string? configurationFromInputChainCall = null)
+                                                                           AccessExpressionDefinition? configurationAccess)
+
                         where TContext : default
         {
             var def = this._mthd.GetAbstractMethod();
 
             return new SequenceStageCallDefinition(this.Input?.GetAbstractType(),
-                                                   this._vgrainType?.GetAbstractType() as ConcreteType ?? throw new InvalidDataException("VGrain interface must not be null"),
+                                                   this._vgrainType?.GetAbstractType() as ConcretType ?? throw new InvalidDataException("VGrain interface must not be null"),
                                                    def,
                                                    this.Output?.GetAbstractType(),
-                                                   EqualityComparer<TContext>.Default.Equals(configuration, default) && string.IsNullOrWhiteSpace(configurationFromInputChainCall)
-                                                        ? NoneType.AbstractTrait
-                                                        : typeof(TContext).GetAbstractType(),
-
-                                                   configuration: configuration,
-                                                   configurationFromInputChainCall: configurationFromInputChainCall,
+                                                   configurationAccess,
                                                    options: option,
                                                    preventReturn,
                                                    option?.StageId);

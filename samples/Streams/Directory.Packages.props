@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <!-- Democrite -->
+  <ItemGroup>
+    <PackageVersion Include="Democrite.Framework.Bag.DebugTools" Version="0.2.3.247-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Bag.Toolbox" Version="0.2.3.247-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Builders" Version="0.2.3.247-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Node" Version="0.2.3.247-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Node.Cron" Version="0.2.3.247-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Node.Signals" Version="0.2.3.247-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Node.StreamQueue" Version="0.2.3.247-prerelease" />
+  </ItemGroup>
+</Project>

@@ -13,9 +13,21 @@ namespace Democrite.Framework.Node.Triggers
     /// In memory provider source of <see cref="ITriggerDefinition"/>
     /// </summary>
     /// <seealso cref="ProviderStrategyBaseSource{TriggerDefinition, Guid}" />
-    /// <seealso cref="ITriggerDefinitionProviderSource" />
+    /// <seealso cref="IStreamQueueDefinitionProviderSource" />
     public sealed class InMemoryTriggerDefinitionProviderSource : ProviderStrategyBaseSource<TriggerDefinition, Guid>, ITriggerDefinitionProviderSource
     {
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InMemoryTriggerDefinitionProviderSource"/> class.
+        /// </summary>
+        public InMemoryTriggerDefinitionProviderSource(IServiceProvider serviceProvider)
+            : base(serviceProvider)
+        {
+        }
+
+        #endregion
+
         #region Methods
 
         /// <summary>

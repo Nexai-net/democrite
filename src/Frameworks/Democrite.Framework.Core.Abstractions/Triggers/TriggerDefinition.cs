@@ -5,8 +5,6 @@
 namespace Democrite.Framework.Core.Abstractions.Triggers
 {
     using Democrite.Framework.Core.Abstractions.Inputs;
-    using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 
@@ -23,7 +21,8 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
 
     [KnownType(typeof(CronTriggerDefinition))]
     [KnownType(typeof(SignalTriggerDefinition))]
-
+    [KnownType(typeof(StreamTriggerDefinition))]
+    
     public abstract class TriggerDefinition : IEquatable<TriggerDefinition>, IDefinition
     {
         #region Ctor
@@ -32,18 +31,18 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         /// Initializes a new instance of the <see cref="TriggerDefinition"/> class.
         /// </summary>
         protected TriggerDefinition(Guid uid,
+                                    string displayName,        
                                     TriggerTypeEnum triggerType,
-                                    IEnumerable<Guid> targetSequenceIds,
-                                    IEnumerable<SignalId> targetSignalIds,
+                                    IEnumerable<TriggerTargetDefinition> targets,
                                     bool enabled,
-                                    InputSourceDefinition? inputSourceDefinition = null)
+                                    DataSourceDefinition? triggerGlobalOutputDefinition = null)
         {
             this.Uid = uid;
+            this.DisplayName = displayName;
             this.Enabled = enabled;
             this.TriggerType = triggerType;
-            this.TargetSequenceIds = targetSequenceIds?.ToArray() ?? EnumerableHelper<Guid>.ReadOnlyArray;
-            this.TargetSignalIds = targetSignalIds?.ToArray() ?? EnumerableHelper<SignalId>.ReadOnlyArray;
-            this.InputSourceDefinition = inputSourceDefinition;
+            this.Targets = targets?.ToArray() ?? EnumerableHelper<TriggerTargetDefinition>.ReadOnlyArray;
+            this.TriggerGlobalOutputDefinition = triggerGlobalOutputDefinition;
         }
 
         #endregion
@@ -55,30 +54,32 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         [DataMember]
         public Guid Uid { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Gets the display name.
+        /// </summary>
         [Id(1)]
         [DataMember]
-        public bool Enabled { get; }
+        public string DisplayName { get; }
 
         /// <inheritdoc />
         [Id(2)]
         [DataMember]
-        public TriggerTypeEnum TriggerType { get; }
+        public bool Enabled { get; }
 
         /// <inheritdoc />
         [Id(3)]
         [DataMember]
-        public IReadOnlyCollection<Guid> TargetSequenceIds { get; }
+        public TriggerTypeEnum TriggerType { get; }
 
         /// <inheritdoc />
         [Id(4)]
         [DataMember]
-        public IReadOnlyCollection<SignalId> TargetSignalIds { get; }
+        public IReadOnlyCollection<TriggerTargetDefinition> Targets { get; }
 
         /// <inheritdoc />
         [Id(5)]
         [DataMember]
-        public InputSourceDefinition? InputSourceDefinition { get; }
+        public DataSourceDefinition? TriggerGlobalOutputDefinition { get; }
 
         /// <inheritdoc />
         public bool Equals(TriggerDefinition? other)
@@ -92,9 +93,8 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
             return this.Uid == other.Uid &&
                    this.Enabled == other.Enabled &&
                    this.TriggerType == other.TriggerType &&
-                   (this.InputSourceDefinition?.Equals(other.InputSourceDefinition) ?? other.InputSourceDefinition is null) &&
-                   this.TargetSignalIds.SequenceEqual(other.TargetSignalIds) &&
-                   this.TargetSequenceIds.SequenceEqual(this.TargetSequenceIds);
+                   (this.TriggerGlobalOutputDefinition?.Equals(other.TriggerGlobalOutputDefinition) ?? other.TriggerGlobalOutputDefinition is null) &&
+                   this.Targets.SequenceEqual(other.Targets);
         }
 
         /// <inheritdoc />
@@ -111,7 +111,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         {
             return HashCode.Combine(this.Uid,
                                     this.TriggerType,
-                                    this.InputSourceDefinition);
+                                    this.TriggerGlobalOutputDefinition);
         }
 
         /// <inheritdoc />

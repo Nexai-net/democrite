@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Builders.Implementations.Triggers
 {
     using Democrite.Framework.Builders.Triggers;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Triggers;
 
@@ -13,7 +14,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
     /// </summary>
     /// <seealso cref="TriggerDefinitionBaseBuilder" />
     /// <seealso cref="ITriggerDefinitionFinalizeBuilder" />
-    internal sealed class TriggerDefinitionSignalBuilder : TriggerDefinitionBaseBuilder, ITriggerDefinitionFinalizeBuilder
+    internal sealed class TriggerDefinitionSignalBuilder : TriggerDefinitionWithInputBaseBuilder, ITriggerDefinitionFinalizeBuilder
     {
         #region Fields
 
@@ -27,8 +28,12 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// <summary>
         /// Initializes a new instance of the <see cref="TriggerDefinitionSignalBuilder"/> class.
         /// </summary>
-        public TriggerDefinitionSignalBuilder(TriggerTypeEnum triggerType, SignalId? signalId, DoorId? doorId, Guid? fixUid = null)
-            : base(triggerType, fixUid)
+        public TriggerDefinitionSignalBuilder(TriggerTypeEnum triggerType,
+                                              SignalId? signalId,
+                                              DoorId? doorId,
+                                              string displayName,
+                                              Guid? fixUid = null)
+            : base(triggerType, displayName, fixUid)
         {
             this._signalId = signalId;
             this._doorId = doorId;
@@ -45,12 +50,12 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
                 throw new NullReferenceException("At least a Signal or Door must be register");
 
             return new SignalTriggerDefinition(this.Uid,
-                                               this.TargetSequenceIds,
-                                               this.TargetSignalIds,
+                                               this.DisplayName,
+                                               this.Targets,
                                                true,
                                                this._signalId,
                                                this._doorId,
-                                               this.TriggerInputDefinition);
+                                               this.TriggerGlobalOutputDefinition);
         }
 
         #endregion

@@ -87,7 +87,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         }
 
         /// <summary>
-        /// Create from specific expression
+        /// Get from specific expression
         /// </summary>
         public static SequenceStageFilterDefinition From<TInputCollection, TInput>(Expression<Func<TInput, bool>> filter,
                                                                                    SequenceOptionStageDefinition? options = null,

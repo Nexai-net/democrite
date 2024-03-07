@@ -8,7 +8,7 @@
 		<IsPackable>true</IsPackable>
 		<Description>Democrite abstract cluster node server part.</Description>
 
-		<PackageTags>Democrite;Multi-VGrain;Framework;Node;Abstract</PackageTags>
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agents;Framework;Node;Abstract</PackageTags>
 
 	</PropertyGroup>
 
@@ -27,6 +27,7 @@
 		<!-- Unit test -->
 		<InternalsVisibleTo Include="Democrite.Framework.Node.UnitTests" />
 		<InternalsVisibleTo Include="Democrite.Framework.Node.Abstraction.UnitTests" />
+		<InternalsVisibleTo Include="Democrite.UnitTests.ToolKit" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 

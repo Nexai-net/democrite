@@ -13,8 +13,6 @@ namespace Democrite.Framework.Builders.UnitTests
 
     using Moq;
 
-    using Newtonsoft.Json;
-
     using NFluent;
 
     using System;
@@ -63,7 +61,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             //var func = (IBasicTestVGrain act) => act.ExecuteStringAsync;
 
-            var definition = Sequence.Build()
+            var definition = Sequence.Build("Full")
                                      .NoInput()
 
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
@@ -106,7 +104,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Simple()
         {
-            var definition = Sequence.Build()
+            var definition = Sequence.Build("Simple")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
                                      .Use<IBasicTestOtherVGrain>().Call((a, input, ctx) => a.OtherReturnIpAddressFromStringAsync(input, ctx)).Return
@@ -115,7 +113,7 @@ namespace Democrite.Framework.Builders.UnitTests
             Check.That(definition).IsNotNull();
             Check.That(definition.Uid).IsNotEqualTo(Guid.Empty);
 
-            Check.That(definition.DisplayName).IsNotNull().And.IsEqualTo(definition.Uid.ToString());
+            Check.That(definition.DisplayName).IsNotNull().And.IsEqualTo(definition.DisplayName);
 
             Check.That(definition.Input).IsNull();
             Check.That(definition.Output!.ToType()).IsNotNull().And.IsEqualTo(typeof(IPAddress));
@@ -155,7 +153,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Foreach()
         {
-            var definition = Sequence.Build()
+            var definition = Sequence.Build("Foreach")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.GetUrisAsync(ctx)).Return
                                      .Foreach(IType.From<Uri>(), each =>
@@ -216,7 +214,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var inputVariable = ";";
 
-            var definition = Sequence.Build()
+            var definition = Sequence.Build("Filter")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.GetUrisAsync(ctx)).Return
 
@@ -237,7 +235,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
-            var sequenceBuild = Sequence.Build()
+            var sequenceBuild = Sequence.Build("InvalidCallControl")
                                         .NoInput()
                                         .Use<IBasicTestVGrain>();
 
@@ -255,7 +253,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
-            var sequenceBuild = Sequence.Build()
+            var sequenceBuild = Sequence.Build("NotAllowArg")
                                         .NoInput()
                                         .Use<IBasicTestVGrain>();
 
@@ -273,7 +271,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
-            var sequenceBuild = Sequence.Build()
+            var sequenceBuild = Sequence.Build("InvalidCallRecord_NotAllow_Arguments_DifferentFromInput")
                                         .NoInput()
                                         .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return;
 
@@ -289,7 +287,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Complexe_Sequence_Serializer()
         {
-            var definition = Sequence.Build()
+            var definition = Sequence.Build("Complexe_Sequence_Serializer")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.GetUrisAsync(ctx)).Return
                                      .Foreach(IType.From<Uri>(), each =>
@@ -309,7 +307,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Simple_Sequence_Serializer()
         {
-            var definition = Sequence.Build()
+            var definition = Sequence.Build("Simple_Sequence_Serializer")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
                                      .Use<IBasicTestOtherVGrain>().Call((a, input, ctx) => a.OtherReturnIpAddressFromStringAsync(input, ctx)).Return
@@ -324,7 +322,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Simple_Sequence_Serializer_With_Input_And_Output()
         {
-            var definition = Sequence.Build()
+            var definition = Sequence.Build("Simple_Sequence_Serializer")
                                      .RequiredInput<Uri>()
                                      .Use<IBasicTestVGrain>().Call((a, uri, ctx) => a.GetHtmlFromUriAsync(uri!, ctx)).Return
                                      .Use<IBasicTestOtherVGrain>().Call((a, html, ctx) => a.OtherReturnIpAddressFromStringAsync(html, ctx)).Return

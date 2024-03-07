@@ -5,6 +5,8 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+    using Democrite.Framework.Toolbox.Abstractions.Expressions;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Models;
 
     using System;
@@ -28,6 +30,9 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         public SequenceStageForeachDefinition(AbstractType? input,
                                               SequenceDefinition innerFlow,
                                               AbstractType? output,
+                                              AbstractType? outputForeach,
+                                              AccessExpressionDefinition? memberAccess,
+                                              AbstractMethod? setMethod,
                                               SequenceOptionStageDefinition? options = null,
                                               bool preventReturn = false,
                                               Guid? uid = null)
@@ -36,6 +41,9 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
             ArgumentNullException.ThrowIfNull(innerFlow);
 
             this.InnerFlow = innerFlow;
+            this.MemberAccess = memberAccess;
+            this.SetMethod = setMethod;
+            this.OutputForeach = outputForeach;
         }
 
         #endregion
@@ -48,6 +56,24 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         [DataMember(IsRequired = true)]
         public SequenceDefinition InnerFlow { get; }
 
+        /// <summary>
+        /// Gets the member access.
+        /// </summary>
+        [DataMember]
+        public AccessExpressionDefinition? MemberAccess { get; }
+
+        /// <summary>
+        /// Gets the set method.
+        /// </summary>
+        [DataMember]
+        public AbstractMethod? SetMethod { get; }
+
+        /// <summary>
+        /// Gets the output foreach.
+        /// </summary>
+        [DataMember]
+        public AbstractType? OutputForeach { get; }
+
         #endregion
 
         #region Methods
@@ -56,13 +82,19 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         protected override bool OnStageEquals(ISequenceStageDefinition other)
         {
             return other is SequenceStageForeachDefinition otherStepDef &&
-                   otherStepDef.InnerFlow == this.InnerFlow;
+                   otherStepDef.InnerFlow == this.InnerFlow &&
+                   otherStepDef.MemberAccess == this.MemberAccess &&
+                   otherStepDef.SetMethod == this.SetMethod &&
+                   otherStepDef.OutputForeach == this.OutputForeach;
         }
 
         /// <inheritdoc />
         protected override int OnStageGetHashCode()
         {
-            return this.InnerFlow.GetHashCode();
+            return HashCode.Combine(this.InnerFlow,
+                                    this.MemberAccess,
+                                    this.SetMethod, 
+                                    this.OutputForeach);
         }
 
         #endregion

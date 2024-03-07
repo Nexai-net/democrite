@@ -10,13 +10,25 @@ namespace Democrite.Framework.Node.Abstractions.Triggers
     [GenerateSerializer]
     public class TriggerState
     {
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TriggerState"/> class.
+        /// </summary>
+        public TriggerState()
+        {
+            this.DataSourceProviderStates = new Dictionary<Guid, object?>();
+        }
+
+        #endregion
+
         #region Properties
 
         /// <summary>
-        /// Gets or sets the state of the input provider.
+        /// Gets or sets the state of the output provider.
         /// </summary>
         [Id(1)]
-        public object? InputProviderState { get; set; }
+        public Dictionary<Guid, object?> DataSourceProviderStates { get; private set; }
 
         #endregion
     }

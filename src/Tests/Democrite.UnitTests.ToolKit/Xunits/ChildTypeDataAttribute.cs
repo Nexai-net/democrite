@@ -14,7 +14,7 @@ namespace Democrite.UnitTests.ToolKit.Xunits
     /// Extract all the child type as test
     /// </summary>
     /// <seealso cref="Xunit.Sdk.DataAttribute" />
-    /// <typeparam name="TAsssemblyMarkerType">Type used to specify in witch assembly to search</typeparam>
+    /// <typeparam name="TAsssemblyMarkerType">Source used to specify in witch assembly to search</typeparam>
     public sealed class ChildTypeDataAttribute<TParentType, TAsssemblyMarkerType> : DataAttribute
     {
         #region Fields

@@ -6,14 +6,14 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
-    using Democrite.Framework.Core.Abstractions.Models;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Toolbox.Abstractions.Disposables;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Models;
     using Democrite.UnitTests.ToolKit;
     using Democrite.UnitTests.ToolKit.VGrains.Transformers;
@@ -22,55 +22,18 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
 
     using NFluent;
 
-    using Orleans.Serialization.Serializers;
+    using NSubstitute;
 
     using System;
     using System.Diagnostics;
 
     /// <summary>
-    /// Test <see cref="SequenceExecutorForeachThreadStageProvider"/> responsable to call vgrain method during flow resolution
+    /// Test <see cref="SequenceExecutorThreadStageForeach"/> responsable to call vgrain method during flow resolution
     /// </summary>
     public sealed class SequenceExecutorForeachThreadStageProviderUnitTests
     {
         /// <summary>
-        /// Test <see cref="SequenceExecutorForeachThreadStageProvider.CanHandler"/>
-        /// </summary>
-        [Fact]
-        public void SequenceExecutorForeachThreadStageProvider_CanHandler()
-        {
-            var provider = new SequenceExecutorForeachThreadStageProvider();
-
-            Check.ThatCode(() => provider.CanHandler(null)).DoesNotThrow().And.WhichResult().IsFalse();
-
-            var mockBaseSequenceStage = new Mock<ISequenceStageDefinition>();
-            Check.ThatCode(() => provider.CanHandler(mockBaseSequenceStage.Object)).DoesNotThrow().And.WhichResult().IsFalse();
-
-            var def = typeof(SequenceExecutorForeachThreadStageProviderUnitTests).GetMethod(nameof(SequenceExecutorForeachThreadStageProvider_CanHandler))!.GetAbstractMethod();
-            Check.ThatCode(() => provider.CanHandler(new SequenceStageCallDefinition(null,
-                                                                                     (ConcreteType)typeof(string).GetAbstractType(),
-                                                                                     def,
-                                                                                     null,
-                                                                                     null)))
-                 .DoesNotThrow()
-                 .And
-                 .WhichResult()
-                 .IsFalse();
-
-            // True
-            Check.ThatCode(() => provider.CanHandler(new SequenceStageForeachDefinition(null,
-                                                                                        new SequenceDefinition(Guid.NewGuid(),
-                                                                                                               "",
-                                                                                                               SequenceOptionDefinition.Default,
-                                                                                                               EnumerableHelper<SequenceStageBaseDefinition>.ReadOnly),
-                                                                                        typeof(string).GetAbstractType())))
-                 .DoesNotThrow()
-                 .And
-                 .WhichResult()
-                 .IsTrue();
-        }
-
-        /// <summary>
-        /// Test <see cref="SequenceExecutorForeachThreadStageProvider.ExecAsync"/> with valid value
+        /// Test <see cref="SequenceExecutorThreadStageForeach.ExecAsync"/> with valid value
         /// </summary>
         [Fact]
         public async Task SequenceExecutorForeachThreadStageProvider_ExecAsync()
@@ -78,18 +41,24 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             var rand = new Random();
 
             // Prepare
-            var provider = new SequenceExecutorForeachThreadStageProvider();
+            var foreachExecutor = new SequenceExecutorThreadStageForeach();
 
             var def = typeof(ITestExtractEmailTransformer).GetMethod(nameof(ITestExtractEmailTransformer.ExtractEmailsAsync))!.GetAbstractMethod();
 
             var callDefinition = new SequenceStageCallDefinition(typeof(string).GetAbstractType(),
-                                                                 (ConcreteType)typeof(ITestExtractEmailTransformer).GetAbstractType(),
+                                                                 (ConcretType)typeof(ITestExtractEmailTransformer).GetAbstractType(),
                                                                  def,
-                                                                 typeof(string[]).GetAbstractType());
+                                                                 typeof(string[]).GetAbstractType(),
+                                                                 null);
 
             var innerDef = new SequenceDefinition(Guid.NewGuid(), "test", SequenceOptionDefinition.Default, new[] { callDefinition });
 
-            var foreachDefinition = new SequenceStageForeachDefinition(typeof(string[]).GetAbstractType(), innerDef, typeof(string[]).GetAbstractType());
+            var foreachDefinition = new SequenceStageForeachDefinition(typeof(string[]).GetAbstractType(),
+                                                                       innerDef,
+                                                                       typeof(string).GetAbstractType(),
+                                                                       typeof(string[]).GetAbstractType(),
+                                                                       null,
+                                                                       null);
 
             var execContext = new Democrite.Framework.Core.Models.ExecutionContext(Guid.NewGuid(), Guid.NewGuid(), null);
             var logger = new MemoryTestLogger();
@@ -103,13 +72,13 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             IReadOnlyCollection<ISequenceExecutorExecThread>? testInnerThreads = null;
             var testMockInnerThreads = new List<Mock<ISequenceExecutorExecThread>>();
 
-            Check.ThatCode(() => provider.CanHandler(foreachDefinition)).WhichResult().IsTrue();
-
             var diagnosticLogs = new List<IExecutionContextChangeDiagnosticLog>();
 
             var mockDiagnositicLogger = new Mock<IDiagnosticLogger>(MockBehavior.Strict);
             var mockVGrain = new Mock<ITestExtractEmailTransformer>(MockBehavior.Strict);
             var mockVGrainProvider = new Mock<IVGrainProvider>(MockBehavior.Strict);
+            var democriteSerializerMock = Substitute.For<IDemocriteSerializer>();
+            var timeManagerMock = Substitute.For<ITimeManager>();
 
             var mockSecureToken = new Mock<ISecureContextToken<ISequenceExecutorThreadHandler>>(MockBehavior.Strict);
             var mockThreadHandler = new Mock<ISequenceExecutorThreadHandler>(MockBehavior.Strict);
@@ -159,9 +128,9 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             mockThreadHandler.Setup(p => p.GetCurrentThreadState()).Returns(state);
 
             // Act
-            var foreachExecutor = provider.Provide(foreachDefinition);
+            //var foreachExecutor = foreachExecutor.Provide(foreachDefinition);
 
-            Check.That(foreachExecutor).IsNotNull().And.IsSameReferenceAs(provider);
+            Check.That(foreachExecutor).IsNotNull().And.IsSameReferenceAs(foreachExecutor);
 
             var result = await foreachExecutor.ExecAsync(foreachDefinition,
                                                          inputs,

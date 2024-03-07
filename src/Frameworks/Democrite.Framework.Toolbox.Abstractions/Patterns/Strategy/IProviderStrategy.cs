@@ -4,8 +4,6 @@
 
 namespace Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy
 {
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
-
     using System.Collections.Generic;
     using System.Linq.Expressions;
     using System.Threading.Tasks;
@@ -30,37 +28,42 @@ namespace Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy
         /// <summary>
         /// Gets all values corresponding to <paramref name="keys"/>
         /// </summary>
-        ValueTask<IReadOnlyCollection<T>> GetValuesAsync(params TKey[] keys);
+        ValueTask<IReadOnlyCollection<T>> GetAllValuesAsync(CancellationToken token);
 
         /// <summary>
         /// Gets all values corresponding to <paramref name="keys"/>
         /// </summary>
-        ValueTask<IReadOnlyCollection<T>> GetValuesAsync(IReadOnlyCollection<TKey> keys);
+        ValueTask<IReadOnlyCollection<T>> GetValuesAsync(CancellationToken token, params TKey[] keys);
+
+        /// <summary>
+        /// Gets all values corresponding to <paramref name="keys"/>
+        /// </summary>
+        ValueTask<IReadOnlyCollection<T>> GetValuesAsync(IReadOnlyCollection<TKey> keys, CancellationToken token);
 
         /// <summary>
         /// Gets all values corresponding match conditions
         /// </summary>
-        ValueTask<IReadOnlyCollection<T>> GetValuesAsync(Expression<Func<T, bool>> filter);
+        ValueTask<IReadOnlyCollection<T>> GetValuesAsync(Expression<Func<T, bool>> filter, CancellationToken token);
 
         /// <summary>
         /// Gets first value to correspond match conditions
         /// </summary>
-        ValueTask<T?> GetFirstValueAsync(Expression<Func<T, bool>> filter);
+        ValueTask<T?> GetFirstValueAsync(Expression<Func<T, bool>> filter, CancellationToken token);
 
         /// <summary>
         /// Gets first value to correspond to <paramref name="key"/>
         /// </summary>
-        ValueTask<T?> GetFirstValueByIdAsync(TKey key);
+        ValueTask<T?> GetFirstValueByIdAsync(TKey key, CancellationToken token);
 
         /// <summary>
         /// Try get first value to correspond to <paramref name="key"/>
         /// </summary>
-        ValueTask<(bool Result, T? value)> TryGetFirstValueAsync(TKey key);
+        ValueTask<(bool Result, T? value)> TryGetFirstValueAsync(TKey key, CancellationToken token);
 
         /// <summary>
         /// Forces cache data to update
         /// </summary>
-        ValueTask ForceUpdateAsync();
+        ValueTask ForceUpdateAsync(CancellationToken token);
 
         #endregion
     }

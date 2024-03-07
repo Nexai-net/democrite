@@ -36,7 +36,7 @@ namespace Democrite.Framework
         #region Methods
 
         /// <summary>
-        /// Create and setup a new democrite cluster node
+        /// Get and setup a new democrite cluster node
         /// </summary>
         public static DemocriteNode Create(string[] args,
                                            Action<IDemocriteNodeBuilder>? builder,
@@ -46,7 +46,7 @@ namespace Democrite.Framework
         }
 
         /// <summary>
-        /// Create and setup a new democrite cluster node
+        /// Get and setup a new democrite cluster node
         /// </summary>
         public static DemocriteNode Create(Action<HostBuilderContext, IConfigurationBuilder>? setupConfig,
                                            Action<IDemocriteNodeBuilder>? builder,
@@ -56,7 +56,7 @@ namespace Democrite.Framework
         }
 
         /// <summary>
-        /// Create and setup a new democrite cluster node
+        /// Get and setup a new democrite cluster node
         /// </summary>
         public static DemocriteNode Create(Action<IDemocriteNodeBuilder>? builder = null,
                                            ClusterBuilderTools? clusterBuilderTools = null)
@@ -65,10 +65,10 @@ namespace Democrite.Framework
         }
 
         /// <summary>
-        /// Create and setup a new democrite cluster node
+        /// Get and setup a new democrite cluster node
         /// </summary>
         /// <remarks>
-        ///     Code on section node part ClusterClient.Create is very similar.
+        ///     Code on section node part ClusterClient.Get is very similar.
         ///     Couldn't factorize for know due method like UseOrleans that are extension method.
         /// </remarks>
         public static DemocriteNode Create(string[]? args,
@@ -89,10 +89,10 @@ namespace Democrite.Framework
         }
 
         /// <summary>
-        /// Create and setup a new democrite cluster node
+        /// Get and setup a new democrite cluster node
         /// </summary>
         /// <remarks>
-        ///     Code on section node part ClusterClient.Create is very similar.
+        ///     Code on section node part ClusterClient.Get is very similar.
         ///     Couldn't factorize for know due method like UseOrleans that are extension method.
         /// </remarks>
         internal static void Create(IHostBuilder host,

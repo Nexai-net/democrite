@@ -18,14 +18,14 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
         [Fact]
         public void Extensions_IsCollection()
         {
-            Check.That(typeof(int).GetTypeIntoExtension().IsCollection).IsEqualTo(false);
+            Check.That(typeof(int).GetTypeInfoExtension().IsCollection).IsEqualTo(false);
 
-            Check.That(typeof(string).GetTypeIntoExtension().IsCollection).IsEqualTo(true);
-            Check.That(typeof(float[]).GetTypeIntoExtension().IsCollection).IsEqualTo(true);
+            Check.That(typeof(string).GetTypeInfoExtension().IsCollection).IsEqualTo(true);
+            Check.That(typeof(float[]).GetTypeInfoExtension().IsCollection).IsEqualTo(true);
 
-            Check.That(typeof(TypeExtensionsUTest).GetTypeIntoExtension().IsCollection).IsEqualTo(false);
+            Check.That(typeof(TypeExtensionsUTest).GetTypeInfoExtension().IsCollection).IsEqualTo(false);
 
-            Check.That(typeof(List<string>).GetTypeIntoExtension().IsCollection).IsEqualTo(true);
+            Check.That(typeof(List<string>).GetTypeInfoExtension().IsCollection).IsEqualTo(true);
         }
 
         /// <summary>
@@ -34,11 +34,11 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
         [Fact]
         public void Extensions_GetItemCollectionType()
         {
-            Check.That(typeof(int).GetTypeIntoExtension().CollectionItemType).IsEqualTo(null);
+            Check.That(typeof(int).GetTypeInfoExtension().CollectionItemType).IsEqualTo(null);
 
-            Check.That(typeof(string).GetTypeIntoExtension().CollectionItemType).IsEqualTo(typeof(char));
-            Check.That(typeof(float[]).GetTypeIntoExtension().CollectionItemType).IsEqualTo(typeof(float));
-            Check.That(typeof(List<string>).GetTypeIntoExtension().CollectionItemType).IsEqualTo(typeof(string));
+            Check.That(typeof(string).GetTypeInfoExtension().CollectionItemType).IsEqualTo(typeof(char));
+            Check.That(typeof(float[]).GetTypeInfoExtension().CollectionItemType).IsEqualTo(typeof(float));
+            Check.That(typeof(List<string>).GetTypeInfoExtension().CollectionItemType).IsEqualTo(typeof(string));
         }
 
 
@@ -48,17 +48,17 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
         [Fact]
         public void Extensions_IsValueTask()
         {
-            Check.That(typeof(ValueTask).GetTypeIntoExtension().IsTask).IsFalse();
-            Check.That(typeof(ValueTask).GetTypeIntoExtension().IsValueTask).IsTrue();
+            Check.That(typeof(ValueTask).GetTypeInfoExtension().IsTask).IsFalse();
+            Check.That(typeof(ValueTask).GetTypeInfoExtension().IsValueTask).IsTrue();
 
-            Check.That(typeof(ValueTask<string>).GetTypeIntoExtension().IsTask).IsFalse();
-            Check.That(typeof(ValueTask<string>).GetTypeIntoExtension().IsValueTask).IsTrue();
+            Check.That(typeof(ValueTask<string>).GetTypeInfoExtension().IsTask).IsFalse();
+            Check.That(typeof(ValueTask<string>).GetTypeInfoExtension().IsValueTask).IsTrue();
 
-            Check.That(typeof(Task).GetTypeIntoExtension().IsValueTask).IsFalse();
-            Check.That(typeof(Task<string>).GetTypeIntoExtension().IsValueTask).IsFalse();
-            Check.That(typeof(string).GetTypeIntoExtension().IsValueTask).IsFalse();
-            Check.That(typeof(float[]).GetTypeIntoExtension().IsValueTask).IsFalse();
-            Check.That(typeof(List<string>).GetTypeIntoExtension().IsValueTask).IsFalse();
+            Check.That(typeof(Task).GetTypeInfoExtension().IsValueTask).IsFalse();
+            Check.That(typeof(Task<string>).GetTypeInfoExtension().IsValueTask).IsFalse();
+            Check.That(typeof(string).GetTypeInfoExtension().IsValueTask).IsFalse();
+            Check.That(typeof(float[]).GetTypeInfoExtension().IsValueTask).IsFalse();
+            Check.That(typeof(List<string>).GetTypeInfoExtension().IsValueTask).IsFalse();
         }
 
 

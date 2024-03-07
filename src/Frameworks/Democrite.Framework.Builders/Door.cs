@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Builders
 {
-    using Democrite.Framework.Builders.Signals;
+    using Democrite.Framework.Builders.Doors;
 
     using System;
 

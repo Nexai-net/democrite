@@ -36,6 +36,7 @@ namespace Democrite.Framework.Cluster.Configurations
     using Orleans.Serialization.Serializers;
 
     using System.Diagnostics.CodeAnalysis;
+    using System.Runtime.ConstrainedExecution;
 
     /// <summary>
     /// base builder class 
@@ -424,11 +425,7 @@ namespace Democrite.Framework.Cluster.Configurations
 
             OnFinalizeManualBuildConfigure(logger);
 
-            // custom serializers
-            //if (!CheckIsExistSetupInServices<IDemocriteExceptionSerializer>(serviceCollection))
-            //    AddCustomSerializer<IDemocriteExceptionSerializer, ExceptionSerializer>();
-
-            // Create Init and Finalize services
+            // Get Init and Finalize services
             RegisterNodeService<INodeInitService>(serviceCollection);
             RegisterNodeService<INodeFinalizeService>(serviceCollection);
 
@@ -465,9 +462,9 @@ namespace Democrite.Framework.Cluster.Configurations
             // Get Concret type that inherite from TService
             var servicesToSetup = serviceCollection.Where(t => t.ServiceType.IsAssignableTo(serviceTrait) &&
                                                                (t.Lifetime == ServiceLifetime.Singleton || t.ImplementationInstance != null))
-                                                   .Distinct()
-                                                   .GroupBy(k => k.ServiceType)
-                                                   .ToArray();
+                                               .Distinct()
+                                               .GroupBy(k => k.ServiceType)
+                                               .ToArray();
 
 #pragma warning disable CS8603 // Possible null reference return.
 
@@ -542,12 +539,6 @@ namespace Democrite.Framework.Cluster.Configurations
                                                                                                    (d.ServiceType == typeof(IGatewayListProvider) && d.ImplementationType != null)),
                                                                                    ConfigurationSectionNames.ClusterMembershipAutoConfigKey,
                                                                                    logger);
-
-            AutoConfigImpl<IClusterEndpointAutoConfigurator, IDemocriteClusterBuilder>(configuration,
-                                                                                       indexedAssemblies,
-                                                                                       s => s.Any(d => (d.ServiceType == typeof(EndpointOptions) && d.ImplementationType != null)),
-                                                                                       ConfigurationSectionNames.Endpoints,
-                                                                                       logger);
         }
 
         /// <summary>
@@ -564,12 +555,13 @@ namespace Democrite.Framework.Cluster.Configurations
         protected void AutoConfigImpl<TAutoConfig, TAutoWizard>(IConfiguration configuration,
                                                                 IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
                                                                 Func<IServiceCollection, bool> predicateConfigurationExist,
-                                                                string configKey,
+                                                                string configFullKey,
                                                                 ILogger logger,
                                                                 Action<TAutoConfig, TAutoWizard, IConfiguration, IServiceCollection, ILogger>? customConfig = null,
-                                                                string? defaultAutoKey = ConfigurationSectionNames.DefaultAutoConfigKey)
+                                                                string? defaultAutoKey = ConfigurationSectionNames.DefaultAutoConfigKey,
+                                                                string? key = null)
 
-            where TAutoConfig : IAutoConfigurator<TAutoWizard>
+            where TAutoConfig : IAutoConfigurator
             where TAutoWizard : IBuilderDemocriteBaseWizard
         {
             var serviceCollection = GetServiceCollection();
@@ -577,7 +569,7 @@ namespace Democrite.Framework.Cluster.Configurations
             if (predicateConfigurationExist(serviceCollection))
                 return;
 
-            var autoConfigKey = configuration.GetValue<string?>(configKey);
+            var autoConfigKey = configuration.GetValue<string?>(configFullKey);
 
             if (string.IsNullOrEmpty(autoConfigKey))
                 autoConfigKey = defaultAutoKey;
@@ -590,7 +582,16 @@ namespace Democrite.Framework.Cluster.Configurations
             {
                 var configurator = (TAutoConfig)(Activator.CreateInstance(autoConfigurator) ?? throw new NotSupportedException());
 
-                customConfig ??= (c, wizard, cfg, service, logger) => c.AutoConfigure(wizard, cfg, service, logger);
+                if (customConfig is null)
+                {
+                    if (configurator is IAutoConfigurator<TAutoWizard>)
+                        customConfig = (c, wizard, cfg, service, logger) => ((IAutoConfigurator<TAutoWizard>)c!).AutoConfigure(wizard, cfg, service, logger);
+                    else if (configurator is IAutoKeyConfigurator<TAutoWizard>)
+                        customConfig = (c, wizard, cfg, service, logger) => ((IAutoKeyConfigurator<TAutoWizard>)c!).AutoConfigure(wizard, cfg, service, logger, configFullKey, key!);
+                }
+
+                if (customConfig is null)
+                    throw new InvalidOperationException("Auto config or custom config is not setups");
 
                 customConfig(configurator, (TAutoWizard)(object)this, configuration, serviceCollection, logger);
 

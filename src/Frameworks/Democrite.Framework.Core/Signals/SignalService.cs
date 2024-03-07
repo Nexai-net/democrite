@@ -5,9 +5,12 @@
 namespace Democrite.Framework.Core.Signals
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Toolbox;
+
+    using Orleans.Concurrency;
 
     using System;
     using System.Linq.Expressions;
@@ -19,10 +22,10 @@ namespace Democrite.Framework.Core.Signals
     internal sealed class SignalService : ISignalService
     {
         #region Fields
-        
+
         private static readonly MethodInfo s_fireImplGeneric;
 
-        private readonly Dictionary<Type, Func<SignalId, object, IVGrainInformationProvider?, Task<Guid>>> _funcCache;
+        private readonly Dictionary<Type, Func<SignalId, object, CancellationToken, IVGrainInformationProvider?, Task<Guid>>> _funcCache;
         private readonly ReaderWriterLockSlim _cacheLocker;
 
         private readonly ISignalDefinitionProvider _signalDefinitionProvider;
@@ -48,7 +51,7 @@ namespace Democrite.Framework.Core.Signals
         public SignalService(ISignalDefinitionProvider signalDefinitionProvider,
                             IGrainFactory grainFactory)
         {
-            this._funcCache = new Dictionary<Type, Func<SignalId, object, IVGrainInformationProvider?, Task<Guid>>>();
+            this._funcCache = new Dictionary<Type, Func<SignalId, object, CancellationToken, IVGrainInformationProvider?, Task<Guid>>>();
             this._cacheLocker = new ReaderWriterLockSlim();
 
             this._signalDefinitionProvider = signalDefinitionProvider;
@@ -60,40 +63,44 @@ namespace Democrite.Framework.Core.Signals
         #region Methods
 
         /// <inheritdoc />
-        public async Task<Guid> Fire(string signalName, IVGrainInformationProvider? vgrainInformationProvider = null)
+        [OneWay]
+        public async Task<Guid> Fire(string signalName, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null)
         {
-            var definition = await ResolveSignalDefinitionByNameAsync(signalName);
-            return await FireImpl<NoneTypeStruct>(definition.SignalId, NoneTypeStruct.Instance, vgrainInformationProvider);
+            var definition = await ResolveSignalDefinitionByNameAsync(signalName, token);
+            return await FireImpl<NoneTypeStruct>(definition.SignalId, NoneTypeStruct.Instance, token, vgrainInformationProvider);
         }
 
         /// <inheritdoc />
+        [OneWay]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<Guid> Fire(in SignalId signalId, IVGrainInformationProvider? vgrainInformationProvider = null)
+        public Task<Guid> Fire(in SignalId signalId, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null)
         {
-            return FireImpl<NoneTypeStruct>(signalId, NoneTypeStruct.Instance, vgrainInformationProvider);
+            return FireImpl<NoneTypeStruct>(signalId, NoneTypeStruct.Instance, token, vgrainInformationProvider);
         }
 
         /// <inheritdoc />
+        [OneWay]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<Guid> Fire(string signalName, object? data, IVGrainInformationProvider? vgrainInformationProvider = null)
+        public async Task<Guid> Fire(string signalName, object? data, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null)
         {
-            var definition = await ResolveSignalDefinitionByNameAsync(signalName);
-            return await Fire(signalName, data, vgrainInformationProvider);
+            var definition = await ResolveSignalDefinitionByNameAsync(signalName, token);
+            return await Fire(definition.SignalId, data, token, vgrainInformationProvider);
         }
 
         /// <inheritdoc />
+        [OneWay]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<Guid> Fire(in SignalId signalId, object? data, IVGrainInformationProvider? vgrainInformationProvider = null)
+        public Task<Guid> Fire(in SignalId signalId, object? data, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null)
         {
             if (data is null)
-                return FireImpl(signalId, NoneTypeStruct.Instance, vgrainInformationProvider);
+                return FireImpl(signalId, NoneTypeStruct.Instance, token, vgrainInformationProvider);
 
             var type = data.GetType();
 
             if (!type.IsValueType)
                 throw new Exception();
 
-            Func<SignalId, object, IVGrainInformationProvider?, Task<Guid>>? builder = null;
+            Func<SignalId, object, CancellationToken, IVGrainInformationProvider?, Task<Guid>>? builder = null;
 
             this._cacheLocker.EnterReadLock();
             try
@@ -114,12 +121,13 @@ namespace Democrite.Framework.Core.Signals
                     {
                         var paramSignalId = Expression.Parameter(typeof(SignalId), "id");
                         var paramData = Expression.Parameter(typeof(object), "data");
+                        var paramCancellationToken = Expression.Parameter(typeof(CancellationToken), "token");
                         var paramProvider = Expression.Parameter(typeof(IVGrainInformationProvider), "provider");
 
-                        var call = Expression.Call(Expression.Constant(this), s_fireImplGeneric.MakeGenericMethod(type), paramSignalId, Expression.Convert(paramData, type), paramProvider);
+                        var call = Expression.Call(Expression.Constant(this), s_fireImplGeneric.MakeGenericMethod(type), paramSignalId, Expression.Convert(paramData, type), paramCancellationToken, paramProvider);
 
-                        var lambda = Expression.Lambda<Func<SignalId, object, IVGrainInformationProvider?, Task<Guid>>>(call, paramSignalId, paramData, paramProvider);
-                        
+                        var lambda = Expression.Lambda<Func<SignalId, object, CancellationToken, IVGrainInformationProvider?, Task<Guid>>>(call, paramSignalId, paramData, paramCancellationToken, paramProvider);
+
                         builder = lambda.Compile();
                         this._funcCache.Add(type, builder);
                     }
@@ -134,58 +142,79 @@ namespace Democrite.Framework.Core.Signals
                 }
             }
 
-            return builder!(signalId, data, vgrainInformationProvider);
+            return builder!(signalId, data, token, vgrainInformationProvider);
         }
 
         /// <inheritdoc />
+        [OneWay]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<Guid> Fire<TData>(string signalName, TData data, IVGrainInformationProvider? vgrainInformationProvider = null)
+        public async Task<Guid> Fire<TData>(string signalName, TData data, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null)
             where TData : struct
         {
-            var definition = await ResolveSignalDefinitionByNameAsync(signalName);
-            return await FireImpl<TData>(definition.SignalId, data, vgrainInformationProvider);
+            var definition = await ResolveSignalDefinitionByNameAsync(signalName, token);
+            return await FireImpl<TData>(definition.SignalId, data, token, vgrainInformationProvider);
         }
 
         /// <inheritdoc />
+        [OneWay]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<Guid> Fire<TData>(in SignalId signalId, in TData data, IVGrainInformationProvider? vgrainInformationProvider = null)
+        public Task<Guid> Fire<TData>(in SignalId signalId, in TData data, CancellationToken token, IVGrainInformationProvider? vgrainInformationProvider = null)
             where TData : struct
         {
-            return FireImpl<TData>(signalId, data, vgrainInformationProvider);
+            return FireImpl<TData>(signalId, data, token, vgrainInformationProvider);
         }
 
         /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Task<Guid> FireImpl<TData>(in SignalId signalId, in TData data, IVGrainInformationProvider? vgrainInformationProvider = null)
+        private async Task<Guid> FireImpl<TData>(SignalId signalId,
+                                                 TData data,
+                                                 CancellationToken token,
+                                                 IVGrainInformationProvider? vgrainInformationProvider = null)
             where TData : struct
         {
             var signalVGrain = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new SignalNotFoundException(signalId.Name);
 
-            if (data is NoneTypeStruct)
-                return signalVGrain.Fire(vgrainInformationProvider?.GetGrainId(), vgrainInformationProvider?.MetaData);
+            using (var grainToken = token.ToGrainCancellationToken())
+            {
+                token.ThrowIfCancellationRequested();
+                if (data is NoneTypeStruct)
+                    return await signalVGrain.Fire(vgrainInformationProvider?.GetGrainId(), vgrainInformationProvider?.MetaData, grainToken.Token);
 
-            return signalVGrain.Fire<TData>(vgrainInformationProvider?.GetGrainId(), data, vgrainInformationProvider?.MetaData);
+                return await signalVGrain.Fire<TData>(vgrainInformationProvider?.GetGrainId(), data, vgrainInformationProvider?.MetaData, grainToken.Token);
+            }
         }
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(string signalName, ISignalReceiver receiver)
+        public async Task<Guid> SubscribeAsync(string signalName, ISignalReceiver receiver, CancellationToken token)
         {
-            var definition = await ResolveSignalDefinitionByNameAsync(signalName);
-            return await SubscribeAsync(definition.SignalId, receiver);
+            var definition = await ResolveSignalDefinitionByNameAsync(signalName, token);
+            return await SubscribeAsync(definition.SignalId, receiver, token);
         }
 
         /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(in SignalId signalId, ISignalReceiver receiver)
+        public async Task<Guid> SubscribeAsync(SignalId signalId, ISignalReceiver receiver, CancellationToken token)
         {
             var signalVGrain = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new SignalNotFoundException(signalId.Name);
-            return signalVGrain.SubscribeAsync(receiver.GetGrainId());
+            token.ThrowIfCancellationRequested();
+
+            using (var cancelSource = new GrainCancellationTokenSource())
+            {
+                token.Register(() => cancelSource.Cancel());
+                return await signalVGrain.SubscribeAsync(receiver.GetGrainId(), cancelSource.Token);
+            }
         }
 
         /// <inheritdoc />
-        public Task<Guid> SubscribeAsync(in DoorId doorId, ISignalReceiver receiver)
+        public async Task<Guid> SubscribeAsync(DoorId doorId, ISignalReceiver receiver, CancellationToken token)
         {
-            var signalVGrain = this._grainFactory.GetGrain<IDoorSignalVGrain>(doorId.Uid) ?? throw new DoorNotFoundException(doorId.Uid + "/" + doorId.Name);
-            return signalVGrain.SubscribeAsync(receiver.GetGrainId());
+            var doorVGrain = this._grainFactory.GetGrain<IDoorSignalVGrain>(doorId.Uid) ?? throw new DoorNotFoundException(doorId.Uid + "/" + doorId.Name);
+
+            token.ThrowIfCancellationRequested();
+
+            using (var cancelSource = new GrainCancellationTokenSource())
+            {
+                token.Register(() => cancelSource.Cancel());
+                return await doorVGrain.SubscribeAsync(receiver.GetGrainId(), cancelSource.Token);
+            }
         }
 
         #region Tools
@@ -193,9 +222,9 @@ namespace Democrite.Framework.Core.Signals
         /// <summary>
         /// Resolves the signal definition by name.
         /// </summary>
-        private async Task<SignalDefinition> ResolveSignalDefinitionByNameAsync(string signalName)
+        private async Task<SignalDefinition> ResolveSignalDefinitionByNameAsync(string signalName, CancellationToken token)
         {
-            var definition = await this._signalDefinitionProvider.GetFirstValueAsync(p => string.Equals(p.Name, signalName, StringComparison.OrdinalIgnoreCase));
+            var definition = await this._signalDefinitionProvider.GetFirstValueAsync(p => string.Equals(p.Name, signalName, StringComparison.OrdinalIgnoreCase), token);
 
 #pragma warning disable IDE0270 // Use coalesce expression
             if (definition == null)

@@ -6,13 +6,11 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
 {
     using AutoFixture;
     using AutoFixture.Kernel;
-    using AutoFixture.Xunit2;
 
     using Democrite.Framework.Toolbox.Abstractions.Conditions;
     using Democrite.Framework.Toolbox.Abstractions.Enums;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.Abstractions.Expressions;
     using Democrite.Framework.Toolbox.Models;
-    using Democrite.Framework.Toolbox.UnitTests.Helpers;
     using Democrite.Framework.Toolbox.UnitTests.Xunits;
     using Democrite.UnitTests.ToolKit.Helpers;
 
@@ -22,11 +20,7 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
 
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.Diagnostics;
     using System.Linq.Expressions;
-
-    using Xunit.Sdk;
 
     /// <summary>
     /// Test extension around <see cref="Expression"/>
@@ -52,6 +46,13 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
                 TypeNameHandling = TypeNameHandling.Auto,
             };
         }
+
+        #endregion
+
+        #region Nested
+
+        public record struct ExpressioSimpleSampleObject(Guid uid, string name, bool value, StringComparison? StringComparison);
+        public record struct ExpressionComplexSampleObject(Guid uid, string name, bool value, ExpressioSimpleSampleObject nested);
 
         #endregion
 
@@ -154,7 +155,11 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
         [InlineData(typeof(ConditionMemberAccessDefinition))]
         [InlineData(typeof(ConditionOperandDefinition))]
         [InlineData(typeof(ConditionValueDefinition))]
-        public void ConditionSerialization_Each_SerializePart(Type partType)
+
+        //[InlineData(typeof(MemberBindingDefinition))]
+        [InlineData(typeof(MemberInputConstantBindingDefinition<string>))]
+        [InlineData(typeof(MemberInputConstantBindingDefinition<bool>))]
+        public void Expression_serialization_part(Type partType)
         {
             var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
 
@@ -171,12 +176,192 @@ namespace Democrite.Framework.Toolbox.UnitTests.Extensions
             Check.That(serializationJson).IsNotNull();
 
             var newInst = JsonConvert.DeserializeObject(serializationJson, partType, s_serializationSetting);
-            
+
             Check.That(newInst).IsNotNull().And.IsInstanceOfType(partType);
             Check.That(newInst).IsEqualTo(inst);
         }
 
+        /// <summary>
+        /// Members the initialize constant binding.
+        /// </summary>
+        [Fact]
+        public void MemberInit_Constant_Binding()
+        {
+            var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
+
+            var nameValue = fixture.Create<string>();
+            var uidValue = Guid.NewGuid();
+
+            Expression<Func<string, ExpressioSimpleSampleObject>> expr = input => new ExpressioSimpleSampleObject()
+            {
+                uid = uidValue,
+                value = true,
+                name = nameValue
+            };
+            MemberInit_Tester(expr, "Poner Rose");
+        }
+
+        /// <summary>
+        /// Members the initialize constant and input binding.
+        /// </summary>
+        [Fact]
+        public void MemberInit_Constant_And_Input_Binding()
+        {
+            var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
+
+            var nameValue = fixture.Create<string>();
+            var uidValue = Guid.NewGuid();
+
+            Expression<Func<string, ExpressioSimpleSampleObject>> expr = input => new ExpressioSimpleSampleObject()
+            {
+                uid = uidValue,
+                value = true,
+                name = input
+            };
+
+            MemberInit_Tester(expr, "Poner Rose");
+        }
+
+        /// <summary>
+        /// Members the initialize constant and input binding.
+        /// </summary>
+        [Fact]
+        public void MemberInit_Constant_And_InputChainCall_Binding()
+        {
+            var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
+
+            var nameValue = fixture.Create<string>();
+
+            Expression<Func<ExpressioSimpleSampleObject, ExpressioSimpleSampleObject>> expr = input => new ExpressioSimpleSampleObject()
+            {
+                uid = input.uid,
+                value = true,
+                name = nameValue
+            };
+
+            MemberInit_Tester(expr, new ExpressioSimpleSampleObject() { uid = Guid.NewGuid() });
+        }
+
+        /// <summary>
+        /// Members the initialize constant and input binding.
+        /// </summary>
+        [Fact]
+        public void MemberInit_Constant_And_Extern_ChainCall_Binding()
+        {
+            var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
+
+            var nameValue = fixture.Create<string>();
+
+            var externInput = new ExpressioSimpleSampleObject()
+            {
+                uid = Guid.NewGuid(),
+            };
+
+            Expression<Func<string, ExpressioSimpleSampleObject>> expr = input => new ExpressioSimpleSampleObject()
+            {
+                uid = externInput.uid,
+                value = true,
+                name = nameValue
+            };
+
+            MemberInit_Tester(expr, "Poeny Rose");
+        }
+
+        /// <summary>
+        /// Members the initialize constant and input binding.
+        /// </summary>
+        [Fact]
+        public void MemberInit_Convert_Binding()
+        {
+            var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
+
+            var nameValue = fixture.Create<string>();
+
+            Expression<Func<string, ExpressioSimpleSampleObject>> expr = input => new ExpressioSimpleSampleObject()
+            {
+                value = true,
+                StringComparison = StringComparison.OrdinalIgnoreCase
+            };
+
+            MemberInit_Tester(expr, "Poeny Rose");
+        }
+
+        /// <summary>
+        /// Members the initialize constant and input binding.
+        /// </summary>
+        [Fact]
+        public void MemberInit_Nested_Param_Binding()
+        {
+            var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
+
+            var nameValue = fixture.Create<string>();
+
+            Expression<Func<ExpressioSimpleSampleObject, ExpressionComplexSampleObject>> expr = input => new ExpressionComplexSampleObject()
+            {
+                uid = input.uid,
+                value = true,
+                name = nameValue,
+                nested = input
+            };
+
+            MemberInit_Tester(expr, new ExpressioSimpleSampleObject() { uid = Guid.NewGuid() });
+        }
+
+        /// <summary>
+        /// Members the initialize constant and input binding.
+        /// </summary>
+        [Fact]
+        public void MemberInit_Nested_Build_Binding_Full()
+        {
+            var fixture = ObjectTestHelper.PrepareFixture(supportCyclingReference: true);
+
+            var nameValue = fixture.Create<string>();
+
+            var externInput = new ExpressioSimpleSampleObject()
+            {
+                uid = Guid.NewGuid(),
+            };
+
+            Expression<Func<ExpressioSimpleSampleObject, ExpressionComplexSampleObject>> expr = input => new ExpressionComplexSampleObject()
+            {
+                uid = input.uid,
+                value = true,
+                name = nameValue,
+                nested = new ExpressioSimpleSampleObject()
+                {
+                    uid = externInput.uid,
+                    value = true,
+                    name = "Poney rose"
+                }
+            };
+
+            MemberInit_Tester(expr, new ExpressioSimpleSampleObject() { uid = Guid.NewGuid() });
+        }
+
         #region Tools
+
+        /// <summary>
+        /// Members the initialize constant binding.
+        /// </summary>
+        private void MemberInit_Tester<TInput, TOutput>(Expression<Func<TInput, TOutput>> expr, TInput test)
+        {
+            var bindingModel = expr.SerializeMemberInitialization();
+            Check.That(bindingModel).IsNotNull();
+
+            var serializationJson = JsonConvert.SerializeObject(bindingModel, s_serializationSetting);
+            Check.That(serializationJson).IsNotNull();
+
+            var newBindingModel = (MemberInitializationDefinition)JsonConvert.DeserializeObject(serializationJson, bindingModel.GetType(), s_serializationSetting)!;
+            Check.That(serializationJson).IsNotNull();
+
+            var newInitExpr = newBindingModel.ToMemberInitializationExpression<TInput, TOutput>();
+            Check.That(newInitExpr).IsNotNull();
+
+            var sourceGenerated = expr.Compile().Invoke(test);
+            var generationAfter = newInitExpr.Compile().Invoke(test);
+
+            Check.That(sourceGenerated).IsEqualTo(generationAfter);
+        }
 
         /// <summary>
         /// Generic condition serialization tester

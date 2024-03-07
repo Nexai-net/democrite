@@ -12,7 +12,7 @@ namespace Democrite.Framework.Toolbox.Patterns.Tree
     /// Tree node
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    public sealed class TreeNode<TEntity>
+    public class TreeNode<TEntity>
     {
         #region Fields
 
@@ -83,7 +83,37 @@ namespace Democrite.Framework.Toolbox.Patterns.Tree
                 return;
 
             this._children.Add(child!);
+            OnChildAdded(child);
         }
+
+        /// <summary>
+        /// Dettacheds a child.
+        /// </summary>
+        public void DettachedChild(TreeNode<TEntity> child)
+        {
+            ArgumentNullException.ThrowIfNull(child);
+
+            if (this._children.Remove(child!))
+                OnChildRemoved(child);
+        }
+
+        #region Tools
+
+        /// <summary>
+        /// Call each time a new child is added by the method <see cref="AttachedChild(TreeNode{TEntity})"/>
+        /// </summary>
+        protected virtual void OnChildAdded(TreeNode<TEntity>? child)
+        {
+        }
+
+        /// <summary>
+        /// Call each time a child is removed by the method <see cref="AttachedChild(TreeNode{TEntity})"/>
+        /// </summary>
+        protected virtual void OnChildRemoved(TreeNode<TEntity>? child)
+        {
+        }
+
+        #endregion
 
         #endregion
     }

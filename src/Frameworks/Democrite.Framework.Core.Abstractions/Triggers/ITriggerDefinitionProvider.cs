@@ -9,7 +9,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     using System;
 
     /// <summary>
-    /// <see cref="ITriggerDefinition"/> provider
+    /// <see cref="TriggerDefinition"/> provider
     /// </summary>
     /// <seealso cref="IProviderStrategy{ITriggerDefinition, Guid}" />
     public interface ITriggerDefinitionProvider : IProviderStrategy<TriggerDefinition, Guid>

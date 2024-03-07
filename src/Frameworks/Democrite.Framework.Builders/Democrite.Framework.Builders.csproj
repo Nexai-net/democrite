@@ -8,7 +8,7 @@
 		<IsPackable>true</IsPackable>
 		<Description>Democrite library use to build definitions Sequence, Signal, Trigger ...</Description>
 
-		<PackageTags>Democrite;Multi-Agent;Framework;Definition</PackageTags>
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Definition</PackageTags>
 		
 	</PropertyGroup>
 

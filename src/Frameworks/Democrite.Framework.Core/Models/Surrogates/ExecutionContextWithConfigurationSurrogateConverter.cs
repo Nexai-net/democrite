@@ -14,16 +14,25 @@ namespace Democrite.Framework.Core.Models.Surrogates
         /// <inheritdoc/>
         public ExecutionContextWithConfiguration<TConfiguration> ConvertFromSurrogate(in ExecutionContextWithConfigurationSurrogate<TConfiguration> surrogate)
         {
-            return new ExecutionContextWithConfiguration<TConfiguration>(surrogate.FlowUID,
-                                                                         surrogate.CurrentExecutionId,
-                                                                         surrogate.ParentExecutionId,
-                                                                         surrogate.Configuration);
+            var ctx = new ExecutionContextWithConfiguration<TConfiguration>(surrogate.FlowUID,
+                                                                            surrogate.CurrentExecutionId,
+                                                                            surrogate.ParentExecutionId,
+                                                                            surrogate.Configuration);
+            ctx.InjectAllDataContext(surrogate.ContextDataContainers);
+            return ctx;
         }
 
         /// <inheritdoc/>
         public ExecutionContextWithConfigurationSurrogate<TConfiguration> ConvertToSurrogate(in ExecutionContextWithConfiguration<TConfiguration> value)
         {
-            return ExecutionContextWithConfigurationSurrogate<TConfiguration>.From(value);
+            return new ExecutionContextWithConfigurationSurrogate<TConfiguration>()
+            {
+                Configuration = value.Configuration,
+                ContextDataContainers = value.GetAllDataContext(),
+                CurrentExecutionId = value.CurrentExecutionId,
+                ParentExecutionId = value.ParentExecutionId,
+                FlowUID = value.FlowUID,
+            };
         }
     }
 }

@@ -36,6 +36,11 @@ namespace Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy
         #region Methods
 
         /// <summary>
+        /// Gets all values
+        /// </summary>
+        ValueTask<IReadOnlyCollection<T>> GetAllValuesAsync(CancellationToken token);
+
+        /// <summary>
         /// Tries get data <typeparamref name="T"/> from key <paramref name="key"/>
         /// </summary>
         ValueTask<(bool Success, T? Result)> TryGetDataAsync(TKey key, CancellationToken token = default);

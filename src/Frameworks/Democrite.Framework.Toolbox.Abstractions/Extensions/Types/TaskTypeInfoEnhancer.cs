@@ -25,7 +25,13 @@ namespace Democrite.Framework.Toolbox.Abstractions.Extensions.Types
                                    .FirstOrDefault(t => t != null && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Task<>));
 
             if (genericTask != null)
-                return (ITaskTypeInfoEnhancer)Activator.CreateInstance(typeof(TaskTypeInfoEnhancer<>).MakeGenericType(genericTask.GetGenericArguments().First()))!;
+            {
+                var finalType = typeof(TaskTypeInfoEnhancer<>).MakeGenericType(genericTask.GetGenericArguments().First());
+
+                // If finalType contains unresolved generic arg the fullname is null
+                if (!string.IsNullOrEmpty(finalType.FullName))
+                    return (ITaskTypeInfoEnhancer)Activator.CreateInstance(finalType)!;
+            }
 
             return new TaskTypeInfoEnhancer();
         }

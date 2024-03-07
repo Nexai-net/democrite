@@ -12,7 +12,7 @@ namespace Democrite.Framework.Builders
     public static class Artifact
     {
         /// <summary>
-        /// Build a VGrain code artifact 
+        /// Get a VGrain code artifact 
         /// </summary>
         public static IArtifactExecutablePackageResourceBuilder VGrain(string displayName, string? description = null, Guid? uid = null)
         {

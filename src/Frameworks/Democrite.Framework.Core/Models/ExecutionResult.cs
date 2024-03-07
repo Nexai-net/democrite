@@ -6,6 +6,7 @@ namespace Democrite.Framework.Core.Models
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Exceptions;
+    using Democrite.Framework.Toolbox.Extensions;
 
     using System;
     using System.Collections;
@@ -126,35 +127,15 @@ namespace Democrite.Framework.Core.Models
         /// </summary>
         private static string? GetMessage(Exception? exception, string? message)
         {
-            if (exception == null && string.IsNullOrEmpty(message))
-                return string.Empty;
-
             var builder = new StringBuilder();
 
             if (!string.IsNullOrEmpty(message))
-            {
-                builder.Append(message);
-            }
+                builder.AppendLine(message);
 
-            if (exception != null)
-            {
-                if (builder.Length > 0)
-                {
-                    builder.AppendLine();
-                    builder.AppendLine();
-                }
+            var exceptionStr = exception?.GetFullString(true);
 
-                builder.Append(exception.GetType().Name);
-                builder.AppendLine(exception.Message);
-
-                foreach (DictionaryEntry data in exception.Data)
-                {
-                    builder.Append(' ', 4);
-                    builder.Append(data.Key);
-                    builder.Append(" : ");
-                    builder.Append(data.Value);
-                }
-            }
+            if (!string.IsNullOrEmpty(exceptionStr))
+                builder.Append(exceptionStr);
 
             return builder.ToString();
         }

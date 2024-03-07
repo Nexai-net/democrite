@@ -5,7 +5,6 @@
 namespace Democrite.Framework.Toolbox.UnitTests.Extensions
 {
     using Democrite.Framework.Toolbox.Models;
-    using Democrite.Framework.Toolbox.UnitTests.Xunits;
     using Democrite.UnitTests.ToolKit.Xunits;
 
     using Newtonsoft.Json;

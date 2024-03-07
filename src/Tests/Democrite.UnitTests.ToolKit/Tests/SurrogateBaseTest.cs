@@ -125,7 +125,7 @@ namespace Democrite.UnitTests.ToolKit.Tests
         }
 
         /// <summary>
-        /// Create a  <see cref="TSource"/> for testing purpose.
+        /// Get a  <see cref="TSource"/> for testing purpose.
         /// </summary>
         protected virtual TSource SourceCreation(Fixture fixture)
         {

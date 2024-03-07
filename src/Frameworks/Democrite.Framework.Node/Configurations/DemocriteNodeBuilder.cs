@@ -5,30 +5,40 @@
 namespace Democrite.Framework.Configurations
 {
     using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
+    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Configurations;
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Exceptions;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
+    using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Abstractions.Streams;
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Core.Diagnostics;
+    using Democrite.Framework.Core.Repositories;
     using Democrite.Framework.Core.Signals;
+    using Democrite.Framework.Core.Streams;
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.Artifacts;
+    using Democrite.Framework.Node.Abstractions.Configurations;
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.Artifacts;
     using Democrite.Framework.Node.Components;
-    using Democrite.Framework.Node.Extensions;
+    using Democrite.Framework.Node.Configurations;
     using Democrite.Framework.Node.Inputs;
     using Democrite.Framework.Node.Models;
     using Democrite.Framework.Node.Services;
     using Democrite.Framework.Node.Signals;
+    using Democrite.Framework.Node.Streams;
+    using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Node.Triggers;
     using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Extensions;
@@ -38,6 +48,7 @@ namespace Democrite.Framework.Configurations
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
@@ -56,6 +67,7 @@ namespace Democrite.Framework.Configurations
                                                  IDemocriteNodeBuilder,
                                                  IDemocriteWizardStart<IDemocriteNodeWizard, IDemocriteNodeConfigurationWizard>,
                                                  IDemocriteNodeWizard,
+                                                 IDemocriteExtensionBuilderTool,
                                                  IDemocriteNodeConfigurationWizard,
                                                  IDemocriteNodeSequenceWizard,
                                                  IDemocriteNodeArtifactsWizard,
@@ -63,6 +75,7 @@ namespace Democrite.Framework.Configurations
                                                  IDemocriteNodeTriggersWizard,
                                                  IDemocriteNodeSignalsWizard,
                                                  IDemocriteNodeDoorsWizard,
+                                                 IDemocriteNodeStreamQueueWizard,
                                                  IDemocriteNodeLocalDefinitionsBuilder
 
     {
@@ -72,7 +85,9 @@ namespace Democrite.Framework.Configurations
         private readonly InMemoryDoorDefinitionProviderSource _doorDefinitionProviderSource;
         private readonly InMemoryArtifactProviderSource _artefactInMemoryProviderSource;
         private readonly InMemorySignalDefinitionProviderSource _signalDefinitionProviderSource;
-        private readonly InMemorySequenceDefinitionProvider _inMemorySequenceDefinition;
+        private readonly InMemorySequenceDefinitionProvider _inMemorySequenceDefinitionProviderSource;
+        private readonly InMemoryStreamQueueDefinitionProviderSource _streamQueueDefinitionProviderSource;
+
         private readonly INetworkInspector _networkInspector;
         private readonly ISiloBuilder _orleanSiloBuilder;
 
@@ -96,11 +111,12 @@ namespace Democrite.Framework.Configurations
         {
             ArgumentNullException.ThrowIfNull(clusterBuilderTools.NetworkInspector);
 
-            this._inMemorySequenceDefinition = new InMemorySequenceDefinitionProvider();
-            this._artefactInMemoryProviderSource = new InMemoryArtifactProviderSource();
-            this._triggerDefinitionProviderSource = new InMemoryTriggerDefinitionProviderSource();
-            this._signalDefinitionProviderSource = new InMemorySignalDefinitionProviderSource();
-            this._doorDefinitionProviderSource = new InMemoryDoorDefinitionProviderSource();
+            this._inMemorySequenceDefinitionProviderSource = new InMemorySequenceDefinitionProvider(null!);
+            this._artefactInMemoryProviderSource = new InMemoryArtifactProviderSource(null!);
+            this._triggerDefinitionProviderSource = new InMemoryTriggerDefinitionProviderSource(null!);
+            this._signalDefinitionProviderSource = new InMemorySignalDefinitionProviderSource(null!);
+            this._doorDefinitionProviderSource = new InMemoryDoorDefinitionProviderSource(null!);
+            this._streamQueueDefinitionProviderSource = new InMemoryStreamQueueDefinitionProviderSource(null!);
 
             this._networkInspector = clusterBuilderTools.NetworkInspector;
 
@@ -115,6 +131,12 @@ namespace Democrite.Framework.Configurations
         public sealed override object SourceOrleanBuilder
         {
             get { return this._orleanSiloBuilder; }
+        }
+
+        /// <inheritdoc />
+        public IDemocriteExtensionBuilderTool ConfigurationTools
+        {
+            get { return this; }
         }
 
         #endregion
@@ -174,7 +196,7 @@ namespace Democrite.Framework.Configurations
         }
 
         /// <inheritdoc />
-        public IDemocriteNodeWizard AddInMemoryMongoDefinitionProvider(Action<IDemocriteNodeLocalDefinitionsBuilder> config)
+        public IDemocriteNodeWizard AddInMemoryDefinitionProvider(Action<IDemocriteNodeLocalDefinitionsBuilder> config)
         {
             ArgumentNullException.ThrowIfNull(config);
             config(this);
@@ -303,22 +325,19 @@ namespace Democrite.Framework.Configurations
             return this;
         }
 
-        #endregion
-
-        #region IDemocriteNodeMemoryBuilder
-
         /// <inheritdoc />
-        public IDemocriteNodeMemoryBuilder UseInMemoryVGrainStateMemory()
+        public IDemocriteNodeLocalDefinitionsBuilder SetupStreamQueues(Action<IDemocriteNodeStreamQueueWizard> config)
         {
-            this._orleanSiloBuilder.AddMemoryGrainStorage(nameof(Democrite));
-            this._orleanSiloBuilder.AddMemoryGrainStorageAsDefault();
+            ArgumentNullException.ThrowIfNull(config);
+            config(this);
             return this;
         }
 
         /// <inheritdoc />
-        public IDemocriteNodeMemoryBuilder UseInMemoryTriggerReminderMemory()
+        public IDemocriteNodeLocalDefinitionsBuilder SetupStreamQueues(params StreamQueueDefinition[] streamQueueDefinitions)
         {
-            this._orleanSiloBuilder.UseInMemoryReminderService();
+            ArgumentNullException.ThrowIfNull(streamQueueDefinitions);
+            SetupStreamQueues(a => a.Register(streamQueueDefinitions));
             return this;
         }
 
@@ -343,7 +362,7 @@ namespace Democrite.Framework.Configurations
             foreach (var sequenceDefinition in sequenceDefinitions)
             {
                 // TODO : ValidateDefinition(sequenceDefinition);
-                this._inMemorySequenceDefinition.AddOrUpdate(sequenceDefinition);
+                this._inMemorySequenceDefinitionProviderSource.AddOrUpdate(sequenceDefinition);
             }
 
             return this;
@@ -368,17 +387,17 @@ namespace Democrite.Framework.Configurations
 
         /// <inheritdoc />
         public IDemocriteNodeArtifactsWizard AddSourceProvider<TSource>(TSource singletonInstances)
-            where TSource : class, IArtifactProviderSource
+            where TSource : class, IArtifactDefinitionProviderSource
         {
-            AddService<IArtifactProviderSource>(singletonInstances);
+            AddService<IArtifactDefinitionProviderSource>(singletonInstances);
             return this;
         }
 
         /// <inheritdoc />
         public IDemocriteNodeArtifactsWizard AddSourceProvider<TSource>()
-            where TSource : class, IArtifactProviderSource
+            where TSource : class, IArtifactDefinitionProviderSource
         {
-            AddService<IArtifactProviderSource, TSource>();
+            AddService<IArtifactDefinitionProviderSource, TSource>();
             return this;
         }
 
@@ -459,6 +478,23 @@ namespace Democrite.Framework.Configurations
 
         #endregion
 
+        #region IDemocriteNodeStreamQueueWizard
+
+        /// <summary>
+        /// Adds an streamQueue in definition execution.
+        /// </summary>
+        public IDemocriteNodeStreamQueueWizard Register(params StreamQueueDefinition[] streamQueueDefinitions)
+        {
+            foreach (var def in streamQueueDefinitions)
+            {
+                ValidateDefinition(def);
+                this._streamQueueDefinitionProviderSource.AddOrUpdate(def);
+            }
+            return this;
+        }
+
+        #endregion
+
         #region Tools
 
         /// <inheritdoc />
@@ -482,20 +518,20 @@ namespace Democrite.Framework.Configurations
 
             base.OnAutoConfigure(configuration, indexedAssemblies, logger);
 
-            AutoConfigBasedOnKeys<INodeCustomMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeCustomMemory,
-                                                                                                  configuration,
-                                                                                                  indexedAssemblies,
-                                                                                                  (s, key) => s.GetServiceByKey<string, IGrainStorage>(key) != null,
-                                                                                                  logger,
-                                                                                                  (c, wizard, key, cfg, service, logger) => c.AutoConfigureCustomStorage(wizard, cfg, service, logger, key),
-                                                                                                  defaultAutoKey: defaultMemoryAutoKey);
+            AutoConfigBasedOnKeys<INodeCustomGrainMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeCustomMemory,
+                                                                                                       configuration,
+                                                                                                       indexedAssemblies,
+                                                                                                       (s, key) => s.GetServiceByKey<string, IGrainStorage>(key) != null,
+                                                                                                       logger,
+                                                                                                       (c, wizard, key, cfg, service, logger) => c.AutoConfigureCustomStorage(wizard, cfg, service, logger, key),
+                                                                                                       defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigBasedOnKeys<INodeCustomDefinitionProviderAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeDefinitionProvider,
                                                                                                               configuration,
                                                                                                               indexedAssemblies,
                                                                                                               (s, key) => s.GetServiceByKey<string, ISequenceDefinitionSourceProvider>(key) != null,
                                                                                                               logger,
-                                                                                                              (c, wizard, key, cfg, service, logger) => c.AutoConfigureCustomProvider(wizard, cfg, service, logger, key),
+                                                                                                              null, //(c, wizard, key, cfg, service, logger) => c.AutoConfigureCustomProvider(wizard, cfg, service, logger, key),
                                                                                                               defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigImpl<INodeDefaultMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
@@ -504,6 +540,12 @@ namespace Democrite.Framework.Configurations
                                                                                             ConfigurationNodeSectionNames.NodeDefaultMemoryAutoConfigKey,
                                                                                             logger,
                                                                                             defaultAutoKey: defaultMemoryAutoKey);
+
+            AutoConfigImpl<IClusterEndpointAutoConfigurator, IDemocriteClusterBuilder>(configuration,
+                                                                                       indexedAssemblies,
+                                                                                       s => s.Any(d => (d.ServiceType == typeof(EndpointOptions) && d.ImplementationType != null)),
+                                                                                       ConfigurationSectionNames.Endpoints,
+                                                                                       logger);
         }
 
         /// <summary>
@@ -516,7 +558,7 @@ namespace Democrite.Framework.Configurations
                                                                      ILogger logger,
                                                                      Action<TAutoConfig, TAutoWizard, string, IConfiguration, IServiceCollection, ILogger>? customConfig = null,
                                                                      string? defaultAutoKey = ConfigurationSectionNames.DefaultAutoConfigKey)
-            where TAutoConfig : IAutoConfigurator<TAutoWizard>
+            where TAutoConfig : IAutoKeyConfigurator<TAutoWizard>
             where TAutoWizard : IBuilderDemocriteBaseWizard
 
         {
@@ -540,7 +582,8 @@ namespace Democrite.Framework.Configurations
                                customConfig == null
                                     ? (Action<TAutoConfig, TAutoWizard, IConfiguration, IServiceCollection, ILogger>?)null
                                     : (c, wizard, cfg, service, logger) => customConfig?.Invoke(c, wizard, child.Key, cfg, service, logger),
-                               defaultAutoKey);
+                               defaultAutoKey,
+                               child.Key);
             }
         }
 
@@ -560,14 +603,19 @@ namespace Democrite.Framework.Configurations
             serviceCollection.AddSingleton<IDedicatedObjectConverter, SignalMessageDedicatedObjectConverter>();
             serviceCollection.AddSingleton<IDedicatedObjectConverter, ScalarDedicatedConverter>();
 
-            AddService<ISequenceDefinitionSourceProvider>(this._inMemorySequenceDefinition);
-            AddService<IArtifactProviderSource>(this._artefactInMemoryProviderSource);
+            serviceCollection.TryAddSingleton<IDemocriteSerializer, DemocriteSerializer>();
+
+            serviceCollection.SetupSequenceExecutorThreadStageProvider();
+
+            AddService<ISequenceDefinitionSourceProvider>(this._inMemorySequenceDefinitionProviderSource);
+            AddService<IArtifactDefinitionProviderSource>(this._artefactInMemoryProviderSource);
             AddService<ITriggerDefinitionProviderSource>(this._triggerDefinitionProviderSource);
             AddService<ISignalDefinitionProviderSource>(this._signalDefinitionProviderSource);
             AddService<IDoorDefinitionProviderSource>(this._doorDefinitionProviderSource);
+            AddService<IStreamQueueDefinitionProviderSource>(this._streamQueueDefinitionProviderSource);
 
-            if (!CheckIsExistSetupInServices<IInputSourceProviderFactory>(serviceCollection))
-                AddService<IInputSourceProviderFactory, InputSourceProviderFactory>();
+            if (!CheckIsExistSetupInServices<IDataSourceProviderFactory>(serviceCollection))
+                AddService<IDataSourceProviderFactory, DataSourceProviderFactory>();
 
             if (!CheckIsExistSetupInServices<IArtifactExecutorFactory>(serviceCollection))
                 AddService<IArtifactExecutorFactory, ArtifactExecutorFactory>();
@@ -575,12 +623,11 @@ namespace Democrite.Framework.Configurations
             if (!CheckIsExistSetupInServices<ITriggerDefinitionProvider>(serviceCollection))
                 AddService<IDoorDefinitionProvider, DoorDefinitionProvider>();
 
-            if (!CheckIsExistSetupInServices<IArtifactProvider>(serviceCollection))
-                AddService<IArtifactProvider, ArtifactsProvider>();
+            if (!CheckIsExistSetupInServices<IArtifactDefinitionProvider>(serviceCollection))
+                AddService<IArtifactDefinitionProvider, ArtifactDefinitionProvider>();
 
-            // Artefacts
-            //serviceCollection.AddSingletonKeyedService<string, IExternalCodeExecutorPreparationStep, PreparationLocalCheckStep>(PreparationLocalCheckStep.KEY);
-            //serviceCollection.AddSingletonKeyedService<string, IExternalCodeExecutorPreparationStep, PreparationExecutorCheckStep>(PreparationExecutorCheckStep.KEY);
+            if (!CheckIsExistSetupInServices<IStreamQueueDefinitionProvider>(serviceCollection))
+                AddService<IStreamQueueDefinitionProvider, StreamQueueDefinitionProvider>();
 
             this._orleanSiloBuilder.AddIncomingGrainCallFilter<IncomingGrainCallTracer>()
                                    .AddIncomingGrainCallFilter<GrainPopulateCancellationTokenCallFilter>();
@@ -636,7 +683,7 @@ namespace Democrite.Framework.Configurations
         }
 
         /// <summary>
-        /// Create a local logger used to trace build informations
+        /// Get a local logger used to trace build informations
         /// </summary>
         private RelayLogger CreateBuilderLogger(string category)
         {

@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Node.Signals
 {
-    using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Toolbox.Patterns.Strategy;
 
     using System;
@@ -16,6 +16,18 @@ namespace Democrite.Framework.Node.Signals
     /// <seealso cref="IDoorDefinitionProviderSource" />
     public sealed class InMemoryDoorDefinitionProviderSource : ProviderStrategyBaseSource<DoorDefinition, Guid>, IDoorDefinitionProviderSource
     {
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InMemoryDoorDefinitionProviderSource"/> class.
+        /// </summary>
+        public InMemoryDoorDefinitionProviderSource(IServiceProvider serviceProvider)
+            : base(serviceProvider)
+        {
+        }
+
+        #endregion
+
         #region Methods
 
         /// <summary>

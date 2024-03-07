@@ -7,6 +7,7 @@ namespace Democrite.Framework.Node.Models
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Exceptions;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Core.Diagnostics;
@@ -18,6 +19,7 @@ namespace Democrite.Framework.Node.Models
     using Democrite.Framework.Toolbox;
     using Democrite.Framework.Toolbox.Abstractions.Disposables;
     using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Disposables;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
@@ -36,12 +38,14 @@ namespace Democrite.Framework.Node.Models
 
         private const string ERROR_NOT_ALLOW_INNER = "[Technical] MUST not execute foreach if already exist some inner threads ({IExecutionContext})";
 
-        private static readonly IReadOnlyCollection<ISequenceExecutorThreadStageProvider> s_democriteStageProviders;
-        private readonly IReadOnlyCollection<ISequenceExecutorThreadStageProvider> _stageProviders;
+        //private static readonly IReadOnlyCollection<ISequenceExecutorThreadStageSourceProvider> s_democriteStageProviders;
+        private readonly ISequenceExecutorThreadStageProvider _stageProvider;
 
         private Func<ISequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>? _postProcessHook;
 
+        private readonly IDemocriteSerializer _democriteSerializer;
         private readonly IObjectConverter _objectConverter;
+        private readonly ITimeManager _timeManager;
 
         private readonly SequenceDefinition _sequenceDefinition;
         private readonly bool _forceFirstContextGeneration;
@@ -60,32 +64,23 @@ namespace Democrite.Framework.Node.Models
         #region Ctor
 
         /// <summary>
-        /// Initialize the class <see cref="SequenceExecutorExecThreadState"/>
-        /// </summary>
-        static SequenceExecutorExecThread()
-        {
-            s_democriteStageProviders = new ISequenceExecutorThreadStageProvider[]
-            {
-                new SequenceExecutorCallThreadStageProvider(),
-                new SequenceExecutorForeachThreadStageProvider(),
-                new SequenceExecutorFilterThreadStageProvider()
-            };
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="SequenceExecutorExecThread"/> class.
         /// </summary>
         private SequenceExecutorExecThread(SequenceExecutorExecThreadState state,
                                            SequenceDefinition sequenceDefinition,
                                            IEnumerable<SequenceExecutorExecThread>? innerThreads,
-                                           IReadOnlyCollection<ISequenceExecutorThreadStageProvider>? stageProviders,
+                                           ISequenceExecutorThreadStageProvider sequenceExecutorProvider,
                                            IObjectConverter objectConverter,
+                                           ITimeManager timeManager,
+                                           IDemocriteSerializer democriteSerializer,
                                            bool forceFirstContextGeneration = false)
         {
             this.State = state;
 
+            this._timeManager = timeManager;
+            this._democriteSerializer = democriteSerializer;
             this._objectConverter = objectConverter;
-            this._stageProviders = stageProviders?.ToReadOnly() ?? EnumerableHelper<ISequenceExecutorThreadStageProvider>.ReadOnlyArray;
+            this._stageProvider = sequenceExecutorProvider;
 
             this._forceFirstContextGeneration = forceFirstContextGeneration;
 
@@ -179,8 +174,10 @@ namespace Democrite.Framework.Node.Models
                 return new SequenceExecutorExecThread(sequenceExecutorExecThreadState,
                                                       innerFlow,
                                                       null,
-                                                      this._sequenceExecutorExecThread._stageProviders,
-                                                      this._sequenceExecutorExecThread._objectConverter);
+                                                      this._sequenceExecutorExecThread._stageProvider,
+                                                      this._sequenceExecutorExecThread._objectConverter,
+                                                      this._sequenceExecutorExecThread._timeManager,
+                                                      this._sequenceExecutorExecThread._democriteSerializer);
             }
 
             /// <inheritdoc />
@@ -317,10 +314,12 @@ namespace Democrite.Framework.Node.Models
         /// </summary>
         internal static Task<SequenceExecutorExecThread> BuildFromAsync(SequenceExecutorExecThreadState threadState,
                                                                         Func<Guid, ValueTask<SequenceDefinition?>> getSequenceDef,
-                                                                        IReadOnlyCollection<ISequenceExecutorThreadStageProvider>? stageProviders,
-                                                                        IObjectConverter objectConverter)
+                                                                        ISequenceExecutorThreadStageProvider stageProviders,
+                                                                        IObjectConverter objectConverter,
+                                                                        ITimeManager timeManager,
+                                                                        IDemocriteSerializer democriteSerializer)
         {
-            return BuildFromImplAsync(threadState, getSequenceDef, 0, stageProviders, objectConverter);
+            return BuildFromImplAsync(threadState, getSequenceDef, 0, stageProviders, objectConverter, timeManager, democriteSerializer);
         }
 
         /// <summary>
@@ -329,8 +328,10 @@ namespace Democrite.Framework.Node.Models
         private static async Task<SequenceExecutorExecThread> BuildFromImplAsync(SequenceExecutorExecThreadState threadState,
                                                                                  Func<Guid, ValueTask<SequenceDefinition?>> getSequenceDef,
                                                                                  int depth,
-                                                                                 IReadOnlyCollection<ISequenceExecutorThreadStageProvider>? stageProviders,
-                                                                                 IObjectConverter objectConverter)
+                                                                                 ISequenceExecutorThreadStageProvider stageProviders,
+                                                                                 IObjectConverter objectConverter,
+                                                                                 ITimeManager timeManager,
+                                                                                 IDemocriteSerializer democriteSerializer)
         {
             var def = await getSequenceDef(threadState.FlowDefinitionId) ?? throw new SequenceDefinitionMissingException(threadState.FlowDefinitionId);
 
@@ -349,12 +350,19 @@ namespace Democrite.Framework.Node.Models
                         return host.InnerFlow;
 
                     return await getSequenceDef(id);
-                }, depth + 1, stageProviders, objectConverter);
+                }, depth + 1, stageProviders, objectConverter, timeManager, democriteSerializer);
 
                 innerThreads.Add(innerThread);
             }
 
-            return new SequenceExecutorExecThread(threadState, def, innerThreads, stageProviders, objectConverter, depth == 0);
+            return new SequenceExecutorExecThread(threadState,
+                                                  def,
+                                                  innerThreads,
+                                                  stageProviders,
+                                                  objectConverter,
+                                                  timeManager,
+                                                  democriteSerializer,
+                                                  depth == 0);
         }
 
         /// <summary>
@@ -370,7 +378,9 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Gets the current execution thread tasks
         /// </summary>
-        internal Task? GetThreadStageExecutionTasks(ILogger logger, IVGrainProvider vgrainProvider, IDiagnosticLogger diagnosticLogger)
+        internal Task? GetThreadStageExecutionTasks(ILogger logger,
+                                                    IVGrainProvider vgrainProvider,
+                                                    IDiagnosticLogger diagnosticLogger)
         {
             this._locker.Wait();
             try
@@ -518,7 +528,12 @@ namespace Democrite.Framework.Node.Models
             // Exec all steps
             logger.OptiLog(LogLevel.Trace, "-- Start step : '{stage}' for input '{input}'", stage, input);
 
-            var execTask = await HandleStageAsync(stage, input, sequenceContext, logger, diagnosticLogger, vgrainProvider);
+            var execTask = await HandleStageAsync(stage,
+                                                  input,
+                                                  sequenceContext,
+                                                  logger,
+                                                  diagnosticLogger,
+                                                  vgrainProvider);
 
             if (execTask.result != null)
                 await execTask.result;
@@ -551,8 +566,7 @@ namespace Democrite.Framework.Node.Models
         {
             ArgumentNullException.ThrowIfNull(step);
 
-            var provider = this._stageProviders.FirstOrDefault(s => s.CanHandler(step))
-                                        ?? s_democriteStageProviders.FirstOrDefault(s => s.CanHandler(step))
+            var executor = this._stageProvider.Provide(step)
                                         ?? throw new InvalidOperationException($"Doesn't know how to handled step definition {step.GetType()}");
 
             try
@@ -569,7 +583,6 @@ namespace Democrite.Framework.Node.Models
                     }
                 }
 
-                var executor = provider.Provide(step);
                 return executor.ExecAsync(step,
                                           input,
                                           sequenceContext,

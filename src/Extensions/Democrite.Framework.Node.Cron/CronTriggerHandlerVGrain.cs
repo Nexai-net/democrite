@@ -10,6 +10,7 @@ namespace Democrite.Framework.Node.Cron
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Abstractions.Streams;
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Triggers;
@@ -21,6 +22,7 @@ namespace Democrite.Framework.Node.Cron
     using Orleans.Runtime;
 
     using System;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -38,9 +40,11 @@ namespace Democrite.Framework.Node.Cron
     {
         #region Fields
 
+        private static readonly Regex s_allExceptSpacesReg = new Regex(@"[^\s]+");
+
         private static readonly TimeSpan s_maxAllowPeriodTime = TimeSpan.FromMicroseconds(uint.MaxValue - 10);
 
-        private readonly IInputSourceProviderFactory _inputSourceProviderFactory;
+        private readonly IDataSourceProviderFactory _inputSourceProviderFactory;
         private readonly ISequenceDefinitionProvider _sequenceDefinitionProvider;
         private readonly IDemocriteExecutionHandler _democriteExecutionHandler;
         private readonly ITriggerDefinitionProvider _triggerDefinitionProvider;
@@ -55,12 +59,13 @@ namespace Democrite.Framework.Node.Cron
         /// Initializes a new instance of the <see cref="CronTriggerHandlerVGrain"/> class.
         /// </summary>
         public CronTriggerHandlerVGrain(ILogger<ICronTriggerHandlerVGrain> logger,
-                                        [PersistentState(nameof(Triggers), nameof(Democrite))] IPersistentState<CronReminderState> persistentState,
+                                        [PersistentState(nameof(Triggers), DemocriteConstants.DefaultDemocriteStateConfigurationKey)] IPersistentState<CronReminderState> persistentState,
                                         ITriggerDefinitionProvider triggerDefinitionProvider,
                                         ISequenceDefinitionProvider sequenceDefinitionProvider,
                                         ISignalDefinitionProvider signalDefinitionProvider,
                                         IDemocriteExecutionHandler democriteExecutionHandler,
-                                        IInputSourceProviderFactory inputSourceProviderFactory,
+                                        IDataSourceProviderFactory inputSourceProviderFactory,
+                                        IStreamQueueDefinitionProvider streamQueueDefinitionProvider,
                                         ISignalService signalService,
                                         ITimeManager timeHandler)
 
@@ -71,6 +76,7 @@ namespace Democrite.Framework.Node.Cron
                    signalDefinitionProvider,
                    democriteExecutionHandler,
                    inputSourceProviderFactory,
+                   streamQueueDefinitionProvider,
                    signalService)
         {
             this._inputSourceProviderFactory = inputSourceProviderFactory;
@@ -89,23 +95,22 @@ namespace Democrite.Framework.Node.Cron
         /// <inheritdoc />
         public async Task ReceiveReminder(string reminderName, TickStatus status)
         {
-            await EnsureTriggerDefinitionAsync();
+            await EnsureTriggerDefinitionAsync(this.VGrainLifecycleToken);
 
-            if (!await UpdateNextTriggerAndCheckCanExecuteAsync(this.TriggerDefinition))
+            if (!await UpdateNextTriggerAndCheckCanExecuteAsync(this.TriggerDefinition, this.VGrainLifecycleToken))
                 return;
 
             await base.FireTriggerAsync();
         }
 
         /// <inheritdoc />
-        public override async Task UpdateAsync()
+        protected override async Task OnEnsureTriggerDefinitionAsync(CancellationToken token)
         {
-            await base.UpdateAsync();
-            await UpdateNextTriggerAndCheckCanExecuteAsync(this.TriggerDefinition!);
+            await UpdateNextTriggerAndCheckCanExecuteAsync(this.TriggerDefinition!, token);
         }
 
         /// <inheritdoc />
-        private async Task<bool> UpdateNextTriggerAndCheckCanExecuteAsync(CronTriggerDefinition definition)
+        private async Task<bool> UpdateNextTriggerAndCheckCanExecuteAsync(CronTriggerDefinition definition, CancellationToken token)
         {
             if (definition.Enabled == false)
             {
@@ -125,12 +130,15 @@ namespace Democrite.Framework.Node.Cron
                                                                   "not null");
             }
 
+            token.ThrowIfCancellationRequested();
             CronExpression cronExpression;
+
+            var supportSecond = definition.UseSecond;
 
             try
             {
-                cronExpression = CronExpression.Parse(definition.CronExpression);
-
+                cronExpression = CronExpression.Parse(definition.CronExpression, supportSecond ? CronFormat.IncludeSeconds : CronFormat.Standard);
+                token.ThrowIfCancellationRequested();
             }
             catch (Exception ex)
             {
@@ -143,7 +151,7 @@ namespace Democrite.Framework.Node.Cron
 
             var utcNow = this._timeHandler.UtcNow;
 
-            var current = cronExpression.GetNextOccurrence(utcNow.AddMinutes(-1), TimeZoneInfo.Utc);
+            var current = cronExpression.GetNextOccurrence(supportSecond ? utcNow.AddSeconds(-1) : utcNow.AddMinutes(-1), TimeZoneInfo.Utc);
 
             var next = cronExpression.GetNextOccurrence(utcNow, TimeZoneInfo.Utc);
 

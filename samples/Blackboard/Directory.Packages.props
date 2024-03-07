@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <!-- Democrite -->
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageVersion Include="Democrite.Framework.Node" Version="0.2.3.247-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Node.Blackboard" Version="0.2.3.247-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Node.Blackboard.Builders" Version="0.2.3.247-prerelease" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+</Project>

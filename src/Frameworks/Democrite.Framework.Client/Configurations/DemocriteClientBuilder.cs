@@ -35,9 +35,9 @@ namespace Democrite.Framework.Client.Configurations
         /// Initializes a new instance of the <see cref="DemocriteClientBuilder"/> class.
         /// </summary>
         public DemocriteClientBuilder(IHostBuilder host,
-                                    IClientBuilder orleanClientBuilder,
-                                    HostBuilderContext builderContext,
-                                    ClusterBuilderTools clusterBuilderTools)
+                                      IClientBuilder orleanClientBuilder,
+                                      HostBuilderContext builderContext,
+                                      ClusterBuilderTools clusterBuilderTools)
 
             : base(host, true, builderContext, clusterBuilderTools)
         {

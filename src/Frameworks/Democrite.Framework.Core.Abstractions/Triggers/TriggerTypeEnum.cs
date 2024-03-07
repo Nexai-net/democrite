@@ -14,5 +14,6 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         Cron,
         Signal,
         Other,
+        Stream
     }
 }

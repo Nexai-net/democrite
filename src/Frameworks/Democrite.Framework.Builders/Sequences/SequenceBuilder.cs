@@ -37,9 +37,11 @@ namespace Democrite.Framework.Builders.Sequences
         /// <param name="displayName"></param>
         /// <param name="triggerDefinition">All information about the worflow trigger; if null the sequence will need manual trigger</param>
         internal SequenceBuilder(Guid uid,
-                                 string? displayName,
+                                 string displayName,
                                  SequenceOptionDefinition? options)
         {
+            ArgumentNullException.ThrowIfNullOrEmpty(displayName);
+
             this._options = options ?? SequenceOptionDefinition.Default;
             this._displayName = displayName;
             this._uid = uid;
@@ -50,7 +52,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceBuilder"/> class link to a parent one
         /// </summary>
-        internal SequenceBuilder(SequenceBuilder parent, string? displayName)
+        internal SequenceBuilder(SequenceBuilder parent, string displayName)
             : this(Guid.NewGuid(), displayName, parent._options)
         {
             this._parent = parent;

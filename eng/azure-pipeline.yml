@@ -35,10 +35,24 @@ steps:
   displayName: Restore dependencies
   workingDirectory: $(SolutionFolder)
 
-- script: dotnet build --configuration $(buildConfiguration)
+- script: dotnet build -c $(buildConfiguration)
   displayName: Build
   workingDirectory: $(SolutionFolder)
 
-- script: dotnet test -v:detailed --consoleLoggerParameters:ErrorsOnly --collect "Code Coverage"
-  displayName: Test with Code Coverage recolt
-  workingDirectory: $(SolutionFolder)
+# - script: dotnet test -c $(buildConfiguration) --no-build -v=normal /p:CollectCoverage=true --collect:"XPlat Code Coverage" --blame-hang-timeout 240s -- xunit.ParallelizeAssembly=true xunit.MaxParallelThreads=4
+#   displayName: Test with Code Coverage recolt
+#   workingDirectory: $(SolutionFolder)
+
+- task: DotNetCoreCLI@2
+  displayName: 'Run tests'
+  inputs:
+    command: 'test'    
+    arguments: '--settings .runsettings -c $(buildConfiguration) --no-build -v=normal /p:CollectCoverage=true --collect:"XPlat Code Coverage" --blame-hang-timeout 240s -- xunit.ParallelizeAssembly=true xunit.MaxParallelThreads=4 DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.CodeCoverage.ModulePaths.Exclude.ModulePath="(((Orleans.)|(h.)|(coverlet.))[a-zA-Z.]+.dll)|(Democrite.[a-zA-Z.]+.unittests.dll)"' 
+    publishTestResults: true
+
+  # Publish Cobertura or JaCoCo code coverage results from a build.
+- task: PublishCodeCoverageResults@2
+  displayName: Publish code coverage
+  inputs:
+    codeCoverageTool: 'Cobertura'
+    summaryFileLocation: $(System.DefaultWorkingDirectory)/src/Tests/Democrite.*/**/*coverage.xml

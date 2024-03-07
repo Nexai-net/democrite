@@ -25,7 +25,12 @@ builder.Services.AddSwaggerGen(c =>
                 .AddEndpointsApiExplorer();
 
 // Add democrite client
-builder.Host.UseDemocriteClient();
+builder.Host.UseDemocriteClient(c =>
+{
+    c.WizardConfig()
+     .NoCluster()
+     .ConfigureLogging(c => c.AddConsole());
+});
 
 var app = builder.Build();
 

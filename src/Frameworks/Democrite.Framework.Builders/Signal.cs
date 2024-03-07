@@ -29,5 +29,13 @@ namespace Democrite.Framework.Builders
         {
             return new SignalBuilder(signalName, uid).Build();
         }
+
+        /// <summary>
+        /// Creates the new signal.
+        /// </summary>
+        public static SignalDefinition Create(in SignalId signalId)
+        {
+            return new SignalBuilder(signalId.Name, signalId.Uid).Build();
+        }
     }
 }

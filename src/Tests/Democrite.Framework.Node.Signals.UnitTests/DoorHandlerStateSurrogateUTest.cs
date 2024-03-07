@@ -6,8 +6,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests
 {
     using AutoFixture;
 
-    using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Node.Signals;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Node.Signals.Doors;
     using Democrite.Framework.Node.Signals.Models;
     using Democrite.UnitTests.ToolKit.Helpers;

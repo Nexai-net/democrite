@@ -9,7 +9,7 @@ namespace Democrite.Framework.Node.Triggers
     using Orleans.Services;
 
     /// <summary>
-    /// Grains service use to setup and manager trigger from signal
+    /// FullKeys service use to setup and manager trigger from signal
     /// </summary>
     [DemocriteSystemVGrain]
     internal interface ISignalTriggerVGrainService : IGrainService

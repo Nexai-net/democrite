@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Models.Surrogates
 {
-    using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Models;
 
     using Orleans;
 
@@ -31,15 +31,7 @@ namespace Democrite.Framework.Core.Abstractions.Models.Surrogates
         [Id(3)]
         public TConfiguration? Configuration { get; set; }
 
-        public static ExecutionContextWithConfigurationSurrogate<TConfiguration> From(IExecutionContext<TConfiguration> context)
-        {
-            return new ExecutionContextWithConfigurationSurrogate<TConfiguration>()
-            {
-                Configuration = context.Configuration,
-                ParentExecutionId = context.ParentExecutionId,
-                CurrentExecutionId = context.CurrentExecutionId,
-                FlowUID = context.FlowUID,
-            };
-        }
+        [Id(4)]
+        public IReadOnlyCollection<IContextDataContainer> ContextDataContainers { get; set; }
     }
 }

@@ -5,8 +5,8 @@
 namespace Democrite.Framework.Node.Signals.Doors
 {
     using Democrite.Framework.Core.Abstractions.Attributes;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Node.Signals;
     using Democrite.Framework.Toolbox.Abstractions.Services;
     using Democrite.Framework.Toolbox.Extensions;
     using Democrite.Framework.Toolbox.Helpers;
@@ -59,9 +59,11 @@ namespace Democrite.Framework.Node.Signals.Doors
         #region Methods
 
         /// </<inheritdoc />
-        protected override ValueTask OnInitializeAsync(BooleanLogicalDoorDefinition doorDefinition)
+        protected override ValueTask OnInitializeAsync(BooleanLogicalDoorDefinition doorDefinition, CancellationToken token)
         {
             var variables = doorDefinition.VariableNames.Keys.ToList();
+
+            token.ThrowIfCancellationRequested();
 
             this._indexedVariables = doorDefinition.DoorSourceIds.Select(s => (Uid: s.Uid, Key: doorDefinition.VariableNames.FirstOrDefault(kv => kv.Value == s.Uid).Key))
                                                    .Concat(doorDefinition.SignalSourceIds.Select(s => (Uid: s.Uid, Key: doorDefinition.VariableNames.FirstOrDefault(kv => kv.Value == s.Uid).Key)))
@@ -79,8 +81,9 @@ namespace Democrite.Framework.Node.Signals.Doors
                 this.Logger.OptiLog(LogLevel.Critical, "[Door:{doorId}-{name}] doesn't founed all the variable requested in the formula", doorDefinition.Uid, doorDefinition.ToDebugDisplayName());
 
             this._conditionExpression = ExpressionBuilder.BuildBoolLogicStatement(doorDefinition.LogicalFormula, variables);
+            token.ThrowIfCancellationRequested();
 
-            return base.OnInitializeAsync(doorDefinition);
+            return base.OnInitializeAsync(doorDefinition, token);
         }
 
         /// </<inheritdoc />

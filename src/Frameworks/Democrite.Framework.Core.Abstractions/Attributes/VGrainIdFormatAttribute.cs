@@ -23,7 +23,7 @@ namespace Democrite.Framework.Core.Abstractions.Attributes
     /// </remarks>
     /// <seealso cref="System.Attribute" />
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
-    public class VGrainIdFormatAttribute : Attribute
+    public sealed class VGrainIdFormatAttribute : VGrainIdBaseFormatorAttribute
     {
         #region Ctor
 
@@ -42,8 +42,8 @@ namespace Democrite.Framework.Core.Abstractions.Attributes
         /// Initializes a new instance of the <see cref="VGrainIdFormatAttribute"/> class.
         /// </summary>
         public VGrainIdFormatAttribute(IdFormatTypeEnum formatType)
+            : base(formatType)
         {
-            this.FormatType = formatType;
         }
 
         #endregion
@@ -54,11 +54,6 @@ namespace Democrite.Framework.Core.Abstractions.Attributes
         /// Gets the default <see cref="IdFormatTypeEnum.Guid"/> - '{new}'
         /// </summary>
         public static VGrainIdFormatAttribute Default { get; }
-
-        /// <summary>
-        /// Gets the type of the format.
-        /// </summary>
-        public IdFormatTypeEnum FormatType { get; init; }
 
         /// <summary>
         /// Gets the first parameter template.

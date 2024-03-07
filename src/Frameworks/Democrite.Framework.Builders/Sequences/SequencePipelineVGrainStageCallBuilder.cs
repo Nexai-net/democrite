@@ -8,6 +8,7 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Toolbox.Abstractions.Conditions;
     using Democrite.Framework.Toolbox.Helpers;
 
     using System;
@@ -29,7 +30,7 @@ namespace Democrite.Framework.Builders.Sequences
 
         private readonly Expression<Func<TInput, TConfiguration>>? _configurationProvider;
         private readonly TConfiguration? _configuration;
-        
+
         private CallStepBuilder? _callDefinition;
 
         #endregion
@@ -142,11 +143,25 @@ namespace Democrite.Framework.Builders.Sequences
         {
             ArgumentNullException.ThrowIfNull(this._callDefinition);
 
+            //SequenceStageLambdaBaseConfiguration? lambdaCfg = null;
+
+            //if (this._configurationProvider is not null)
+            //{
+            //    if (this._configurationProvider.NodeType != ExpressionType.Lambda)
+            //        throw new InvalidOperationException("Only lambda type could be used as configuration provider");
+
+            //    if (this._configurationProvider.Body.NodeType == ExpressionType.MemberInit)
+            //        lambdaCfg = new SequenceStageLambdaMemberInitConfiguration(this._configurationProvider.SerializeMemberInitialization());
+            //    else
+            //        lambdaCfg = new SequenceStageLambdaChainCallConfiguration(DynamicCallHelper.GetCallChain(this._configurationProvider)!);
+            //}
+
+            var access = this._configurationProvider?.CreateAccess() ?? this._configuration?.CreateAccess();
+
             var option = BuildConfigDefinition();
             return this._callDefinition.ToDefinition<TConfiguration>(option,
                                                                      this.ConfigPreventOutput,
-                                                                     this._configurationProvider is null ? this._configuration : default,
-                                                                     this._configurationProvider is null ? null : DynamicCallHelper.GetCallChain(this._configurationProvider));
+                                                                     access);
         }
 
         #region Tools

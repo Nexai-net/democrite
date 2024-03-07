@@ -3,7 +3,7 @@
 	<PropertyGroup>
 
 		<Product>Democrite</Product>
-		<PackageTags>Democrite;Multi-Agent;VGrain;Framework</PackageTags>
+		<PackageTags>Democrite;Orleans;Multi-Agent;Multi-Grain;Multi-VAgent;VGrain;Grain;Framework</PackageTags>
 		
 	</PropertyGroup>
 	

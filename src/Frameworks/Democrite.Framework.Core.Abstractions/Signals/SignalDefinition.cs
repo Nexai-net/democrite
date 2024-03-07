@@ -18,6 +18,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
     /// </remarks>
     /// <seealso cref="SignalNetworkBasePartDefinition" />
     [Immutable]
+    [DataContract]
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
@@ -31,7 +32,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         public SignalDefinition(Guid uid,
                                 string name,
                                 string? group = null)
-            : base(uid, name, group)
+            : base(uid, name, name, group: group)
         {
             this.SignalId = new SignalId(uid, name);
         }
@@ -45,8 +46,8 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// </summary>
         [Id(0)]
         [IgnoreDataMember]
-        [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public SignalId SignalId { get; }
 
         #endregion

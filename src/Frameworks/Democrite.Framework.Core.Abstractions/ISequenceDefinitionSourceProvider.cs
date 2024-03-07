@@ -5,9 +5,6 @@
 namespace Democrite.Framework.Core.Abstractions
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
-
-    using System;
 
     /// <summary>
     /// Provider used to access <see cref="SequenceDefinition"/>
@@ -15,7 +12,7 @@ namespace Democrite.Framework.Core.Abstractions
     /// <remarks>
     ///     Use <see cref="ISequenceDefinitionProvider"/> to access <see cref="SequenceDefinition"/>
     /// </remarks>
-    public interface ISequenceDefinitionSourceProvider : IProviderStrategySource<SequenceDefinition, Guid>, INodeInitService
+    public interface ISequenceDefinitionSourceProvider : IDefinitionSourceProvider<SequenceDefinition>
     {
     }
 }

@@ -7,7 +7,7 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions.Sequence;
 
     /// <summary>
-    /// Build pipeline stage
+    /// Get pipeline stage
     /// </summary>
     public interface ISequencePipelineStageDefinitionProvider
     {

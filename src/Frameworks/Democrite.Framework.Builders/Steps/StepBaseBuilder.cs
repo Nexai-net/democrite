@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Builders.Steps
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
+    using Democrite.Framework.Toolbox.Abstractions.Expressions;
 
     using System;
 
@@ -46,8 +47,7 @@ namespace Democrite.Framework.Builders.Steps
         /// <inheritdoc/>
         public abstract ISequenceStageDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
                                                                         bool preventReturn,
-                                                                        TContext? contextInfo = default,
-                                                                        string? configurationFromInputChainCall = null);
+                                                                        AccessExpressionDefinition? configurationAccess);
 
         #endregion
     }

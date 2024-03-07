@@ -16,7 +16,7 @@ namespace Democrite.Framework.Toolbox.Models
     [ImmutableObject(true)]
 
     [KnownType(typeof(CollectionType))]
-    [KnownType(typeof(ConcreteType))]
+    [KnownType(typeof(ConcretType))]
     [KnownType(typeof(GenericRefType))]
     [KnownType(typeof(GenericType))]
     public abstract class AbstractType : IEquatable<AbstractType>, IEquatable<Type>

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="$(SolutionDir)\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\\SharedFrameworkAssmblyInfo.props" />
 
 	<PropertyGroup>
 		<IsPackable>false</IsPackable>
@@ -15,6 +15,7 @@
 		<PackageReference Include="Microsoft.Orleans.TestingHost" />
 		<PackageReference Include="NFluent" />
 		<PackageReference Include="xunit" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="System.ComponentModel.TypeConverter" />
 		
 		<!-- TO BE REPLACE by NSubstitute -->
@@ -22,8 +23,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
-		<ProjectReference Include="$(SolutionDir)\src\Frameworks\Democrite.Framework.Node\Democrite.Framework.Node.csproj" />
+		<ProjectReference Include="..\..\..\src\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\..\..\src\Frameworks\Democrite.Framework.Node\Democrite.Framework.Node.csproj" />
 	</ItemGroup>
 
 </Project>

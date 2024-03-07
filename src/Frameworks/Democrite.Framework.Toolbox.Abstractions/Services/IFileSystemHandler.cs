@@ -25,6 +25,22 @@ namespace Democrite.Framework.Toolbox.Abstractions.Services
         Stream? OpenRead(Uri uri);
 
         /// <summary>
+        /// Writes data to file 
+        /// </summary>
+        /// <returns>
+        ///     <c>true</c> if file have file full fill; otherwise <c>false</c> if file already exist and <paramref name="override"/> is set false
+        /// </returns>
+        ValueTask<bool> WriteToFileAsync(Stream stream, Uri uri, bool @override = true, CancellationToken token = default);
+
+        /// <summary>
+        /// Writes data to file 
+        /// </summary>
+        /// <returns>
+        ///     <c>true</c> if file have file full fill; otherwise <c>false</c> if file already exist and <paramref name="override"/> is set false
+        /// </returns>
+        ValueTask<bool> WriteToFileAsync(byte[] bytes, Uri uri, bool @override = true, CancellationToken token = default);
+
+        /// <summary>
         /// Gets a value indicating if file target by <paramref name="uri"/> exits
         /// </summary>
         bool Exists(Uri uri);
@@ -57,6 +73,11 @@ namespace Democrite.Framework.Toolbox.Abstractions.Services
         /// <summary>
         /// Copies from <paramref name="source"/> to <paramref name="target"/>
         /// </summary>
-        bool CopyFrom(Uri source, Uri target, bool overrideTarget);
+        ValueTask<bool> CopyFromAsync(Uri source, Uri target, bool @override = true, CancellationToken token = default);
+
+        /// <summary>
+        /// Copies from <paramref name="source"/> to <paramref name="target"/>
+        /// </summary>
+        ValueTask<bool> CopyFromAsync(Stream source, Uri target, bool @override = true, CancellationToken token = default);
     }
 }

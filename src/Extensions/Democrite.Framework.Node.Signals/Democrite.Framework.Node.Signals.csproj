@@ -8,7 +8,7 @@
 		<IsPackable>true</IsPackable>
 		<Description>Democrite node extension used to enable signal in the cluster.</Description>
 
-		<PackageTags>Democrite;Multi-Agent;Framework;Node;Extension;Signal</PackageTags>
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Node;Extension;Signal</PackageTags>
 
 	</PropertyGroup>
 

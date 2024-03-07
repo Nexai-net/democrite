@@ -6,6 +6,7 @@ namespace Democrite.Framework.Cluster.Services
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.Framework.Toolbox.Supports;
 
     using Microsoft.Extensions.DependencyInjection;
 
@@ -17,7 +18,7 @@ namespace Democrite.Framework.Cluster.Services
     /// <summary>
     /// Service proxy used to initialize and finalize
     /// </summary>
-    internal sealed class NodeServiceProxy : INodeInitService, INodeFinalizeService
+    internal sealed class NodeServiceProxy : SupportBaseInitialization<IServiceProvider>, INodeInitService, INodeFinalizeService
     {
         #region Fields
 
@@ -53,17 +54,17 @@ namespace Democrite.Framework.Cluster.Services
             get { return false; }
         }
 
-        /// <inheritdoc />
-        public bool IsInitializing
-        {
-            get { return false; }
-        }
+        ///// <inheritdoc />
+        //public bool IsInitializing
+        //{
+        //    get { return false; }
+        //}
 
-        /// <inheritdoc />
-        public bool IsInitialized
-        {
-            get { return false; }
-        }
+        ///// <inheritdoc />
+        //public bool IsInitialized
+        //{
+        //    get { return false; }
+        //}
 
         #endregion
 
@@ -83,13 +84,13 @@ namespace Democrite.Framework.Cluster.Services
         }
 
         /// <inheritdoc />
-        public async ValueTask InitializationAsync<TState>(TState? initializationState = default, CancellationToken token = default)
+        protected override async ValueTask OnInitializingAsync(IServiceProvider? serviceProvider, CancellationToken token)
         {
             var services = this._serviceProvider.GetServices(this._serviceKey)
                                                 .OfType<INodeInitService>()
                                                 .ToArray();
 
-            var tasks = services.Select(s => s.InitializationAsync(initializationState, token))
+            var tasks = services.Select(s => s.InitializationAsync(serviceProvider, token))
                                 .ToArray();
 
             await tasks.SafeWhenAllAsync(token);

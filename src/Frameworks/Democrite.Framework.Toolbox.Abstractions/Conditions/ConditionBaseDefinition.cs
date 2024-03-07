@@ -26,6 +26,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
     [JsonDerivedType(typeof(ConditionMemberAccessDefinition), ConditionMemberAccessDefinition.TypeDiscriminator)]
     [JsonDerivedType(typeof(ConditionOperandDefinition), ConditionOperandDefinition.TypeDiscriminator)]
     [JsonDerivedType(typeof(ConditionValueDefinition), ConditionValueDefinition.TypeDiscriminator)]
+    [JsonDerivedType(typeof(ConditionConvertDefinition), ConditionConvertDefinition.TypeDiscriminator)]
 
     [JsonObject(ItemTypeNameHandling = TypeNameHandling.All)]
 
@@ -36,6 +37,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
     [KnownType(typeof(ConditionMemberAccessDefinition))]
     [KnownType(typeof(ConditionOperandDefinition))]
     [KnownType(typeof(ConditionValueDefinition))]
+    [KnownType(typeof(ConditionConvertDefinition))]
 
     public abstract class ConditionBaseDefinition : IEquatable<ConditionBaseDefinition>
     {

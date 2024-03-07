@@ -126,7 +126,7 @@ namespace Democrite.Framework.Core.Executions
 
         /// <summary>
         ///     Generic execution able to call <typeparamref name="TExecutor"/> with diffent parameter
-        /// </summary>
+        /// </summary> 
         private async Task<IExecutionResult<TExpectedOutput>> RunImplAsync<TExpectedOutput>(CancellationToken token,
                                                                                             bool fire = false)
         {
@@ -146,7 +146,6 @@ namespace Democrite.Framework.Core.Executions
 
                 executionTask = OnRunAsync<TExpectedOutput>(executor, input, executionContext, fire);
                 await executionTask;
-
             }
             catch (Exception ex)
             {

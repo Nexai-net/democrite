@@ -60,9 +60,9 @@ namespace Democrite.Framework.Node.Signals
         /// <inheritdoc />
         [OneWay]
         [ReadOnly]
-        public async Task<Guid> Fire(GrainId? sourceId, VGrainMetaData? sourceMetaData)
+        public async Task<Guid> Fire(GrainId? sourceId, VGrainMetaData? sourceMetaData, GrainCancellationToken token)
         {
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(token.CancellationToken);
 
             var fireId = Guid.NewGuid();
 
@@ -81,10 +81,10 @@ namespace Democrite.Framework.Node.Signals
         /// <inheritdoc />
         [OneWay]
         [ReadOnly]
-        public async Task<Guid> Fire<TData>(GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData) 
+        public async Task<Guid> Fire<TData>(GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData, GrainCancellationToken token) 
             where TData : struct
         {
-            await EnsureInitializedAsync();
+            await EnsureInitializedAsync(token.CancellationToken);
 
             var fireId = Guid.NewGuid();
             var now = this._timeManager.UtcNow;
@@ -106,7 +106,7 @@ namespace Democrite.Framework.Node.Signals
         /// <summary>
         /// Ensures this instance is initialized.
         /// </summary>
-        protected override async ValueTask EnsureInitializedAsync()
+        protected override async ValueTask OnEnsureInitializedAsync(CancellationToken token)
         {
             if (this._signalDefinition != null)
                 return;
@@ -116,7 +116,7 @@ namespace Democrite.Framework.Node.Signals
             if (signalDefinitionId == Guid.Empty)
                 throw new InvalidVGrainIdException(GetGrainId(), "signal definition id");
 
-            var signalDefinitions = (await this._signalDefinitionProvider.GetValuesAsync(signalDefinitionId)).Distinct().ToArray();
+            var signalDefinitions = (await this._signalDefinitionProvider.GetValuesAsync(token, signalDefinitionId)).Distinct().ToArray();
 
             if (signalDefinitions.Length > 1)
             {

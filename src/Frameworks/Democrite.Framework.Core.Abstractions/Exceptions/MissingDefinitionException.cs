@@ -19,7 +19,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         /// Initializes a new instance of the <see cref="MissingDefinitionException"/> class.
         /// </summary>
         public MissingDefinitionException(Type definitionType,
-                                          Guid definitionId,
+                                          string definitionId,
                                           Exception? innerException = null)
             : this(DemocriteExceptionSR.DefinitionMissingExceptionMessage.WithArguments(definitionType, definitionId),
                    definitionType.GetAbstractType(),
@@ -35,7 +35,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         /// </summary>
         internal MissingDefinitionException(string message,
                                             AbstractType definitionType,
-                                            Guid definitionId,
+                                            string definitionId,
                                             ulong errorCode,
                                             Exception? innerException) 
             : base(message, errorCode, innerException)
@@ -58,7 +58,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         public AbstractType DefinitionType { get; set; }
 
         [Id(3)]
-        public Guid DefinitionId { get; set; }
+        public string DefinitionId { get; set; }
 
         [Id(4)]
         public Exception? InnerException { get; set; }
@@ -84,7 +84,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
                 Message = value.Message,
                 ErrorCode = value.ErrorCode,
                 DefinitionType = (AbstractType)value.Data[nameof(MissingDefinitionExceptionSurrogate.DefinitionType)]!,
-                DefinitionId = (Guid)value.Data[nameof(MissingDefinitionExceptionSurrogate.DefinitionId)]!
+                DefinitionId = (string)value.Data[nameof(MissingDefinitionExceptionSurrogate.DefinitionId)]!
             };
         }
     }

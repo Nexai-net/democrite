@@ -29,8 +29,8 @@ namespace Democrite.Framework.Builders.Signals
         public SignalDefinition Build()
         {
             return new SignalDefinition(this.Uid,
-                                       this.Name,
-                                       this.GroupName);
+                                        this.Name,
+                                        this.GroupName);
         }
 
         #endregion

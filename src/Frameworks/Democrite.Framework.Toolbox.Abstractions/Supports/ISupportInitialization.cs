@@ -30,7 +30,22 @@ namespace Democrite.Framework.Toolbox.Abstractions.Supports
         /// <summary>
         /// Initialize the instance
         /// </summary>
-        ValueTask InitializationAsync<TState>(TState? initializationState = default, CancellationToken token = default);
+        ValueTask InitializationAsync(CancellationToken token = default);
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Define an instance that support initialization
+    /// </summary>
+    public interface ISupportInitialization<TState> : ISupportInitialization
+    {
+        #region Methods
+
+        /// <summary>
+        /// Initialize the instance
+        /// </summary>
+        ValueTask InitializationAsync(TState? initializationState, CancellationToken token = default);
 
         #endregion
     }

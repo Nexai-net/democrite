@@ -4,7 +4,7 @@
 
 namespace Democrite.UnitTests.ToolKit.Models
 {
-    using Democrite.Framework.Toolbox;
+    using Democrite.Framework.Toolbox.Abstractions.Models;
 
     /// <summary>
     /// Method call argument

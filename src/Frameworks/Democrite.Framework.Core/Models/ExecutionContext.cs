@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Models
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Repositories;
 
     using Microsoft.Extensions.Logging;
 
@@ -37,6 +38,8 @@ namespace Democrite.Framework.Core.Models
 
         private static readonly MethodInfo s_addGrainCancelReference;
         private static readonly PropertyInfo s_propGrainRuntime;
+
+        private readonly HashSet<IContextDataContainer> _contextDataContainers;
 
         [NonSerialized]
         private readonly GrainCancellationTokenSource _grainCancelTokenSource;
@@ -80,6 +83,8 @@ namespace Democrite.Framework.Core.Models
             this.FlowUID = flowUID;
             this.CurrentExecutionId = currentExecutionId;
             this.ParentExecutionId = parentExecutionId;
+
+            this._contextDataContainers = new HashSet<IContextDataContainer>();
         }
 
         /// <summary>
@@ -97,6 +102,8 @@ namespace Democrite.Framework.Core.Models
             this.FlowUID = flowUID;
             this.CurrentExecutionId = currentExecutionId;
             this.ParentExecutionId = parentExecutionId;
+
+            this._contextDataContainers = new HashSet<IContextDataContainer>();
         }
 
         #endregion
@@ -145,16 +152,24 @@ namespace Democrite.Framework.Core.Models
         /// <inheritdoc />
         public IExecutionContext NextContext()
         {
-            return new ExecutionContext(this.FlowUID,
-                                        Guid.NewGuid(),
-                                        this.CurrentExecutionId,
-                                        this._grainCancelTokenSource);
+            var next = new ExecutionContext(this.FlowUID,
+                                            Guid.NewGuid(),
+                                            this.CurrentExecutionId,
+                                            this._grainCancelTokenSource);
+
+            next.InjectAllDataContext(this.GetAllDataContext());
+            return next;
         }
 
         /// <inheritdoc />
         public IExecutionContext<TContextInfo> DuplicateWithContext<TContextInfo>(TContextInfo contextInfo)
         {
-            return new ExecutionContextWithConfiguration<TContextInfo>(this.FlowUID, this.CurrentExecutionId, this.ParentExecutionId, contextInfo);
+            var ctx = new ExecutionContextWithConfiguration<TContextInfo>(this.FlowUID,
+                                                                          this.CurrentExecutionId,
+                                                                          this.ParentExecutionId,
+                                                                          contextInfo);
+            ctx.InjectAllDataContext(this.GetAllDataContext());
+            return ctx;
         }
 
         /// <inheritdoc />
@@ -191,7 +206,84 @@ namespace Democrite.Framework.Core.Models
             return (IExecutionContext)(genericMthd?.Invoke(this, new object?[] { contextInfo }) ?? throw new InvalidOperationException("Invalid context cast"));
         }
 
+        /// <inheritdoc />
+        public TContextData? TryGetContextData<TContextData>(IDemocriteSerializer serializer) where TContextData : struct
+        {
+            var trait = typeof(TContextData);
+            var container = this._contextDataContainers.FirstOrDefault(c => c.IsMatch(trait));
+
+            if (container is null)
+                return default;
+
+            return (TContextData?)container.GetData(serializer);
+        }
+
+        /// <inheritdoc />
+        public bool TryPushContextData<TContextData>(TContextData contextData,
+                                                     bool @override,
+                                                     IDemocriteSerializer serializer)
+            where TContextData : struct
+        {
+            var trait = typeof(TContextData);
+            var exist = this._contextDataContainers.FirstOrDefault(c => c.IsMatch(trait));
+
+            if (exist is not null)
+            {
+                if (!@override)
+                    return false;
+
+                this._contextDataContainers.Remove(exist);
+            }
+
+            var newData = ContextDataContainer<TContextData>.Create(contextData, serializer);
+            this._contextDataContainers.Add(newData);
+            return true;
+        }
+
+        /// <inheritdoc />
+        public void ClearContextData()
+        {
+            this._contextDataContainers.Clear();
+        }
+
+        /// <inheritdoc />
+        public void ClearContextData(Type dataType)
+        {
+            this._contextDataContainers.RemoveWhere(c => c.IsMatch(dataType));
+        }
+
+        /// <inheritdoc />
+        public void ClearContextData<TContextData>() where TContextData : struct
+        {
+            ClearContextData(typeof(TContextData));
+        }
+
         #region Tools
+
+        /// <summary>
+        /// Gets all data context.
+        /// </summary>
+        /// <remarks>
+        ///     Use during serialization
+        /// </remarks>
+        internal IReadOnlyCollection<IContextDataContainer> GetAllDataContext()
+        {
+            return this._contextDataContainers;
+        }
+
+        /// <summary>
+        /// Gets all data context.
+        /// </summary>
+        /// <remarks>
+        ///     Use during serialization
+        /// </remarks>
+        internal void InjectAllDataContext(IReadOnlyCollection<IContextDataContainer> contextDataContainers)
+        {
+            this._contextDataContainers.Clear();
+
+            foreach (var data in contextDataContainers)
+                this._contextDataContainers.Add(data);
+        }
 
         /// <inheritdoc cref="IExecutionContext.GetLogger{T}(ILoggerProvider)" />
         private static ILogger GetLogger(ILoggerFactory loggerFactory, Guid flowUid, Guid currentExecutionId, string category)

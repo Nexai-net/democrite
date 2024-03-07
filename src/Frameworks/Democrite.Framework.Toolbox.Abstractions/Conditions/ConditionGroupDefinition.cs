@@ -17,6 +17,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
     /// <summary>
     /// Define a group condition link by <see cref="LogicEnum"/>
     /// </summary>
+    [DataContract]
     [Serializable]
     [ImmutableObject(true)]
 #pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
@@ -49,11 +50,13 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the logic.
         /// </summary>
+        [DataMember]
         public LogicEnum Logic { get; }
 
         /// <summary>
         /// Gets the conditions.
         /// </summary>
+        [DataMember]
         [JsonProperty(ItemTypeNameHandling = TypeNameHandling.All)]
         public IReadOnlyCollection<ConditionBaseDefinition> Conditions { get; }
 
@@ -88,8 +91,8 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <inheritdoc />
         protected override int OnGetHashCode()
         {
-            return this.Logic.GetHashCode() ^
-                   (this.Conditions.OrderBy(a => (a?.GetHashCode() ?? 0)).Aggregate(0, (acc, a) => acc + (a?.GetHashCode() ?? 0)));
+            return HashCode.Combine(this.Logic,
+                                    (this.Conditions.OrderBy(a => (a?.GetHashCode() ?? 0)).Aggregate(0, (acc, a) => acc + (a?.GetHashCode() ?? 0))));
         }
 
         #endregion

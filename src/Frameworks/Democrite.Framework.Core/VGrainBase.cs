@@ -7,7 +7,9 @@ namespace Democrite.Framework.Core
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Enums;
+    using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Models;
+    using Democrite.Framework.Core.Helpers;
     using Democrite.Framework.Toolbox.Extensions;
 
     using Microsoft.Extensions.DependencyInjection;
@@ -34,8 +36,7 @@ namespace Democrite.Framework.Core
     {
         #region Fields
 
-        private static readonly Dictionary<Type, VGrainMetaData> s_metadataCache;
-        private static readonly ReaderWriterLockSlim s_metaDataCacheLocker;
+        private readonly CancellationTokenSource _lifecycleCancellationToken;
 
         private readonly List<IDisposable> _disposables;
         private long _disposableRefCount = 0;
@@ -43,15 +44,6 @@ namespace Democrite.Framework.Core
         #endregion
 
         #region Ctor
-
-        /// <summary>
-        /// Initializes the <see cref="VGrainBase"/> class.
-        /// </summary>
-        static VGrainBase()
-        {
-            s_metadataCache = new Dictionary<Type, VGrainMetaData>();
-            s_metaDataCacheLocker = new ReaderWriterLockSlim();
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VGrainBase"/> class.
@@ -63,7 +55,8 @@ namespace Democrite.Framework.Core
 
             this.Logger = logger;
 
-            this.MetaData = BuildVGrainMetaData(GetType(), typeof(TVGrainInterface));
+            this.MetaData = BuildVGrainMetaData(GetType());
+            this._lifecycleCancellationToken = new CancellationTokenSource();
         }
 
         /// <summary>
@@ -85,6 +78,14 @@ namespace Democrite.Framework.Core
 
         /// <inheritdoc />
         public VGrainMetaData MetaData { get; }
+
+        /// <summary>
+        /// Gets the grain lifecycle token.
+        /// </summary>
+        public CancellationToken VGrainLifecycleToken
+        {
+            get { return this._lifecycleCancellationToken.Token; }
+        }
 
         /// <summary>
         /// Gets the identity card.
@@ -154,6 +155,7 @@ namespace Democrite.Framework.Core
 
             try
             {
+                CheckGrainIdValidity();
                 LifecycleLog(nameof(ActivationSetupState));
                 await OnActivationSetupState(ct);
             }
@@ -183,6 +185,7 @@ namespace Democrite.Framework.Core
         public override Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
         {
             LifecycleLog(nameof(OnDeactivateAsync));
+            this._lifecycleCancellationToken.Cancel();
             return base.OnDeactivateAsync(reason, cancellationToken);
         }
 
@@ -271,40 +274,9 @@ namespace Democrite.Framework.Core
         /// <summary>
         /// Builds the vgrain meta data.
         /// </summary>
-        private static VGrainMetaData BuildVGrainMetaData(Type type, Type vgrainInterface)
+        private static VGrainMetaData BuildVGrainMetaData(Type type)
         {
-            s_metaDataCacheLocker.EnterReadLock();
-            try
-            {
-                if (s_metadataCache.TryGetValue(type, out var metaData))
-                    return metaData;
-            }
-            finally
-            {
-                s_metaDataCacheLocker.ExitReadLock();
-            }
-
-            s_metaDataCacheLocker.EnterWriteLock();
-            try
-            {
-                if (s_metadataCache.TryGetValue(type, out var metaData))
-                    return metaData;
-
-                var isDemcriteSystemVGrain = type.GetCustomAttribute<DemocriteSystemVGrainAttribute>();
-                var categories = type.GetCustomAttributes<VGrainCategoryAttribute>();
-
-                var newMetaData = new VGrainMetaData(vgrainInterface.Name,
-                                                    type.GetTreeValues(t => t?.BaseType).FirstOrDefault(t => t != null && t.IsGenericType && t.GetGenericTypeDefinition() == typeof(VGrainBase<>)) != null,
-                                                    categories?.Select(c => c.Category).Where(c => !string.IsNullOrEmpty(c)),
-                                                    isDemcriteSystemVGrain != null);
-
-                s_metadataCache.Add(type, newMetaData);
-                return newMetaData;
-            }
-            finally
-            {
-                s_metaDataCacheLocker.ExitWriteLock();
-            }
+            return VGrainMetaDataHelper.GetVGrainMetaDataType(type);
         }
 
         /// <summary>
@@ -331,6 +303,29 @@ namespace Democrite.Framework.Core
             return (TIdentityCard)card;
         }
 
+        /// <summary>
+        /// Checks the grain identifier validity.
+        /// </summary>
+        /// <exception cref=""></exception>
+        private void CheckGrainIdValidity()
+        {
+            // OPTI : Cache attribute by type
+            var validatorAttributes = GetType().GetCustomAttributes()
+                                               .OfType<VGrainIdBaseValidatorAttribute>()
+                                               .ToArray();
+            if (validatorAttributes.Length == 0)
+                return;
+
+            var grainId = GetGrainId();
+            var grainIdStr = grainId.ToString();
+
+            foreach (var validator in validatorAttributes)
+            {
+                if (!validator.Validate(grainId, grainIdStr, this.Logger))
+                    throw new VGrainIdValidationFaildException(validator, GetType(), grainId);
+            }
+        }
+
         #endregion
 
         #endregion
@@ -350,6 +345,8 @@ namespace Democrite.Framework.Core
     {
         #region Fields
 
+        protected static readonly Type s_stateTraits = typeof(TVGrainState);
+
         private readonly IPersistentState<TVGrainState> _persistentState;
 
         private TVGrainState? _state;
@@ -366,6 +363,10 @@ namespace Democrite.Framework.Core
             : base(logger)
         {
             this._persistentState = persistentState;
+
+            if (s_stateTraits.GetTypeInfoExtension().IsCSharpScalarType)
+                logger.OptiLog(LogLevel.Warning, "Direct scalar type ({grainStateRisky}) as state is not managed by this kind of repository.", s_stateTraits);
+
         }
 
         #endregion
@@ -400,7 +401,7 @@ namespace Democrite.Framework.Core
 
             await base.OnDeactivateAsync(reason, cancellationToken);
 
-            await(OnDeactivateAsync(this._state, reason, cancellationToken) ?? Task.CompletedTask);
+            await (OnDeactivateAsync(this._state, reason, cancellationToken) ?? Task.CompletedTask);
         }
 
         /// <summary>
@@ -417,7 +418,7 @@ namespace Democrite.Framework.Core
             this._state = this._persistentState.State;
             await OnStateRefreshedAsync(this._state);
         }
-        
+
         /// <summary>
         /// Push <paramref name="newState"/> to storage
         /// </summary>

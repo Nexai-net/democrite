@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Configurations
 {
+    using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
     using Democrite.Framework.Node.Abstractions.Models;
 
     using System;
@@ -13,6 +14,17 @@ namespace Democrite.Framework.Configurations
     /// </summary>
     public interface IDemocriteNodeWizard : IDemocriteWizard<IDemocriteNodeWizard, IDemocriteNodeConfigurationWizard>
     {
+        #region Properties
+
+        /// <summary>
+        /// Gets the gneric builder tool.
+        /// </summary>
+        public IDemocriteExtensionBuilderTool ConfigurationTools { get; }
+
+        #endregion
+
+        #region Methods
+
         /// <summary>
         /// Add a <see cref="INodeOptions"/>.
         /// </summary>
@@ -31,7 +43,7 @@ namespace Democrite.Framework.Configurations
         /// <summary>
         /// Setups in local memory definitions
         /// </summary>
-        IDemocriteNodeWizard AddInMemoryMongoDefinitionProvider(Action<IDemocriteNodeLocalDefinitionsBuilder> config);
+        IDemocriteNodeWizard AddInMemoryDefinitionProvider(Action<IDemocriteNodeLocalDefinitionsBuilder> config);
 
         /// <summary>
         /// Setups the nodes memories, how to same state, reminder, trigger ...
@@ -42,5 +54,7 @@ namespace Democrite.Framework.Configurations
         /// Setups the nodes memories, how to same state, reminder, trigger ...
         /// </summary>
         IDemocriteNodeWizard SetupNodeMemories(string defaultAutokey, Action<IDemocriteNodeMemoryBuilder>? memoryBuilder = null);
+
+        #endregion
     }
 }

@@ -6,7 +6,9 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
 {
     using AutoFixture;
 
+    using Democrite.Framework.Builders.Doors;
     using Democrite.Framework.Builders.Signals;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Signals.Doors;
 
@@ -14,7 +16,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    using DoorTest = DoorVGrainBaseUTest<Democrite.Framework.Node.Signals.Doors.LogicalDoorVGrain, Democrite.Framework.Core.Abstractions.Signals.BooleanLogicalDoorDefinition, Democrite.Framework.Core.Abstractions.Signals.ILogicalDoorVGrain>;
+    using DoorTest = DoorVGrainBaseUTest<Democrite.Framework.Node.Signals.Doors.LogicalDoorVGrain, Democrite.Framework.Core.Abstractions.Doors.BooleanLogicalDoorDefinition, Democrite.Framework.Core.Abstractions.Doors.ILogicalDoorVGrain>;
 
     /// <summary>
     /// Test for <see cref="RelayFilterDoorVGrain"/>

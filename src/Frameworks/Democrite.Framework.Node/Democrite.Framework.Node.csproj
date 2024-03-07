@@ -8,9 +8,18 @@
 		<IsPackable>true</IsPackable>
 		<Description>Democrite cluster node server part.</Description>
 
-		<PackageTags>Democrite;Multi-Agent;Framework;Node</PackageTags>
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Node</PackageTags>
 
 	</PropertyGroup>
+
+	<!--<ItemGroup>
+	  <Compile Remove="Internals\**" />
+	  <Compile Remove="Repositories\**" />
+	  <EmbeddedResource Remove="Internals\**" />
+	  <EmbeddedResource Remove="Repositories\**" />
+	  <None Remove="Internals\**" />
+	  <None Remove="Repositories\**" />
+	</ItemGroup>-->
 
 	<ItemGroup>
 		<ProjectReference Include="..\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
@@ -22,11 +31,13 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Hosting" />
 		<PackageReference Include="Microsoft.Orleans.Reminders" />
+		<PackageReference Include="Microsoft.Orleans.Streaming" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="Democrite.UnitTests.ToolKit" />
 		<InternalsVisibleTo Include="Democrite.Framework.Node.UnitTests" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 	
 	<ItemGroup>

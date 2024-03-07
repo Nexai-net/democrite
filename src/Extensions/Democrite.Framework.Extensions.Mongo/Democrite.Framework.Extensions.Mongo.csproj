@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>true</IsPackable>
+		<Description>Democrite extension cluster library using mnongDB.</Description>
+
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agents;Framework;Cluster;Mongo;Extension</PackageTags>
+
+	</PropertyGroup>
+	
+	<ItemGroup>
+	  <PackageReference Include="Orleans.Providers.MongoDB" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Cluster\Democrite.Framework.Cluster.csproj" />
+	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
+	  <ProjectReference Include="..\Democrite.Framework.Extensions.Mongo.Abstractions\Democrite.Framework.Extensions.Mongo.Abstractions.csproj" />
+	</ItemGroup>
+</Project>

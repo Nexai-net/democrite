@@ -11,8 +11,6 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
-    using System;
-
     /// <summary>
     /// Configurator in charge to setup the default services
     /// </summary>
@@ -25,17 +23,7 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
                                   IServiceCollection serviceDescriptors,
                                   ILogger logger)
         {
-            ArgumentNullException.ThrowIfNull(democriteBuilderWizard);
-
-            // Prever type case before instead on allocating inline variable in condition if it's use outside the scope
-
-#pragma warning disable IDE0019 // Use pattern matching
-            var siloBuilder = democriteBuilderWizard.SourceOrleanBuilder as ISiloBuilder;
-#pragma warning restore IDE0019 // Use pattern matching
-
-            if (democriteBuilderWizard.IsClient || siloBuilder == null)
-                throw new InvalidOperationException("The auto configurator must only be used by Node/Server side");
-
+            var siloBuilder = democriteBuilderWizard.GetSiloBuilder();
             siloBuilder.UseLocalhostClustering();
         }
     }

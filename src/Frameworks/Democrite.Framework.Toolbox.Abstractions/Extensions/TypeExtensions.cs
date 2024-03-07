@@ -10,7 +10,6 @@ namespace System
     using System.Collections;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
@@ -43,7 +42,7 @@ namespace System
         /// <summary>
         /// Gets <see cref="ITypeInfoExtension"/> to extend information currently get by reflection
         /// </summary>
-        public static ITypeInfoExtension GetTypeIntoExtension(this Type type)
+        public static ITypeInfoExtension GetTypeInfoExtension(this Type type)
         {
             ArgumentNullException.ThrowIfNull(type);
 
@@ -82,7 +81,7 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCollection(this Type type)
         {
-            return GetTypeIntoExtension(type)?.IsCollection ?? false;
+            return GetTypeInfoExtension(type)?.IsCollection ?? false;
         }
 
         /// <summary>
@@ -95,7 +94,7 @@ namespace System
             if (type is null)
                 return null;
 
-            return GetTypeIntoExtension(type)?.CollectionItemType;
+            return GetTypeInfoExtension(type)?.CollectionItemType;
         }
 
         /// <summary>
@@ -105,17 +104,17 @@ namespace System
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object? GetDefaultValue(this Type type)
         {
-            return GetTypeIntoExtension(type)?.Default;
+            return GetTypeInfoExtension(type)?.Default;
         }
 
         /// <summary>
         /// Get a simple full readable name
         /// </summary>
-        [Obsolete("Use GetTypeIntoExtension(type)?.FullShortName ?? string.Empty")]
+        [Obsolete("Use GetTypeInfoExtension(type)?.FullShortName ?? string.Empty")]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string FullShortName(this Type type)
         {
-            return GetTypeIntoExtension(type)?.FullShortName ?? string.Empty;
+            return GetTypeInfoExtension(type)?.FullShortName ?? string.Empty;
         }
 
         /// <summary>
@@ -132,6 +131,52 @@ namespace System
                        .Distinct()
                        .SelectMany(t => t.GetMethods(flags))
                        .Distinct();
+        }
+
+        /// <summary>
+        /// Stream all property infos from a type interface, parents, parent interfaces
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IEnumerable<PropertyInfo> GetAllPropertyInfos(this Type type, BindingFlags flags = BindingFlags.Instance | BindingFlags.Public)
+        {
+            return type.GetTreeValues(t => t.BaseType)
+                       .Append(type)
+                       .Where(t => t != null && t != typeof(object))
+                       .SelectMany(t => t.GetInterfaces()
+                                         .Append(t))
+                       .Distinct()
+                       .SelectMany(t => t.GetProperties(flags))
+                       .Distinct();
+        }
+
+        /// <summary>
+        /// Gets the value from property or field.
+        /// </summary>
+        public static object? GetValueFromPropertyOrField(this Type type,
+                                                          object? inst,
+                                                          string name,
+                                                          out Type fieldType,
+                                                          BindingFlags flags = BindingFlags.Public | BindingFlags.Instance)
+        {
+            var members = type.GetMember(name, flags);
+
+            var member = members.FirstOrDefault(m => m.MemberType == MemberTypes.Field || m.MemberType == MemberTypes.Property);
+
+            ArgumentNullException.ThrowIfNull(member);
+
+            if (member is PropertyInfo prop)
+            {
+                fieldType = prop.PropertyType;
+                return prop.GetValue(inst);
+            }
+
+            if (member is FieldInfo info)
+            {
+                fieldType = info.FieldType;
+                return info.GetValue(inst);
+            }
+
+            throw new NotSupportedException("Could not extract value from " + member);
         }
 
         #endregion

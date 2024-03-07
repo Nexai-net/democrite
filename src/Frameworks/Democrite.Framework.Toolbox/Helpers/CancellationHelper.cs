@@ -29,6 +29,15 @@ namespace Democrite.Framework.Toolbox.Helpers
         }
 
         /// <summary>
+        /// Create a timeout <see cref="CancellationToken"/>
+        /// </summary>
+        public static ISafeDisposable<CancellationToken> DisposableTimeout(TimeSpan? timeout = null)
+        {
+            var source = new CancellationTokenSource(timeout ?? s_defaultScopeTimeout);
+            return new DisposableAction<CancellationToken>(_ => source.Dispose(), source.Token);
+        }
+
+        /// <summary>
         /// Associate with a using provide a safe scope accesible by only one thread at time
         /// </summary>
         public static ISafeDisposable<CancellationToken> SingleAccessScope(SemaphoreSlim locker,

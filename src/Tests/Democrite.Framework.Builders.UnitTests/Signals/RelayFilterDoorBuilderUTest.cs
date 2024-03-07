@@ -4,11 +4,19 @@
 
 namespace Democrite.Framework.Builders.UnitTests.Signals
 {
+    using AutoFixture;
+
+    using Democrite.Framework.Builders.Doors;
     using Democrite.Framework.Builders.Signals;
+    using Democrite.Framework.Core.Abstractions.Doors;
+    using Democrite.Framework.Core.Abstractions.Enums;
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Democrite.UnitTests.ToolKit.Helpers;
 
     using NFluent;
+
+    using Orleans.Runtime;
 
     using System;
     using System.Linq.Expressions;
@@ -18,6 +26,21 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
     /// </summary>
     public sealed class RelayFilterDoorBuilderUTest : DoorBaseBuilderUTest<RelayFilterDoorDefinition>
     {
+        #region Models
+
+        public enum SignalCarryTypeEnum
+        {
+            None,
+            Opt1,
+            Fail,
+            All,
+            Poney
+        }
+
+        public record struct SignalTestMessage(Guid Uid, SignalCarryTypeEnum Type, int Value);
+
+        #endregion
+
         #region Methods
 
         /// <summary>
@@ -56,7 +79,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
                                                false,
                                                DateTime.Now,
                                                null,
-                                               new Core.Abstractions.Models.VGrainMetaData("impl", false, null, false),
+                                               new Core.Abstractions.Models.VGrainMetaData("impl".AsEnumerable(), "impl", false, null, IdFormatTypeEnum.String.AsEnumerable(), false, false, false),
                                                null);
 
             var invalidSource = new SignalSource(Guid.NewGuid(),
@@ -65,7 +88,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
                                                  false,
                                                  DateTime.Now,
                                                  null,
-                                                 new Core.Abstractions.Models.VGrainMetaData("impl", false, null, true),
+                                                 new Core.Abstractions.Models.VGrainMetaData("impl".AsEnumerable(), "impl", false, null, IdFormatTypeEnum.String.AsEnumerable(), false, false, true),
                                                  null);
 
             var testMsg = new SignalMessage(Guid.NewGuid(), DateTime.Now, validSource);
@@ -75,6 +98,26 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
 
             Check.ThatCode(() => func(testMsg)).WhichResult().IsTrue();
             Check.ThatCode(() => func(testInvalidMsg)).WhichResult().IsFalse();
+        }
+
+        /// <summary>
+        /// Test to build a door relay filter using condition about <see cref="SignalMessage"/> with enum check
+        /// </summary>
+        [Fact]
+        public void Build_Filter_Only_On_Signal_Enum_Filter()
+        {
+            var signalA = Signal.Create("SignalA");
+
+            var def = Door.Create("DoorTest")
+                          .Listen(signalA)
+                          .UseRelayFilter<SignalTestMessage>((msg, s) => msg.Type == SignalCarryTypeEnum.Poney)
+                          .Build();
+
+            Check.That(def).IsNotNull().And.IsInstanceOf<RelayFilterDoorDefinition>();
+            Check.That(def.VGrainInterfaceFullName).IsNotNull().And.IsEqualTo(typeof(IRelayFilterVGrain).AssemblyQualifiedName);
+            TestRelayFilterConditions<SignalTestMessage>(def,
+                                                         new SignalTestMessage(Guid.NewGuid(), SignalCarryTypeEnum.Poney, 42).AsEnumerable(),
+                                                         new SignalTestMessage(Guid.NewGuid(), SignalCarryTypeEnum.Opt1, 42).AsEnumerable());
         }
 
         /// <summary>
@@ -113,7 +156,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
                                                      false,
                                                      DateTime.Now,
                                                      null,
-                                                     new Core.Abstractions.Models.VGrainMetaData("impl", false, null, false),
+                                                     new Core.Abstractions.Models.VGrainMetaData("impl".AsEnumerable(), "impl", false, null, IdFormatTypeEnum.String.AsEnumerable(), false, false, false),
                                                      tecthId,
                                                      null);
 
@@ -123,7 +166,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
                                                  false,
                                                  DateTime.Now,
                                                  null,
-                                                 new Core.Abstractions.Models.VGrainMetaData("impl", false, null, true),
+                                                 new Core.Abstractions.Models.VGrainMetaData("impl".AsEnumerable(), "impl", false, null, IdFormatTypeEnum.String.AsEnumerable(), false, false, true),
                                                  null);
 
             var testMsg = new SignalMessage(Guid.NewGuid(), DateTime.Now, validSource);
@@ -172,7 +215,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
                                                      false,
                                                      DateTime.Now,
                                                      null,
-                                                     new Core.Abstractions.Models.VGrainMetaData("impl", false, null, false),
+                                                     new Core.Abstractions.Models.VGrainMetaData("impl".AsEnumerable(), "impl", false, null, IdFormatTypeEnum.String.AsEnumerable(), false, false, false),
                                                      tecthId,
                                                      null);
 
@@ -243,7 +286,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         /// Check that condition using external method is not allowed because not serializable
         /// </summary>
         /// <remarks>
-        ///     Same as <see cref="Build_Invalid_Filter_On_Signal"/> but with a content type filter
+        ///     Same as <see cref="Build_Invalid_Filter_On_Signal"/> but with a content Type filter
         /// </remarks>
         [Fact]
         public void Build_Invalid_Filter_With_Context_On_Signal()
@@ -269,10 +312,65 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             }
         }
 
-        
         #endregion
 
         #region Tools
+
+        /// <summary>
+        /// Tests the relay filter conditions.
+        /// </summary>
+        private static void TestRelayFilterConditions<TMessageCarryType>(DoorDefinition def,
+                                                            IEnumerable<TMessageCarryType> success,
+                                                            IEnumerable<TMessageCarryType> fail,
+                                                            Func<TMessageCarryType, Fixture, SignalMessage>? signalBuilder = null)
+            where TMessageCarryType : struct
+        {
+            var fixture = ObjectTestHelper.PrepareFixture();
+
+            if (signalBuilder is null)
+                signalBuilder = (c, f) => DefaultSignalBuilder<TMessageCarryType>(c, f);
+
+            var relayDef = (RelayFilterDoorDefinition)def;
+            var expression = relayDef.FilterCondition.ToExpression<TMessageCarryType, SignalMessage, bool>();
+
+            Check.That(expression).IsNotNull();
+
+            var func = expression.Compile();
+            Check.That(func).IsNotNull();
+
+            foreach (var result in success)
+            {
+                var msg = signalBuilder(result, fixture);
+                Check.ThatCode(() => func(result, msg)).DoesNotThrow()
+                                                       .And
+                                                       .WhichResult()
+                                                       .IsTrue();
+            }
+
+            foreach (var result in fail)
+            {
+                var msg = signalBuilder(result, fixture);
+                Check.ThatCode(() => func(result, msg)).DoesNotThrow()
+                                                       .And
+                                                       .WhichResult()
+                                                       .IsFalse();
+            }
+        }
+
+        private static SignalMessage DefaultSignalBuilder<TTMessageCarryType>(TTMessageCarryType data, Fixture fixture)
+            where TTMessageCarryType : struct
+        {
+            return new SignalMessage(Guid.NewGuid(), 
+                                     DateTime.UtcNow, 
+                                     new SignalSource<TTMessageCarryType>(fixture.Create<Guid>(),
+                                                                          fixture.Create<Guid>(),
+                                                                          fixture.Create<string>(),
+                                                                          false,
+                                                                          fixture.Create<DateTime>(),
+                                                                          fixture.Create<GrainId>(),
+                                                                          fixture.Create<VGrainMetaData>(),
+                                                                          data));    
+        }
 
         private bool ExternalMethod()
         {

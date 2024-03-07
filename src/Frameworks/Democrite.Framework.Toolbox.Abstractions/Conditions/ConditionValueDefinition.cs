@@ -17,6 +17,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
     /// <summary>
     /// Store simple value
     /// </summary>
+    [DataContract]
     [Serializable]
     [ImmutableObject(true)]
 #pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
@@ -59,12 +60,14 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the type.
         /// </summary>
+        [DataMember]
         public AbstractType Type { get; }
 
         /// <summary>
         /// Gets the value.
         /// </summary>
         [Newtonsoft.Json.JsonProperty(TypeNameHandling = Newtonsoft.Json.TypeNameHandling.All)]
+        [DataMember]
         public object? Value { get; }
 
         #endregion
@@ -98,7 +101,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <inheritdoc />
         protected override int OnGetHashCode()
         {
-            return this.Type.GetHashCode() ^ (this.Value?.GetHashCode() ?? 0);
+            return HashCode.Combine(this.Type, this.Value);
         }
 
         /// <summary>

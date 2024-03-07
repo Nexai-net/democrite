@@ -13,6 +13,7 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
     /// <summary>
     /// Define a group condition link by <see cref="OperandEnum"/>
     /// </summary>
+    [DataContract]
     [Serializable]
     [ImmutableObject(true)]
 #pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
@@ -48,16 +49,19 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <summary>
         /// Gets the left.
         /// </summary>
+        [DataMember]
         public ConditionBaseDefinition? Left { get; }
 
         /// <summary>
         /// Gets the operand.
         /// </summary>
+        [DataMember]
         public OperandEnum Operand { get; }
 
         /// <summary>
         /// Gets the right.
         /// </summary>
+        [DataMember]
         public ConditionBaseDefinition Right { get; }
 
         #endregion
@@ -94,9 +98,9 @@ namespace Democrite.Framework.Toolbox.Abstractions.Conditions
         /// <inheritdoc />
         protected override int OnGetHashCode()
         {
-            return (this.Left?.GetHashCode() ?? 0) ^
-                   this.Operand.GetHashCode() ^
-                   this.Right.GetHashCode();
+            return HashCode.Combine(this.Left,
+                                    this.Operand,
+                                    this.Right);
         }
 
         #endregion

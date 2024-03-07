@@ -28,10 +28,12 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalNotFoundException"/> class.
         /// </summary>
-        internal SignalNotFoundException(string message,
-                                         string signalName,
-                                         ulong errorCode,
-                                         Exception? innerException)
+        [Newtonsoft.Json.JsonConstructor]
+        [System.Text.Json.Serialization.JsonConstructor]
+        public SignalNotFoundException(string message,
+                                       string signalName,
+                                       ulong errorCode,
+                                       Exception? innerException)
             : base(message, errorCode, innerException)
         {
             this.Data.Add(nameof(SignalNotFoundExceptionSurrogate.SignalName), signalName);
@@ -39,20 +41,10 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
     }
 
     [GenerateSerializer]
-    public struct SignalNotFoundExceptionSurrogate : IDemocriteBaseExceptionSurrogate
-    {
-        [Id(0)]
-        public string Message { get; set; }
-
-        [Id(1)]
-        public ulong ErrorCode { get; set; }
-
-        [Id(2)]
-        public string SignalName { get; set; }
-
-        [Id(3)]
-        public Exception? InnerException { get; set; }
-    }
+    public record struct SignalNotFoundExceptionSurrogate(string Message,
+                                                          ulong ErrorCode,
+                                                          string SignalName,
+                                                          Exception? InnerException) : IDemocriteBaseExceptionSurrogate;
 
     [RegisterConverter]
     public sealed class SignalNotFoundExceptionConverter : IConverter<SignalNotFoundException, SignalNotFoundExceptionSurrogate>

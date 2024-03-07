@@ -10,11 +10,11 @@ namespace Democrite.Framework.Builders.Triggers
     /// <summary>
     /// Common part of trigger definition
     /// </summary>
-    public interface ITriggerDefinitionFinalizeBuilder : ITriggerDefinitionBuilder, IDefinitionBaseBuilder<TriggerDefinition>
+    public interface ITriggerDefinitionFinalizeBuilder : ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder>, IDefinitionBaseBuilder<TriggerDefinition>
     {
         /// <summary>
-        /// Configure how to pick input message that will be fire when trigged.
+        /// Configure how to output message that will be send on fire (Sequence, Signal and/or stream)
         /// </summary>
-        ITriggerDefinitionFinalizeBuilder SetInputSource(Func<ITriggerInputBuilder, InputSourceDefinition> inputBuilders);
+        ITriggerDefinitionFinalizeBuilder SetOutput(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> outputBuilders);
     }
 }

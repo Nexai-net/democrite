@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>true</IsPackable>
+		<Description>
+			Democrite node builder part extension providing blackboard algorithme to democrite cluster.<br. />A blackboard is a shared memory space with a controller that managed and react based on data.
+		</Description>
+
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Node;Extension;Blackboard;Builders</PackageTags>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Builders\Democrite.Framework.Builders.csproj" />
+	  <ProjectReference Include="..\Democrite.Framework.Node.Blackboard.Abstractions\Democrite.Framework.Node.Blackboard.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -4,14 +4,10 @@
 
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
-
-    using System;
-
     /// <summary>
     /// Provider source of <see cref="SignalDefinition"/>
     /// </summary>
-    public interface ISignalDefinitionProviderSource : IProviderStrategySource<SignalDefinition, Guid>, INodeInitService
+    public interface ISignalDefinitionProviderSource : IDefinitionSourceProvider<SignalDefinition>
     {
     }
 }

@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+    using Democrite.Framework.Toolbox.Abstractions.Expressions;
     using Democrite.Framework.Toolbox.Abstractions.Models;
     using Democrite.Framework.Toolbox.Models;
 
@@ -28,12 +29,10 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Initializes a new instance of the <see cref="SequenceStageCallDefinition"/> class.
         /// </summary>
         public SequenceStageCallDefinition(AbstractType? input,
-                                           ConcreteType vgrainType,
+                                           ConcretType vgrainType,
                                            AbstractMethod callMethodDefinition,
                                            AbstractType? output,
-                                           AbstractType? configurationType = null,
-                                           object? configuration = null,
-                                           string? configurationFromInputChainCall = null,
+                                           AccessExpressionDefinition? configuration,
                                            SequenceOptionStageDefinition? options = null,
                                            bool preventReturn = false,
                                            Guid? uid = null)
@@ -46,8 +45,6 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 
             this.VGrainType = vgrainType;
 
-            this.ConfigurationType = configurationType;
-            this.ConfigurationFromInputChainCall = configurationFromInputChainCall;
             this.Configuration = configuration;
         }
 
@@ -65,25 +62,13 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Gets the type of the vgrain.
         /// </summary>
         [DataMember]
-        public ConcreteType VGrainType { get; }
-
-        /// <summary>
-        /// Gets the type of the context information.
-        /// </summary>
-        [DataMember]
-        public AbstractType? ConfigurationType { get; }
-
-        /// <summary>
-        /// Gets the configuration chain call to extract config from call input using DynamicCallHelper
-        /// </summary>
-        [DataMember]
-        public string? ConfigurationFromInputChainCall { get; }
+        public ConcretType VGrainType { get; }
 
         /// <summary>
         /// Gets the context information.
         /// </summary>
         [DataMember]
-        public object? Configuration { get; }
+        public AccessExpressionDefinition? Configuration { get; }
 
         #endregion
 
@@ -100,8 +85,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// <inheritdoc/>
         protected override int OnStageGetHashCode()
         {
-            return this.CallMethodDefinition.GetHashCode() ^
-                   this.VGrainType.GetHashCode();
+            return HashCode.Combine(this.CallMethodDefinition, this.VGrainType);
         }
 
         #endregion

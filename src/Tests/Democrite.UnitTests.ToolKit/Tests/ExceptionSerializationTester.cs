@@ -11,17 +11,12 @@ namespace Democrite.UnitTests.ToolKit.Tests
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Toolbox.Models;
     using Democrite.UnitTests.ToolKit.Helpers;
-    using Democrite.UnitTests.ToolKit.Xunits;
 
     using NFluent;
-
-    using Orleans.Runtime;
 
     using System;
     using System.Diagnostics;
     using System.Reflection;
-
-    using Xunit;
 
     public abstract class ExceptionSerializationTester
     {
@@ -102,11 +97,13 @@ namespace Democrite.UnitTests.ToolKit.Tests
             var tester = new SurrogateBaseTest<TSource, TSurrogate, TConverter>(sourceCreation: (fixture) =>
                                                                                 {
                                                                                     fixture.Register<AbstractType>(() => ObjectTestHelper.GenerateRandomAbstractType());
+                                                                                    OnSourceCreationSetup<TSource, TSurrogate, TConverter>(fixture);
                                                                                     return fixture.Create<TSource>();
                                                                                 }, 
                                                                                 surrogateCreation: (fixture) =>
                                                                                 {
                                                                                     fixture.Register<AbstractType>(() => ObjectTestHelper.GenerateRandomAbstractType());
+                                                                                    OnSurrogateCreationSetup<TSource, TSurrogate, TConverter>(fixture);
                                                                                     return fixture.Create<TSurrogate>();
                                                                                 });
             
@@ -123,6 +120,20 @@ namespace Democrite.UnitTests.ToolKit.Tests
             {
                 tester.Ensure_Source_Is_Serializable_Using_Surrogate_And_Converter();
             }
+        }
+
+        protected virtual void OnSurrogateCreationSetup<TSource, TSurrogate, TConverter>(Fixture fixture)
+            where TSource : class, IEquatable<TSource>
+            where TSurrogate : struct
+            where TConverter : IConverter<TSource, TSurrogate>, new()
+        {
+        }
+
+        protected virtual void OnSourceCreationSetup<TSource, TSurrogate, TConverter>(Fixture fixture)
+            where TSource : class, IEquatable<TSource>
+            where TSurrogate : struct
+            where TConverter : IConverter<TSource, TSurrogate>, new()
+        {
         }
     }
 }

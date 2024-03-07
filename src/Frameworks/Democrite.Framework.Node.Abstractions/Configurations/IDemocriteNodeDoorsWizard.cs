@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Configurations
 {
-    using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Abstractions.Doors;
 
     /// <summary>
     /// Setup local doors

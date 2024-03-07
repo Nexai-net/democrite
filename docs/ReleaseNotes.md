@@ -1,13 +1,43 @@
 Release Notes
 ===
 
-[![Last Release](https://img.shields.io/github/v/release/nexai-net/democrite)](https://github.com/nexai-net/democrite/releases)
+[![Nuget Democrite](https://img.shields.io/nuget/dt/democrite.framework.core.svg?label=Nuget%20Democrite%20Framework%20downloads)](https://www.nuget.org/packages?q=democrite)
 
 # Released
 
 # Beta
 
 # Alpha
+
+## 0.3-prerelease
+
+In this version we mainly:
+- Add blackboard extension
+- Add Stream triggers to send and consumed
+- Sequence feature Foreach/FireSignal
+- Storage through repository
+
+### Features
+- **Blackboard** : Extension in charged to create a controlled shared memory.
+- **Stream** : Trigger used to push to an orlean stream & trigger fire by message present in a stream
+- **Sequence** 
+    - **Foreach** : Be able to process through a foreach loop a sub-collectionn the model current data processed
+    - **Fire Signal** : Be able to fire signal directly from a sequence
+- **Trigger Cron** : Support second as minimal timer
+- **Trigger Output** : Allow each trigger output to have a custom output value
+- **Repository** : Simple storage space used to store information like state way but simpler without container
+
+### Breaking Changes
+>[CAUTION]
+> - **rename(Bag)** : Rename debug tools and web tools VGRAINS to Bag terminologie <br />
+> - **rename(Mongo)** : Rename extensions about storage in mongo from Democrite.Framework.Node.Mongo to   Democrite.Framework.Extensions.Mongo<br />
+> - **Definition** : Force display name to be set <br />
+> - **rename(SetInput)** : Rename SetInputValue to SetOutput<br />
+> - **Move(TypeArgument)** : Move TypeArgument and EnumerableHelper in the abstractions assembly to allow more usage
+> - **rename(Configuration)** : Changing configuration name from 'AddInMemoryMongoDefinitionProvider' to 'AddInMemoryDefinitionProvider' to remove mongo missplaced name
+
+### Fix
+- **ConcretType** : CollectionType was not tolerate as concret type
 
 ## 0.2.2-prerelease
 

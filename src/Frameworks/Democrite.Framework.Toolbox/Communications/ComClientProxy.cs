@@ -103,11 +103,12 @@ namespace Democrite.Framework.Toolbox.Communications
         {
             try
             {
-                var timeoutCancelToken = CancellationHelper.Timeout(TimeSpan.FromSeconds(5));
-                var token = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancelToken);
-
-                var sendUid = SendImpl(MessageType.Ping, null, out var waitingResultTask, true, token.Token);
-                await Task.Factory.StartNew(async () => await waitingResultTask!.Task, token.Token);
+                using (var timeoutCancelToken = CancellationHelper.DisposableTimeout(TimeSpan.FromSeconds(5)))
+                using (var token = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancelToken.Content))
+                {
+                    var sendUid = SendImpl(MessageType.Ping, null, out var waitingResultTask, true, token.Token);
+                    await Task.Factory.StartNew(async () => await waitingResultTask!.Task, token.Token);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -121,17 +122,19 @@ namespace Democrite.Framework.Toolbox.Communications
         /// </summary>
         public async Task<string> AskAsync(string data, CancellationToken cancellationToken)
         {
-            var timeoutCancelToken = CancellationHelper.Timeout(TimeSpan.FromSeconds(Debugger.IsAttached ? 50000 : 5));
-            var token = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancelToken);
+            using (var timeoutCancelToken = CancellationHelper.DisposableTimeout(TimeSpan.FromSeconds(Debugger.IsAttached ? 50000 : 5)))
+            using (var token = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCancelToken.Content))
+            {
 
-            var sendUid = SendImpl(MessageType.User, Encoding.UTF8.GetBytes(data), out var waitingResultTask, true, token.Token);
-            await Task.Factory.StartNew(async () => await waitingResultTask!.Task, token.Token);
+                var sendUid = SendImpl(MessageType.User, Encoding.UTF8.GetBytes(data), out var waitingResultTask, true, token.Token);
+                await Task.Factory.StartNew(async () => await waitingResultTask!.Task, token.Token);
 
-            var results = waitingResultTask!.Task.Result;
-            if (results != null && results.Any())
-                return Encoding.UTF8.GetString(results);
+                var results = waitingResultTask!.Task.Result;
+                if (results != null && results.Any())
+                    return Encoding.UTF8.GetString(results);
 
-            return string.Empty;
+                return string.Empty;
+            }
         }
 
         /// <inheritdoc />

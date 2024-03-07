@@ -6,6 +6,8 @@ namespace Democrite.Framework.Toolbox.Services
 {
     using Democrite.Framework.Toolbox.Abstractions.Services;
 
+    using Microsoft.Extensions.DependencyInjection;
+
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -43,6 +45,49 @@ namespace Democrite.Framework.Toolbox.Services
         public Stream OpenRead(Uri uri)
         {
             return File.OpenRead(uri.LocalPath);
+        }
+
+        /// <inheritdoc />
+        public async ValueTask<bool> WriteToFileAsync(Stream stream, Uri uri, bool @override = true, CancellationToken token = default)
+        {
+            ArgumentNullException.ThrowIfNull(stream);
+            ArgumentNullException.ThrowIfNull(uri);
+
+            var preparationSucceed = CheckAndPrepareFileTarget(uri, @override);
+            if (preparationSucceed)
+            {
+                var buffer = new byte[Math.Max(stream.Length, 65536)];
+
+                using (var outputStream = File.OpenWrite(uri.LocalPath))
+                {
+                    var readTotal = 0;
+                    var remains = stream.Length;
+
+                    while (remains > 0)
+                    {
+                        var readData = await stream.ReadAsync(buffer, 0, buffer.Length, token);
+                        await outputStream.WriteAsync(buffer, 0, readData, token);
+
+                        readTotal += readData;
+                        remains = stream.Length - readTotal;
+                    }
+                }
+            }
+
+            return preparationSucceed;
+        }
+
+        /// <inheritdoc />
+        public async ValueTask<bool> WriteToFileAsync(byte[] bytes, Uri uri, bool @override = true, CancellationToken token = default)
+        {
+            ArgumentNullException.ThrowIfNull(bytes);
+            ArgumentNullException.ThrowIfNull(uri);
+
+            var preparationSucceed = CheckAndPrepareFileTarget(uri, @override);
+            if (preparationSucceed)
+                await File.WriteAllBytesAsync(uri.LocalPath, bytes, token);
+
+            return preparationSucceed;
         }
 
         /// <inheritdoc />
@@ -116,19 +161,51 @@ namespace Democrite.Framework.Toolbox.Services
         }
 
         /// <inheritdoc />
-        public bool CopyFrom(Uri source, Uri target, bool overrideTarget)
+        public async ValueTask<bool> CopyFromAsync(Uri source, Uri target, bool @override = true, CancellationToken token = default)
         {
-            var dir = Path.GetDirectoryName(target.OriginalString);
-
-            if (string.IsNullOrEmpty(dir))
+            if (!Exists(source))
                 return false;
 
-            if (Directory.Exists(dir) == false)
+            using (var sourceStream = OpenRead(source))
+            {
+                return await CopyFromAsync(sourceStream, target, @override, token);
+            }
+        }
+
+        /// <inheritdoc />
+        public async ValueTask<bool> CopyFromAsync(Stream source, Uri target, bool @override = true, CancellationToken token = default)
+        {
+            var targetIsPrepared = CheckAndPrepareFileTarget(target, @override);
+
+            if (targetIsPrepared)
+                return await WriteToFileAsync(source, target, @override, token);
+
+            return false;
+        }
+
+        #region Tools
+
+        /// <summary>
+        /// Checks the and prepare file target.
+        /// </summary>
+        private bool CheckAndPrepareFileTarget(Uri uri, bool @override)
+        {
+            if (@override == false && Exists(uri))
+                return false;
+
+            if (Exists(uri))
+                Delete(uri);
+
+            var filePath = uri.LocalPath;
+            var dir = Path.GetDirectoryName(filePath)!;
+
+            if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
-            File.Copy(source.OriginalString, target.OriginalString, overrideTarget);
             return true;
         }
+
+        #endregion
 
         #endregion
     }

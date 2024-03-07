@@ -66,7 +66,7 @@ namespace Democrite.Framework.Toolbox.Extensions
         {
             ArgumentNullException.ThrowIfNull(inst);
 
-            var typeInfo = inst.GetType().GetTypeIntoExtension()!;
+            var typeInfo = inst.GetType().GetTypeInfoExtension()!;
 
             return typeInfo.GetSpecifcTypeExtend<ITaskTypeInfoEnhancer>().GetResult(inst);
         }
@@ -132,6 +132,15 @@ namespace Democrite.Framework.Toolbox.Extensions
         /// </summary>
         /// <exception cref="AggregateException"></exception>
         public static async Task SafeWhenAllAsync(this IReadOnlyCollection<ValueTask> tasks, CancellationToken token = default)
+        {
+            await SafeWhenAllAsync(tasks.Select(t => t.AsTask()).ToReadOnly(), token);
+        }
+
+        /// <summary>
+        /// Safes wait all tasks to be completed
+        /// </summary>
+        /// <exception cref="AggregateException"></exception>
+        public static async Task SafeWhenAllAsync<TData>(this IReadOnlyCollection<ValueTask<TData>> tasks, CancellationToken token = default)
         {
             await SafeWhenAllAsync(tasks.Select(t => t.AsTask()).ToReadOnly(), token);
         }

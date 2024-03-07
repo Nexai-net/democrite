@@ -97,6 +97,18 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             /// </summary>
             [Description("Error code category Execution")]
             Execution = 0x_10_00_00_00_00_00_00_00,
+
+            /// <summary>
+            /// Error code category Storage
+            /// </summary>
+            [Description("Error code category Storage")]
+            Storage = 0x_11_00_00_00_00_00_00_00,
+
+            /// <summary>
+            /// Error code category data
+            /// </summary>
+            [Description("Error code category Data")]
+            Data = 0x_11_00_00_00_00_00_00_00,
         }
 
         public enum PartType : ulong
@@ -168,6 +180,24 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             /// </summary>
             [Description("Error about input information.")]
             Configuration = 0x_00_00_0B_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about ETAG information
+            /// </summary>
+            [Description("Error about input ETAG.")]
+            Etag = 0x_00_00_0C_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about Insert
+            /// </summary>
+            [Description("Error about Insert.")]
+            Insert = 0x_00_00_0D_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about Right
+            /// </summary>
+            [Description("Error about Right.")]
+            Right = 0x_00_00_0E_00_00_00_00_00,
         }
 
         public enum ErrorType : ulong
@@ -187,10 +217,28 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             Missing = 0x_00_00_02_00_00_00_00_00,
 
             /// <summary>
-            /// Error about action that Not Founde
+            /// Error about action that Not Found
             /// </summary>
             [Description("Error When resources doesn't have been founded.")]
             NotFounded = 0x_00_00_03_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about action that Mismatch
+            /// </summary>
+            [Description("Error When value mismatch.")]
+            Mismatch = 0x_00_00_04_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about action that Mismatch
+            /// </summary>
+            [Description("Error When value multiple.")]
+            Multiple = 0x_00_00_05_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about action that Conflict
+            /// </summary>
+            [Description("Error When value Conflict.")]
+            Conflict = 0x_00_00_06_00_00_00_00_00,
 
             /// <summary>
             /// Error about action that failed
