@@ -4,44 +4,46 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Orlean -->
+    <PackageVersion Include="H.Formatters.Newtonsoft.Json" Version="13.0.59" />
+    <PackageVersion Include="MessagePack" Version="2.5.140" />
     <PackageVersion Include="Microsoft.Orleans.Clustering.AdoNet" Version="7.2.4" />
-    <PackageVersion Include="Microsoft.Orleans.Core" Version="7.2.4" />
-    <PackageVersion Include="Microsoft.Orleans.Core.Abstractions" Version="7.2.4" />
+    <PackageVersion Include="Microsoft.Orleans.Core" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Orleans.Core.Abstractions" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Orleans.Persistence.AdoNet" Version="7.2.4" />
-    <PackageVersion Include="Microsoft.Orleans.Reminders" Version="7.2.4" />
+    <PackageVersion Include="Microsoft.Orleans.Reminders" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Orleans.Reminders.AdoNet" Version="7.2.4" />
-    <PackageVersion Include="Microsoft.Orleans.Runtime" Version="7.2.4" />
+    <PackageVersion Include="Microsoft.Orleans.Runtime" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Orleans.Runtime.Abstractions" Version="3.7.4" />
     <PackageVersion Include="Microsoft.Orleans.Serialization.NewtonsoftJson" Version="7.2.4" />
     <PackageVersion Include="Microsoft.Orleans.Serialization.TestKit" Version="7.2.4" />
-    <PackageVersion Include="Microsoft.Orleans.Streaming" Version="7.2.4" />
-    <PackageVersion Include="Microsoft.Orleans.TestingHost" Version="7.2.4" />
-    <PackageVersion Include="Microsoft.Orleans.Client" Version="7.2.4" />
-    <PackageVersion Include="Microsoft.Orleans.Server" Version="7.2.4" />
-    <PackageVersion Include="Microsoft.Orleans.Sdk" Version="7.2.4" />
+    <PackageVersion Include="Microsoft.Orleans.Streaming" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Orleans.TestingHost" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Orleans.Client" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Orleans.Server" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Orleans.Sdk" Version="8.0.0" />
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.4" />
     <PackageVersion Include="Microsoft.VisualStudio.SlowCheetah" Version="4.0.50" />
-    <PackageVersion Include="MongoDB.Driver" Version="2.21.0" />
-    <PackageVersion Include="Orleans.Providers.MongoDB" Version="7.6.0" />
+    <PackageVersion Include="MongoDB.Driver" Version="2.24.0" />
+    <PackageVersion Include="Orleans.Providers.MongoDB" Version="8.0.2" />
     <PackageVersion Include="OrleansDashboard" Version="7.2.2" />
     <!-- System -->
     <PackageVersion Include="System.Reactive" Version="6.0.0" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.5" />
     <!-- Microsoft -->
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.4" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="7.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.7.0" PrivateAssets="all" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.7.0" PrivateAssets="all" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" PrivateAssets="all" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" PrivateAssets="all" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageVersion Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <!-- Test -->
@@ -51,18 +53,18 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <!-- SECURITY ISSUE REMOVE MOQ and replace by NSubstitute-->
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
-    <PackageVersion Include="Moq" Version="4.20.69" />
-    <PackageVersion Include="NFluent" Version="3.0.1.352" />
-    <PackageVersion Include="xunit" Version="2.6.2" />
+    <PackageVersion Include="Moq" Version="4.20.70" />
+    <PackageVersion Include="NFluent" Version="3.0.3" />
+    <PackageVersion Include="xunit" Version="2.7.0" />
     <PackageVersion Include="xunit.extensibility.core" Version="2.6.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.4" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.1" />
     <!-- Other -->
-    <PackageVersion Include="Cronos" Version="0.8.3" />
+    <PackageVersion Include="Cronos" Version="0.8.4" />
     <PackageVersion Include="HtmlAgilityPack" Version="1.11.54" />
-    <PackageVersion Include="H.Pipes" Version="2.0.53" />
+    <PackageVersion Include="H.Pipes" Version="2.0.59" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-    <PackageVersion Include="MongoDB.Bson" Version="2.21.0" />
+    <PackageVersion Include="MongoDB.Bson" Version="2.24.0" />
   </ItemGroup>
 </Project>

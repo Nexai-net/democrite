@@ -73,9 +73,9 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
             siloBuilder.Services.RemoveKeyedService<string, IRepositorySpecificFactory>(option.Key);
 
             if (option.TargetGrainState)
-                siloBuilder.Services.AddSingletonNamedService<IRepositorySpecificFactory>(option.Key, (p, k) => ActivatorUtilities.CreateInstance<MemoryGrainStateSpecificRepositoryFactory>(p, k));
+                siloBuilder.Services.AddKeyedSingleton<IRepositorySpecificFactory>(option.Key, (p, k) => ActivatorUtilities.CreateInstance<MemoryGrainStateSpecificRepositoryFactory>(p, k!));
             else
-                siloBuilder.Services.AddSingletonNamedService<IRepositorySpecificFactory>(option.Key, (p, k) => ActivatorUtilities.CreateInstance<MemorySpecificRepositoryFactory>(p, k));
+                siloBuilder.Services.AddKeyedSingleton<IRepositorySpecificFactory>(option.Key, (p, k) => ActivatorUtilities.CreateInstance<MemorySpecificRepositoryFactory>(p, k!));
         }
 
         #endregion

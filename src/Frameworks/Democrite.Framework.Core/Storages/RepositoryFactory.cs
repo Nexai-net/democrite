@@ -7,6 +7,8 @@ namespace Democrite.Framework.Core.Storages
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
 
+    using Microsoft.Extensions.DependencyInjection;
+
     using Orleans.Runtime;
 
     using System;
@@ -44,9 +46,9 @@ namespace Democrite.Framework.Core.Storages
                                             ? DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey
                                             : storageName;
 
-            var specificFactory = this._serviceProvider.GetServiceByKey<string, IRepositorySpecificFactory>(storageConfig)
-                                  ?? this._serviceProvider.GetServiceByKey<string, IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey)
-                                  ?? this._serviceProvider.GetServiceByKey<string, IRepositorySpecificFactory>("Default");
+            var specificFactory = this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>(storageConfig)
+                                  ?? this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey)
+                                  ?? this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>("Default");
 
             if (specificFactory is null)
             {

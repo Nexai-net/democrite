@@ -113,7 +113,7 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         /// <inheritdoc />
         public ValueTask<TEntity?> GetByIdValueAsync([NotNull] TEntityId entityId, CancellationToken token)
         {
-            return base.GetFirstValueAsync(e => EqualityComparer<TEntityId>.Default.Equals(e.Uid, entityId), token);
+            return base.GetFirstValueAsync(e => e.Uid.Equals(entityId), token);
         }
 
         /// <inheritdoc />

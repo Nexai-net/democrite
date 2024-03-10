@@ -8,7 +8,6 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
     using Democrite.Framework.Core.Abstractions.Storages;
     using Democrite.Framework.Extensions.Mongo.Services;
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Node.Abstractions.Models;
 
     using Microsoft.Extensions.Configuration;
 
@@ -17,7 +16,6 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
 
     using Orleans.Hosting;
     using Orleans.Providers.MongoDB.Configuration;
-    using Orleans.Runtime;
 
     /// <summary>
     /// Auto configure the repository storage
@@ -57,7 +55,7 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
                                                 MongoDBOptions opt,
                                                 bool buildRepository = false)
         {
-            siloBuilder.Services.AddSingletonNamedService<IRepositorySpecificFactory>(key, (p, k) => ActivatorUtilities.CreateInstance<MongoStorageSpecificRepositoryFactory>(p, k));
+            siloBuilder.Services.AddKeyedSingleton<IRepositorySpecificFactory>(key, (p, k) => ActivatorUtilities.CreateInstance<MongoStorageSpecificRepositoryFactory>(p, k!));
         }
 
         /// <inheritdoc />

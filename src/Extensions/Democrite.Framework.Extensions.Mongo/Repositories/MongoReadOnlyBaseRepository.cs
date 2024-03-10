@@ -8,6 +8,7 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
     using Democrite.Framework.Toolbox.Abstractions.Supports;
     using Democrite.Framework.Toolbox.Supports;
 
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
 
     using MongoDB.Bson;
@@ -237,7 +238,7 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
             this._client = this._mongoClientFactory.Create(configurationKey);
 
             if (this._mongoDBOptions == null)
-                this._mongoDBOptions = this._serviceProvider.GetServiceByName<IOptions<MongoDBOptions>>(configurationKey);
+                this._mongoDBOptions = this._serviceProvider.GetKeyedService<IOptions<MongoDBOptions>>(configurationKey);
 
             var dbName = this._mongoDBOptions?.Value?.DatabaseName;
 

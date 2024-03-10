@@ -92,7 +92,7 @@ namespace Democrite.Framework.Toolbox.UnitTests.Helpers
         /// Test <see cref="CancellationHelper.Timeout(TimeSpan?)"/> correcly cancel the token after the time asked
         /// </summary>
         [Fact(Timeout = 5000)] // Security test MUST exist normally on the time setups
-        public void CancellationHelper_Timeout()
+        public async Task CancellationHelper_Timeout()
         {
             var stopwatch = new Stopwatch();
 
@@ -102,6 +102,8 @@ namespace Democrite.Framework.Toolbox.UnitTests.Helpers
 
             // Mainly if it got to this line the cancellation work
             Check.That(stopwatch.ElapsedMilliseconds).IsGreaterOrEqualThan(900).And.IsLessOrEqualThan(4_000);
+
+            await Task.CompletedTask;
         }
     }
 }

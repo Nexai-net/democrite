@@ -9,6 +9,7 @@ namespace Democrite.UnitTests.ToolKit.Remoting
     using Democrite.UnitTests.ToolKit.Extensions;
     using Democrite.UnitTests.ToolKit.Models;
 
+    using H.Formatters;
     using H.Pipes;
     using H.Pipes.Args;
 
@@ -79,7 +80,7 @@ namespace Democrite.UnitTests.ToolKit.Remoting
         /// <inheritdoc />
         public async ValueTask InitializeRemoteAsync(CancellationToken token = default)
         {
-            this._server = new PipeServer<RemoteCallMessage>(this.Uid);
+            this._server = new PipeServer<RemoteCallMessage>(this.Uid, formatter: new NewtonsoftJsonFormatter());
             Debug.WriteLine("Start listening on pipe " + this.Uid);
 
             this._server.MessageReceived += ServerMessageReceived;

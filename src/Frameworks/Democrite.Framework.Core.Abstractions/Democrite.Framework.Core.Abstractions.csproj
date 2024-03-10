@@ -13,6 +13,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
+	  <PackageReference Include="MessagePack" />
 	  <PackageReference Include="Microsoft.Orleans.Sdk" />
 	</ItemGroup>
 

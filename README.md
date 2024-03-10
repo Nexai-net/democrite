@@ -725,7 +725,8 @@ Use Python scripts inside democrite environment like VGrain standard
 
 | Democrite Version | Minimal .net version | Minimal orlean version |
 | --- | --- | --- |
-| Lastest | .net 7.0 | 7.2.4 |
+| Lastest | .net 8.0 | 8.0.0 |
+| 0.3.0 | .net 7.0 | 7.2.4 |
 | 0.2.1 | .net 7.0 | 7.0.3 |
 
 

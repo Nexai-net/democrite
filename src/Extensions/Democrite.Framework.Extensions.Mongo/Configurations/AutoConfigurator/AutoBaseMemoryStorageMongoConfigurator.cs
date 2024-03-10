@@ -36,7 +36,7 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
             {
                 siloBuilder.Services.RemoveKeyedService<string, IRepositorySpecificFactory>(key);
                 //siloBuilder.Services.TryAddSingleton<MongoSpecificRepositoryFactory, MongoSpecificRepositoryFactory>();
-                siloBuilder.Services.AddSingletonNamedService<IRepositorySpecificFactory>(key, (p, storageName) => ActivatorUtilities.CreateInstance<MongoStateSpecificRepositoryFactory>(p, storageName));
+                siloBuilder.Services.AddKeyedSingleton<IRepositorySpecificFactory>(key, (p, storageName) => ActivatorUtilities.CreateInstance<MongoStateSpecificRepositoryFactory>(p, storageName!));
             }
         }
     }

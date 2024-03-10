@@ -9,6 +9,7 @@ namespace Democrite.UnitTests.ToolKit.Remoting
     using Democrite.UnitTests.ToolKit.Extensions;
     using Democrite.UnitTests.ToolKit.Models;
 
+    using H.Formatters;
     using H.Pipes;
 
     using Moq;
@@ -99,7 +100,7 @@ namespace Democrite.UnitTests.ToolKit.Remoting
 
                 if (this._client == null)
                 {
-                    this._client = new PipeClient<RemoteCallMessage>(this._uniqueInstanceId, reconnectionInterval: TimeSpan.FromMilliseconds(100));
+                    this._client = new PipeClient<RemoteCallMessage>(this._uniqueInstanceId, reconnectionInterval: TimeSpan.FromMilliseconds(100), formatter: new NewtonsoftJsonFormatter());
                     this._client.MessageReceived += ResponseReceived;
                 }
 

@@ -53,13 +53,13 @@ namespace Democrite.Framework.Configurations
             if (blackboardBuilder is null)
             {
                 var newBuilder = new DemocriteNodeBlackboardsBuilder(wizard);
-                wizard.GetServiceCollection().AddSingletonKeyedService(s_blackboardBuilderKey, (p, e) => newBuilder);
+                wizard.GetServiceCollection().AddKeyedSingleton(s_blackboardBuilderKey, newBuilder);
                 newBuilder.BuildServices();
                 return newBuilder;
             }
 
-            Debug.Assert(blackboardBuilder.ImplementationFactory is not null);
-            return ((KeyedSingletonService<string, DemocriteNodeBlackboardsBuilder>)blackboardBuilder.ImplementationFactory(null!)!).GetService(null!);
+            Debug.Assert(blackboardBuilder.KeyedImplementationInstance is not null);
+            return (DemocriteNodeBlackboardsBuilder)blackboardBuilder.KeyedImplementationInstance;
         }
     }
 }

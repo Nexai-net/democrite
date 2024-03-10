@@ -86,7 +86,7 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
                 siloBuilder.Services.RemoveKeyedService<string, IGrainStorage>(key);
 
                 // Setup a new MemoryGrain provider with track to registry
-                siloBuilder.Services.AddSingletonNamedService(key, MemoryGrainStorageRepositoryFactory.Create);
+                siloBuilder.Services.AddKeyedSingleton(key, MemoryGrainStorageRepositoryFactory.Create);
 
                 AutoDefaultCustomRepositoryMemoryConfigurator.Default.AutoConfigure(democriteBuilderWizard,
                                                                                     configuration,

@@ -97,7 +97,8 @@ namespace Democrite.Framework.Extensions.Mongo.Services
 
             s_lastOptionSetups = MongoConfigurator.MapOption<MongoDBOptions>(option);
 
-            var defaultOpt = serviceCollection.FirstOrDefault(s => s.ServiceType == typeof(MongoDBConnectionOptions) &&
+            var defaultOpt = serviceCollection.FirstOrDefault(s => s.IsKeyedService == false &&
+                                                                   s.ServiceType == typeof(MongoDBConnectionOptions) &&
                                                                    s.ImplementationInstance is MongoDBConnectionOptions opt &&
                                                                    string.Equals(opt.Key, key));
 
@@ -110,7 +111,7 @@ namespace Democrite.Framework.Extensions.Mongo.Services
                 serviceCollection.Remove(defaultOpt);
 
             serviceCollection.AddSingleton(connectionOption);
-            serviceCollection.AddSingletonNamedService<MongoDBConnectionOptions>(key, (p, n) => connectionOption);
+            serviceCollection.AddKeyedSingleton<MongoDBConnectionOptions>(key, connectionOption);// (p, n) => connectionOption);
 
             SetupDefaultMongoServices(serviceCollection);
         }
