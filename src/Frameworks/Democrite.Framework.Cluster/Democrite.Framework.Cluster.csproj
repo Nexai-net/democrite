@@ -13,11 +13,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Elvex.Toolbox.Configuration" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\Democrite.Framework.Cluster.Abstractions\Democrite.Framework.Cluster.Abstractions.csproj" />
 		<ProjectReference Include="..\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
 		<ProjectReference Include="..\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
-		<ProjectReference Include="..\Democrite.Framework.Toolbox\Democrite.Framework.Toolbox.csproj" />
-		<ProjectReference Include="..\Democrite.Framework.Toolbox.Configuration\Democrite.Framework.Toolbox.Configuration.csproj" />
 	</ItemGroup>
 
 </Project>

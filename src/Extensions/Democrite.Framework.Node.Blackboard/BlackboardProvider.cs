@@ -10,7 +10,7 @@ namespace Democrite.Framework.Node.Blackboard
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains;
     using Democrite.Framework.Node.Blackboard.VGrains;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.DependencyInjection;
 

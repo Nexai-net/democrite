@@ -10,9 +10,9 @@ namespace Democrite.Framework.Core.Services
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Models;
     using Democrite.Framework.Core.Resources;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;

@@ -5,8 +5,8 @@
 namespace Democrite.Framework.Core.Abstractions.Doors
 {
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox.Abstractions.Conditions;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Abstractions.Conditions;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 

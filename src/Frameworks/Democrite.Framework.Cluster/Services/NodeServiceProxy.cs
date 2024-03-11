@@ -5,8 +5,8 @@
 namespace Democrite.Framework.Cluster.Services
 {
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Supports;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Supports;
 
     using Microsoft.Extensions.DependencyInjection;
 

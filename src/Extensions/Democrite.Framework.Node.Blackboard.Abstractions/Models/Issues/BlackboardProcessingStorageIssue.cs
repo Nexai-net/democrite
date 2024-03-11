@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues
 {
     using Democrite.Framework.Core.Abstractions.Surrogates;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     using System;
     using System.ComponentModel;

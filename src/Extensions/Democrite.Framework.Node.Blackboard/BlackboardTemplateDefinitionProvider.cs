@@ -8,7 +8,7 @@ namespace Democrite.Framework.Node.Blackboard
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Patterns.Strategy;
+    using Elvex.Toolbox.Patterns.Strategy;
 
     using Microsoft.Extensions.Logging;
 

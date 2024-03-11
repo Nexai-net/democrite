@@ -7,8 +7,8 @@ namespace Democrite.Framework.Cluster.Configurations
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Services;
     using Democrite.Framework.Configurations;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Services;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Services;
 
     /// <summary>
     /// Container about some services used during the cluster build process (node/client)

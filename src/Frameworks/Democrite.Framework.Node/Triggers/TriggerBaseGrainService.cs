@@ -6,8 +6,8 @@ namespace Democrite.Framework.Node.Triggers
 {
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Node.Abstractions.Triggers;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 

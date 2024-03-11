@@ -5,9 +5,9 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
-    using Democrite.Framework.Toolbox.Abstractions.Conditions;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Abstractions.Conditions;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Models;
 
     using System;
     using System.ComponentModel;

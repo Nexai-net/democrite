@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Triggers
 {
     using Democrite.Framework.Core.Abstractions.Triggers;
-    using Democrite.Framework.Toolbox.Patterns.Strategy;
+    using Elvex.Toolbox.Patterns.Strategy;
 
     using System;
 

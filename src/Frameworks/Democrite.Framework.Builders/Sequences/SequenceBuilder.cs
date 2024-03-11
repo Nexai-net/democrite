@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Builders.Sequences
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
 
     using System;
 

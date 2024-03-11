@@ -7,7 +7,7 @@ namespace Democrite.Framework.Bag.Toolbox.Grains
     using Democrite.Framework.Bag.Toolbox.Abstractions;
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Models;
 
     using Microsoft.Extensions.Logging;
 

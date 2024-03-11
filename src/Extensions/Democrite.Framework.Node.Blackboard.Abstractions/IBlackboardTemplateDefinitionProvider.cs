@@ -6,7 +6,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
+    using Elvex.Toolbox.Abstractions.Patterns.Strategy;
 
     using System;
 

@@ -4,8 +4,8 @@
 
 namespace Democrite.UnitTests.ToolKit.Remoting
 {
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Helpers;
     using Democrite.UnitTests.ToolKit.Extensions;
     using Democrite.UnitTests.ToolKit.Models;
 

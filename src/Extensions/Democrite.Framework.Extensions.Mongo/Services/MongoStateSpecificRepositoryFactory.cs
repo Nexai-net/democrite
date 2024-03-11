@@ -7,7 +7,7 @@ namespace Democrite.Framework.Extensions.Mongo.Services
     using Democrite.Framework.Core.Abstractions.Storages;
     using Democrite.Framework.Extensions.Mongo.Repositories;
     using Democrite.Framework.Node.Abstractions.Repositories;
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
 
     using System;
 

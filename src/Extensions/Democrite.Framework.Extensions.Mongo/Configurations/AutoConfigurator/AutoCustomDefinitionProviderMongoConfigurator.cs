@@ -25,7 +25,7 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
     using Democrite.Framework.Core.Abstractions.Streams;
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Options;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     /// <summary>
     /// Auto configure the VGrain state storage

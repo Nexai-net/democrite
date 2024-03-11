@@ -4,8 +4,8 @@
 
 namespace Democrite.UnitTests.ToolKit.Remoting
 {
-    using Democrite.Framework.Toolbox.Abstractions.Extensions.Types;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Extensions.Types;
+    using Elvex.Toolbox.Abstractions.Models;
     using Democrite.UnitTests.ToolKit.Extensions;
     using Democrite.UnitTests.ToolKit.Models;
 

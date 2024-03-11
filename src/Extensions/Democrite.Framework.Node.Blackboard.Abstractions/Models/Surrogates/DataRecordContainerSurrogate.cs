@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
 {
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     using System;
     using System.Runtime.Serialization;

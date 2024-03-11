@@ -17,7 +17,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Toolbox\Democrite.Framework.Toolbox.csproj" />
 	  <ProjectReference Include="..\Democrite.Framework.Extensions.Mongo.Abstractions\Democrite.Framework.Extensions.Mongo.Abstractions.csproj" />
 	</ItemGroup>
 

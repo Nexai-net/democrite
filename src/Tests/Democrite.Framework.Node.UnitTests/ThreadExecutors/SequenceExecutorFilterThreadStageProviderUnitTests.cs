@@ -12,9 +12,9 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.ThreadExecutors;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Models;
     using Democrite.UnitTests.ToolKit;
 
     using Microsoft.Extensions.DependencyInjection;

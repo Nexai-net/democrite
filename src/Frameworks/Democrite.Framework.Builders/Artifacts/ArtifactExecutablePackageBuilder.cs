@@ -5,9 +5,9 @@
 namespace Democrite.Framework.Builders.Artifacts
 {
     using Democrite.Framework.Core.Abstractions.Artifacts;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Helpers;
-    using Democrite.Framework.Toolbox.Services;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Helpers;
+    using Elvex.Toolbox.Services;
 
     using System;
     using System.Text.RegularExpressions;

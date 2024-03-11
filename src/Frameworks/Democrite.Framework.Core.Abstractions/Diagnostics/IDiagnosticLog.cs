@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Diagnostics
 {
     using Democrite.Framework.Core.Abstractions.Enums;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Abstractions.Supports;
 
     /// <summary>
     /// Define a diagnostic log

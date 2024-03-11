@@ -4,8 +4,8 @@
 
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules
 {
-    using Democrite.Framework.Toolbox.Abstractions.Enums;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Abstractions.Enums;
+    using Elvex.Toolbox.Models;
 
     using System.Collections.Generic;
     using System.ComponentModel;

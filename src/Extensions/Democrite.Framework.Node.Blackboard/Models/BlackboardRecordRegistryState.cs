@@ -7,9 +7,9 @@ namespace Democrite.Framework.Node.Blackboard.Models
     using Democrite.Framework.Core.Abstractions.Surrogates;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Models.Surrogates;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Helpers;
-    using Democrite.Framework.Toolbox.Services;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Helpers;
+    using Elvex.Toolbox.Services;
 
     using System;
     using System.Collections;

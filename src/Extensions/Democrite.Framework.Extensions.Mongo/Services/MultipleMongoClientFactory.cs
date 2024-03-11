@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Extensions.Mongo.Services
 {
     using Democrite.Framework.Extensions.Mongo.Models;
-    using Democrite.Framework.Toolbox.Disposables;
+    using Elvex.Toolbox.Disposables;
 
     using MongoDB.Driver;
 

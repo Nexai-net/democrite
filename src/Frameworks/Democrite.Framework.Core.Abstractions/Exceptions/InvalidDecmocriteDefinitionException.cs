@@ -6,8 +6,8 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Resources;
-    using Democrite.Framework.Toolbox.Abstractions.Loggers;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Abstractions.Loggers;
+    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 

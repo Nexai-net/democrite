@@ -10,10 +10,10 @@ namespace Democrite.Framework.Node.ThreadExecutors
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Disposables;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Abstractions.Disposables;
+    using Elvex.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 

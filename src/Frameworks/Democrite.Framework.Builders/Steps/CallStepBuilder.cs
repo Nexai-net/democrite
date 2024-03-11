@@ -8,9 +8,9 @@ namespace Democrite.Framework.Builders.Steps
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Abstractions.Expressions;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Expressions;
+    using Elvex.Toolbox.Models;
 
     using System;
     using System.Collections.Generic;

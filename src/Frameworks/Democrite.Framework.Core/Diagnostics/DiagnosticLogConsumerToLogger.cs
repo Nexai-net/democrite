@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Core.Diagnostics
 {
     using Democrite.Framework.Core.Abstractions.Diagnostics;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 

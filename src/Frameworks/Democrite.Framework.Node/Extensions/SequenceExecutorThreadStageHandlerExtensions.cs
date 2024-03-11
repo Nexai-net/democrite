@@ -7,8 +7,8 @@ namespace Democrite.Framework.Node.Abstractions
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Diagnostics;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Services;
 
     internal static class SequenceExecutorThreadStageHandlerExtensions
     {

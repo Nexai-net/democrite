@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Abstractions.Supports;
 
     using Microsoft.Extensions.Logging;
 

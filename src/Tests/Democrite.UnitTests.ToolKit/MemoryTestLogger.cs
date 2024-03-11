@@ -4,7 +4,7 @@
 
 namespace Democrite.UnitTests.ToolKit
 {
-    using Democrite.Framework.Toolbox.Disposables;
+    using Elvex.Toolbox.Disposables;
 
     using Microsoft.Extensions.Logging;
 

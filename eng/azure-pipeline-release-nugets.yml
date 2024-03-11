@@ -9,28 +9,40 @@ trigger: none
 pool:
   vmImage: 'windows-latest'
 
+parameters:
+  - name: release_target
+    displayName: define the nuget export target
+    type: string
+    default: Azure
+    values: 
+      - Azure
+      - Nuget
+      
+  - name: prerelease
+    displayName: Define if the package is a pre-release one
+    type: boolean
+    default: true
+
 variables:
   - group: democrite-frameworks-variables
-  - group: azure-api
 
-  - template: Templates/azure-pipeline-pkg-version.yml
+  - ${{ if eq(parameters.release_target, 'Azure') }}:
+    - group: nuget-azure-api
+  
+  - ${{ if eq(parameters.release_target, 'Nuget') }}:
+    - group: nuget-org-api-nexai
 
-  - name: SolutionFolder
-    value: "./"
-    
-  - name: PublishNuget
-    value: ".publish/nuget"
+  - template: Templates/ci-compute-version.yaml@tpl
+    parameters:
+      include_build_number : ${{ parameters.prerelease }}
+      pre_release : ${{ parameters.prerelease }}
 
-  - ${{ if eq(variables['ReleasePublic'], true) }}:
-
-    - name: NugetPackageFilter
-      value: "Democrite.Framework.*.nupkg"
-
-
-  - ${{ if ne(variables['ReleasePublic'], true) }}:
-
-    - name: NugetPackageFilter
-      value: "Democrite.Framework.*.symbols.nupkg"
+resources:
+  repositories:
+    - repository: tpl
+      type: git
+      name: Yaml-Templates
+      ref: refs/heads/dev
 
 steps:
   - task: UseDotNet@2
@@ -39,35 +51,12 @@ steps:
       version: 8.x
       includePreviewVersions: true # Required for preview versions
 
-  # Need a trust certificate chain to trust tier
-
-  # - task: DotNetCoreCLI@2
-  #   displayName: Install NuGetKeyVaultSignTool
-  #   inputs:
-  #     command: 'custom'
-  #     custom: 'tool'
-  #     arguments: 'install --tool-path . NuGetKeyVaultSignTool'
-
   - task: NuGetAuthenticate@1
 
-  - script: dotnet pack ${{ variables.SolutionFolder }}/Democrite.sln -o "${{ variables.PublishNuget }}" -c $(BuildConfiguration) --include-symbols -p:PackageVersion=${{ variables.FinalPkgVersion }}
-    displayName: dotnet pack
- 
-  # - task: PowerShell@2
-  #   displayName: Running NuGetKeyVaultSign
-  #   inputs:
-  #     targetType: 'inline'
-  #     script: |
-  #       .\NuGetKeyVaultSignTool sign $(PublishNuget)/**/${{ variables.NugetPackageFilter }} `
-  #       --file-digest "sha256" `
-  #       --timestamp-rfc3161 "https://timestamp.digicert.com" `
-  #       --timestamp-digest "sha256" `
-  #       --azure-key-vault-url "https://nexai-democrite-nuget.vault.azure.net/" `
-  #       --azure-key-vault-tenant-id "$(azure-tenant-id)" `
-  #       --azure-key-vault-client-id "$(azure-key-vault-client-id)" `
-  #       --azure-key-vault-client-secret "$(azure-key-vault-client-secret)" `
-  #       --azure-key-vault-certificate "nexai-democrite-nuget-sign-pkg"
-
-  - script: dotnet nuget push -s "$(NugetDepo)" "${{ variables.NugetPackageFilter }}" --api-key $(SecretApiKey) --skip-duplicate
-    displayName: dotnet push
-    workingDirectory: $(PublishNuget)
+  - template: Templates/dotnet/nuget-steps.yaml@tpl
+    parameters:
+      package_version: $(FinalPkgVersion)
+      include_symbols: ${{ parameters.prerelease }}
+      solution_file_name: $(solution_file_name)
+      nuget_depo: $(nuget_depo)
+      secret_api_key: $(secret_api_key)

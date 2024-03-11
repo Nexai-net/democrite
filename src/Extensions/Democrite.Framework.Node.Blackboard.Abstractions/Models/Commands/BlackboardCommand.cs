@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
 {
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Abstractions.Supports;
 
     using System;
     using System.ComponentModel;

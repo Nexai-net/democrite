@@ -4,8 +4,8 @@
 
 namespace Democrite.Framework.Builders
 {
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Services;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Services;
 
     /// <summary>
     /// Base interface of all the end part of builders

@@ -8,9 +8,9 @@ namespace Democrite.Framework.Node.Artifacts
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Node.Abstractions.Artifacts;
     using Democrite.Framework.Node.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 

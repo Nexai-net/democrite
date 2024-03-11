@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Inputs
 {
-    using Democrite.Framework.Toolbox.Abstractions.Expressions;
+    using Elvex.Toolbox.Abstractions.Expressions;
 
     using Microsoft.Extensions.Logging;
 

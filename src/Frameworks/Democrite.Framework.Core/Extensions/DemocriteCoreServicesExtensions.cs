@@ -14,10 +14,10 @@ namespace Democrite.Framework.Core.Extensions
     using Democrite.Framework.Core.Services;
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Core.Storages;
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Workers;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Patterns.Workers;
-    using Democrite.Framework.Toolbox.Services;
+    using Elvex.Toolbox.Abstractions.Patterns.Workers;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Patterns.Workers;
+    using Elvex.Toolbox.Services;
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;

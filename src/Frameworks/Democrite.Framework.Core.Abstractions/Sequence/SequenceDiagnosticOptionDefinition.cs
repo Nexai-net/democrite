@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Sequence
 {
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
 
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;

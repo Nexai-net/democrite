@@ -7,7 +7,7 @@ namespace Democrite.UnitTests.ToolKit.Extensions
     using AutoFixture;
 
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Helpers;
     using Democrite.UnitTests.ToolKit.Helpers;
 
     using Microsoft.Extensions.DependencyInjection;

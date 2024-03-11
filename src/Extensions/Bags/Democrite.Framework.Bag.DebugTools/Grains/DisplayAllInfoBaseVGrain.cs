@@ -7,8 +7,8 @@ namespace Democrite.Framework.Bag.DebugTools.Grains
     using Democrite.Framework.Bag.DebugTools.Models;
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;

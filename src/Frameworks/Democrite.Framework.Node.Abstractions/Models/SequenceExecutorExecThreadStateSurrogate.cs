@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Node.Abstractions.Models
 {
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Helpers;
 
     [GenerateSerializer]
     public struct SequenceExecutorExecThreadStateSurrogate

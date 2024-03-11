@@ -6,8 +6,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 {
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Extensions;
 
     /// <summary>
     /// Handler to use control a controller

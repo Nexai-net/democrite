@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Abstractions.Artifacts
 {
     using Democrite.Framework.Core.Abstractions.Artifacts;
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
+    using Elvex.Toolbox.Abstractions.Patterns.Strategy;
 
     using System;
 

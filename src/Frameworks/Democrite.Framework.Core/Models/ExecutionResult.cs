@@ -6,7 +6,7 @@ namespace Democrite.Framework.Core.Models
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Exceptions;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using System;
     using System.Collections;

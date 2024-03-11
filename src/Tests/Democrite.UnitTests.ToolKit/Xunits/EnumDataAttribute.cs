@@ -2,7 +2,7 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-namespace Democrite.Framework.Toolbox.UnitTests.Xunits
+namespace Elvex.Toolbox.UnitTests.Xunits
 {
     using System;
     using System.Collections.Generic;

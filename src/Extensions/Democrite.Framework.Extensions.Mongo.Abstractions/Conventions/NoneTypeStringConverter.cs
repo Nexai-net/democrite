@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Extensions.Mongo.Abstractions.Conventions
 {
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
 
     using MongoDB.Bson.Serialization;
 

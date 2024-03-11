@@ -7,7 +7,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Targets;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Abstractions.Services;
 
     using Microsoft.Extensions.Logging;
 

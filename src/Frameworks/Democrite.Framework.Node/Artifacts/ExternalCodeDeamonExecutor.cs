@@ -10,11 +10,11 @@ namespace Democrite.Framework.Node.Artifacts
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions.Artifacts;
     using Democrite.Framework.Node.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Communications;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Services;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Communications;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Services;
 
     using Microsoft.Extensions.Logging;
 

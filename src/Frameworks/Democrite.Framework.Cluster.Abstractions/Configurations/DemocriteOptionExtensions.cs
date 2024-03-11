@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Configurations
 {
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

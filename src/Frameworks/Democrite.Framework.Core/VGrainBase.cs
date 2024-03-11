@@ -10,7 +10,7 @@ namespace Democrite.Framework.Core
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Helpers;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;

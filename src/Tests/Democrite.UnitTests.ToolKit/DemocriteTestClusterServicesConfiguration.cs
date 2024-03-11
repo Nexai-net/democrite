@@ -12,10 +12,10 @@ namespace Democrite.UnitTests.ToolKit
     using Democrite.Framework.Core.Repositories;
     using Democrite.Framework.Node.Configurations;
     using Democrite.Framework.Node.Services;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Models;
-    using Democrite.Framework.Toolbox.Services;
+    using Elvex.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Models;
+    using Elvex.Toolbox.Services;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

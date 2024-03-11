@@ -10,9 +10,9 @@ namespace Democrite.Framework.Node.Services
     using Democrite.Framework.Core.Diagnostics;
     using Democrite.Framework.Core.Helpers;
     using Democrite.Framework.Node.Abstractions.Models;
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Disposables;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Disposables;
 
     using Microsoft.Extensions.Options;
 

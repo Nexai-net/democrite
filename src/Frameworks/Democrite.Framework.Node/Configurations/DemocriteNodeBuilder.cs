@@ -40,11 +40,11 @@ namespace Democrite.Framework.Configurations
     using Democrite.Framework.Node.Streams;
     using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Node.Triggers;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Loggers;
-    using Democrite.Framework.Toolbox.Models;
-    using Democrite.Framework.Toolbox.Models.Converters;
+    using Elvex.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Loggers;
+    using Elvex.Toolbox.Models;
+    using Elvex.Toolbox.Models.Converters;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

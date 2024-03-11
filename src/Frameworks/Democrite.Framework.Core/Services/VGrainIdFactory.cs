@@ -6,7 +6,7 @@ namespace Democrite.Framework.Core.Services
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
-    using Democrite.Framework.Toolbox.Disposables;
+    using Elvex.Toolbox.Disposables;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;

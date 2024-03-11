@@ -12,7 +12,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains;
     using Democrite.Framework.Node.Blackboard.Models;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 

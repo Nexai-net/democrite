@@ -6,7 +6,7 @@ namespace Democrite.Framework.Core
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Executions;
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;

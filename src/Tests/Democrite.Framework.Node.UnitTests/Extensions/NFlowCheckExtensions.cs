@@ -8,9 +8,9 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Core.Diagnostics;
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Helpers;
     using Democrite.UnitTests.ToolKit.Sequences;
 
     using NFluent;

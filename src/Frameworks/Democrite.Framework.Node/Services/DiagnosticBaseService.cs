@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Services
 {
     using Democrite.Framework.Core.Abstractions.Diagnostics;
-    using Democrite.Framework.Toolbox.Disposables;
+    using Elvex.Toolbox.Disposables;
 
     /// <summary>
     /// Base diagnostic service managment

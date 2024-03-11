@@ -23,13 +23,13 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
     using Democrite.Framework.Node.Blackboard.Models;
     using Democrite.Framework.Node.Blackboard.Models.Surrogates;
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Helpers;
-    using Democrite.Framework.Toolbox.Models;
-    using Democrite.Framework.Toolbox.Services;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Helpers;
+    using Elvex.Toolbox.Models;
+    using Elvex.Toolbox.Services;
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;

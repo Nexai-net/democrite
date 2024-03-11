@@ -13,46 +13,50 @@ pr:
       - main
       - dev
 
-pool:
-  vmImage: 'windows-latest'
+resources:
+  repositories:
+    - repository: Yaml-Templates
+      type: git
+      name: Yaml-Templates
+#      ref: refs/heads/dev
 
-variables:
-  solution: 'Democrite.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
-  SolutionFolder: "./"
-  
-steps:
-- task: UseDotNet@2
-  displayName: 'Install .NET Core SDK'
-  inputs:
-    version: 8.x
-    includePreviewVersions: true # Required for preview versions
-  
-- task: NuGetAuthenticate@1
+parameters:
+  - name: debug_display
+    displayName: Define debug information are requested
+    type: boolean
+    default: false
 
-- script: dotnet restore
-  displayName: Restore dependencies
-  workingDirectory: $(SolutionFolder)
+jobs:
+  - job: Window
+    pool:
+      vmImage: 'windows-latest'
 
-- script: dotnet build -c $(buildConfiguration)
-  displayName: Build
-  workingDirectory: $(SolutionFolder)
+    steps:
+      - task: UseDotNet@2
+        displayName: 'Install .NET Core SDK'
+        inputs:
+          version: 8.x
+          includePreviewVersions: true # Required for preview versions
 
-# - script: dotnet test -c $(buildConfiguration) --no-build -v=normal /p:CollectCoverage=true --collect:"XPlat Code Coverage" --blame-hang-timeout 240s -- xunit.ParallelizeAssembly=true xunit.MaxParallelThreads=4
-#   displayName: Test with Code Coverage recolt
-#   workingDirectory: $(SolutionFolder)
+      - template: /Templates/dotnet/full-build-test-export-steps.yaml@Yaml-Templates
+        parameters: 
+          debug_display: ${{ parameters.debug_display }}
+          solution_file_name: $(solution-name)
+          exclude_from_coverage_regex: '(((Orleans.)|(h.)|(coverlet.))[a-zA-Z.]+.dll)|(Democrite.[a-zA-Z.]+.unittests.dll)'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Run tests'
-  inputs:
-    command: 'test'    
-    arguments: '--settings .runsettings -c $(buildConfiguration) --no-build -v=normal /p:CollectCoverage=true --collect:"XPlat Code Coverage" --blame-hang-timeout 240s -- xunit.ParallelizeAssembly=true xunit.MaxParallelThreads=4 DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.CodeCoverage.ModulePaths.Exclude.ModulePath="(((Orleans.)|(h.)|(coverlet.))[a-zA-Z.]+.dll)|(Democrite.[a-zA-Z.]+.unittests.dll)"' 
-    publishTestResults: true
+#   - job: Linux
+#     pool:
+#       vmImage: 'ubuntu-latest'
+      
+#     steps:
+#       - task: UseDotNet@2
+#         displayName: 'Install .NET Core SDK'
+#         inputs:
+#           version: 8.x
+#           includePreviewVersions: true # Required for preview versions
 
-  # Publish Cobertura or JaCoCo code coverage results from a build.
-- task: PublishCodeCoverageResults@2
-  displayName: Publish code coverage
-  inputs:
-    codeCoverageTool: 'Cobertura'
-    summaryFileLocation: $(System.DefaultWorkingDirectory)/src/Tests/Democrite.*/**/*coverage.xml
+#       - template: /Templates/dotnet/full-build-test-export-steps.yaml@Yaml-Templates
+#         parameters: 
+#           debug_display: ${{ parameters.debug_display }}
+#           solution_file_name: $(solution-name)
+#           exclude_from_coverage_regex: '(((Orleans.)|(h.)|(coverlet.))[a-zA-Z.]+.dll)|(Democrite.[a-zA-Z.]+.unittests.dll)'

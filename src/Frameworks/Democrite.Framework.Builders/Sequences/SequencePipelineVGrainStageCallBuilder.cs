@@ -7,9 +7,9 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Builders.Steps;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Abstractions.Conditions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Conditions;
+    using Elvex.Toolbox.Helpers;
 
     using System;
     using System.Linq.Expressions;

@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Node.Abstractions.Repositories;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Models;
 
     using Microsoft.Extensions.Logging;
 

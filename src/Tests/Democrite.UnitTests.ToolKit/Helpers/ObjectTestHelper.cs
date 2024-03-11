@@ -7,7 +7,7 @@ namespace Democrite.UnitTests.ToolKit.Helpers
     using AutoFixture;
     using AutoFixture.AutoNSubstitute;
 
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;

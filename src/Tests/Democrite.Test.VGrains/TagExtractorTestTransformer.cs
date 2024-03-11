@@ -6,7 +6,7 @@ namespace Democrite.Test.VGrains
 {
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Helpers;
     using Democrite.Test.Interfaces;
 
     using Microsoft.Extensions.Logging;

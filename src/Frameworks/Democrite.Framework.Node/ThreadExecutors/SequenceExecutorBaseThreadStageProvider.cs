@@ -6,7 +6,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Node.Abstractions;
-    using Democrite.Framework.Toolbox.Disposables;
+    using Elvex.Toolbox.Disposables;
 
     /// <summary>
     /// Base Thread stage executor

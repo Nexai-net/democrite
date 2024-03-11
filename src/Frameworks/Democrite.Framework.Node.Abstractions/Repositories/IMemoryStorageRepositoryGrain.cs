@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Node.Abstractions.Repositories
 {
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     /// <summary>
     /// In memory storage grain used to serialize in binary data in the cluster memory

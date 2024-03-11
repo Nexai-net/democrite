@@ -9,9 +9,9 @@ namespace Democrite.Framework.Node.Blackboard.Models
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Helpers;
 
     using System;
     using System.Collections;

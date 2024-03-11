@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Cluster.Abstractions.Services
 {
-    using Democrite.Framework.Toolbox.Abstractions.Disposables;
+    using Elvex.Toolbox.Abstractions.Disposables;
 
     using System.Collections.Generic;
     using System.Net;

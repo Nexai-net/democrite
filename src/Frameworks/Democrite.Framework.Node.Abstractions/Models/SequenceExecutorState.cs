@@ -6,7 +6,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Abstractions.Supports;
 
     using System;
 

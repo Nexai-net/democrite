@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Abstractions.Artifacts
 {
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Toolbox.Abstractions.Disposables;
+    using Elvex.Toolbox.Abstractions.Disposables;
 
     using Microsoft.Extensions.Logging;
 

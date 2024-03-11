@@ -6,8 +6,8 @@ namespace Democrite.Framework.Builders.Sequences
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
-    using Democrite.Framework.Toolbox.Abstractions.Conditions;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Abstractions.Conditions;
+    using Elvex.Toolbox.Models;
 
     using System;
 

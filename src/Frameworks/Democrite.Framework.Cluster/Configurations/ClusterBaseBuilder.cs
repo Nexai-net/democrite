@@ -16,10 +16,10 @@ namespace Democrite.Framework.Cluster.Configurations
     using Democrite.Framework.Core.Extensions;
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Core.Triggers;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Helpers;
-    using Democrite.Framework.Toolbox.Loggers;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Helpers;
+    using Elvex.Toolbox.Loggers;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

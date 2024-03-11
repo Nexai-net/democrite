@@ -6,7 +6,7 @@ namespace Democrite.Test.Interfaces
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
 
     /// <summary>
     /// Provide Html for testing purpose

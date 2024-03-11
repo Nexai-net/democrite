@@ -14,7 +14,7 @@ namespace Democrite.Framework.Node.Cron
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Triggers;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Abstractions.Services;
 
     using Microsoft.Extensions.Logging;
 

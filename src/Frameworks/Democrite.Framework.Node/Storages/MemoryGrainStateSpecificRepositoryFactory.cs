@@ -6,7 +6,7 @@ namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Core.Abstractions.Storages;
     using Democrite.Framework.Node.Abstractions.Repositories;
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
     using Microsoft.Extensions.DependencyInjection;
 
     using System;

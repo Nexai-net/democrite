@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
 {
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Abstractions.Supports;
 
     using System.Collections.Generic;
 

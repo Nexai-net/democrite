@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Bag.Toolbox.Abstractions
 {
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Models;
 
     using System;
 

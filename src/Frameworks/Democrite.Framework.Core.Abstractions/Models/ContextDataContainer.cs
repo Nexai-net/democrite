@@ -6,7 +6,7 @@ namespace Democrite.Framework.Core.Models
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Surrogates;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     public interface IContextDataContainer
     {

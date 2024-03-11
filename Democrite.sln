@@ -13,14 +13,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{3AD8F8
 		SampleFullConfiguration.json = SampleFullConfiguration.json
 		SharedFrameworkAssmblyInfo.props = SharedFrameworkAssmblyInfo.props
 		SharedFrameworkDemocriteAssemblyInfo.props = SharedFrameworkDemocriteAssemblyInfo.props
-		SharedFrameworkToolBoxAssemblyInfo.props = SharedFrameworkToolBoxAssemblyInfo.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{40C9D1BA-089B-41C3-A99E-5ED5D06462D1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extensions", "Extensions", "{2F1AD903-9D49-4E20-9673-C93C5F85185B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Toolbox", "Toolbox", "{BB115B56-EA92-49A3-B4CC-5AAF9F4DF111}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{F3FCFC0A-13BC-4DDA-B0B8-551971907878}"
 	ProjectSection(SolutionItems) = preProject
@@ -32,12 +29,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Cron", "src\Extensions\Democrite.Framework.Node.Cron\Democrite.Framework.Node.Cron.csproj", "{BC9B4C85-BB29-4B99-854C-CA04702F2047}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.Signals", "src\Extensions\Democrite.Framework.Node.Signals\Democrite.Framework.Node.Signals.csproj", "{FC071BF1-ADF5-4A85-9E3F-ADC5E4361AE1}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Toolbox.Abstractions", "src\Frameworks\Democrite.Framework.Toolbox.Abstractions\Democrite.Framework.Toolbox.Abstractions.csproj", "{7BDFB8CB-2383-4978-9751-EEE3E3283601}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Toolbox", "src\Frameworks\Democrite.Framework.Toolbox\Democrite.Framework.Toolbox.csproj", "{CABFDB43-0531-4AFA-9F64-4480FF2D5837}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Toolbox.Configuration", "src\Frameworks\Democrite.Framework.Toolbox.Configuration\Democrite.Framework.Toolbox.Configuration.csproj", "{1CCF94D7-9C28-413C-8679-748D4D8ED35A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Builders", "src\Frameworks\Democrite.Framework.Builders\Democrite.Framework.Builders.csproj", "{BE03C81D-C026-42CD-B618-65F1B3A97994}"
 EndProject
@@ -64,10 +55,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Core.UnitTests", "src\Tests\Democrite.Framework.Core.UnitTests\Democrite.Framework.Core.UnitTests.csproj", "{5AB36113-27A5-4B0A-A29B-165B69E84571}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Node.UnitTests", "src\Tests\Democrite.Framework.Node.UnitTests\Democrite.Framework.Node.UnitTests.csproj", "{37A55C8E-BEEA-4917-92AD-D325DFFCDDD0}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Toolbox.Configuration.UnitTests", "src\Tests\Democrite.Framework.Toolbox.Configuration.UnitTests\Democrite.Framework.Toolbox.Configuration.UnitTests.csproj", "{9A5812BF-6597-4A7B-8F67-74AB431220FE}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Toolbox.UnitTests", "src\Tests\Democrite.Framework.Toolbox.UnitTests\Democrite.Framework.Toolbox.UnitTests.csproj", "{38FBD3E4-EE6F-42EC-BCE5-76EFAAA19C8B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.UnitTests.ToolKit", "src\Tests\Democrite.UnitTests.ToolKit\Democrite.UnitTests.ToolKit.csproj", "{25AD23F9-36C7-462D-834E-81C6D18737B9}"
 EndProject
@@ -136,18 +123,6 @@ Global
 		{FC071BF1-ADF5-4A85-9E3F-ADC5E4361AE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC071BF1-ADF5-4A85-9E3F-ADC5E4361AE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC071BF1-ADF5-4A85-9E3F-ADC5E4361AE1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7BDFB8CB-2383-4978-9751-EEE3E3283601}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7BDFB8CB-2383-4978-9751-EEE3E3283601}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7BDFB8CB-2383-4978-9751-EEE3E3283601}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7BDFB8CB-2383-4978-9751-EEE3E3283601}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CABFDB43-0531-4AFA-9F64-4480FF2D5837}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CABFDB43-0531-4AFA-9F64-4480FF2D5837}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CABFDB43-0531-4AFA-9F64-4480FF2D5837}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CABFDB43-0531-4AFA-9F64-4480FF2D5837}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1CCF94D7-9C28-413C-8679-748D4D8ED35A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1CCF94D7-9C28-413C-8679-748D4D8ED35A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1CCF94D7-9C28-413C-8679-748D4D8ED35A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1CCF94D7-9C28-413C-8679-748D4D8ED35A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BE03C81D-C026-42CD-B618-65F1B3A97994}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BE03C81D-C026-42CD-B618-65F1B3A97994}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE03C81D-C026-42CD-B618-65F1B3A97994}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -200,14 +175,6 @@ Global
 		{37A55C8E-BEEA-4917-92AD-D325DFFCDDD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37A55C8E-BEEA-4917-92AD-D325DFFCDDD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37A55C8E-BEEA-4917-92AD-D325DFFCDDD0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9A5812BF-6597-4A7B-8F67-74AB431220FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9A5812BF-6597-4A7B-8F67-74AB431220FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9A5812BF-6597-4A7B-8F67-74AB431220FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9A5812BF-6597-4A7B-8F67-74AB431220FE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{38FBD3E4-EE6F-42EC-BCE5-76EFAAA19C8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{38FBD3E4-EE6F-42EC-BCE5-76EFAAA19C8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{38FBD3E4-EE6F-42EC-BCE5-76EFAAA19C8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{38FBD3E4-EE6F-42EC-BCE5-76EFAAA19C8B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{25AD23F9-36C7-462D-834E-81C6D18737B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{25AD23F9-36C7-462D-834E-81C6D18737B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{25AD23F9-36C7-462D-834E-81C6D18737B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -297,12 +264,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{BB115B56-EA92-49A3-B4CC-5AAF9F4DF111} = {6BF28FB3-9FA0-4A68-A66F-B7701CD93C69}
 		{BC9B4C85-BB29-4B99-854C-CA04702F2047} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
 		{FC071BF1-ADF5-4A85-9E3F-ADC5E4361AE1} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
-		{7BDFB8CB-2383-4978-9751-EEE3E3283601} = {BB115B56-EA92-49A3-B4CC-5AAF9F4DF111}
-		{CABFDB43-0531-4AFA-9F64-4480FF2D5837} = {BB115B56-EA92-49A3-B4CC-5AAF9F4DF111}
-		{1CCF94D7-9C28-413C-8679-748D4D8ED35A} = {BB115B56-EA92-49A3-B4CC-5AAF9F4DF111}
 		{BE03C81D-C026-42CD-B618-65F1B3A97994} = {6BF28FB3-9FA0-4A68-A66F-B7701CD93C69}
 		{E5D1AC14-D3BD-4621-A096-5868923CDE46} = {6BF28FB3-9FA0-4A68-A66F-B7701CD93C69}
 		{0C41F250-F363-49E3-8024-7F1029396368} = {6BF28FB3-9FA0-4A68-A66F-B7701CD93C69}
@@ -316,8 +279,6 @@ Global
 		{75562161-40E3-4C03-A4F6-AFE5472687C8} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
 		{5AB36113-27A5-4B0A-A29B-165B69E84571} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
 		{37A55C8E-BEEA-4917-92AD-D325DFFCDDD0} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
-		{9A5812BF-6597-4A7B-8F67-74AB431220FE} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
-		{38FBD3E4-EE6F-42EC-BCE5-76EFAAA19C8B} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
 		{25AD23F9-36C7-462D-834E-81C6D18737B9} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
 		{D53F80C8-5B1F-4153-989A-A10DD890B9D2} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
 		{D7908BB4-28E9-4401-A477-DAD299AC494F} = {D53F80C8-5B1F-4153-989A-A10DD890B9D2}

@@ -8,10 +8,10 @@ namespace Democrite.Framework.Extensions.Mongo.Services
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Extensions.Mongo.Models;
     using Democrite.Framework.Extensions.Mongo.Repositories;
-    using Democrite.Framework.Toolbox.Abstractions.Attributes;
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
-    using Democrite.Framework.Toolbox.Patterns.Strategy;
+    using Elvex.Toolbox.Abstractions.Attributes;
+    using Elvex.Toolbox.Abstractions.Patterns.Strategy;
+    using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Patterns.Strategy;
 
     using Microsoft.Extensions.Options;
 

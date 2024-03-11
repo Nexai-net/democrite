@@ -5,9 +5,9 @@
 namespace Democrite.Framework.Cluster.Services
 {
     using Democrite.Framework.Cluster.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Abstractions.Disposables;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Abstractions.Disposables;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Helpers;
 
     using System;
     using System.Collections.Generic;

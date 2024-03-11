@@ -4,7 +4,7 @@
 
 namespace Democrite.UnitTests.ToolKit.Models
 {
-    using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Models;
 
     /// <summary>
     /// Method call argument
@@ -37,7 +37,7 @@ namespace Democrite.UnitTests.ToolKit.Models
         public string MethodName { get; }
 
         /// <summary>
-        /// Gets the name of the method unique id generate by <see cref="Democrite.Framework.Toolbox.Extensions.ReflectionExtensions.GetUniqueId"/>.
+        /// Gets the name of the method unique id generate by <see cref="Elvex.Toolbox.Extensions.ReflectionExtensions.GetUniqueId"/>.
         /// </summary>
         public string MethodUniqueId { get; }
 

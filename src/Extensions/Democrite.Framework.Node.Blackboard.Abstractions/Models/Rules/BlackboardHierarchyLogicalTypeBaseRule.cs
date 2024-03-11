@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules
 {
-    using Democrite.Framework.Toolbox.Abstractions.Enums;
+    using Elvex.Toolbox.Abstractions.Enums;
 
     using System;
     using System.ComponentModel;

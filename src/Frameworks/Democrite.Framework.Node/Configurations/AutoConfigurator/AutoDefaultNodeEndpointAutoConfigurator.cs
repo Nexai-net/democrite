@@ -7,8 +7,8 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
     using Democrite.Framework.Configurations;
     using Democrite.Framework.Node.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

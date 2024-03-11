@@ -4,9 +4,9 @@
 
 namespace Democrite.Framework.Core.Abstractions.Sequence
 {
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Helpers;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Helpers;
+    using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
 

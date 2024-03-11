@@ -8,7 +8,7 @@ namespace Democrite.Framework.Core.Services
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Models;
-    using Democrite.Framework.Toolbox.Disposables;
+    using Elvex.Toolbox.Disposables;
 
     using Microsoft.Extensions.Logging;
 

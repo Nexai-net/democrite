@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions
 {
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Abstractions.Supports;
 
     using Microsoft.Extensions.DependencyInjection;
 

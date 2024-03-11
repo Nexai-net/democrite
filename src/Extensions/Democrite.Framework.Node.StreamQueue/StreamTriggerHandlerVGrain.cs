@@ -13,9 +13,9 @@ namespace Democrite.Framework.Node.StreamQueue
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Triggers;
     using Democrite.Framework.Node.Triggers;
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Workers;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Patterns.Workers;
+    using Elvex.Toolbox.Abstractions.Patterns.Workers;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Patterns.Workers;
 
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json.Linq;

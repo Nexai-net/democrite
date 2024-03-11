@@ -4,8 +4,8 @@
 
 namespace Democrite.Framework.Core.Abstractions.Streams
 {
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 

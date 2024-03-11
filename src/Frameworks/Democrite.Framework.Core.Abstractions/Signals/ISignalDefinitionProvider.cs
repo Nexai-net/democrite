@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
+    using Elvex.Toolbox.Abstractions.Patterns.Strategy;
 
     using System;
 

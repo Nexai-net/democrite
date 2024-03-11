@@ -13,6 +13,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Elvex.Toolbox" />
 		<PackageReference Include="Microsoft.Orleans.Core" />
 		<PackageReference Include="Microsoft.Orleans.Runtime" />
 		<PackageReference Include="System.Reactive" />

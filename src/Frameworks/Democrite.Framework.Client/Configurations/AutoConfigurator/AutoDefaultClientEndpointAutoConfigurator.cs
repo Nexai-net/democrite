@@ -9,7 +9,7 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     using Democrite.Framework.Cluster.Abstractions.Configurations.AutoConfigurator;
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Configurations;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Signals
 {
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox.Patterns.Strategy;
+    using Elvex.Toolbox.Patterns.Strategy;
 
     using System;
 

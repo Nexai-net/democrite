@@ -4,8 +4,8 @@
 
 namespace Democrite.Framework.Node.Blackboard.Abstractions
 {
-    using Democrite.Framework.Toolbox.Abstractions.Enums;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Abstractions.Enums;
+    using Elvex.Toolbox.Abstractions.Supports;
 
     /// <summary>
     /// Validate a record data

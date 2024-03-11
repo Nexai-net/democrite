@@ -6,9 +6,9 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
 

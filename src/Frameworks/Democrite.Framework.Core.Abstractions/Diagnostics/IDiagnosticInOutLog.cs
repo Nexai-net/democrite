@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Diagnostics
 {
-    using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Models;
 
     /// <summary>
     /// Log use store in/out information

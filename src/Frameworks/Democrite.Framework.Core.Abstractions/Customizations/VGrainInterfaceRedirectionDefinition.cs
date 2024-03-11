@@ -4,10 +4,10 @@
 
 namespace Democrite.Framework.Core.Abstractions.Customizations
 {
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Abstractions.Conditions;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Conditions;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
 

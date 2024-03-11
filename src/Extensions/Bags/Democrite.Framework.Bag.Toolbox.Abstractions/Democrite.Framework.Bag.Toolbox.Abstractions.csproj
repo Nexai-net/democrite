@@ -14,7 +14,6 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
-	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Toolbox.Abstractions\Democrite.Framework.Toolbox.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

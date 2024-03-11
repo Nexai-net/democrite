@@ -6,7 +6,7 @@ namespace Democrite.Framework.Node.Streams
 {
     using Democrite.Framework.Core.Abstractions.Streams;
     using Democrite.Framework.Core.Abstractions.Triggers;
-    using Democrite.Framework.Toolbox.Patterns.Strategy;
+    using Elvex.Toolbox.Patterns.Strategy;
 
     using System;
 

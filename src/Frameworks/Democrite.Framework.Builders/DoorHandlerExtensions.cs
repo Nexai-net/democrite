@@ -7,8 +7,8 @@ namespace Democrite.Framework.Builders.Signals
     using Democrite.Framework.Builders.Doors;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox.Abstractions.Enums;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Abstractions.Enums;
+    using Elvex.Toolbox.Helpers;
 
     using System;
     using System.Linq.Expressions;

@@ -6,7 +6,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 {
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.DependencyInjection;
 

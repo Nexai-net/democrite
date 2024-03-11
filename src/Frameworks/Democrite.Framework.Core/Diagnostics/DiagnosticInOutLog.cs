@@ -6,7 +6,7 @@ namespace Democrite.Framework.Core.Diagnostics
 {
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Enums;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Models;
 
     using System;
     using System.ComponentModel;

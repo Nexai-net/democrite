@@ -6,7 +6,7 @@ namespace Democrite.Framework.Core
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Democrite.Framework.Toolbox.Patterns.Strategy;
+    using Elvex.Toolbox.Patterns.Strategy;
 
     using System;
 

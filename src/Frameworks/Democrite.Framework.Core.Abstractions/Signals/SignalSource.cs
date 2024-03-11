@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
     using Democrite.Framework.Core.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Helpers;
 
     using Orleans.Runtime;
 

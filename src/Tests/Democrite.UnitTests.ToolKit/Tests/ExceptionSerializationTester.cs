@@ -9,7 +9,7 @@ namespace Democrite.UnitTests.ToolKit.Tests
     using Castle.DynamicProxy.Internal;
 
     using Democrite.Framework.Core.Abstractions.Exceptions;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
     using Democrite.UnitTests.ToolKit.Helpers;
 
     using NFluent;

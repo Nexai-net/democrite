@@ -6,8 +6,8 @@ namespace Democrite.UnitTests.ToolKit.Sequences
 {
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Extensions;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Helpers;
 
     using System;
     using System.Collections.Generic;

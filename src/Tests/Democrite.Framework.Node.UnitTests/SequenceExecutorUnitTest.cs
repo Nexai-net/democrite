@@ -17,10 +17,10 @@ namespace Democrite.Framework.Node.UnitTests
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Node.UnitTests.Extensions;
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Helpers;
-    using Democrite.Framework.Toolbox.Services;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Helpers;
+    using Elvex.Toolbox.Services;
     using Democrite.Test.Interfaces;
     using Democrite.Test.VGrains;
     using Democrite.UnitTests.ToolKit;

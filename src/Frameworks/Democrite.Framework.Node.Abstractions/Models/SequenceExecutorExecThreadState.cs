@@ -5,11 +5,11 @@
 namespace Democrite.Framework.Node.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Helpers;
 
     using System;
     using System.Diagnostics;

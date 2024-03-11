@@ -8,7 +8,7 @@ namespace Democrite.Framework.Core.Signals
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
 
     using Orleans.Concurrency;
 

@@ -5,8 +5,8 @@
 namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
-    using Democrite.Framework.Toolbox.Helpers;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Helpers;
+    using Elvex.Toolbox.Models;
 
     using Newtonsoft.Json;
 

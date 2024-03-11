@@ -6,7 +6,7 @@ namespace Democrite.Framework.Node.DataSources
 {
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Node.Inputs;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using System.Threading;
     using System.Threading.Tasks;

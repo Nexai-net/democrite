@@ -5,8 +5,8 @@
 namespace Democrite.Framework.Extensions.Mongo.Repositories
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
-    using Democrite.Framework.Toolbox.Supports;
+    using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Supports;
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;

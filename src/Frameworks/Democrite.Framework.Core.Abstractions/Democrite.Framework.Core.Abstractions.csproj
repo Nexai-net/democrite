@@ -13,6 +13,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
+	  <PackageReference Include="Elvex.Toolbox" />
 	  <PackageReference Include="MessagePack" />
 	  <PackageReference Include="Microsoft.Orleans.Sdk" />
 	</ItemGroup>
@@ -23,10 +24,6 @@
 		<!-- Testing Purpose -->
 		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals.UnitTests" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\Democrite.Framework.Toolbox\Democrite.Framework.Toolbox.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Extensions.Mongo.Abstractions.Serializers
 {
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     using MongoDB.Bson;
     using MongoDB.Bson.IO;

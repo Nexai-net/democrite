@@ -12,9 +12,9 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.ThreadExecutors;
-    using Democrite.Framework.Toolbox.Abstractions.Disposables;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Abstractions.Disposables;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Models;
     using Democrite.UnitTests.ToolKit;
     using Democrite.UnitTests.ToolKit.VGrains.Transformers;
 

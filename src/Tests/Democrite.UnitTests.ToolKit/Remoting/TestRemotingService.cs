@@ -4,8 +4,8 @@
 
 namespace Democrite.UnitTests.ToolKit.Remoting
 {
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Helpers;
 
     using Newtonsoft.Json;
 
@@ -17,7 +17,7 @@ namespace Democrite.UnitTests.ToolKit.Remoting
     /// <summary>
     /// Service used to managed all the required <see cref="IRemoteControllerService"/> declared
     /// </summary>
-    /// <seealso cref="Democrite.Framework.Toolbox.Disposables.SafeDisposable" />
+    /// <seealso cref="Elvex.Toolbox.Disposables.SafeDisposable" />
     /// <seealso cref="Democrite.UnitTests.ToolKit.Remoting.ITestRemotingService" />
     internal sealed class TestRemotingService : SafeDisposable, ITestRemotingService
     {

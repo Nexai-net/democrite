@@ -5,8 +5,8 @@
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Models;
 
     using System;
     using System.Linq.Expressions;

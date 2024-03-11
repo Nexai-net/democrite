@@ -5,11 +5,11 @@
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
-    using Democrite.Framework.Toolbox;
-    using Democrite.Framework.Toolbox.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Models;
 
     using System;
     using System.ComponentModel;

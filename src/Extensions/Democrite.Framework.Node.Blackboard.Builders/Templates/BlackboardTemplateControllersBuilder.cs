@@ -9,7 +9,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     using System;
 

@@ -6,8 +6,8 @@ namespace Democrite.Framework.Builders.Sequences
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
-    using Democrite.Framework.Toolbox.Abstractions.Expressions;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Abstractions.Expressions;
+    using Elvex.Toolbox.Helpers;
 
     using System.Linq.Expressions;
 

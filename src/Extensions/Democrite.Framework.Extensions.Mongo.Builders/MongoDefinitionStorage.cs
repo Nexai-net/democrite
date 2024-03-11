@@ -7,7 +7,7 @@ namespace Democrite.Framework.Extensions.Mongo.Builders
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Extensions.Mongo.Abstractions;
     using Democrite.Framework.Extensions.Mongo.Models;
-    using Democrite.Framework.Toolbox.Disposables;
+    using Elvex.Toolbox.Disposables;
 
     using MongoDB.Driver;
 

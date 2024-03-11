@@ -7,7 +7,7 @@ namespace Democrite.Framework.Node.Signals.Doors
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Signals.Models;
-    using Democrite.Framework.Toolbox.Helpers;
+    using Elvex.Toolbox.Helpers;
 
     using System;
     using System.Collections.Generic;

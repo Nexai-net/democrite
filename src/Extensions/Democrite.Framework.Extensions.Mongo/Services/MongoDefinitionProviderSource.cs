@@ -7,7 +7,7 @@ namespace Democrite.Framework.Extensions.Mongo.Services
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Extensions.Mongo.Models;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Options;
 

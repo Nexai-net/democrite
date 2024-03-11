@@ -8,7 +8,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     /// <summary>
     /// Configuration dedicated to one type on record on the blackboard

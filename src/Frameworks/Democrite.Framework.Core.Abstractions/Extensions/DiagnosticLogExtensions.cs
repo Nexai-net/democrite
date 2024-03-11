@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Extensions
 {
     using Democrite.Framework.Core.Abstractions.Diagnostics;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using System;
     using System.Collections.Generic;

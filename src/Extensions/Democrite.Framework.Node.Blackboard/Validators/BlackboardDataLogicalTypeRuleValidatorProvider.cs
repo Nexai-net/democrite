@@ -6,7 +6,7 @@ namespace Democrite.Framework.Node.Blackboard.Validators
 {
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules;
-    using Democrite.Framework.Toolbox.Abstractions.Enums;
+    using Elvex.Toolbox.Abstractions.Enums;
 
     using System;
     using System.Collections.Generic;

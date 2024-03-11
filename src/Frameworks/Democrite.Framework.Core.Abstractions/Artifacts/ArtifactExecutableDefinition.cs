@@ -4,8 +4,6 @@
 
 namespace Democrite.Framework.Core.Abstractions.Artifacts
 {
-    using Democrite.Framework.Toolbox.Helpers;
-
     using System;
     using System.Collections.Generic;
 

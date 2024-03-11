@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     using Orleans.Runtime;
 

@@ -7,7 +7,7 @@ namespace Democrite.Framework.Builders
     using Democrite.Framework.Builders.Sequences;
     using Democrite.Framework.Builders.Steps;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
 
     using System;
     using System.Collections.Generic;

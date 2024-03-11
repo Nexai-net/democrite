@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 

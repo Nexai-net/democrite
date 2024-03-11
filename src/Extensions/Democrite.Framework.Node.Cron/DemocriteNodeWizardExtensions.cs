@@ -6,7 +6,7 @@
 namespace Democrite.Framework.Configurations
 {
     using Democrite.Framework.Node.Cron;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.DependencyInjection;
 

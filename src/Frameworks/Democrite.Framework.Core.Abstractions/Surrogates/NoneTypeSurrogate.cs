@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Surrogates
 {
-    using Democrite.Framework.Toolbox;
+    using Elvex.Toolbox;
 
     [GenerateSerializer]
     public record struct NoneTypeSurrogate();

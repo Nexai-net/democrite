@@ -5,9 +5,9 @@
 namespace Democrite.Framework.Configurations
 {
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Toolbox.Abstractions.Attributes;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Extensions;
+    using Elvex.Toolbox.Abstractions.Attributes;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

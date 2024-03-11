@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Artifacts
 {
-    using Democrite.Framework.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Abstractions.Supports;
 
     using Microsoft.Extensions.Logging;
 

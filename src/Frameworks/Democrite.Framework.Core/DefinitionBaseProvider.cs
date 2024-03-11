@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Core
 {
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Toolbox.Patterns.Strategy;
+    using Elvex.Toolbox.Patterns.Strategy;
 
     using Microsoft.Extensions.Logging;
 

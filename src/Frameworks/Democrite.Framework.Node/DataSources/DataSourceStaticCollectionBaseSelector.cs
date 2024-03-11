@@ -7,7 +7,7 @@ namespace Democrite.Framework.Node.Inputs
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Inputs;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Models;
 
     using System;
     using System.Linq;

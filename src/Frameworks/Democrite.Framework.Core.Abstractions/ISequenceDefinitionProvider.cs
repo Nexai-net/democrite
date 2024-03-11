@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Democrite.Framework.Toolbox.Abstractions.Patterns.Strategy;
+    using Elvex.Toolbox.Abstractions.Patterns.Strategy;
 
     /// <summary>
     /// Provider used to get <see cref="SequenceDefinition"/> from <see cref="ISequenceDefinitionSourceProvider"/>

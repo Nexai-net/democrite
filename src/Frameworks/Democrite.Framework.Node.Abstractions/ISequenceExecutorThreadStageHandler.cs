@@ -8,7 +8,7 @@ namespace Democrite.Framework.Node.Abstractions
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Node.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Abstractions.Disposables;
+    using Elvex.Toolbox.Abstractions.Disposables;
 
     using Microsoft.Extensions.Logging;
 

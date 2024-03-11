@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Configurations
 {
     using Democrite.Framework.Cluster.Abstractions.Services;
-    using Democrite.Framework.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Abstractions.Services;
 
     /// <summary>
     /// Contains all tools needed during the democrite cluster part setup

@@ -6,8 +6,8 @@ namespace Democrite.Framework.Node.Inputs
 {
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Inputs;
-    using Democrite.Framework.Toolbox.Disposables;
-    using Democrite.Framework.Toolbox.Models;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Models;
 
     using System.Threading;
     using System.Threading.Tasks;
