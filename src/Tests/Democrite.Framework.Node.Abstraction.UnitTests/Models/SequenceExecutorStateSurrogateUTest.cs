@@ -5,11 +5,14 @@
 namespace Democrite.Framework.Node.Abstraction.UnitTests.Models
 {
     using AutoFixture;
+    using AutoFixture.Kernel;
 
+    using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions.Models;
-    using Elvex.Toolbox.Extensions;
+
+    using Elvex.Toolbox.Abstractions.Conditions;
     using Elvex.Toolbox.Models;
 
     using System;
@@ -37,7 +40,7 @@ namespace Democrite.Framework.Node.Abstraction.UnitTests.Models
         /// </summary>
         public SequenceExecutorExecSurrogateUTest()
         {
-            this._tester = new BaseTesterAlias(sourceCreation: SequenceTestCreation);
+            this._tester = new BaseTesterAlias(sourceCreation: SequenceTestCreation, surrogateCreation: SurrogateCreation);
         }
 
         #endregion
@@ -87,7 +90,18 @@ namespace Democrite.Framework.Node.Abstraction.UnitTests.Models
                                              Guid.NewGuid(),
                                              Guid.NewGuid(),
                                              fixture.Create<SequenceExecutorExecThreadState>(),
-                                             fixture.Create<DateTime>());
+                                             fixture.Create<DateTime>(),
+                                             null);
+        }
+
+        private SequenceExecutorStateSurrogate SurrogateCreation(Fixture fixture)
+        {
+            fixture.Customizations.Add(new TypeRelay(typeof(VGrainRedirectionDefinition), typeof(VGrainInterfaceRedirectionDefinition)));
+
+            fixture.Register<ConditionBaseDefinition>(() => new ConditionValueDefinition(typeof(int).GetAbstractType(), 42));
+            fixture.Register<AbstractType>(() => new ConcretType(fixture.Create<string>(), null, fixture.Create<string>(), false, null!));
+
+            return fixture.Create<SequenceExecutorStateSurrogate>();
         }
 
         #endregion

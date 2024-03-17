@@ -5,8 +5,9 @@
 namespace Democrite.Framework.Node.Triggers
 {
     using Democrite.Framework.Core.Abstractions.Triggers;
+    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Abstractions.Triggers;
-    using Elvex.Toolbox.Extensions;
+
     using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
@@ -42,7 +43,7 @@ namespace Democrite.Framework.Node.Triggers
         protected TriggerBaseGrainService(GrainId id,
                                           Silo silo,
                                           ILoggerFactory loggerFactory,
-                                          IGrainFactory grainFactory,
+                                          IGrainOrleanFactory grainFactory,
                                           ITriggerDefinitionProvider triggerDefinitionProvider,
                                           TriggerTypeEnum triggerType)
             : base(id, silo, loggerFactory)

@@ -9,8 +9,9 @@ namespace Democrite.Framework.Node.Signals.UnitTests
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Node.Signals.Doors;
     using Democrite.Framework.Node.Signals.Models;
-    using Democrite.UnitTests.ToolKit.Helpers;
     using Democrite.UnitTests.ToolKit.Tests;
+
+    using Elvex.Toolbox.UnitTests.ToolKit.Helpers;
 
     /// <summary>
     /// Test for <see cref="DoorHandlerStateSurrogate"/>

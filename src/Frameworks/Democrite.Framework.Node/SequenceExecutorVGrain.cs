@@ -11,15 +11,15 @@ namespace Democrite.Framework.Node
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.Models;
+    using Democrite.Framework.Node.Services;
     using Democrite.Framework.Node.ThreadExecutors;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Extensions;
-    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 
@@ -27,9 +27,7 @@ namespace Democrite.Framework.Node
     using Orleans.Runtime;
 
     using System;
-    using System.Collections.Concurrent;
     using System.Diagnostics;
-    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -41,12 +39,12 @@ namespace Democrite.Framework.Node
     {
         #region Fields
 
+        private readonly ISequenceVGrainProviderFactory _sequenceVGrainProviderFactory;
         private readonly ISequenceDefinitionProvider _sequenceDefinitionManager;
         private readonly ISequenceExecutorThreadStageProvider _stageProvider;
         private readonly IDemocriteSerializer _democriteSerializer;
         private readonly IDiagnosticLogger _diagnosticLogger;
         private readonly IObjectConverter _objectConverter;
-        private readonly IVGrainProvider _vgrainProvider;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ITimeManager _timeManager;
 
@@ -61,22 +59,22 @@ namespace Democrite.Framework.Node
                                       ILoggerFactory loggerFactory,
                                       IDiagnosticLogger diagnosticLogger,
                                       ISequenceDefinitionProvider sequenceDefinitionManager,
-                                      IVGrainProvider vgrainProvider,
                                       [PersistentState("SequenceExecutor", DemocriteConstants.DefaultDemocriteStateConfigurationKey)] IPersistentState<SequenceExecutorStateSurrogate> sequenceExecutorState,
                                       ITimeManager timeManager,
                                       IObjectConverter objectConverter,
                                       IDemocriteSerializer democriteSerializer,
-                                      ISequenceExecutorThreadStageProvider stageProvider)
+                                      ISequenceExecutorThreadStageProvider stageProvider,
+                                      ISequenceVGrainProviderFactory sequenceVGrainProviderFactory)
             : base(logger, sequenceExecutorState)
         {
-            this._democriteSerializer = democriteSerializer;
-            this._loggerFactory = loggerFactory;
+            this._sequenceVGrainProviderFactory = sequenceVGrainProviderFactory;
             this._sequenceDefinitionManager = sequenceDefinitionManager;
+            this._democriteSerializer = democriteSerializer;
             this._diagnosticLogger = diagnosticLogger;
-            this._vgrainProvider = vgrainProvider;
+            this._objectConverter = objectConverter;
+            this._loggerFactory = loggerFactory;
             this._stageProvider = stageProvider;
             this._timeManager = timeManager;
-            this._objectConverter = objectConverter;
         }
 
         #endregion
@@ -136,8 +134,7 @@ namespace Democrite.Framework.Node
                 try
                 {
                     if (state.MainThread == null)
-                        state.Initialize(executionContext, sequenceDefintion, input);
-                    //state.Initialize(state.InstanceId, state.FlowUid, sequenceDefintion, input);
+                        state.Initialize(executionContext, sequenceDefintion, input, this._democriteSerializer);
 
                     Debug.Assert(state.MainThread != null);
 
@@ -148,41 +145,44 @@ namespace Democrite.Framework.Node
                                                                                               this._timeManager,
                                                                                               this._democriteSerializer);
 
-                    do
+                    using (var container = this._sequenceVGrainProviderFactory.GetProvider(state.Customization))
                     {
-                        Debug.Assert(state.MainThread != null, "MUST be setup by state.Initialize(input)");
-
-                        await (mainExecutionThread.GetThreadStageExecutionTasks(execLogger, this._vgrainProvider, this._diagnosticLogger) ?? Task.CompletedTask);
-
-                        // Push each time to allow recovery on crash and dashboard follow up
-                        await PushStateAsync(state, mainExecutionThread.ExecutionContext.CancellationToken);
-
-                        if (state.MainThread.JobDone)
+                        do
                         {
-                            if (state.MainThread.Exception != null)
-                                throw state.MainThread.Exception;
+                            Debug.Assert(state.MainThread != null, "MUST be setup by state.Initialize(input)");
 
-                            if (!string.IsNullOrEmpty(state.MainThread.ErrorMessage))
-                                throw new SequenceExecutionException(state.MainThread.ErrorMessage);
+                            await (mainExecutionThread.GetThreadStageExecutionTasksAsync(execLogger, container.Content, this._diagnosticLogger) ?? Task.CompletedTask);
 
-                            var output = state.MainThread.Output;
-                            if (typeof(TOutput) != NoneType.Trait)
+                            // Push each time to allow recovery on crash and dashboard follow up
+                            await PushStateAsync(state, mainExecutionThread.ExecutionContext.CancellationToken);
+
+                            if (state.MainThread.JobDone)
                             {
-                                if (output is TOutput castOutput)
-                                    return castOutput;
+                                if (state.MainThread.Exception != null)
+                                    throw state.MainThread.Exception;
 
-                                execLogger.OptiLog(LogLevel.Error,
-                                                   "Invalid output [Expected: {expectedType}] != [Get {getType}] : Details {details}",
-                                                    typeof(TOutput),
-                                                    output?.GetType(),
-                                                    output);
+                                if (!string.IsNullOrEmpty(state.MainThread.ErrorMessage))
+                                    throw new SequenceExecutionException(state.MainThread.ErrorMessage);
 
-                                return defaultResult;
+                                var output = state.MainThread.Output;
+                                if (typeof(TOutput) != NoneType.Trait)
+                                {
+                                    if (output is TOutput castOutput)
+                                        return castOutput;
+
+                                    execLogger.OptiLog(LogLevel.Error,
+                                                       "Invalid output [Expected: {expectedType}] != [Get {getType}] : Details {details}",
+                                                        typeof(TOutput),
+                                                        output?.GetType(),
+                                                        output);
+
+                                    return defaultResult;
+                                }
+
+                                break;
                             }
-
-                            break;
-                        }
-                    } while (sequencesDone == false);
+                        } while (sequencesDone == false);
+                    }
                 }
                 catch (Exception ex)
                 {

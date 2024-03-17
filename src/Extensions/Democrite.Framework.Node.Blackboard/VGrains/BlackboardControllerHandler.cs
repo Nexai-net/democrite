@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Blackboard.VGrains
 {
+    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
     using Elvex.Toolbox.Disposables;
@@ -37,7 +38,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         public BlackboardControllerHandler(Guid boardId,
                                            Type controllerType,
-                                           IGrainFactory grainFactory,
+                                           IGrainOrleanFactory grainFactory,
                                            ControllerBaseOptions? option,
                                            BlackboardTemplateDefinition blackboardTemplate)
         {

@@ -74,8 +74,8 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
                                                               connectionString,
                                                               option,
                                                               nameof(Democrite),
-                                                              ConfigurationNodeSectionNames.NodeDemocriteSystemMemory,
-                                                              ConfigurationNodeSectionNames.NodeDemocriteSystemMemoryConnectionString);
+                                                              ConfigurationNodeSectionNames.NodeDemocriteMemory,
+                                                              ConfigurationNodeSectionNames.NodeDemocriteMemoryConnectionString);
         }
 
         #endregion

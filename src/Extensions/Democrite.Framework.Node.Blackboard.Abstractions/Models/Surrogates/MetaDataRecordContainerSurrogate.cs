@@ -29,7 +29,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
             return new MetaDataRecordContainer(surrogate.LogicalType,
                                                surrogate.Uid,
                                                surrogate.DisplayName,
-                                               surrogate.ContainsType is null ? null : ConcretBaseTypeConverter.Default.ConvertFromSurrogate(surrogate.ContainsType!),
+                                               surrogate.ContainsType is null ? null : ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate.ContainsType!),
                                                surrogate.Status,
                                                surrogate.UTCCreationTime,
                                                surrogate.CreatorIdentity,
@@ -42,7 +42,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
         {
             return new MetaDataRecordContainerSurrogate()
             {
-                ContainsType = value.ContainsType is null ? null : ConcretBaseTypeConverter.Default.ConvertToSurrogate(value.ContainsType),
+                ContainsType = value.ContainsType is null ? null : ConcretBaseTypeConverter.ConvertToSurrogate(value.ContainsType),
                 Status = value.Status,
                 DisplayName = value.DisplayName,
                 LogicalType = value.LogicalType,

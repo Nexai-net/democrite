@@ -8,33 +8,39 @@ namespace Democrite.Framework.Core.Abstractions.Enums
     /// System storage type
     /// </summary>
     [Flags]
-    public enum StorageTypeEnum
+    public enum StorageTypeEnum : ushort
     {
         None = 0,
 
         /// <summary>
         /// Define a storage used when no specific if definied
         /// </summary>
-        Default = 1,
+        Default = 0x0001,
 
         /// <summary>
         /// Define a storage used by democrite system vgrain.
         /// </summary>
-        Democrite = 2,
+        Democrite = 0x0002,
 
         /// <summary>
         /// Define a storage used to store reminder information.
         /// </summary>
-        Reminders = 4,
+        Reminders = 0x0004,
 
         /// <summary>
         /// Define a storage used to store reminder information.
         /// </summary>
-        Repositories = 8,
+        Repositories = 0x0008,
+
+        /// <summary>
+        /// Define a storage used to store democrite high system information.
+        /// </summary>
+        DemocriteAdmin = 0x8000,
 
         All = StorageTypeEnum.Democrite | 
               StorageTypeEnum.Reminders | 
               StorageTypeEnum.Default |
-              StorageTypeEnum.Repositories
+              StorageTypeEnum.Repositories | 
+              StorageTypeEnum.DemocriteAdmin
     }
 }

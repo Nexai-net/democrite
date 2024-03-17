@@ -6,15 +6,12 @@ namespace Democrite.Framework.Node.Cron
 {
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Triggers;
+    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Triggers;
 
     using Microsoft.Extensions.Logging;
 
-    using Orleans;
-    using Orleans.Concurrency;
     using Orleans.Runtime;
-
-    using System.Threading.Tasks;
 
     /// <summary>
     /// Virtual Grain Service instanciate and launch on all silo start used to start <see cref="ICronTriggerHandlerVGrain"/> by cron setups
@@ -30,7 +27,7 @@ namespace Democrite.Framework.Node.Cron
         public CronVGrainService(GrainId id,
                                  Silo silo,
                                  ILoggerFactory loggerFactory,
-                                 IGrainFactory grainFactory,
+                                 IGrainOrleanFactory grainFactory,
                                  ITriggerDefinitionProvider triggerDefinitionProvider) 
             : base(id, silo, loggerFactory, grainFactory, triggerDefinitionProvider, TriggerTypeEnum.Cron)
         {

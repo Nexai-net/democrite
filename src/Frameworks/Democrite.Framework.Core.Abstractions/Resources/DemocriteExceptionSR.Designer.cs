@@ -106,6 +106,15 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Conflict between multiple definitions type &apos;{0}&apos;, Source &apos;{1}&apos;, Conflict &apos;{2}&apos;.
+        /// </summary>
+        internal static string ConflictDefinitionException {
+            get {
+                return ResourceManager.GetString("ConflictDefinitionException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; definition with id &apos;{1}&apos; fail due to : {2}.
         /// </summary>
         internal static string DefinitionExceptionMessage {

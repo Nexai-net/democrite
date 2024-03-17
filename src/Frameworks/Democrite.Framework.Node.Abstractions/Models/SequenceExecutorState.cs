@@ -5,15 +5,19 @@
 namespace Democrite.Framework.Node.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Customizations;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Elvex.Toolbox.Abstractions.Supports;
 
     using System;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// State used by <see cref="SequenceExecutorVGrain"/> to execute the sequence
     /// </summary>
     [Serializable]
+    [DataContract]
     internal sealed class SequenceExecutorState : ISupportDebugDisplayName, IEquatable<SequenceExecutorState>
     {
         #region Ctor
@@ -29,7 +33,8 @@ namespace Democrite.Framework.Node.Abstractions.Models
                    flowUid,
                    instanceId ?? Guid.NewGuid(),
                    null,
-                   startAt)
+                   startAt,
+                   null)
         {
 
         }
@@ -43,13 +48,15 @@ namespace Democrite.Framework.Node.Abstractions.Models
                                        Guid flowUid,
                                        Guid instanceId,
                                        SequenceExecutorExecThreadState? mainThread,
-                                       DateTime startAt)
+                                       DateTime startAt,
+                                       ExecutionCustomizationDescriptions? customization)
         {
             this.SequenceDefinitionId = sequenceDefinitionId;
             this.InstanceId = instanceId;
             this.MainThread = mainThread;
             this.FlowUid = flowUid;
             this.StartAt = startAt;
+            this.Customization = customization;
         }
 
         #endregion
@@ -59,6 +66,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// <summary>
         /// Gets the sequence definition identifier.
         /// </summary>
+        [DataMember]
         public Guid SequenceDefinitionId { get; }
 
         /// <summary>
@@ -67,22 +75,32 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// <remarks>
         ///     Unique id shared throught all the vgrain to identify the process work
         /// </remarks>
+        [DataMember]
         public Guid FlowUid { get; }
 
         /// <summary>
         /// Gets the UTC date/time the sequence startAt.
         /// </summary>
+        [DataMember]
         public DateTime StartAt { get; }
 
         /// <summary>
         /// Gets the current instance identifier.
         /// </summary>
+        [DataMember]
         public Guid InstanceId { get; }
 
         /// <summary>
         /// Gets the main execution threads.
         /// </summary>
+        [DataMember]
         public SequenceExecutorExecThreadState? MainThread { get; private set; }
+
+        /// <summary>
+        /// Gets the execution customization.
+        /// </summary>
+        [DataMember]
+        public ExecutionCustomizationDescriptions? Customization { get; private set; }
 
         #endregion
 
@@ -91,8 +109,16 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// <summary>
         /// Initializes state with input
         /// </summary>
-        internal void Initialize<TInput>(IExecutionContext executionContext, SequenceDefinition sequenceDefinition, TInput? input)
+        internal void Initialize<TInput>(IExecutionContext executionContext,
+                                         SequenceDefinition sequenceDefinition,
+                                         TInput? input,
+                                         IDemocriteSerializer democriteSerializer)
         {
+            var customization = executionContext.TryGetContextData<ExecutionCustomizationDescriptions>(democriteSerializer);
+
+            if (this.Customization is null)
+                this.Customization = customization;
+
             this.MainThread = new SequenceExecutorExecThreadState(executionContext.FlowUID,
                                                                   this.SequenceDefinitionId,
                                                                   executionContext.CurrentExecutionId,

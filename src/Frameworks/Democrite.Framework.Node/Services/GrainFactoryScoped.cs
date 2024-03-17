@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Services
 {
     using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Node.Abstractions.Services;
+
     using Elvex.Toolbox.Disposables;
     using Elvex.Toolbox.Models;
 
@@ -22,12 +23,10 @@ namespace Democrite.Framework.Node.Services
         #region Fields
 
         private static readonly Type[] s_solverSignatureParameters;
-        private static readonly IReadOnlyDictionary<Type, Func<VGrainRedirectionDefinition, Type, Type?>> s_redirectionSolver;
-
-        private readonly IReadOnlyDictionary<AbstractType, IReadOnlyCollection<Tuple<VGrainRedirectionDefinition, Type, Func<IdSpan, string?, bool>?>>>? _redirectionDefinitionsIndexed;
 
         private readonly Func<Type, IdSpan, string?, IAddressable?> _finalSolver;
-        private readonly IGrainFactory _grainFactory;
+        private readonly IVGrainRouteService _grainRouteService;
+        private readonly IGrainFactory _parentGrainFactory;
 
         #endregion
 
@@ -44,45 +43,43 @@ namespace Democrite.Framework.Node.Services
                 typeof(IdSpan),
                 typeof(string),
             };
-
-            s_redirectionSolver = new Dictionary<Type, Func<VGrainRedirectionDefinition, Type, Type?>>()
-            {
-                { typeof(VGrainInterfaceRedirectionDefinition), (redirection, sourceType) => ((VGrainInterfaceRedirectionDefinition)redirection).Redirect.ToType() }
-            };
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GrainFactoryScoped"/> class.
         /// </summary>
-        public GrainFactoryScoped(IGrainFactory grainFactory, IEnumerable<VGrainRedirectionDefinition>? redirectionDefinitions = null)
+        public GrainFactoryScoped(IGrainFactory parentGrainFactory, IVGrainRouteService grainRouteService)
         {
-            this._grainFactory = grainFactory;
+            this._grainRouteService = grainRouteService;
+            this._parentGrainFactory = parentGrainFactory;
 
-            if (grainFactory is GrainFactoryScoped)
+            if (parentGrainFactory is GrainFactoryScoped)
             {
-                this._finalSolver = (type, id, grainClassNamePrefix) => ((GrainFactoryScoped)this._grainFactory).GetGrainImpl(type, id, grainClassNamePrefix);
+                this._finalSolver = (type, id, grainClassNamePrefix) => ((GrainFactoryScoped)this._parentGrainFactory).GetGrainImpl(type, id, grainClassNamePrefix);
             }
             else
             {
-                var grainImplMth = grainFactory.GetType()
-                                               .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                                               .FirstOrDefault(mth => mth.ReturnType == typeof(IAddressable) &&
-                                                                      mth.GetParameters().Length == 3 &&
-                                                                      mth.GetParameters().Select(p => p.ParameterType).SequenceEqual(s_solverSignatureParameters));
+                var grainImplMth = parentGrainFactory.GetType()
+                                                     .GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                                                     .FirstOrDefault(mth => mth.ReturnType == typeof(IAddressable) &&
+                                                                            mth.GetParameters().Length == 3 &&
+                                                                            mth.GetParameters().Select(p => p.ParameterType).SequenceEqual(s_solverSignatureParameters));
 
 #pragma warning disable IDE0270 // Use coalesce expression
                 if (grainImplMth is null)
                     throw new InvalidOperationException("Root grain factory must have a method able to solve IAddressable element from Type, IdSpan and string");
 #pragma warning restore IDE0270 // Use coalesce expression
 
-                this._finalSolver = (type, id, grainClassNamePrefix) => (IAddressable?)grainImplMth!.Invoke(this._grainFactory, new object?[] { type, id, grainClassNamePrefix });
+                this._finalSolver = (type, id, grainClassNamePrefix) => (IAddressable?)grainImplMth!.Invoke(this._parentGrainFactory, new object?[] { type, id, grainClassNamePrefix });
             }
+        }
 
-            this._redirectionDefinitionsIndexed = redirectionDefinitions?.GroupBy(k => k.Source)
-                                                                         .ToDictionary(k => k.Key, 
-                                                                                       kv => kv.Select(k => Tuple.Create(k,
-                                                                                                                         k.GetType(), // Save redirection type
-                                                                                                                         k.RedirectionCondition?.ToExpression<IdSpan, string?, bool>()?.Compile())).ToReadOnly());
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GrainFactoryScoped"/> class.
+        /// </summary>
+        public GrainFactoryScoped(IGrainFactory parentGrainFactory, IEnumerable<VGrainRedirectionDefinition>? redirectionDefinitions)
+            : this(parentGrainFactory, new GrainRouteFixedService(redirectionDefinitions))
+        {
         }
 
         #endregion
@@ -99,14 +96,14 @@ namespace Democrite.Framework.Node.Services
         public TGrainObserverInterface CreateObjectReference<TGrainObserverInterface>(IGrainObserver obj)
             where TGrainObserverInterface : IGrainObserver
         {
-            return this._grainFactory.CreateObjectReference<TGrainObserverInterface>(obj);
+            return this._parentGrainFactory.CreateObjectReference<TGrainObserverInterface>(obj);
         }
 
         /// <inheritdoc />
         public void DeleteObjectReference<TGrainObserverInterface>(IGrainObserver obj)
             where TGrainObserverInterface : IGrainObserver
         {
-            this._grainFactory.DeleteObjectReference<TGrainObserverInterface>(obj);
+            this._parentGrainFactory.DeleteObjectReference<TGrainObserverInterface>(obj);
         }
 
         /// <inheritdoc />
@@ -191,7 +188,7 @@ namespace Democrite.Framework.Node.Services
         public TGrainInterface GetGrain<TGrainInterface>(GrainId grainId)
             where TGrainInterface : IAddressable
         {
-            return (TGrainInterface)this._grainFactory.GetGrain<TGrainInterface>(grainId);
+            return (TGrainInterface)this._parentGrainFactory.GetGrain<TGrainInterface>(grainId);
         }
 
         /// <inheritdoc />
@@ -200,7 +197,7 @@ namespace Democrite.Framework.Node.Services
         /// </remarks>
         public IAddressable GetGrain(GrainId grainId)
         {
-            return this._grainFactory.GetGrain(grainId);
+            return this._parentGrainFactory.GetGrain(grainId);
         }
 
         /// <inheritdoc />
@@ -209,7 +206,7 @@ namespace Democrite.Framework.Node.Services
         /// </remarks>
         public IAddressable GetGrain(GrainId grainId, GrainInterfaceType interfaceType)
         {
-            return this._grainFactory.GetGrain(grainId, interfaceType);
+            return this._parentGrainFactory.GetGrain(grainId, interfaceType);
         }
 
         #region Tools
@@ -221,34 +218,9 @@ namespace Democrite.Framework.Node.Services
         {
             ArgumentNullException.ThrowIfNull(interfaceType);
 
-            var finalInterfaceType = interfaceType;
+            var route = this._grainRouteService.GetRoute(interfaceType, null, null, grainClassNamePrefix);
 
-            // Apply redirection comparaison
-            if (this._redirectionDefinitionsIndexed != null && this._redirectionDefinitionsIndexed.TryGetValue(interfaceType.GetAbstractType(), out var redirections))
-            {
-                foreach (var redirection in redirections)
-                {
-                    if (redirection.Item3 != null && redirection.Item3(grainKey, grainClassNamePrefix) == false)
-                        continue;
-
-                    if (s_redirectionSolver.TryGetValue(redirection.Item2, out var resolver))
-                    {
-                        var newInterFaceType = resolver(redirection.Item1, interfaceType);
-
-                        if (newInterFaceType is not null)
-                        {
-                            finalInterfaceType = newInterFaceType;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Redirection type is not managed " + redirection.Item1);
-                    }
-                }
-            }
-
-            return this._finalSolver(finalInterfaceType, grainKey, grainClassNamePrefix) ?? throw new InvalidOperationException("Could not solve a grain associate to contract " + finalInterfaceType);
+            return this._finalSolver(route.TargetGrain, grainKey, route.GrainPrefixExtension) ?? throw new InvalidOperationException("Could not solve a grain associate to contract " + route.TargetGrain + " ext('" + route.GrainPrefixExtension);
         }
 
         #endregion

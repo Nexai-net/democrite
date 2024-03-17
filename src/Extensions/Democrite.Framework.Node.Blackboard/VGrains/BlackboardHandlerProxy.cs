@@ -4,9 +4,11 @@
 
 namespace Democrite.Framework.Node.Blackboard.VGrains
 {
+    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Targets;
+
     using Elvex.Toolbox.Abstractions.Services;
 
     using Microsoft.Extensions.Logging;
@@ -16,7 +18,6 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Security.Cryptography;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -43,7 +44,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <summary>
         /// Initializes a new instance of the <see cref="BlackboardHandlerProxy"/> class.
         /// </summary>
-        public BlackboardHandlerProxy(IGrainFactory grainFactory,
+        public BlackboardHandlerProxy(IGrainOrleanFactory grainFactory,
                                       ILogger<BlackboardHandlerProxy> logger,
                                       GrainId blackboardGrainId,
                                       ITimeManager timeManager)

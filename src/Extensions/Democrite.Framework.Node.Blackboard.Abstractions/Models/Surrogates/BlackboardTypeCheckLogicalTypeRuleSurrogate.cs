@@ -19,7 +19,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
         public BlackboardTypeCheckLogicalTypeRule ConvertFromSurrogate(in BlackboardTypeCheckLogicalTypeRuleSurrogate surrogate)
         {
             return new BlackboardTypeCheckLogicalTypeRule(surrogate.LogicalTypePattern,
-                                                          ConcretBaseTypeConverter.Default.ConvertFromSurrogate(surrogate.FilterType),
+                                                          ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate.FilterType),
                                                           BlackboardLogicalTypeBaseRuleSurrogateConverter.ConvertFromSurrogate(surrogate.Children));
         }
 
@@ -29,7 +29,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
             return new BlackboardTypeCheckLogicalTypeRuleSurrogate()
             {
                 LogicalTypePattern = value.LogicalTypePattern,
-                FilterType = ConcretBaseTypeConverter.Default.ConvertToSurrogate(value.FilterType),
+                FilterType = ConcretBaseTypeConverter.ConvertToSurrogate(value.FilterType),
                 Children = BlackboardLogicalTypeBaseRuleSurrogateConverter.ConvertToSurrogate(value.Children).ToReadOnly()
             };
         }

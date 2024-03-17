@@ -63,17 +63,32 @@ namespace Democrite.Framework.Configurations
         /// <summary>
         /// The section configuring the vgrain state memory
         /// </summary>
-        public const string NodeDemocriteSystemMemory = NodeStorages + ConfigurationSectionNames.SectionSeparator + "System";
+        public const string NodeDemocriteAdminMemory = NodeStorages + ConfigurationSectionNames.SectionSeparator + "Admin";
 
         /// <summary>
         /// The section configuring the vgrain state memory
         /// </summary>
-        public const string NodeDemocriteSystemMemoryAutoConfigKey = NodeDemocriteSystemMemory + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.AutoConfigKey;
+        public const string NodeDemocriteAdminMemoryAutoConfigKey = NodeDemocriteAdminMemory + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.AutoConfigKey;
 
         /// <summary>
         /// The node democrite system memory connection string
         /// </summary>
-        public const string NodeDemocriteSystemMemoryConnectionString = NodeDemocriteSystemMemory + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.ConnectionString;
+        public const string NodeDemocriteAdminMemoryConnectionString = NodeDemocriteAdminMemory + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.ConnectionString;
+
+        /// <summary>
+        /// The section configuring the vgrain state memory
+        /// </summary>
+        public const string NodeDemocriteMemory = NodeStorages + ConfigurationSectionNames.SectionSeparator + "Democrite";
+
+        /// <summary>
+        /// The section configuring the vgrain state memory
+        /// </summary>
+        public const string NodeDemocriteMemoryAutoConfigKey = NodeDemocriteMemory + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.AutoConfigKey;
+
+        /// <summary>
+        /// The node democrite system memory connection string
+        /// </summary>
+        public const string NodeDemocriteMemoryConnectionString = NodeDemocriteMemory + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.ConnectionString;
 
         /// <summary>
         /// The section configuring the vgrain state memory

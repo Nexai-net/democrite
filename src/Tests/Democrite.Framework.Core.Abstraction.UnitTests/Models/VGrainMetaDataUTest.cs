@@ -5,7 +5,8 @@
 namespace Democrite.Framework.Core.Abstraction.UnitTests.Models
 {
     using Democrite.Framework.Core.Abstractions.Models;
-    using Democrite.UnitTests.ToolKit.Helpers;
+
+    using Elvex.Toolbox.UnitTests.ToolKit.Helpers;
 
     /// <summary>
     /// Test for <see cref="VGrainMetaData"/>

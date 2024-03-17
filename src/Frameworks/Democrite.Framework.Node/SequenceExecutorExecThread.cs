@@ -15,6 +15,7 @@ namespace Democrite.Framework.Node.Models
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions.Models;
+    using Democrite.Framework.Node.Services;
     using Democrite.Framework.Node.ThreadExecutors;
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Disposables;
@@ -378,16 +379,16 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Gets the current execution thread tasks
         /// </summary>
-        internal Task? GetThreadStageExecutionTasks(ILogger logger,
-                                                    IVGrainProvider vgrainProvider,
-                                                    IDiagnosticLogger diagnosticLogger)
+        internal Task? GetThreadStageExecutionTasksAsync(ILogger logger,
+                                                         ISequenceVGrainProvider sequenceVGrainProvider,
+                                                         IDiagnosticLogger diagnosticLogger)
         {
             this._locker.Wait();
             try
             {
                 // If inner then exec them
                 var innerTasks = this._innerThreads.Where(a => !a.State.JobDone)
-                                                   .Select(inner => inner.GetThreadStageExecutionTasks(logger, vgrainProvider, diagnosticLogger))
+                                                   .Select(inner => inner.GetThreadStageExecutionTasksAsync(logger, sequenceVGrainProvider, diagnosticLogger))
                                                    .Where(t => t != null)
                                                    .OfType<Task>()
                                                    .ToArray();
@@ -476,7 +477,7 @@ namespace Democrite.Framework.Node.Models
                                                                                                        this._executionContext,
                                                                                                        logger,
                                                                                                        diagnosticLogger,
-                                                                                                       vgrainProvider)).Unwrap();
+                                                                                                       sequenceVGrainProvider)).Unwrap();
 
                 return this._currentTaskExecution;
             }
@@ -523,7 +524,7 @@ namespace Democrite.Framework.Node.Models
                                              IExecutionContext sequenceContext,
                                              ILogger logger,
                                              IDiagnosticLogger diagnosticLogger,
-                                             IVGrainProvider vgrainProvider)
+                                             ISequenceVGrainProvider sequenceVGrainProvider)
         {
             // Exec all steps
             logger.OptiLog(LogLevel.Trace, "-- Start step : '{stage}' for input '{input}'", stage, input);
@@ -533,7 +534,7 @@ namespace Democrite.Framework.Node.Models
                                                   sequenceContext,
                                                   logger,
                                                   diagnosticLogger,
-                                                  vgrainProvider);
+                                                  sequenceVGrainProvider);
 
             if (execTask.result != null)
                 await execTask.result;
@@ -562,7 +563,7 @@ namespace Democrite.Framework.Node.Models
                                                             IExecutionContext sequenceContext,
                                                             ILogger logger,
                                                             IDiagnosticLogger diagnosticLogger,
-                                                            IVGrainProvider vgrainProvider)
+                                                            ISequenceVGrainProvider sequenceVGrainProvider)
         {
             ArgumentNullException.ThrowIfNull(step);
 
@@ -588,7 +589,7 @@ namespace Democrite.Framework.Node.Models
                                           sequenceContext,
                                           logger,
                                           diagnosticLogger,
-                                          vgrainProvider,
+                                          sequenceVGrainProvider.GetGrainProvider(ref step),
                                           GetSecurityThreadHandler);
             }
             catch (Exception ex)

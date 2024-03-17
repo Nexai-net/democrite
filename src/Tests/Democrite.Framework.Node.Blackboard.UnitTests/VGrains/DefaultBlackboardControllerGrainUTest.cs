@@ -12,7 +12,8 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues;
     using Democrite.Framework.Node.Blackboard.VGrains;
     using Democrite.UnitTests.ToolKit.Extensions;
-    using Democrite.UnitTests.ToolKit.Helpers;
+
+    using Elvex.Toolbox.UnitTests.ToolKit.Helpers;
 
     using NFluent;
 

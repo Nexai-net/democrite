@@ -156,7 +156,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues
         /// </summary>
         public static DataTypeBlackboardProcessingRuleIssue Create(Type type, DataRecordContainer data)
         {
-            return new DataTypeBlackboardProcessingRuleIssue(ConcretBaseTypeConverter.Default.ConvertToSurrogate((ConcretType)type.GetAbstractType()),
+            return new DataTypeBlackboardProcessingRuleIssue(ConcretBaseTypeConverter.ConvertToSurrogate((ConcretType)type.GetAbstractType()),
                                                              data);
         }
 

@@ -11,7 +11,9 @@ namespace Democrite.UnitTests.ToolKit
     using Democrite.Framework.Core.Extensions;
     using Democrite.Framework.Core.Repositories;
     using Democrite.Framework.Node.Configurations;
+    using Democrite.Framework.Node.Extensions;
     using Democrite.Framework.Node.Services;
+
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Models;
@@ -65,6 +67,8 @@ namespace Democrite.UnitTests.ToolKit
                     .AddSingleton<ITimeManager, TimeManager>()
                     .AddSingleton<IDemocriteSerializer, DemocriteSerializer>()
                     .AddSingleton<IObjectConverter, ObjectConverter>();
+
+            services.SetupGrainRoutingServices();
 
             // Call
             services.SetupSequenceExecutorThreadStageProvider();

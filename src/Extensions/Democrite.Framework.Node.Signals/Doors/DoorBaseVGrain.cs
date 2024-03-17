@@ -10,6 +10,8 @@ namespace Democrite.Framework.Node.Signals.Doors
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Signals;
+    using Democrite.Framework.Node.Abstractions.Services;
+
     using Elvex.Toolbox.Abstractions.Attributes;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Extensions;
@@ -68,7 +70,7 @@ namespace Democrite.Framework.Node.Signals.Doors
                                  ISignalService signalService,
                                  IDoorDefinitionProvider doorDefinitionProvider,
                                  ITimeManager timeHandler,
-                                 IGrainFactory grainFactory,
+                                 IGrainOrleanFactory grainFactory,
                                  TimeSpan? stimulationTimeout = null)
             : base(logger, persistentState)
         {

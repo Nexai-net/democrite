@@ -9,19 +9,17 @@ namespace Democrite.Framework.Core.Repositories
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
 
+    using Newtonsoft.Json;
+
     using Orleans.Serialization;
-    using Orleans.Serialization.Codecs;
     using Orleans.Serialization.Configuration;
-    using Orleans.Serialization.Serializers;
-    using Orleans.Serialization.Session;
-    using Orleans.Storage;
 
     using System;
+    using System.Buffers;
+    using System.Collections.Frozen;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Reflection;
     using System.Text;
-    using System.Threading.Tasks;
 
     public sealed class DemocriteSerializer : IDemocriteSerializer
     {
@@ -30,9 +28,8 @@ namespace Democrite.Framework.Core.Repositories
         private static readonly Type s_genericConverterGenTraits;
 
         private readonly IReadOnlyDictionary<Type, GenericConverter> _converterLinks;
-        private readonly IGrainStorageSerializer _grainStorageSerializer;
         private readonly IServiceProvider _serviceProvider;
-
+        private readonly JsonSerializerSettings _jsonSettings;
         private readonly Dictionary<Type, IGenericConverter?> _converterCached;
         private readonly ReaderWriterLockSlim _converterCacheLocker;
 
@@ -48,12 +45,31 @@ namespace Democrite.Framework.Core.Repositories
         /// <summary>
         /// Initializes a new instance of the <see cref="DemocriteSerializer"/> class.
         /// </summary>
-        public DemocriteSerializer(IGrainStorageSerializer grainStorageSerializer,
+        public DemocriteSerializer(IOptions<OrleansJsonSerializerOptions> serializationOptions,
                                    IOptions<TypeManifestOptions> manifests,
                                    IServiceProvider serviceProvider)
         {
-            this._grainStorageSerializer = grainStorageSerializer;
             this._serviceProvider = serviceProvider;
+
+            var options = serializationOptions.Value.JsonSerializerSettings;
+
+            this._jsonSettings = new JsonSerializerSettings()
+            {
+                Converters = options.Converters,
+                ContractResolver = options.ContractResolver,
+                Formatting = Formatting.None,
+
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                SerializationBinder = options.SerializationBinder,
+                Error = options.Error,
+                NullValueHandling = options.NullValueHandling,
+                TraceWriter = options.TraceWriter,
+                TypeNameHandling = TypeNameHandling.All,
+                TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
+                ReferenceResolverProvider = options.ReferenceResolverProvider,
+                ReferenceLoopHandling = options.ReferenceLoopHandling,
+                ObjectCreationHandling = options.ObjectCreationHandling
+            };
 
             this._converterCacheLocker = new ReaderWriterLockSlim();
 
@@ -89,8 +105,8 @@ namespace Democrite.Framework.Core.Repositories
                                                         ToSurrogate: kv.ToSurrogate);
                                             })
 
-                                            .ToDictionary(lnk => lnk.Type,
-                                                          lnk => new GenericConverter(lnk.Source, lnk.Cnv, lnk.Surrogate, lnk.ToSurrogate));
+                                            .ToFrozenDictionary(lnk => lnk.Type,
+                                                                lnk => new GenericConverter(lnk.Source, lnk.Cnv, lnk.Surrogate, lnk.ToSurrogate));
         }
 
         #endregion
@@ -176,8 +192,9 @@ namespace Democrite.Framework.Core.Repositories
             if (serializable is null)
                 return default;
 
-            var data = this._grainStorageSerializer.Serialize(serializable);
-            return data;
+            //var data = this._orleansJsonSerializer.Serialize(serializable, serializable?.GetType() ?? typeof(TObj));
+            var data = JsonConvert.SerializeObject(serializable, this._jsonSettings);
+            return new BinaryData(data);
         }
 
         /// <inheritdoc />
@@ -195,9 +212,10 @@ namespace Democrite.Framework.Core.Repositories
         }
 
         /// <inheritdoc />
-        public TObj Deserialize<TObj>(in ReadOnlyMemory<byte> serializeIbj)
+        public TObj Deserialize<TObj>(in ReadOnlyMemory<byte> serializeobj)
         {
-            var obj = this._grainStorageSerializer.Deserialize<object>(serializeIbj);
+            //var obj = this._orleansJsonSerializer.Deserialize(typeof(TObj), Encoding.UTF8.GetString(new ReadOnlySequence<byte>(serializeobj)));
+            var obj = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(new ReadOnlySequence<byte>(serializeobj)), this._jsonSettings)!;
 
             if (obj is TObj correctCastObj)
                 return correctCastObj;
@@ -234,7 +252,7 @@ namespace Democrite.Framework.Core.Repositories
 
                 GenericConverter? cnv = null;
                 IGenericConverter? cnvResult = null;
-                
+
                 if (this._converterLinks.TryGetValue(trait, out cnv) || (trait.IsGenericType && this._converterLinks.TryGetValue(trait.GetGenericTypeDefinition(), out cnv)))
                 {
                     var converterType = cnv.Converter;

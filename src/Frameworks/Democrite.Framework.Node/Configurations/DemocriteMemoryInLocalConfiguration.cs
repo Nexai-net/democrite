@@ -40,6 +40,14 @@ namespace Democrite.Framework.Node.Configurations
                                                                              wizard.Logger);
             }
 
+            if ((storageType & StorageTypeEnum.DemocriteAdmin) == StorageTypeEnum.DemocriteAdmin)
+            {
+                AutoDefaultDemocriteAdminMemoryConfigurator.Default.AutoConfigure(wizard,
+                                                                                   wizard.GetConfiguration(),
+                                                                                   wizard.GetServiceCollection(),
+                                                                                   wizard.Logger);
+            }
+
             if ((storageType & StorageTypeEnum.Repositories) == StorageTypeEnum.Repositories)
             {
                 AutoDefaultCustomRepositoryMemoryConfigurator.Default.AutoConfigure(wizard,

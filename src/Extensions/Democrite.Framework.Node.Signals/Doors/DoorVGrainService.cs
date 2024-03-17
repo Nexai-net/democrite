@@ -5,6 +5,8 @@
 namespace Democrite.Framework.Node.Signals.Doors
 {
     using Democrite.Framework.Core.Abstractions.Doors;
+    using Democrite.Framework.Node.Abstractions.Services;
+
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Helpers;
 
@@ -41,7 +43,7 @@ namespace Democrite.Framework.Node.Signals.Doors
         public DoorVGrainService(GrainId grainId,
                                    Silo silo,
                                    ILoggerFactory loggerFactory,
-                                   IGrainFactory grainFactory,
+                                   IGrainOrleanFactory grainFactory,
                                    IDoorDefinitionProvider doorDefinitionProvider)
             : base(grainId, silo, loggerFactory)
         {

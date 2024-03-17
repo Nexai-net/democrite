@@ -8,6 +8,8 @@ namespace Democrite.Framework.Node.Signals
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Node.Abstractions.Services;
+
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Extensions;
 
@@ -45,7 +47,7 @@ namespace Democrite.Framework.Node.Signals
         public SignalHandlerVGrain(ILogger<SignalHandlerVGrain> logger,
                                    [PersistentState("Signals", nameof(Democrite))] IPersistentState<SignalHandlerStateSurrogate> persistentState,
                                    ISignalDefinitionProvider signalDefinitionProvider,
-                                   IGrainFactory grainFactory,
+                                   IGrainOrleanFactory grainFactory,
                                    ITimeManager timeManager)
             : base(logger, persistentState, grainFactory)
         {

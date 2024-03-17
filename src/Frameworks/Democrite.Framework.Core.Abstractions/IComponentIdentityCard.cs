@@ -9,7 +9,7 @@ namespace Democrite.Framework.Core.Abstractions
     /// <summary>
     /// Identity and permission of a component
     /// </summary>
-    public interface IComponentIdentityCard
+    public interface IComponentIdentityCard : IIdentityCard
     {
         /// <summary>
         /// Determines whether this component is enable.

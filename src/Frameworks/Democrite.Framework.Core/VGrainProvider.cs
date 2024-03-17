@@ -17,7 +17,7 @@ namespace Democrite.Framework.Core
     /// VGrain provider
     /// </summary>
     /// <seealso cref="ISequenceVGrainProvider" />
-    internal sealed class VGrainProvider : IVGrainProvider
+    internal class VGrainProvider : IVGrainProvider
     {
         #region Fields
 
@@ -42,14 +42,14 @@ namespace Democrite.Framework.Core
         #region Methods
 
         /// <inheritdoc />
-        public ValueTask<TVGrainType> GetVGrainAsync<TVGrainType>(IExecutionContext executionContext, ILogger? logger = null)
+        public ValueTask<TVGrainType> GetVGrainAsync<TVGrainType>(IExecutionContext? executionContext, ILogger? logger = null)
             where TVGrainType : IVGrain
         {
             return GetVGrainAsync<TVGrainType>(null, executionContext, logger);
         }
 
         /// <inheritdoc />
-        public ValueTask<TVGrainType> GetVGrainAsync<TVGrainType>(object? input, IExecutionContext executionContext, ILogger? logger = null)
+        public ValueTask<TVGrainType> GetVGrainAsync<TVGrainType>(object? input, IExecutionContext? executionContext, ILogger? logger = null)
             where TVGrainType : IVGrain
         {
             var vgrain = GetVGrainImpl(typeof(TVGrainType), input, executionContext, logger);
@@ -57,13 +57,13 @@ namespace Democrite.Framework.Core
         }
 
         /// <inheritdoc />
-        public ValueTask<IVGrain> GetVGrainAsync(Type vgrainInterfaceType, IExecutionContext executionContext, ILogger? logger = null)
+        public ValueTask<IVGrain> GetVGrainAsync(Type vgrainInterfaceType, IExecutionContext? executionContext, ILogger? logger = null)
         {
             return GetVGrainAsync(vgrainInterfaceType, null, executionContext, logger);
         }
 
         /// <inheritdoc />
-        public ValueTask<IVGrain> GetVGrainAsync(Type vgrainInterfaceType, object? input, IExecutionContext executionContext, ILogger? logger = null)
+        public ValueTask<IVGrain> GetVGrainAsync(Type vgrainInterfaceType, object? input, IExecutionContext? executionContext, ILogger? logger = null)
         {
             var vgrain = GetVGrainImpl(vgrainInterfaceType, input, executionContext, logger);
             return ValueTask.FromResult((IVGrain)vgrain);
@@ -74,12 +74,12 @@ namespace Democrite.Framework.Core
         /// <summary>
         /// Gets the vgrain orlean proxy to consume the vgrain
         /// </summary>
-        private IVGrain GetVGrainImpl(Type vgrainType, object? input, IExecutionContext executionContext, ILogger? logger = null)
+        private IVGrain GetVGrainImpl(Type vgrainType, object? input, IExecutionContext? executionContext, ILogger? logger = null)
         {
             var grainId = this._vgrainIdFactory.BuildNewId(vgrainType,
-                                                          input,
-                                                          executionContext,
-                                                          logger ?? NullLogger.Instance);
+                                                           input,
+                                                           executionContext,
+                                                           logger ?? NullLogger.Instance);
 
             IGrain vgrain;
 

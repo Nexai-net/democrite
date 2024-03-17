@@ -189,4 +189,7 @@
   <data name="StageExecutorNotFoundException" xml:space="preserve">
     <value>Stage executor was not found to solved stage definition type '{0}'.</value>
   </data>
+  <data name="ConflictDefinitionException" xml:space="preserve">
+    <value>Conflict between multiple definitions type '{0}', Source '{1}', Conflict '{2}'</value>
+  </data>
 </root>

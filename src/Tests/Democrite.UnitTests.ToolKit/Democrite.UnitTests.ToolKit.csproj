@@ -11,6 +11,7 @@
 	<ItemGroup>
 		<PackageReference Include="AutoFixture" />
 		<PackageReference Include="AutoFixture.AutoNSubstitute" />
+		<PackageReference Include="Elvex.Toolbox.UnitTests.ToolKit" />
 		<PackageReference Include="H.Formatters.Newtonsoft.Json" />
 		<PackageReference Include="H.Pipes" />
 		<PackageReference Include="Microsoft.Orleans.TestingHost" />

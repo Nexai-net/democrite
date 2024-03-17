@@ -33,10 +33,10 @@ namespace Democrite.Framework.Node.Triggers
         /// Initializes a new instance of the <see cref="SignalTriggerVGrainService"/> class.
         /// </summary>
         public SignalTriggerVGrainService(GrainId grainId,
-                                         Silo silo,
-                                         ILoggerFactory loggerFactory,
-                                         ITriggerDefinitionProvider triggerDefinitionProvider,
-                                         IGrainFactory grainFactory)
+                                          Silo silo,
+                                          ILoggerFactory loggerFactory,
+                                          ITriggerDefinitionProvider triggerDefinitionProvider,
+                                          IGrainFactory grainFactory)
             : base(grainId, silo, loggerFactory)
         {
             this._triggerDefinitionProvider = triggerDefinitionProvider;

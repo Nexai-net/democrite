@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.StreamQueue
 {
     using Democrite.Framework.Core.Abstractions.Streams;
     using Democrite.Framework.Core.Abstractions.Triggers;
+    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Abstractions.Triggers;
     using Democrite.Framework.Node.Triggers;
 
@@ -38,7 +39,7 @@ namespace Democrite.Framework.Node.StreamQueue
         public StreamTriggerVGrainService(GrainId id,
                                           Silo silo,
                                           ILoggerFactory loggerFactory,
-                                          IGrainFactory grainFactory,
+                                          IGrainOrleanFactory grainFactory,
                                           ITriggerDefinitionProvider triggerDefinitionProvider)
             : base(id, silo, loggerFactory, grainFactory, triggerDefinitionProvider, TriggerTypeEnum.Stream)
         {

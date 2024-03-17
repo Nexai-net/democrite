@@ -15,6 +15,11 @@ namespace Democrite
         public const string DefaultDemocriteStateConfigurationKey = nameof(Democrite);
 
         /// <summary>
+        /// The default dmocrite System state storage configuration
+        /// </summary>
+        public const string DefaultDemocriteAdminStateConfigurationKey = nameof(Democrite) + "Admin";
+
+        /// <summary>
         /// The default dmocrite repository storage configuration
         /// </summary>
         public const string DefaultDemocriteRepositoryConfigurationKey = nameof(Democrite) + "Repository";

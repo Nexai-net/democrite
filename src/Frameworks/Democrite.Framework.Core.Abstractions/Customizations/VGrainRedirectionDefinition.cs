@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Core.Abstractions.Customizations
 {
+    using Democrite.Framework.Core.Abstractions.Enums;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Conditions;
     using Elvex.Toolbox.Extensions;
@@ -28,12 +30,11 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
     [DataContract]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public abstract class VGrainRedirectionDefinition : Equatable<VGrainRedirectionDefinition>, IDefinition
+    public abstract class VGrainRedirectionDefinition : IEquatable<VGrainRedirectionDefinition>, IDefinition
     {
         #region Fields
 
-        private static readonly AbstractType s_idSpanType;
-        private static readonly AbstractType s_stringType;
+        private static readonly ConcretType[] s_expectedConditionParams;
 
         #endregion
 
@@ -44,8 +45,13 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         /// </summary>
         static VGrainRedirectionDefinition()
         {
-            s_idSpanType = typeof(IdSpan).GetAbstractType();
-            s_stringType = typeof(string).GetAbstractType();
+            s_expectedConditionParams = new[]
+            {
+                (ConcretType)typeof(Type).GetAbstractType(),
+                (ConcretType)typeof(object).GetAbstractType(),
+                (ConcretType)typeof(IExecutionContext).GetAbstractType(),
+                (ConcretType)typeof(string).GetAbstractType(),
+            };
         }
 
         /// <summary>
@@ -53,7 +59,8 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         /// </summary>
         public VGrainRedirectionDefinition(Guid uid,
                                            string displayName,
-                                           AbstractType source,
+                                           ConcretType source,
+                                           VGrainRedirectionTypeEnum type,
                                            ConditionExpressionDefinition? redirectionCondition = null)
         {
             ArgumentNullException.ThrowIfNull(source);
@@ -61,6 +68,7 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
             this.Uid = uid;
             this.DisplayName = displayName;
             this.Source = source;
+            this.Type = type;
             this.RedirectionCondition = redirectionCondition;
         }
 
@@ -86,15 +94,27 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         [DataMember]
         [Newtonsoft.Json.JsonProperty]
         [Id(2)]
-        public AbstractType Source { get; }
+        public ConcretType Source { get; }
 
         /// <summary>
         /// Gets the redirection condition.
         /// </summary>
+        /// <remarks>
+        ///     Expect func (Type originTarget, object? Input, IExecutionContext? ctx) => true
+        /// </remarks>
         [DataMember]
         [Newtonsoft.Json.JsonProperty]
         [Id(3)]
         public ConditionExpressionDefinition? RedirectionCondition { get; }
+
+        /// <summary>
+        /// Gets the type.
+        /// </summary>
+        /// </value>
+        [DataMember]
+        [Newtonsoft.Json.JsonProperty]
+        [Id(4)]
+        public VGrainRedirectionTypeEnum Type { get; }
 
         #endregion
 
@@ -107,15 +127,66 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         public bool Validate(ILogger logger, bool matchWarningAsError = false)
         {
             if (this.RedirectionCondition is not null &&
-                (this.RedirectionCondition.Parameters.Count != 2 || 
-                 this.RedirectionCondition.Parameters.First().Type != s_idSpanType ||
-                 this.RedirectionCondition.Parameters.Last().Type != s_stringType))
+                this.RedirectionCondition.Parameters.Select(k => k.Type).SequenceEqual(s_expectedConditionParams))
             {
-                logger.OptiLog(LogLevel.Critical, "Redirection condition must take only one parameter type GrainId");
+                logger.OptiLog(LogLevel.Critical, "Redirection condition must follow the signature : func(Type originTarget, object? Input, IExecutionContext? ctx, string? grainPrefixExtensions) => true");
                 return false;
             }
 
             return OnValidate(logger, matchWarningAsError);
+        }
+
+        /// <summary>
+        /// Test if <paramref name="redirectionDefinition"/> conflict with current
+        /// </summary>
+        public bool Conflict(VGrainRedirectionDefinition redirectionDefinition)
+        {
+            if (Equals(redirectionDefinition))
+                return false;
+
+            return this.Source.Equals(redirectionDefinition.Source) &&
+                   (this.RedirectionCondition?.Equals(redirectionDefinition?.RedirectionCondition) ?? redirectionDefinition?.RedirectionCondition is null) &&
+                   OnConflict(redirectionDefinition);
+        }
+
+        /// <inheritdoc />
+        public bool Equals(VGrainRedirectionDefinition? other)
+        {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(this, other))
+                return true;
+
+            return this.Source.Equals((AbstractType)other.Source) &&
+                   (this.RedirectionCondition?.Equals(other.RedirectionCondition) ?? other.RedirectionCondition is null) &&
+                   OnRedirectionEquals(other);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            if (obj is VGrainInterfaceRedirectionDefinition redirectionDefinition)
+                return Equals(redirectionDefinition);
+            return false;
+        }
+
+        /// <inheritdoc />
+        public sealed override int GetHashCode()
+        {
+            return HashCode.Combine(this.Source,
+                                    this.RedirectionCondition,
+                                    OnRedirectionGetHashCode());
+        }
+
+        #region Tools
+
+        /// <summary>
+        /// Called to check if rule conflict
+        /// </summary>
+        protected virtual bool OnConflict(VGrainRedirectionDefinition? redirectionDefinition)
+        {
+            return true;
         }
 
         /// <inheritdoc cref="Equatable{VGrainRedirectionDefinition}.Equals(VGrainRedirectionDefinition?)" />
@@ -127,21 +198,7 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         /// <inheritdoc cref="IDefinition.Validate(ILogger, bool)" />
         protected abstract bool OnValidate(ILogger logger, bool matchWarningAsError = false);
 
-        /// <inheritdoc />
-        protected sealed override bool OnEquals([NotNull] VGrainRedirectionDefinition other)
-        {
-            return this.Source.Equals(other.Source) &&
-                   (this.RedirectionCondition?.Equals(other.RedirectionCondition) ?? other.RedirectionCondition is null) &&
-                   OnRedirectionEquals(other);
-        }
-
-        /// <inheritdoc />
-        protected sealed override int OnGetHashCode()
-        {
-            return HashCode.Combine(this.Source, 
-                                    this.RedirectionCondition,
-                                    OnRedirectionGetHashCode());
-        }
+        #endregion
 
         #endregion
     }

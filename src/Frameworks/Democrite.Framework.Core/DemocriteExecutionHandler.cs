@@ -5,6 +5,8 @@
 namespace Democrite.Framework.Core
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Customizations;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Executions;
     using Elvex.Toolbox;
 
@@ -24,6 +26,7 @@ namespace Democrite.Framework.Core
         #region Fields
 
         private readonly ILogger<IDemocriteExecutionHandler> _logger;
+        private readonly IDemocriteSerializer _democriteSerializer;
         private readonly IVGrainProvider _vgrainProvider;
 
         #endregion
@@ -34,9 +37,11 @@ namespace Democrite.Framework.Core
         /// Initializes a new instance of the <see cref="DemocriteExecutionHandler"/> class.
         /// </summary>
         public DemocriteExecutionHandler(IVGrainProvider vgrainProvider,
+                                         IDemocriteSerializer democriteSerializer,
                                          ILogger<IDemocriteExecutionHandler>? logger = null)
         {
             this._vgrainProvider = vgrainProvider;
+            this._democriteSerializer = democriteSerializer;
             this._logger = logger ?? NullLogger<IDemocriteExecutionHandler>.Instance;
         }
 
@@ -71,27 +76,21 @@ namespace Democrite.Framework.Core
         }
 
         /// <inheritdoc />
-        public IExecutionLauncher Sequence(Guid sequenceId)
+        public IExecutionLauncher Sequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
         {
-            return new ExecutionBuilderLauncher<ISequenceExecutorVGrain, NoneType>(sequenceId,
-                                                                             this._vgrainProvider,
-                                                                             this._logger);
+            return SequenceImpl<NoneType>(sequenceId, cfgBuilder);
         }
 
         /// <inheritdoc />
-        public IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId)
+        public IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
         {
-            return new ExecutionBuilderLauncher<ISequenceExecutorVGrain, TInput>(sequenceId,
-                                                                           this._vgrainProvider,
-                                                                           this._logger);
+            return SequenceImpl<TInput>(sequenceId, cfgBuilder);
         }
 
         /// <inheritdoc />
-        public IExecutionBuilder<object> SequenceWithInput(Guid sequenceId)
+        public IExecutionBuilder<object> SequenceWithInput(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
         {
-            return new ExecutionBuilderLauncher<ISequenceExecutorVGrain, object>(sequenceId,
-                                                                                 this._vgrainProvider,
-                                                                                 this._logger);
+            return SequenceImpl<object>(sequenceId, cfgBuilder);
         }
 
         #region Tools
@@ -101,6 +100,27 @@ namespace Democrite.Framework.Core
             where TVGrain : IVGrain
         {
             return new ExecutionDirectBuilder<TVGrain>(this._vgrainProvider, this._logger, forcedGrainId);
+        }
+
+        /// <inheritdoc />
+        public ExecutionBuilderLauncher<ISequenceExecutorVGrain, TInput> SequenceImpl<TInput>(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
+        {
+            ExecutionCustomizationDescriptions? executionCustomization = null;
+
+            if (cfgBuilder != null)
+            {
+                var builder = new ExecutionConfigurationBuilder();
+                cfgBuilder.Invoke(builder);
+
+                // To config definition
+                executionCustomization = builder.Build();
+            }
+
+            return new ExecutionBuilderLauncher<ISequenceExecutorVGrain, TInput>(sequenceId,
+                                                                                 this._vgrainProvider,
+                                                                                 this._logger,
+                                                                                 this._democriteSerializer,
+                                                                                 executionCustomization);
         }
 
         #endregion

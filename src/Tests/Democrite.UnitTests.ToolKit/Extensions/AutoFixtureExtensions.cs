@@ -21,6 +21,8 @@ namespace Democrite.UnitTests.ToolKit.Extensions
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
+    using Democrite.Framework.Node.Abstractions.Services;
+    using Democrite.Framework.Node.Services;
 
     /// <summary>
     /// Extesions method that help auto fixture to generate grain
@@ -89,7 +91,13 @@ namespace Democrite.UnitTests.ToolKit.Extensions
             factory ??= Substitute.For<IGrainFactory>();
             runtime.GrainFactory.Returns(factory);
 
+            var orleanFactory = new GrainOrleanFactory(factory);
+            serviceCollection.AddSingleton(factory);
+            serviceCollection.AddSingleton<IGrainOrleanFactory>(orleanFactory);
             serviceCollection.AddSingleton(runtime);
+
+            fixture.Register<IGrainFactory>(() => factory);
+            fixture.Register<IGrainOrleanFactory>(() => orleanFactory);
 
             var provider = serviceCollection.BuildServiceProvider();
 
@@ -103,13 +111,13 @@ namespace Democrite.UnitTests.ToolKit.Extensions
             context.GrainId.Returns<GrainId>(forcedGrainId.Value);
 
             var grainRefShared = new GrainReferenceShared(forcedGrainId.Value.Type,
-                                                              new GrainInterfaceType(typeof(TVGrain).Name),
-                                                              (ushort)1,
-                                                              Substitute.For<IGrainReferenceRuntime>(),
-                                                              Orleans.CodeGeneration.InvokeMethodOptions.OneWay,
-                                                              null,
-                                                              null,
-                                                              provider);
+                                                          new GrainInterfaceType(typeof(TVGrain).Name),
+                                                          (ushort)1,
+                                                          Substitute.For<IGrainReferenceRuntime>(),
+                                                          Orleans.CodeGeneration.InvokeMethodOptions.OneWay,
+                                                          null,
+                                                          null,
+                                                          provider);
 
             var grainRef = (GrainReference)s_grainReferenceFromGrainId.Invoke(null, new object[] { grainRefShared, forcedGrainId })!;
 

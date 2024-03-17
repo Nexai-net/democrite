@@ -14,14 +14,11 @@ namespace Democrite.Framework.Configurations
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Exceptions;
-    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Streams;
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Core.Diagnostics;
-    using Democrite.Framework.Core.Repositories;
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Core.Streams;
     using Democrite.Framework.Node.Abstractions;
@@ -30,16 +27,19 @@ namespace Democrite.Framework.Configurations
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Models;
+    using Democrite.Framework.Node.Abstractions.Services;
+    using Democrite.Framework.Node.Administrations;
     using Democrite.Framework.Node.Artifacts;
     using Democrite.Framework.Node.Components;
     using Democrite.Framework.Node.Configurations;
+    using Democrite.Framework.Node.Extensions;
     using Democrite.Framework.Node.Inputs;
     using Democrite.Framework.Node.Models;
     using Democrite.Framework.Node.Services;
     using Democrite.Framework.Node.Signals;
     using Democrite.Framework.Node.Streams;
-    using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Node.Triggers;
+
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Loggers;
@@ -48,19 +48,18 @@ namespace Democrite.Framework.Configurations
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
     using Orleans.Configuration;
     using Orleans.Hosting;
     using Orleans.Providers;
-    using Orleans.Runtime;
     using Orleans.Serialization.Configuration;
     using Orleans.Storage;
 
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     /// <see cref="IDemocriteNodeBuilder" /> implementation
     internal sealed class DemocriteNodeBuilder : ClusterBaseBuilder<IDemocriteNodeWizard, IDemocriteNodeConfigurationWizard, DemocriteNodeConfigurationDefinition>,
@@ -504,10 +503,17 @@ namespace Democrite.Framework.Configurations
 
             AutoConfigImpl<INodeDemocriteMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
                                                                                               indexedAssemblies,
-                                                                                              s => s.GetServiceByKey<string, IGrainStorage>(nameof(Democrite)) != null,
-                                                                                              ConfigurationNodeSectionNames.NodeDemocriteSystemMemoryAutoConfigKey,
+                                                                                              s => s.GetServiceByKey<string, IGrainStorage>(DemocriteConstants.DefaultDemocriteStateConfigurationKey) != null,
+                                                                                              ConfigurationNodeSectionNames.NodeDemocriteMemoryAutoConfigKey,
                                                                                               logger,
                                                                                               defaultAutoKey: defaultMemoryAutoKey);
+
+            AutoConfigImpl<INodeDemocriteAdminMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                                   indexedAssemblies,
+                                                                                                   s => s.GetServiceByKey<string, IGrainStorage>(DemocriteConstants.DefaultDemocriteAdminStateConfigurationKey) != null,
+                                                                                                   ConfigurationNodeSectionNames.NodeDemocriteAdminMemoryAutoConfigKey,
+                                                                                                   logger,
+                                                                                                   defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigImpl<INodeReminderStateMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
                                                                                                   indexedAssemblies,
@@ -603,7 +609,7 @@ namespace Democrite.Framework.Configurations
             serviceCollection.AddSingleton<IDedicatedObjectConverter, SignalMessageDedicatedObjectConverter>();
             serviceCollection.AddSingleton<IDedicatedObjectConverter, ScalarDedicatedConverter>();
 
-            serviceCollection.TryAddSingleton<IDemocriteSerializer, DemocriteSerializer>();
+            //serviceCollection.TryAddSingleton<IDemocriteSerializer, DemocriteSerializer>();
 
             serviceCollection.SetupSequenceExecutorThreadStageProvider();
 
@@ -633,6 +639,7 @@ namespace Democrite.Framework.Configurations
                                    .AddIncomingGrainCallFilter<GrainPopulateCancellationTokenCallFilter>();
 
             this._orleanSiloBuilder.AddGrainService<SignalTriggerVGrainService>();
+            this._orleanSiloBuilder.AddGrainService<AdministrationGrainService>();
 
             base.OnManualBuildConfigure();
         }
@@ -646,6 +653,27 @@ namespace Democrite.Framework.Configurations
                                                                        false);
 
             base.OnFinalizeManualBuildConfigure(logger);
+
+            // Route & redirection services
+            this._orleanSiloBuilder.Services.SetupGrainRoutingServices();
+
+            //this._orleanSiloBuilder.Services.AddSingleton<GrainOrleanFactory>(p =>
+            //{
+            //    var orleanGrainFactory = typeof(MembershipEntry).Assembly.GetTypes().FirstOrDefault(d => d.Name == "GrainFactory" &&
+            //                                                                                            (d.Attributes & System.Reflection.TypeAttributes.NotPublic) == System.Reflection.TypeAttributes.NotPublic &&
+            //                                                                                             d.IsAssignableTo(typeof(IGrainFactory)));
+            //    Debug.Assert(orleanGrainFactory != null);
+            //    return new GrainOrleanFactory((IGrainFactory)p.GetRequiredService(orleanGrainFactory));
+            //});
+
+            //this._orleanSiloBuilder.Services.AddSingleton<IGrainOrleanFactory>(p => p.GetRequiredService<GrainOrleanFactory>());
+            //this._orleanSiloBuilder.Services.AddSingleton<IVGrainDemocriteSystemProvider, VGrainDemocriteSystemProvider>();
+
+            //this._orleanSiloBuilder.Services.AddSingleton<ISequenceVGrainProviderFactory, SequenceVGrainProviderFactory>();
+
+            //this._orleanSiloBuilder.Services.AddSingleton<GrainRouteSiloRootService>()
+            //                                .AddSingleton<IVGrainRouteService>(p => p.GetRequiredService<GrainRouteSiloRootService>())
+            //                                .AddSingleton<IGrainFactory>(p => new GrainFactoryScoped(p.GetRequiredService<GrainOrleanFactory>().GrainFactory, p.GetRequiredService<IVGrainRouteService>()));
         }
 
         /// <inheritdoc />

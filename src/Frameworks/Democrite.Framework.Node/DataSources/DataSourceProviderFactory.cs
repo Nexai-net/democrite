@@ -11,6 +11,7 @@ namespace Democrite.Framework.Node.Inputs
     using Microsoft.Extensions.DependencyInjection;
 
     using System;
+    using System.Collections.Frozen;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -39,7 +40,7 @@ namespace Democrite.Framework.Node.Inputs
                 { DataSourceTypeEnum.StaticCollection, (factory, def) => factory.BuildProvider<DataSourceStaticCollectionProxyProvider<int>>(def) },
                 { DataSourceTypeEnum.FixValue, (factory, def) => factory.BuildProvider<DataSourceFixValueProvider<int>>(def) },
                 { DataSourceTypeEnum.Convert, (factory, def) => factory.BuildProvider<DataSourceConvertValueProvider<int>>(def) }
-            };
+            }.ToFrozenDictionary();
         }
 
         /// <summary>

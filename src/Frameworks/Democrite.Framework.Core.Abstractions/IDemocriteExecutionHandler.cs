@@ -52,16 +52,16 @@ namespace Democrite.Framework.Core.Abstractions
         /// <summary>
         /// Prepare an execution with schema a <see cref="SequenceDefinition"/>.
         /// </summary>
-        IExecutionLauncher Sequence(Guid sequenceId);
+        IExecutionLauncher Sequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null);
 
         /// <summary>
         /// Prepare an execution with schema a <see cref="SequenceDefinition"/> with an input type <typeparamref name="TInput"/>.
         /// </summary>
-        IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId);
+        IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null);
 
         /// <summary>
         /// Prepare an execution with schema a <see cref="SequenceDefinition"/> with an input.
         /// </summary>
-        IExecutionBuilder<object> SequenceWithInput(Guid sequenceId);
+        IExecutionBuilder<object> SequenceWithInput(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null);
     }
 }

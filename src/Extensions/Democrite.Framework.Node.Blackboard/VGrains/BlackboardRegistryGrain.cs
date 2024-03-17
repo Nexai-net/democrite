@@ -7,6 +7,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Exceptions;
+    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains;
@@ -44,7 +45,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         public BlackboardRegistryGrain(ILogger<IBlackboardRegistryGrain> logger,
                                        [PersistentState(BlackboardConstants.BlackboardStorageStateKey, BlackboardConstants.BlackboardRegistryStorageConfigurationKey)] IPersistentState<BlackboardRegistryStateSurrogate> persistentState,
-                                       IGrainFactory grainFactory,
+                                       IGrainOrleanFactory grainFactory,
                                        IBlackboardTemplateDefinitionProvider blackboardTemplateDefinitionProvider)
             : base(logger, persistentState)
         {

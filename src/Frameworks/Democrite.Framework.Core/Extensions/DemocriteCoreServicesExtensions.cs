@@ -45,7 +45,6 @@ namespace Democrite.Framework.Core.Extensions
             AddDefaultCoreService<IVGrainIdDefaultFactory, VGrainIdFactoryDefault>(serviceCollection);
 
             AddDefaultCoreService<IVGrainIdFactory, VGrainIdFactory>(serviceCollection);
-
             AddDefaultCoreService<IVGrainProvider, VGrainProvider>(serviceCollection);
 
             AddDefaultCoreService<IDemocriteExecutionHandler, DemocriteExecutionHandler>(serviceCollection);
@@ -55,6 +54,8 @@ namespace Democrite.Framework.Core.Extensions
 
             AddDefaultCoreService<IAttributeToFactoryMapper<RepositoryAttribute>, RepositoryAttributeMapper>(serviceCollection);
             AddDefaultCoreService<IRepositoryFactory, RepositoryFactory>(serviceCollection);
+
+            AddDefaultCoreService<IRemoteGrainServiceFactory, RemoteGrainServiceFactory>(serviceCollection);
 
             return serviceCollection;
         }

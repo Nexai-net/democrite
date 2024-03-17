@@ -105,7 +105,7 @@ namespace Democrite.Framework.Core.Models
             return new ContextDataContainerSurrogate<TData>()
             {
                 SerializedData = this._serializedData,
-                Type = ConcretBaseTypeConverter.Default.ConvertToSurrogate(this._type),
+                Type = ConcretBaseTypeConverter.ConvertToSurrogate(this._type),
             };
         }
 
@@ -122,7 +122,7 @@ namespace Democrite.Framework.Core.Models
         /// <inheritdoc />
         public ContextDataContainer<TData> ConvertFromSurrogate(in ContextDataContainerSurrogate<TData> surrogate)
         {
-            return new ContextDataContainer<TData>(ConcretBaseTypeConverter.Default.ConvertFromSurrogate(surrogate.Type), surrogate.SerializedData);
+            return new ContextDataContainer<TData>(ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate.Type), surrogate.SerializedData);
         }
 
         /// <inheritdoc />

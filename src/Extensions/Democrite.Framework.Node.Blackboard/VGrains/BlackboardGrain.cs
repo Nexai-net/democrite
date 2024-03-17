@@ -11,6 +11,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
     using Democrite.Framework.Core.Abstractions.Surrogates;
+    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Exceptions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
@@ -23,11 +24,11 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
     using Democrite.Framework.Node.Blackboard.Models;
     using Democrite.Framework.Node.Blackboard.Models.Surrogates;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Extensions;
-    using Elvex.Toolbox.Helpers;
     using Elvex.Toolbox.Models;
     using Elvex.Toolbox.Services;
 
@@ -35,13 +36,12 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Microsoft.Extensions.Logging;
 
     using Orleans;
-    using Orleans.Concurrency;
     using Orleans.Runtime;
 
+    using System.Collections.Frozen;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
     using System.Text.RegularExpressions;
     using System.Threading;
 
@@ -74,7 +74,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         private readonly IDemocriteExecutionHandler _democriteExecutionHandler;
         private readonly IRepositoryFactory _repositoryFactory;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IGrainFactory _grainFactory;
+        private readonly IGrainOrleanFactory _grainOrleanFactory;
         private readonly IObjectConverter _converter;
         private readonly ITimeManager _timeManager;
 
@@ -99,7 +99,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         {
             s_defaultController = typeof(IDefaultBlackboardControllerGrain);
             s_defaultControllerConcretType = (ConcretType)s_defaultController.GetAbstractType();
-            s_defaultControllerConcretTypeSurrogate = ConcretBaseTypeConverter.Default.ConvertToSurrogate(s_defaultControllerConcretType);
+            s_defaultControllerConcretTypeSurrogate = ConcretBaseTypeConverter.ConvertToSurrogate(s_defaultControllerConcretType);
 
             var addCommandToStorage = typeof(BlackboardGrain).GetMethod(nameof(Command_AddToStorageAsync), BindingFlags.NonPublic | BindingFlags.Instance);
             Debug.Assert(addCommandToStorage != null);
@@ -114,7 +114,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 { BlackboardCommandTypeEnum.Storage, CommandExecuteStorageAsync },
                 { BlackboardCommandTypeEnum.Trigger, CommandExecuteTriggerAsync },
                 { BlackboardCommandTypeEnum.Reject, Command_ExecuteRejectAsync },
-            };
+            }.ToFrozenDictionary();
 
             s_rootCommandStorageExecutor = new Dictionary<BlackboardCommandStorageActionTypeEnum, Func<BlackboardGrain, BlackboardCommandStorage, CommandExecutionContext, Task<bool>>>()
             {
@@ -122,12 +122,12 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 { BlackboardCommandStorageActionTypeEnum.Remove, (g, cmd, ctx) => g.Command_RemoveFromStorageAsync(cmd, ctx) },
                 { BlackboardCommandStorageActionTypeEnum.Decommission, (g, cmd, ctx) => g.Command_DecommissionFromStorageAsync(cmd, ctx) },
                 { BlackboardCommandStorageActionTypeEnum.ChangeStatus, (g, cmd, ctx) => g.Command_ChangeStatusFromStorageAsync(cmd, ctx) },
-            };
+            }.ToFrozenDictionary();
 
             s_rootCommandTriggerExecutor = new Dictionary<BlackboardCommandTriggerActionTypeEnum, Func<BlackboardGrain, BlackboardCommandTrigger, CommandExecutionContext, Task<bool>>>()
             {
                 { BlackboardCommandTriggerActionTypeEnum.Sequence, (g, cmd, ctx) => CommandGenericCall(g, cmd, ctx, s_triggerSequenceCommandToStorage) }
-            };
+            }.ToFrozenDictionary();
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         public BlackboardGrain(ILogger<IBlackboardGrain> logger,
                                [PersistentState(BlackboardConstants.BlackboardStorageStateKey, BlackboardConstants.BlackboardStorageConfigurationKey)] IPersistentState<BlackboardGrainStateSurrogate> persistentState,
-                               IGrainFactory grainFactory,
+                               IGrainOrleanFactory grainFactory,
                                IServiceProvider serviceProvider,
                                ITimeManager timeManager,
                                IRepositoryFactory repositoryFactory,
@@ -153,7 +153,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             this._metaDataLocker = new SemaphoreSlim(1);
 
             this._repositoryFactory = repositoryFactory;
-            this._grainFactory = grainFactory;
+            this._grainOrleanFactory = grainFactory;
             this._serviceProvider = serviceProvider;
             this._timeManager = timeManager;
             this._blackboardDataLogicalTypeRuleValidatorProvider = blackboardDataLogicalTypeRuleValidatorProvider;
@@ -204,7 +204,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
                     var grainDefType = controllerDefinition.AgentInterfaceType.ToType();
 
-                    var controllerGrain = this._grainFactory.GetGrain(grainDefType, this.GetPrimaryKey()).AsReference<IBlackboardBaseControllerGrain>()!;
+                    var controllerGrain = this._grainOrleanFactory.GetGrain(grainDefType, this.GetPrimaryKey()).AsReference<IBlackboardBaseControllerGrain>()!;
 
                     var key = (controllerGrain.GetGrainId(), controllerDefinition.Options);
 
@@ -215,7 +215,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                     {
                         handler = new BlackboardControllerHandler(this.State.BlackboardId.Uid,
                                                                   grainDefType,
-                                                                  this._grainFactory,
+                                                                  this._grainOrleanFactory,
                                                                   controllerDefinition.Options,
                                                                   this.State!.TemplateCopy!);
                         initController.Add(key, handler);
@@ -305,7 +305,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             return Task.FromResult(metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
                                                                                      kv.Value.Uid,
                                                                                      kv.Value.DisplayName,
-                                                                                     kv.Value.ContainsType is not null ? ConcretBaseTypeConverter.Default.ConvertFromSurrogate(kv.Value.ContainsType!) : (ConcretType?)null,
+                                                                                     kv.Value.ContainsType is not null ? ConcretBaseTypeConverter.ConvertFromSurrogate(kv.Value.ContainsType!) : (ConcretType?)null,
                                                                                      kv.Value.Status,
                                                                                      kv.Value.UTCCreationTime,
                                                                                      kv.Value.CreatorIdentity,

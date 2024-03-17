@@ -4,9 +4,12 @@
 
 namespace Democrite.Framework.Core.Abstractions.Customizations
 {
+    using Democrite.Framework.Core.Abstractions.Extensions;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Conditions;
     using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Loggers;
     using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
@@ -26,6 +29,7 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class VGrainInterfaceRedirectionDefinition : VGrainRedirectionDefinition, IDefinition
     {
@@ -36,10 +40,10 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         /// </summary>
         public VGrainInterfaceRedirectionDefinition(Guid uid,
                                                     string displayName,
-                                                    AbstractType source,
-                                                    AbstractType redirect,
+                                                    ConcretType source,
+                                                    ConcretType redirect,
                                                     ConditionExpressionDefinition? redirectionCondition = null)
-            : base(uid, displayName, source, redirectionCondition)
+            : base(uid, displayName, source, Enums.VGrainRedirectionTypeEnum.OtherInterface, redirectionCondition)
         {
             ArgumentNullException.ThrowIfNull(redirect);
 
@@ -53,7 +57,9 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         /// <summary>
         /// Gets the redirect.
         /// </summary>
-        public AbstractType Redirect { get; }
+        [Id(0)]
+        [DataMember]
+        public ConcretType Redirect { get; }
 
         #endregion
 
@@ -71,11 +77,13 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         public static VGrainInterfaceRedirectionDefinition Create<TSource, TRedirect>(Expression<Func<IdSpan, string?, bool>>? cond = null, string? displayName = null)
             where TRedirect : TSource
         {
-            return new VGrainInterfaceRedirectionDefinition(Guid.NewGuid(),
-                                                            !string.IsNullOrEmpty(displayName) ? displayName : $"{typeof(TSource)} -> {typeof(TRedirect)}",
-                                                            typeof(TSource).GetAbstractType(),
-                                                            typeof(TRedirect).GetAbstractType(),
-                                                            cond?.Serialize());
+            var def = new VGrainInterfaceRedirectionDefinition(Guid.NewGuid(),
+                                                               !string.IsNullOrEmpty(displayName) ? displayName : $"{typeof(TSource)} -> {typeof(TRedirect)}",
+                                                               (ConcretType)typeof(TSource).GetAbstractType(),
+                                                               (ConcretType)typeof(TRedirect).GetAbstractType(),
+                                                               cond?.Serialize());
+            def.ValidateWithException();
+            return def;
         }
 
         #region Tools
@@ -83,8 +91,8 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         /// <inheritdoc />
         protected override bool OnValidate(ILogger logger, bool matchWarningAsError = false)
         {
-            var redirectType = this.Redirect.ToType();
-            var sourceType = this.Source.ToType();
+            var redirectType = this.Redirect?.ToType();
+            var sourceType = this.Source?.ToType();
 
             if (sourceType is null)
             {
@@ -98,7 +106,19 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
                 return false;
             }
 
-            if (redirectType.IsAssignableTo(sourceType))
+            if (!this.Redirect!.IsInterface)
+            {
+                logger.OptiLog(LogLevel.Critical, "Redirection redirect must be an interface {abstractType}", this.Redirect);
+                return false;
+            }
+
+            if (!this.Source!.IsInterface)
+            {
+                logger.OptiLog(LogLevel.Critical, "Redirection redirect must be an interface {abstractType}", this.Source);
+                return false;
+            }
+
+            if (!redirectType.IsAssignableTo(sourceType))
             {
                 logger.OptiLog(LogLevel.Critical, "Redirect type {redirectType} must inherite from {abstractType}", this.Redirect, this.Source);
                 return false;
@@ -110,7 +130,7 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         /// <inheritdoc />
         protected override bool OnRedirectionEquals(VGrainRedirectionDefinition other)
         {
-            return other is VGrainInterfaceRedirectionDefinition otherInterface && this.Redirect.Equals(otherInterface.Redirect);
+            return other is VGrainInterfaceRedirectionDefinition otherInterface && this.Redirect.Equals((AbstractType)otherInterface.Redirect);
         }
 
         /// <inheritdoc />

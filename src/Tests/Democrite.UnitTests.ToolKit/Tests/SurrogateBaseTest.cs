@@ -6,7 +6,7 @@ namespace Democrite.UnitTests.ToolKit.Tests
 {
     using AutoFixture;
 
-    using Democrite.UnitTests.ToolKit.Helpers;
+    using Elvex.Toolbox.UnitTests.ToolKit.Helpers;
 
     using Newtonsoft.Json;
 

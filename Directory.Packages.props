@@ -4,8 +4,11 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Orlean -->
-    <PackageVersion Include="Elvex.Toolbox" Version="1.0.2" />
-    <PackageVersion Include="Elvex.Toolbox.Configuration" Version="1.0.2" />
+    <PackageVersion Include="Elvex.Toolbox" Version="1.0.4" />
+    <PackageVersion Include="Elvex.Toolbox.Abstractions" Version="1.0.4" />
+    <PackageVersion Include="Elvex.Toolbox.Configuration" Version="1.0.4" />
+    <PackageVersion Include="Elvex.Toolbox.UnitTests.ToolKit" Version="1.0.4" />
+	  
     <PackageVersion Include="H.Formatters.Newtonsoft.Json" Version="13.0.59" />
     <PackageVersion Include="MessagePack" Version="2.5.140" />
     <PackageVersion Include="Microsoft.Orleans.Clustering.AdoNet" Version="7.2.4" />
@@ -26,7 +29,7 @@
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.4" />
     <PackageVersion Include="Microsoft.VisualStudio.SlowCheetah" Version="4.0.50" />
     <PackageVersion Include="MongoDB.Driver" Version="2.24.0" />
-    <PackageVersion Include="Orleans.Providers.MongoDB" Version="8.0.2" />
+    <PackageVersion Include="Orleans.Providers.MongoDB" Version="8.0.3" />
     <PackageVersion Include="OrleansDashboard" Version="7.2.2" />
     <!-- System -->
     <PackageVersion Include="System.Reactive" Version="6.0.0" />
@@ -60,7 +63,7 @@
     <PackageVersion Include="xunit" Version="2.7.0" />
     <PackageVersion Include="xunit.extensibility.core" Version="2.6.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" />
-    <PackageVersion Include="coverlet.collector" Version="6.0.1" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <!-- Other -->
     <PackageVersion Include="Cronos" Version="0.8.4" />
     <PackageVersion Include="HtmlAgilityPack" Version="1.11.54" />

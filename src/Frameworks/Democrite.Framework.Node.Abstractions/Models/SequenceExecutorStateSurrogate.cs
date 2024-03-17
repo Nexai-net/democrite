@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Node.Abstractions.Models
 {
+    using Democrite.Framework.Core.Abstractions.Customizations;
+
     using System;
 
     [GenerateSerializer]
@@ -38,6 +40,12 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// </summary>
         [Id(4)]
         public SequenceExecutorExecThreadStateSurrogate? MainThread { get; set; }
+
+        /// <summary>
+        /// Gets or sets the execution customization.
+        /// </summary>
+        [Id(5)]
+        public ExecutionCustomizationDescriptions? Customization { get; set; }
     }
 
     /// <summary>
@@ -73,7 +81,8 @@ namespace Democrite.Framework.Node.Abstractions.Models
                                              surrogate.FlowUid,
                                              surrogate.InstanceId,
                                              surrogate.MainThread != null ? s_threadConverter.ConvertFromSurrogate(surrogate.MainThread.Value) : null,
-                                             surrogate.StartAt);
+                                             surrogate.StartAt,
+                                             surrogate.Customization);
         }
 
         /// <inheritdoc />
@@ -88,6 +97,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
                                   ? s_threadConverter.ConvertToSurrogate(value.MainThread)
                                   : null,
                 StartAt = value.StartAt,
+                Customization = value.Customization
             };
         }
 

@@ -19,7 +19,7 @@ namespace Democrite.Framework.Core.Abstractions
         /// </summary>
         /// <exception cref="VGrainIdTemplateMissingException"> Raised when attribute <see cref="ExpectedVGrainIdFormatAttribute"/> is missing </exception>
         /// <exception cref="VGrainIdGenerationException">Raised when information need for the generation are invalid or missings</exception>
-        IVGrainId BuildNewId<TVGrain>(object? input, IExecutionContext executionContext, ILogger logger)
+        IVGrainId BuildNewId<TVGrain>(object? input, IExecutionContext? executionContext, ILogger logger)
             where TVGrain : IVGrain;
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace Democrite.Framework.Core.Abstractions
         /// </summary>
         /// <exception cref="VGrainIdTemplateMissingException"> Raised when attribute <see cref="ExpectedVGrainIdFormatAttribute"/> is missing </exception>
         /// <exception cref="VGrainIdGenerationException">Raised when information need for the generation are invalid or missings</exception>
-        IVGrainId BuildNewId(Type vgrainType, object? input, IExecutionContext executionContext, ILogger logger);
+        IVGrainId BuildNewId(Type vgrainType, object? input, IExecutionContext? executionContext, ILogger logger);
 
         #endregion
     }

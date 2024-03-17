@@ -5,7 +5,10 @@
 namespace Democrite.Framework.Core.Executions
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Customizations;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Models;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Supports;
 
@@ -30,10 +33,12 @@ namespace Democrite.Framework.Core.Executions
     {
         #region Fields
 
+        private readonly IDemocriteSerializer _democriteSerializer;
         private readonly Guid _executionSchemaId;
 
         private object? _genericInput;
         private TInput? _input;
+        private ExecutionCustomizationDescriptions? _executionCustomization;
 
         #endregion
 
@@ -44,12 +49,16 @@ namespace Democrite.Framework.Core.Executions
         /// </summary>
         public ExecutionBuilderLauncher(Guid executionSchemaId,
                                         IVGrainProvider vgrainProvider,
-                                        ILogger? logger)
+                                        ILogger? logger,
+                                        IDemocriteSerializer democriteSerializer,
+                                        ExecutionCustomizationDescriptions? executionCustomization)
             : base(logger, vgrainProvider)
         {
             ArgumentNullException.ThrowIfNull(executionSchemaId);
             ArgumentNullException.ThrowIfNull(vgrainProvider);
 
+            this._executionCustomization = executionCustomization;
+            this._democriteSerializer = democriteSerializer;
             this._executionSchemaId = executionSchemaId;
         }
 
@@ -110,10 +119,15 @@ namespace Democrite.Framework.Core.Executions
         /// <inheritdoc />
         protected override IExecutionContext GenerateExecutionContext()
         {
-            return new ExecutionContextWithConfiguration<Guid>(Guid.NewGuid(),
-                                                               Guid.NewGuid(),
-                                                               null,
-                                                               this._executionSchemaId);
+            var ctx = new ExecutionContextWithConfiguration<Guid>(Guid.NewGuid(),
+                                                                  Guid.NewGuid(),
+                                                                  null,
+                                                                  this._executionSchemaId);
+
+            if (this._executionCustomization is not null)
+                ctx.TryPushContextData(this._executionCustomization.Value, true, this._democriteSerializer);
+
+            return ctx;
         }
 
         /// <inheritdoc />

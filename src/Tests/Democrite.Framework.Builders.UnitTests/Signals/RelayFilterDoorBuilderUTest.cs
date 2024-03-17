@@ -12,7 +12,8 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.UnitTests.ToolKit.Helpers;
+
+    using Elvex.Toolbox.UnitTests.ToolKit.Helpers;
 
     using NFluent;
 

@@ -8,18 +8,16 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Models
 
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Signals.Models;
-    using Democrite.UnitTests.ToolKit.Helpers;
+
+    using Elvex.Toolbox.UnitTests.ToolKit.Helpers;
 
     using Newtonsoft.Json;
 
     using NFluent;
 
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// Test for <see cref="DoorSignalReceivedStatus"/>

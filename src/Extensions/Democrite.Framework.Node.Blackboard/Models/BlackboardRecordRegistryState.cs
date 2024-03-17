@@ -74,7 +74,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
             var newEntry = new BlackboardRecordMetadata(record.Uid,
                                                         record.LogicalType,
                                                         record.DisplayName,
-                                                        record.ContainsType is not null ? ConcretBaseTypeConverter.Default.ConvertToSurrogate(record.ContainsType) : null,
+                                                        record.ContainsType is not null ? ConcretBaseTypeConverter.ConvertToSurrogate(record.ContainsType) : null,
                                                         record.RecordContainerType,
                                                         record.Status,
                                                         foundExisting ? exist.UTCCreationTime : record.UTCCreationTime,

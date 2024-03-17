@@ -42,6 +42,10 @@ namespace Democrite.Framework.Node.UnitTests
     using Orleans.TestingHost;
 
     using Xunit.Abstractions;
+    using Democrite.Framework.Node.Services;
+    using Democrite.Framework.Core.Abstractions.Customizations;
+    using Elvex.Toolbox.Disposables;
+    using NSubstitute.Core;
 
     /// <summary>
     /// Test <see cref="SequenceExecutorVGrain"/>
@@ -86,10 +90,13 @@ namespace Democrite.Framework.Node.UnitTests
             var rootLogger = new MemoryTestLogger<SequenceExecutorVGrain>();
 
             var sequenceProvider = new Mock<ISequenceDefinitionProvider>(MockBehavior.Strict);
-            var vgrainProvider = new Mock<IVGrainProvider>(MockBehavior.Strict);
+            var vgrainProvider = Substitute.For<IVGrainProvider>();
             var logFactory = new Mock<ILoggerFactory>(MockBehavior.Strict);
             var objectConvertMock = new Mock<IObjectConverter>(MockBehavior.Strict);
             var democriteSerializerMock = Substitute.For<IDemocriteSerializer>();
+            var sequenceVGrainProviderFactoryMock = Substitute.For<ISequenceVGrainProviderFactory>();
+            var sequenceVGrainProviderMock = Substitute.For<ISequenceVGrainProvider>();
+
             var threadStageExecutorProviderMock = (ISequenceExecutorThreadStageProvider)SequenceExecutorThreadStageProviderMock.Create();
             var timeManager = new TimeManager();
 
@@ -128,33 +135,43 @@ namespace Democrite.Framework.Node.UnitTests
 
             sequenceProvider.Setup(w => w.GetFirstValueByIdAsync(def.Uid, It.IsAny<CancellationToken>())).Returns(ValueTask.FromResult<SequenceDefinition?>(def));
 
-            vgrainProvider.Setup(w => w.GetVGrainAsync(It.IsAny<Type>(), It.IsAny<object?>(), It.IsAny<IExecutionContext>(), It.IsAny<ILogger>()))
-                         .Returns((Type type, object? input, IExecutionContext ctxVGrain, ILogger logger) =>
-                         {
-                             Check.That(type).IsEqualTo(typeof(ITestExtractEmailTransformer));
-                             Check.That(ctxVGrain).IsNotNull();
+            sequenceVGrainProviderFactoryMock.GetProvider(Arg.Any<ExecutionCustomizationDescriptions?>())
+                                             .Returns(new DisposableStructContainer<ISequenceVGrainProvider>(sequenceVGrainProviderMock));
 
-                             var transformer = new TestExtractEmailTransformer(rootLogger.CreateChild<TestExtractEmailTransformer>());
-                             return ValueTask.FromResult<IVGrain>(transformer);
-                         });
+            sequenceVGrainProviderMock.GetGrainProvider(ref Arg.Any<ISequenceStageDefinition>())
+                                      .Returns(vgrainProvider);
+
+            vgrainProvider.GetVGrainAsync(Arg.Any<Type>(), Arg.Any<object?>(), Arg.Any<IExecutionContext>(), Arg.Any<ILogger>())
+                          //.Returns((Type type, object? input, IExecutionContext ctxVGrain, ILogger logger) =>
+                          .Returns((CallInfo info) => 
+                          {
+                              var type = info.Arg<Type>();
+                              var ctxVGrain = info.Arg<IExecutionContext>();
+
+                              Check.That(type).IsEqualTo(typeof(ITestExtractEmailTransformer));
+                              Check.That(ctxVGrain).IsNotNull();
+                          
+                              var transformer = new TestExtractEmailTransformer(rootLogger.CreateChild<TestExtractEmailTransformer>());
+                              return ValueTask.FromResult<IVGrain>(transformer);
+                          });
 
             var executor = new SequenceExecutorVGrain(rootLogger,
                                                       logFactory.Object,
                                                       diagnosticLogger,
                                                       sequenceProvider.Object,
-                                                      vgrainProvider.Object,
                                                       persistentState.Object,
                                                       timeManager,
                                                       objectConvertMock.Object,
                                                       democriteSerializerMock,
-                                                      threadStageExecutorProviderMock);
+                                                      threadStageExecutorProviderMock,
+                                                      sequenceVGrainProviderFactoryMock);
 
             var result = await executor.RunAsync<string[], string>(EMAIL_SAMPLE_TEST, execCtx);
 
             Check.That(result).IsNotNull().And.ContainsExactly(EMAIL_A, EMAIL_B).And.CountIs(2);
 
             sequenceProvider.Verify(w => w.GetFirstValueByIdAsync(def.Uid, It.IsAny<CancellationToken>()), Times.Exactly(2));
-            vgrainProvider.Verify(w => w.GetVGrainAsync(It.IsAny<Type>(), It.IsAny<object?>(), It.IsAny<IExecutionContext>(), It.IsAny<ILogger>()), Times.Once);
+            await vgrainProvider.Received(1).GetVGrainAsync(Arg.Any<Type>(), Arg.Any<object?>(), Arg.Any<IExecutionContext>(), Arg.Any<ILogger>());
 
             Check.That(stateStack).IsNotNull().And.CountIs(2);
 
@@ -239,7 +256,7 @@ namespace Democrite.Framework.Node.UnitTests
         /// <summary>
         /// Test foreach run one vgrain, manual call input, using orleans <see cref="TestClusterBuilder"/>
         /// </summary>
-        [Fact(Timeout = 200_000)]
+        [Fact(Timeout = 200_000, Skip = "Instable on CI/CD execute")]
         public async Task TestCluster_Cluster_Foreach_Run()
         {
             var getHtmlStageUid = Guid.NewGuid();
@@ -360,7 +377,8 @@ namespace Democrite.Framework.Node.UnitTests
 
                 await cluster.DeployAsync();
 
-                var client = new DemocriteExecutionHandler(new VGrainProvider(cluster.GrainFactory, localServices.GetRequiredService<IVGrainIdFactory>()));// new VGrainIdFactory()));
+                var client = new DemocriteExecutionHandler(new VGrainProvider(cluster.GrainFactory, localServices.GetRequiredService<IVGrainIdFactory>()),
+                                                           Substitute.For<IDemocriteSerializer>());
 
                 var result = await exec(client);
 

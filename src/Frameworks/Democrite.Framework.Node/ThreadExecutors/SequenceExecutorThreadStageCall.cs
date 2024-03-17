@@ -101,6 +101,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
             var vgrainProxy = await vgrainProvider.GetVGrainAsync(step.VGrainType.ToType(), input, sequenceContext, logger);
 
+            // OPTIM : Use generator to create proxy call without doing any reflexion
             var resultTask = (Task?)mthd.Invoke(vgrainProxy, args);
 
             ArgumentNullException.ThrowIfNull(resultTask);

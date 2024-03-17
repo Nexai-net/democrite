@@ -8,10 +8,13 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
     using Elvex.Toolbox.Models;
 
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Diagnostics;
     using System.Linq;
-    using System.Runtime.Serialization;
+    using System.Text.Json.Serialization;
 
+    [JsonDerivedType(typeof(CollectionConcretTypeSurrogate), "Collection")]
+    [JsonDerivedType(typeof(ConcretTypeSurrogate), "Concret")]
     public interface IConcretTypeSurrogate : ISupportDebugDisplayName
     {
         string DisplayName { get; }
@@ -20,13 +23,16 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
         bool IsInterface { get; }
     }
 
+    [Immutable]
+    [Serializable]
     [GenerateSerializer]
+    [ImmutableObject(true)]
     public record struct CollectionConcretTypeSurrogate(string DisplayName,
-                                             string? NamespaceName,
-                                             string AssemblyQualifiedName,
-                                             bool IsInterface,
-                                             // MOST of the time only one dependence but to prevent cycle issue in struct we use a collection
-                                             IReadOnlyCollection<IConcretTypeSurrogate>? ItemCollectionType) : IEquatable<ConcretTypeSurrogate>, ISupportDebugDisplayName, IConcretTypeSurrogate
+                                                        string? NamespaceName,
+                                                        string AssemblyQualifiedName,
+                                                        bool IsInterface,
+                                                        // MOST of the time only one dependence but to prevent cycle issue in struct we use a collection
+                                                        IReadOnlyCollection<IConcretTypeSurrogate>? ItemCollectionType) : IEquatable<ConcretTypeSurrogate>, ISupportDebugDisplayName, IConcretTypeSurrogate
     {
         /// <inheritdoc />
         public bool Equals(ConcretTypeSurrogate other)
@@ -48,12 +54,15 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
         }
     }
 
+    [Immutable]
+    [Serializable]
     [GenerateSerializer]
+    [ImmutableObject(true)]
     public record struct ConcretTypeSurrogate(string DisplayName,
-                                             string? NamespaceName,
-                                             string AssemblyQualifiedName,
-                                             bool IsInterface,
-                                             IReadOnlyCollection<IConcretTypeSurrogate> GenericParameters) : IEquatable<ConcretTypeSurrogate>, ISupportDebugDisplayName, IConcretTypeSurrogate
+                                              string? NamespaceName,
+                                              string AssemblyQualifiedName,
+                                              bool IsInterface,
+                                              IReadOnlyCollection<IConcretTypeSurrogate> GenericParameters) : IEquatable<ConcretTypeSurrogate>, ISupportDebugDisplayName, IConcretTypeSurrogate
     {
         /// <inheritdoc />
         public bool Equals(ConcretTypeSurrogate other)
@@ -79,7 +88,7 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
     /// Convert toolbox <see cref="ConcretType"/> to <see cref="ConcretTypeSurrogate"/> and back
     /// </summary>
     /// <seealso cref="IConverter{ConcretType, ConcretTypeSurrogate}" />
-    public sealed class ConcretBaseTypeConverter
+    public static class ConcretBaseTypeConverter
     {
         #region Fields
 
@@ -97,24 +106,14 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
         {
             s_surrogateCacheLocker = new ReaderWriterLockSlim();
             s_fromSurrogateCache = new Dictionary<IConcretTypeSurrogate, ConcretBaseType>();
-            Default = new ConcretBaseTypeConverter();
         }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the default.
-        /// </summary>
-        public static ConcretBaseTypeConverter Default { get; }
 
         #endregion
 
         #region Methods
 
         /// <inheritdoc />
-        public ConcretBaseType ConvertFromSurrogate(in IConcretTypeSurrogate surrogate)
+        public static ConcretBaseType ConvertFromSurrogate(in IConcretTypeSurrogate surrogate)
         {
             s_surrogateCacheLocker.EnterReadLock();
             try
@@ -163,7 +162,7 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
         }
 
         /// <inheritdoc />
-        public IConcretTypeSurrogate ConvertToSurrogate(in ConcretBaseType value)
+        public static IConcretTypeSurrogate ConvertToSurrogate(in ConcretBaseType value)
         {
             if (value is ConcretType concret)
             {
@@ -204,13 +203,13 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
         /// <inheritdoc />
         public ConcretType ConvertFromSurrogate(in ConcretTypeSurrogate surrogate)
         {
-            return (ConcretType)ConcretBaseTypeConverter.Default.ConvertFromSurrogate(surrogate);
+            return (ConcretType)ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate);
         }
 
         /// <inheritdoc />
         public ConcretTypeSurrogate ConvertToSurrogate(in ConcretType value)
         {
-            return (ConcretTypeSurrogate)ConcretBaseTypeConverter.Default.ConvertToSurrogate(value);
+            return (ConcretTypeSurrogate)ConcretBaseTypeConverter.ConvertToSurrogate(value);
         }
     }
 
@@ -220,13 +219,13 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
         /// <inheritdoc />
         public CollectionType ConvertFromSurrogate(in CollectionConcretTypeSurrogate surrogate)
         {
-            return (CollectionType)ConcretBaseTypeConverter.Default.ConvertFromSurrogate(surrogate);
+            return (CollectionType)ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate);
         }
 
         /// <inheritdoc />
         public CollectionConcretTypeSurrogate ConvertToSurrogate(in CollectionType value)
         {
-            return (CollectionConcretTypeSurrogate)ConcretBaseTypeConverter.Default.ConvertToSurrogate(value);
+            return (CollectionConcretTypeSurrogate)ConcretBaseTypeConverter.ConvertToSurrogate(value);
         }
     }
 }

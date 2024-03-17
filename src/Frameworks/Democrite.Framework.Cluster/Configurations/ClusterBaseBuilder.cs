@@ -11,9 +11,11 @@ namespace Democrite.Framework.Cluster.Configurations
     using Democrite.Framework.Cluster.Services;
     using Democrite.Framework.Configurations;
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Core.Extensions;
+    using Democrite.Framework.Core.Repositories;
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Core.Triggers;
     using Elvex.Toolbox.Abstractions.Services;
@@ -23,6 +25,7 @@ namespace Democrite.Framework.Cluster.Configurations
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -398,6 +401,8 @@ namespace Democrite.Framework.Cluster.Configurations
             AddService<IHashService>(this._hashService);
 
             serviceCollection.SetupCoreServices();
+
+            serviceCollection.TryAddSingleton<IDemocriteSerializer, DemocriteSerializer>();
 
             OnManualBuildConfigure();
 
