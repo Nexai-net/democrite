@@ -44,21 +44,25 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// <summary>
         /// Gets the signal message.
         /// </summary>
+        [DataMember]
         public string? SignalName { get; }
 
         /// <summary>
         /// Gets the signal identifier.
         /// </summary>
+        [DataMember] 
         public Guid? SignalId { get; }
 
         /// <summary>
         /// Gets the message access.
         /// </summary>
+        [DataMember] 
         public AccessExpressionDefinition? MessageAccess { get; }
 
         /// <summary>
         /// Gets a value indicating whether this <see cref="SequenceStageFireSignalDefinition"/> must send multiple message.
         /// </summary>
+        [DataMember] 
         public bool Multi { get; }
 
         #endregion

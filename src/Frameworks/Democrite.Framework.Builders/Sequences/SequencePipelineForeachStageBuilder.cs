@@ -4,21 +4,20 @@
 
 namespace Democrite.Framework.Builders.Sequences
 {
-    using Democrite.Framework.Builders.Steps;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
+
     using Elvex.Toolbox.Abstractions.Expressions;
     using Elvex.Toolbox.Abstractions.Models;
 
     using System;
-    using System.Linq.Expressions;
 
     /// <summary>
     /// Stage about loop throught <typeparamref name="TInput"/> to apply a processing sequence on each item
     /// </summary>
     /// <typeparam name="TInput">The type of the input.</typeparam>
     /// <seealso cref="ISequencePipelineStageDefinitionProvider" />
-    internal sealed class SequencePipelineForeachStageBuilder<TInput> : SequencePipelineStageBaseBuilder<TInput>, ISequencePipelineStageDefinitionProvider
+    internal sealed class SequencePipelineForeachStageBuilder<TInput> : SequencePipelineStageBaseBuilder, ISequencePipelineStageDefinitionProvider
     {
         #region Fields
 
@@ -38,7 +37,7 @@ namespace Democrite.Framework.Builders.Sequences
                                                    AccessExpressionDefinition? memberAccess = null,
                                                    AbstractMethod? setMethod = null,
                                                    bool relayInput = false,
-                                                   Action<ISequencePipelineStageConfigurator<TInput>>? configAction = null)
+                                                   Action<ISequencePipelineStageConfigurator>? configAction = null)
             : base(configAction)
         {
             this._sequenceBuilder = sequenceBuilder;

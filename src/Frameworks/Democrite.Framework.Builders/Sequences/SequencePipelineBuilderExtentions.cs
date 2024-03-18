@@ -5,14 +5,13 @@
 namespace Democrite.Framework.Builders
 {
     using Democrite.Framework.Builders.Sequences;
-    using Democrite.Framework.Builders.Steps;
     using Democrite.Framework.Core.Abstractions.Signals;
+
     using Elvex.Toolbox;
 
     using System;
     using System.Collections.Generic;
     using System.Linq.Expressions;
-    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// Extention methods to apply stages on each inputs
@@ -26,7 +25,7 @@ namespace Democrite.Framework.Builders
                                                                                                                   Expression<Func<TInputMessage, IEnumerable<TSplitInputMessage>>> subInputGetAccess,
                                                                                                                   Func<ISequencePipelineBuilder<TSplitInputMessage>, ISequencePipelineBuilder<TOutput>> foreachConfigStage,
                                                                                                                   Expression<Action<TInputMessage, IEnumerable<TOutput>>> subInputSetAccess,
-                                                                                                                  Action<ISequencePipelineStageConfigurator<TInputMessage>>? cfg = null)
+                                                                                                                  Action<ISequencePipelineStageConfigurator>? cfg = null)
         {
             var eachSequenceBuilder = stageBuilder.CreateSubSequence(nameof(Foreach));
             var pipeline = eachSequenceBuilder.RequiredInput<TSplitInputMessage>();
@@ -48,7 +47,7 @@ namespace Democrite.Framework.Builders
         public static ISequencePipelineBuilder<IEnumerable<TOutput>> Foreach<TInputMessage, TOutput, TSplitInputMessage>(this ISequencePipelineBuilder<TInputMessage> stageBuilder,
                                                                                                                          TSplitInputMessage _,
                                                                                                                          Func<ISequencePipelineBuilder<TSplitInputMessage>, ISequencePipelineBuilder<TOutput>> foreachConfigStage,
-                                                                                                                         Action<ISequencePipelineStageConfigurator<TInputMessage>>? cfg = null)
+                                                                                                                         Action<ISequencePipelineStageConfigurator>? cfg = null)
         {
             var eachSequenceBuilder = stageBuilder.CreateSubSequence(nameof(Foreach));
             var pipeline = eachSequenceBuilder.RequiredInput<TSplitInputMessage>();
@@ -63,7 +62,7 @@ namespace Democrite.Framework.Builders
         public static ISequencePipelineBuilder Foreach<TInputMessage, TSplitInputMessage>(this ISequencePipelineBuilder<TInputMessage> stageBuilder,
                                                                                           TSplitInputMessage _,
                                                                                           Func<ISequencePipelineBuilder<TSplitInputMessage>, ISequencePipelineBuilder> foreachConfigStage,
-                                                                                          Action<ISequencePipelineStageConfigurator<TInputMessage>>? cfg = null)
+                                                                                          Action<ISequencePipelineStageConfigurator>? cfg = null)
             where TInputMessage : IEnumerable<TSplitInputMessage>
         {
             return (ISequencePipelineBuilder)stageBuilder.Foreach(_, each => (ISequencePipelineBuilder<NoneType>)foreachConfigStage(each), cfg);
@@ -74,7 +73,7 @@ namespace Democrite.Framework.Builders
         /// </summary>
         public static ISequencePipelineBuilder<TInputMessage> Filter<TInputMessage, TItemInputMessage>(this ISequencePipelineBuilder<TInputMessage> stageBuilder,
                                                                                                        Expression<Func<TItemInputMessage, bool>> conditions,
-                                                                                                       Action<ISequencePipelineStageConfigurator<TInputMessage>>? cfg = null)
+                                                                                                       Action<ISequencePipelineStageConfigurator>? cfg = null)
             where TInputMessage : IEnumerable<TItemInputMessage>
         {
             var serializable = conditions.Serialize();

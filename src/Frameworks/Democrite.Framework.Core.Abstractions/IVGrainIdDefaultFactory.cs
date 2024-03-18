@@ -16,7 +16,7 @@ namespace Democrite.Framework.Core.Abstractions
         /// <summary>
         /// Builds a new vgrain identifier base on information provide by the <paramref name="input"/> and <paramref name="executionContext"/>
         /// </summary>
-        IVGrainId BuildNewId(Type vgrainType, object? input, IExecutionContext executionContext, ILogger logger);
+        IVGrainId BuildNewId(Type vgrainType, object? input, IExecutionContext? executionContext, ILogger logger);
 
         #endregion
     }

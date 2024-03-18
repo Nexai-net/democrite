@@ -36,6 +36,11 @@ namespace Democrite.Framework.Node.Configurations
             // FireAsync Signal
             serviceCollection.AddSingleton<SequenceExecutorThreadStageFireSignal>();
             serviceCollection.AddSingleton<ISequenceExecutorThreadStageSourceProvider, SequenceExecutorGenericThreadStageSourceProvider<SequenceStageFireSignalDefinition, SequenceExecutorThreadStageFireSignal>>();
+
+            // Select
+            serviceCollection.AddSingleton<SequenceExecutorThreadStageSelect>();
+            serviceCollection.AddSingleton<ISequenceExecutorThreadStageSourceProvider, SequenceExecutorGenericThreadStageSourceProvider<SequenceStageSelectDefinition, SequenceExecutorThreadStageSelect>>();
+
         }
     }
 }

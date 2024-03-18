@@ -6,8 +6,6 @@ namespace Democrite.Framework.Builders.Sequences
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
-    using Elvex.Toolbox.Abstractions.Expressions;
-    using Elvex.Toolbox.Helpers;
 
     using System.Linq.Expressions;
 
@@ -15,7 +13,7 @@ namespace Democrite.Framework.Builders.Sequences
     /// Builder about <see cref="SequenceStagePushToContextDefinition"/> a stage able to push an information into <see cref="IExecutionContext"/>
     /// </summary>
     /// <seealso cref="ISequencePipelineStageDefinitionProvider" />
-    internal sealed class SequencePipelinePushToContextStageBuilder<TInput> : SequencePipelineStageBaseBuilder<TInput>, ISequencePipelineStageDefinitionProvider
+    internal sealed class SequencePipelinePushToContextStageBuilder<TInput> : SequencePipelineStageBaseBuilder, ISequencePipelineStageDefinitionProvider
     {
         #region Fields
 
@@ -31,7 +29,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// </summary>
         public SequencePipelinePushToContextStageBuilder(LambdaExpression inputExpression,
                                                          bool @override, 
-                                                         Action<ISequencePipelineStageConfigurator<TInput>>? configAction)
+                                                         Action<ISequencePipelineStageConfigurator>? configAction)
             : base(configAction)
         {
             this._inputExpression = inputExpression;

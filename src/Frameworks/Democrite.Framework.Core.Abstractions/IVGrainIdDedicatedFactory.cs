@@ -26,7 +26,7 @@ namespace Democrite.Framework.Core.Abstractions
         /// </summary>
         /// <exception cref="VGrainIdTemplateMissingException"> Raised when attribute <see cref="ExpectedVGrainIdFormatAttribute"/> is missing </exception>
         /// <exception cref="VGrainIdGenerationException">Raised when information need for the generation are invalid or missings</exception>
-        IVGrainId BuildNewId(VGrainIdBaseFormatorAttribute attr, Type vgrainType, object? input, IExecutionContext executionContext, ILogger logger);
+        IVGrainId BuildNewId(VGrainIdBaseFormatorAttribute attr, Type vgrainType, object? input, IExecutionContext? executionContext, ILogger logger);
 
         #endregion
     }

@@ -52,13 +52,13 @@ namespace Democrite.Framework.Core.Services
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IVGrainId BuildNewId<TVGrain>(object? input, IExecutionContext executionContext, ILogger logger) where TVGrain : IVGrain
+        public IVGrainId BuildNewId<TVGrain>(object? input, IExecutionContext? executionContext, ILogger logger) where TVGrain : IVGrain
         {
             return BuildNewId(typeof(TVGrain), input, executionContext, logger);
         }
 
         /// <inheritdoc />
-        public IVGrainId BuildNewId(Type vgrainType, object? input, IExecutionContext executionContext, ILogger logger)
+        public IVGrainId BuildNewId(Type vgrainType, object? input, IExecutionContext? executionContext, ILogger logger)
         {
             ArgumentNullException.ThrowIfNull(vgrainType);
 

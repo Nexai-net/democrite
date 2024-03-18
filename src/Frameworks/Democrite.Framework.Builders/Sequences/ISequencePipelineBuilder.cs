@@ -132,6 +132,16 @@ namespace Democrite.Framework.Builders.Sequences
         /// Add a new <see cref="IVGrain"/> in the pipeline to transform action based on input to produce normally and output
         /// </summary>
         ISequencePipelineStageCallBuilder<TVGrain> Use<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg = null) where TVGrain : IVGrain;
+
+        /// <summary>
+        /// Selects the specified data as input
+        /// </summary>
+        ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TSelected>> select, Action<ISequencePipelineStageConfigurator>? cfg = null);
+
+        /// <summary>
+        /// Selects the specified data as input
+        /// </summary>
+        ISequencePipelineBuilder<TSelected> Select<TSelected>(TSelected select, Action<ISequencePipelineStageConfigurator>? cfg = null);
     }
 
     /// <summary>
@@ -144,9 +154,14 @@ namespace Democrite.Framework.Builders.Sequences
 
     {
         /// <summary>
+        /// Selects the specified data as input
+        /// </summary>
+        ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TPreviousMessage, TSelected>> select, Action<ISequencePipelineStageConfigurator>? cfg = null);
+
+        /// <summary>
         /// Add a new <see cref="IVGrain"/> in the pipeline to transform action based on input to produce normally and output
         /// </summary>
-        ISequencePipelineStageCallBuilder<TPreviousMessage, TVGrain> Use<TVGrain>(Action<ISequencePipelineStageConfigurator<TPreviousMessage>>? cfg = null)
+        ISequencePipelineStageCallBuilder<TPreviousMessage, TVGrain> Use<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg = null)
             where TVGrain : IVGrain;
 
         /// <summary>
@@ -193,7 +208,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Add a new converter <see cref="ITransformerConvertVGrain{TInput}"/> in the pipeline to transform input into output
         /// </summary>
-        ISequencePipelineStageCallBuilder<TPreviousMessage, TConverterVGrain> Convert<TConverterVGrain>(Action<ISequencePipelineStageConfigurator<TPreviousMessage>>? cfg = null)
+        ISequencePipelineStageCallBuilder<TPreviousMessage, TConverterVGrain> Convert<TConverterVGrain>(Action<ISequencePipelineStageConfigurator>? cfg = null)
             where TConverterVGrain : IVGrain;
 
     }

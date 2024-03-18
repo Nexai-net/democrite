@@ -9,7 +9,7 @@ namespace Democrite.Framework.Builders.Sequences
     using System;
 
     /// <inheritdoc />
-    internal sealed class SequencePipelineConfiguratorStageBuilder<TInput> : ISequencePipelineStageConfigurator<TInput>, ISequencePipelineStageConfigurator
+    internal sealed class SequencePipelineConfiguratorStageBuilder : ISequencePipelineStageConfigurator //<TInput>, ISequencePipelineStageConfigurator
     {
         #region Fields
 
@@ -20,7 +20,7 @@ namespace Democrite.Framework.Builders.Sequences
         #region Ctor
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SequencePipelineConfiguratorStageBuilder{TInput}"/> class.
+        /// Initializes a new instance of the <see cref="SequencePipelineConfiguratorStageBuilder"/> class.
         /// </summary>
         public SequencePipelineConfiguratorStageBuilder()
         {
@@ -30,45 +30,26 @@ namespace Democrite.Framework.Builders.Sequences
 
         #region Methods
 
-        ISequencePipelineStageConfigurator ISequencePipelineStageConfigurator.ContextParameter<TParameterType>(string parameterName, TParameterType value)
-        {
-            throw new NotImplementedException();
-        }
-
-        ISequencePipelineStageConfigurator<TInput> ISequencePipelineStageConfigurator<TInput>.ContextParameter<TParameterType>(string parameterName, TParameterType value)
-        {
-            throw new NotImplementedException();
-        }
-
-        ISequencePipelineStageConfigurator ISequencePipelineStageConfigurator.Options<TParameterType>(Func<TParameterType> optionReturned)
-        {
-            throw new NotImplementedException();
-        }
-
-        ISequencePipelineStageConfigurator ISequencePipelineStageConfigurator.Options<TParameterType>(Action<TParameterType> optionSetup)
-        {
-            throw new NotImplementedException();
-        }
-
-        ISequencePipelineStageConfigurator<TInput> ISequencePipelineStageConfigurator<TInput>.Options<TParameterType>(Func<TParameterType> optionReturned)
-        {
-            throw new NotImplementedException();
-        }
-
-        ISequencePipelineStageConfigurator<TInput> ISequencePipelineStageConfigurator<TInput>.Options<TParameterType>(Action<TParameterType> optionSetup)
+        /// <inheritdoc />
+        public ISequencePipelineStageConfigurator ContextParameter<TParameterType>(string parameterName, TParameterType value)
         {
             throw new NotImplementedException();
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageConfigurator ISequencePipelineStageConfigurator.Uid(Guid uid)
+        public ISequencePipelineStageConfigurator Options<TParameterType>(Func<TParameterType> optionReturned)
         {
-            this._customStageId = uid;
-            return this;
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageConfigurator<TInput> ISequencePipelineStageConfigurator<TInput>.Uid(Guid uid)
+        public ISequencePipelineStageConfigurator Options<TParameterType>(Action<TParameterType> optionSetup) where TParameterType : new()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public ISequencePipelineStageConfigurator Uid(Guid uid)
         {
             this._customStageId = uid;
             return this;

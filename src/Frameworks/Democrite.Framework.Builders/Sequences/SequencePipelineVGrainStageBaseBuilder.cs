@@ -12,7 +12,7 @@ namespace Democrite.Framework.Builders.Sequences
 
     /// <inheritdoc />
     [DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
-    internal class SequencePipelineVGrainStageBaseBuilder<TVGrain, TInput> : SequencePipelineStageBaseBuilder<TInput>,
+    internal class SequencePipelineVGrainStageBaseBuilder<TVGrain, TInput> : SequencePipelineStageBaseBuilder,
                                                                             
                                                                              ISequencePipelineStageBaseBuilder,
                                                                              ISequencePipelineStageFinalizerBuilder<TVGrain>,
@@ -34,7 +34,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Initializes a new instance of the <see cref="SequencePipelineVGrainStageBaseBuilder{TWorflowStage, TInput}"/> class.
         /// </summary>
-        public SequencePipelineVGrainStageBaseBuilder(ISequencePipelineBaseBuilder sequencePipelineBuilder, Action<ISequencePipelineStageConfigurator<TInput>>? configAction)
+        public SequencePipelineVGrainStageBaseBuilder(ISequencePipelineBaseBuilder sequencePipelineBuilder, Action<ISequencePipelineStageConfigurator>? configAction)
             : base(configAction)
         {
             this._sequencePipelineBuilder = sequencePipelineBuilder;

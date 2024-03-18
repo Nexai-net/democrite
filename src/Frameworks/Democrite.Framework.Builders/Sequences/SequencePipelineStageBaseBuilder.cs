@@ -11,15 +11,14 @@ namespace Democrite.Framework.Builders.Sequences
     /// <summary>
     /// base class to every stage builder
     /// </summary>
-    /// <typeparam name="TInput">The type of the input.</typeparam>
-    public abstract class SequencePipelineStageBaseBuilder<TInput>
+    public abstract class SequencePipelineStageBaseBuilder
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequencePipelineStageBaseBuilder{TInput}"/> class.
         /// </summary>
-        public SequencePipelineStageBaseBuilder(Action<ISequencePipelineStageConfigurator<TInput>>? configAction)
+        public SequencePipelineStageBaseBuilder(Action<ISequencePipelineStageConfigurator>? configAction)
         {
             this.ConfigAction = configAction;
         }
@@ -31,7 +30,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Gets the configuration action.
         /// </summary>
-        protected Action<ISequencePipelineStageConfigurator<TInput>>? ConfigAction { get; }
+        protected Action<ISequencePipelineStageConfigurator>? ConfigAction { get; }
 
         #endregion
 
@@ -44,7 +43,7 @@ namespace Democrite.Framework.Builders.Sequences
         {
             if (this.ConfigAction != null)
             {
-                var builder = new SequencePipelineConfiguratorStageBuilder<TInput>();
+                var builder = new SequencePipelineConfiguratorStageBuilder();
                 this.ConfigAction?.Invoke(builder);
                 return builder.ToDefinition();
             }

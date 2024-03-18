@@ -15,7 +15,7 @@ namespace Democrite.Framework.Builders.Sequences
     /// Stage about loop throught <typeparamref name="TInput"/> to apply a filter
     /// </summary>
     /// <seealso cref="ISequencePipelineInternalStage" />
-    internal sealed class SequencePipelineFilterStageBuilder<TInput> : SequencePipelineStageBaseBuilder<TInput>, ISequencePipelineStageDefinitionProvider
+    internal sealed class SequencePipelineFilterStageBuilder<TInput> : SequencePipelineStageBaseBuilder, ISequencePipelineStageDefinitionProvider
     {
         #region Fields
 
@@ -28,7 +28,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Initializes a new instance of the <see cref="SequencePipelineForeachBuilder"/> class.
         /// </summary>
-        public SequencePipelineFilterStageBuilder(ConditionExpressionDefinition condition, Action<ISequencePipelineStageConfigurator<TInput>>? configAction)
+        public SequencePipelineFilterStageBuilder(ConditionExpressionDefinition condition, Action<ISequencePipelineStageConfigurator>? configAction)
             : base(configAction)
         {
             this._condition = condition;

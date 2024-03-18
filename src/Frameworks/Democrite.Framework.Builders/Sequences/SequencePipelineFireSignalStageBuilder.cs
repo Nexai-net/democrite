@@ -14,8 +14,7 @@ namespace Democrite.Framework.Builders.Sequences
     /// Builder about <see cref="SequenceStageFireSignalDefinition"/> a stage able to fire a signal without or without message
     /// </summary>
     /// <seealso cref="ISequencePipelineStageDefinitionProvider" />
-    internal sealed class SequencePipelineFireSignalStageBuilder<TInput, TMessage> : SequencePipelineStageBaseBuilder<TInput>, ISequencePipelineStageDefinitionProvider
-        //where TMessage : struct
+    internal sealed class SequencePipelineFireSignalStageBuilder<TInput, TMessage> : SequencePipelineStageBaseBuilder, ISequencePipelineStageDefinitionProvider
     {
         #region Fields
 
@@ -37,7 +36,7 @@ namespace Democrite.Framework.Builders.Sequences
                                                       TMessage? directMessage,
                                                       LambdaExpression? fetchMessage,
                                                       bool multi,
-                                                      Action<ISequencePipelineStageConfigurator<TInput>>? configAction)
+                                                      Action<ISequencePipelineStageConfigurator>? configAction)
             : base(configAction)
         {
             this._signalName = signalName;

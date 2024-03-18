@@ -8,6 +8,7 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Expressions;
 
     using System.Linq.Expressions;
 
@@ -66,14 +67,14 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageCallBuilder<TInput, TVGrain> ISequencePipelineBuilder<TInput>.Use<TVGrain>(Action<ISequencePipelineStageConfigurator<TInput>>? cfg)
+        ISequencePipelineStageCallBuilder<TInput, TVGrain> ISequencePipelineBuilder<TInput>.Use<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg)
         {
             var stageBuilder = new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, NoneType>(this, cfg);
             return stageBuilder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageCallBuilder<TInput, TVGrain> ISequencePipelineBuilder<TInput>.Convert<TVGrain>(Action<ISequencePipelineStageConfigurator<TInput>>? cfg)
+        ISequencePipelineStageCallBuilder<TInput, TVGrain> ISequencePipelineBuilder<TInput>.Convert<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg)
         {
             var stageBuilder = new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, NoneType>(this, cfg);
             return stageBuilder;
@@ -300,7 +301,32 @@ namespace Democrite.Framework.Builders.Sequences
             return EnqueueStage<TInput>(fireStage);
         }
 
+        /// <inheritdoc />
+        public ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TSelected>> select, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        {
+            return SelectImpl<NoneType, TSelected>(select.CreateAccess(), cfg);
+        }
+
+        /// <inheritdoc />
+        public ISequencePipelineBuilder<TSelected> Select<TSelected>(TSelected item, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        {
+            return SelectImpl<NoneType, TSelected>(item.CreateAccess(), cfg);
+        }
+
+        /// <inheritdoc />
+        public ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TInput, TSelected>> select, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        {
+            return SelectImpl<TInput, TSelected>(select.CreateAccess(), cfg);
+        }
+
         #region Tools
+
+        /// <inheritdoc />
+        private ISequencePipelineBuilder<TSelected> SelectImpl<TForceInput, TSelected>(AccessExpressionDefinition access, Action<ISequencePipelineStageConfigurator>? cfg)
+        {
+            var selectStage = new SequencePipelineSelectStageBuilder<TForceInput, TSelected>(access, cfg);
+            return EnqueueStage<TSelected>(selectStage);
+        }
 
         /// <inheritdoc />
         private SequencePipelineFireSignalStageBuilder<TInput, NoneTypeStruct?> FireSignalImpl(string signalName)

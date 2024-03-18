@@ -7,9 +7,8 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Builders.Steps;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
+
     using Elvex.Toolbox;
-    using Elvex.Toolbox.Abstractions.Conditions;
-    using Elvex.Toolbox.Helpers;
 
     using System;
     using System.Linq.Expressions;
@@ -25,7 +24,7 @@ namespace Democrite.Framework.Builders.Sequences
     {
         #region Fields
 
-        private readonly Action<ISequencePipelineStageConfigurator<TInput>>? _configAction;
+        private readonly Action<ISequencePipelineStageConfigurator>? _configAction;
         private readonly ISequencePipelineBaseBuilder _sequenceBuilder;
 
         private readonly Expression<Func<TInput, TConfiguration>>? _configurationProvider;
@@ -41,7 +40,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// Initializes a new instance of the <see cref="SequencePipelineVGrainStageCallBuilder{TWorflowStage, TInput}"/> class.
         /// </summary>
         public SequencePipelineVGrainStageCallBuilder(ISequencePipelineBaseBuilder sequenceBuilder,
-                                                      Action<ISequencePipelineStageConfigurator<TInput>>? configAction,
+                                                      Action<ISequencePipelineStageConfigurator>? configAction,
                                                       TConfiguration? configuration = default,
                                                       Expression<Func<TInput, TConfiguration>>? configurationProvider = null)
             : base(sequenceBuilder, configAction)
@@ -142,19 +141,6 @@ namespace Democrite.Framework.Builders.Sequences
         protected override SequenceStageBaseDefinition InternalToDefinition()
         {
             ArgumentNullException.ThrowIfNull(this._callDefinition);
-
-            //SequenceStageLambdaBaseConfiguration? lambdaCfg = null;
-
-            //if (this._configurationProvider is not null)
-            //{
-            //    if (this._configurationProvider.NodeType != ExpressionType.Lambda)
-            //        throw new InvalidOperationException("Only lambda type could be used as configuration provider");
-
-            //    if (this._configurationProvider.Body.NodeType == ExpressionType.MemberInit)
-            //        lambdaCfg = new SequenceStageLambdaMemberInitConfiguration(this._configurationProvider.SerializeMemberInitialization());
-            //    else
-            //        lambdaCfg = new SequenceStageLambdaChainCallConfiguration(DynamicCallHelper.GetCallChain(this._configurationProvider)!);
-            //}
 
             var access = this._configurationProvider?.CreateAccess() ?? this._configuration?.CreateAccess();
 
