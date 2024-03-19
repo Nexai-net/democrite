@@ -41,6 +41,10 @@ namespace Democrite.Framework.Node.Configurations
             serviceCollection.AddSingleton<SequenceExecutorThreadStageSelect>();
             serviceCollection.AddSingleton<ISequenceExecutorThreadStageSourceProvider, SequenceExecutorGenericThreadStageSourceProvider<SequenceStageSelectDefinition, SequenceExecutorThreadStageSelect>>();
 
+            // Nested Sequence call
+            serviceCollection.AddSingleton<SequenceExecutorThreadStageNestedSequenceCall>();
+            serviceCollection.AddSingleton<ISequenceExecutorThreadStageSourceProvider, SequenceExecutorGenericThreadStageSourceProvider<SequenceStageNestedSequenceCallDefinition, SequenceExecutorThreadStageNestedSequenceCall>>();
+
         }
     }
 }

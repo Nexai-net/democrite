@@ -16,6 +16,11 @@ namespace Democrite.Framework.Core.Models
         bool IsMatch(Type type);
 
         /// <summary>
+        /// Determines whether the specified context data container is match.
+        /// </summary>
+        bool IsMatch(IContextDataContainer contextDataContainer);
+
+        /// <summary>
         /// Gets the data.
         /// </summary>
         object? GetData(IDemocriteSerializer democriteSerializer);
@@ -69,6 +74,12 @@ namespace Democrite.Framework.Core.Models
         public bool IsMatch(Type type)
         {
             return this._type.IsEqualTo(type, true);
+        }
+
+        /// <inheritdoc />
+        public bool IsMatch(IContextDataContainer type)
+        {
+            return type is ContextDataContainer<TData>;
         }
 
         /// <summary>

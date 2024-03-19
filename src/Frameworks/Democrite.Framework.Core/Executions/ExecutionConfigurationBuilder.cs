@@ -14,8 +14,8 @@ namespace Democrite.Framework.Core.Executions
     /// <summary>
     /// Execution Configuraiton builder
     /// </summary>
-    /// <seealso cref="Democrite.Framework.Core.Abstractions.IExecutionConfigurationBuilder" />
-    internal sealed class ExecutionConfigurationBuilder : IExecutionConfigurationBuilder
+    /// <seealso cref="IExecutionConfigurationBuilder" />
+    public sealed class ExecutionConfigurationBuilder : IExecutionConfigurationBuilder
     {
         #region Fields
 

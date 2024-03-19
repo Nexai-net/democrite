@@ -78,19 +78,37 @@ namespace Democrite.Framework.Core
         /// <inheritdoc />
         public IExecutionLauncher Sequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
         {
-            return SequenceImpl<NoneType>(sequenceId, cfgBuilder);
+            return SequenceImpl<NoneType>(sequenceId, cfgBuilder, null);
+        }
+
+        /// <inheritdoc />
+        public IExecutionLauncher Sequence(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
+        {
+            return SequenceImpl<NoneType>(sequenceId, null, customizationDescriptions);
         }
 
         /// <inheritdoc />
         public IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
         {
-            return SequenceImpl<TInput>(sequenceId, cfgBuilder);
+            return SequenceImpl<TInput>(sequenceId, cfgBuilder, null);
+        }
+
+        /// <inheritdoc />
+        public IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
+        {
+            return SequenceImpl<TInput>(sequenceId, null, customizationDescriptions);
         }
 
         /// <inheritdoc />
         public IExecutionBuilder<object> SequenceWithInput(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
         {
-            return SequenceImpl<object>(sequenceId, cfgBuilder);
+            return SequenceImpl<object>(sequenceId, cfgBuilder, null);
+        }
+
+        /// <inheritdoc />
+        public IExecutionBuilder<object> SequenceWithInput(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
+        {
+            return SequenceImpl<object>(sequenceId, null, customizationDescriptions);
         }
 
         #region Tools
@@ -103,9 +121,11 @@ namespace Democrite.Framework.Core
         }
 
         /// <inheritdoc />
-        public ExecutionBuilderLauncher<ISequenceExecutorVGrain, TInput> SequenceImpl<TInput>(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
+        public ExecutionBuilderLauncher<ISequenceExecutorVGrain, TInput> SequenceImpl<TInput>(Guid sequenceId,
+                                                                                              Action<IExecutionConfigurationBuilder>? cfgBuilder,
+                                                                                              in ExecutionCustomizationDescriptions? customizationDescriptions)
         {
-            ExecutionCustomizationDescriptions? executionCustomization = null;
+            var executionCustomization = customizationDescriptions;
 
             if (cfgBuilder != null)
             {

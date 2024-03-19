@@ -6,6 +6,7 @@ namespace Democrite.Framework.Core.Abstractions
 {
     using Democrite.Framework.Core.Abstractions.Models.Surrogates;
     using Democrite.Framework.Core.Abstractions.Repositories;
+    using Democrite.Framework.Core.Models;
 
     using Microsoft.Extensions.Logging;
 
@@ -63,12 +64,20 @@ namespace Democrite.Framework.Core.Abstractions
         /// <summary>
         /// Duplicates current <see cref="IExecutionContext"/> and attach the context info <paramref name="contextInfo"/>
         /// </summary>
-        IExecutionContext<TContextInfo> DuplicateWithContext<TContextInfo>(TContextInfo contextInfo);
+        IExecutionContext<TContextInfo> DuplicateWithConfiguration<TContextInfo>(TContextInfo contextInfo);
 
         /// <summary>
         /// Duplicates current <see cref="IExecutionContext"/> and attach the context info <paramref name="contextInfo"/>
         /// </summary>
-        IExecutionContext DuplicateWithContext(object? contextInfo, Type contextType);
+        IExecutionContext DuplicateWithConfiguration(object? contextInfo, Type contextType);
+
+        /// <summary>
+        /// Gets all data context.
+        /// </summary>
+        /// <remarks>
+        ///     Use during serialization
+        /// </remarks>
+        IReadOnlyCollection<IContextDataContainer> GetAllDataContext();
 
         /// <summary>
         /// Try to the pusll data stored in the context carried throught flow execution
@@ -86,6 +95,14 @@ namespace Democrite.Framework.Core.Abstractions
                                               IDemocriteSerializer serializer) where TContextData : struct;
 
         /// <summary>
+        /// Try to the push data stored in the context carried throught flow execution
+        /// </summary>
+        /// <remarks>
+        ///     A data is identify by its type, except when <paramref name="override"/> is true the data will not be replaced
+        /// </remarks>
+        bool TryPushContextData(IContextDataContainer contextData, bool @override);
+
+        /// <summary>
         /// Clear all context data
         /// </summary>
         void ClearContextData();
@@ -99,6 +116,11 @@ namespace Democrite.Framework.Core.Abstractions
         /// Clear all context data of type <paramref name="dataType"/>
         /// </summary>
         void ClearContextData<TContextData>() where TContextData : struct;
+
+        /// <summary>
+        /// Duplicates this instance.
+        /// </summary>
+        IExecutionContext Duplicate();
 
         #endregion
     }

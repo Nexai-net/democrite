@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Builders.Sequences
 {
     using Democrite.Framework.Builders;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Elvex.Toolbox;
@@ -394,6 +395,18 @@ namespace Democrite.Framework.Builders.Sequences
             where TMessage : struct
         {
             return new SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>>(null, signalId, null, messageBuilder, true, null);
+        }
+
+        /// <inheritdoc />
+        public ISequencePipelineNestedSequenceCallBuilder CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        {
+            return new SequencePipelineNestedSequenceCallBuilder<NoneType>(this, sequenceId, cfgBuilder, cfg);
+        }
+
+        /// <inheritdoc />
+        ISequencePipelineNestedSequenceCallBuilder<TInput> ISequencePipelineBuilder<TInput>.CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        {
+            return new SequencePipelineNestedSequenceCallBuilder<TInput>(this, sequenceId, cfgBuilder, cfg);
         }
 
         #endregion

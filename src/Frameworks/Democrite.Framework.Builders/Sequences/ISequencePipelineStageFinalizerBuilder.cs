@@ -27,7 +27,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Gets the endpoint of an actor definition without using the <typeparamref name="TOutputMessage"/>
         /// </summary>
-        ISequencePipelineBuilder ReturnNoMessage { get; }
+        ISequencePipelineBuilder ReturnNoData { get; }
     }
 
     /// <summary>

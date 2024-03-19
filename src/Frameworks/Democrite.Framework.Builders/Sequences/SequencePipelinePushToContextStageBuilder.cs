@@ -43,20 +43,6 @@ namespace Democrite.Framework.Builders.Sequences
         /// <inheritdoc />
         public SequenceStageBaseDefinition ToDefinition()
         {
-            //MemberInitializationDefinition? initMember = null;
-            //string? callChain = null;
-
-            //if (this._inputExpression is not null)
-            //{
-            //    if (this._inputExpression.NodeType != ExpressionType.Lambda)
-            //        throw new InvalidOperationException("Only lambda type could be used as configuration provider");
-
-            //    if (this._inputExpression.Body.NodeType == ExpressionType.MemberInit)
-            //        initMember = this._inputExpression.SerializeMemberInitialization();
-            //    else
-            //        callChain = DynamicCallHelper.GetCallChain(this._inputExpression)!;
-            //}
-
             var access = this._inputExpression.CreateAccess();
 
             return new SequenceStagePushToContextDefinition(typeof(TInput).GetAbstractType(),

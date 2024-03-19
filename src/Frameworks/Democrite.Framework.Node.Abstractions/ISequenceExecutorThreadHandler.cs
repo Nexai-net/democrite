@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Abstractions
 {
+    using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Node.Abstractions.Models;
     using Elvex.Toolbox.Abstractions.Disposables;
@@ -27,9 +28,14 @@ namespace Democrite.Framework.Node.Abstractions
         bool HasInnerThreads { get; }
 
         /// <summary>
-        /// Gets the state of the current thread.
+        /// Gets the state of the current thread saved
         /// </summary>
-        ISequenceExecutorExecThreadState GetCurrentThreadState();
+        ISequenceExecutorExecThreadState GetCurrentDoneThreadState();
+
+        /// <summary>
+        /// Gets the state of the current thread in processing
+        /// </summary>
+        ISequenceExecutorExecThreadState GetCurrentInProcessThreadState();
 
         /// <summary>
         /// Creates an inner <see cref="ISequenceExecutorExecThread"/>.
@@ -52,5 +58,10 @@ namespace Democrite.Framework.Node.Abstractions
         /// </summary>
         /// <param name="emptyOnPull">if set to <c>true</c> [empty on pull].</param>
         IReadOnlyCollection<ISequenceExecutorExecThread> PullInnerThreads(bool emptyOnPull);
+
+        /// <summary>
+        /// Gets the sequence execution customization.
+        /// </summary>
+        ExecutionCustomizationDescriptions? GetSequenceExecutionCustomization();
     }
 }

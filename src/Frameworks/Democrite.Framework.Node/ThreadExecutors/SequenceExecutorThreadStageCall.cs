@@ -84,7 +84,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
                                    if (paramType == typeof(IExecutionContext<>).MakeGenericType(step.Configuration.TargetType.ToType()))
                                    {
-                                       sequenceContext = sequenceContext.DuplicateWithContext(configuration, step.Configuration.TargetType.ToType());
+                                       sequenceContext = sequenceContext.DuplicateWithConfiguration(configuration, step.Configuration.TargetType.ToType());
                                        return sequenceContext;
                                    }
                                }

@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Models
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Repositories;
@@ -13,17 +14,16 @@ namespace Democrite.Framework.Node.Models
     using Democrite.Framework.Core.Diagnostics;
     using Democrite.Framework.Core.Models;
     using Democrite.Framework.Node.Abstractions;
-    using Democrite.Framework.Node.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.Services;
     using Democrite.Framework.Node.ThreadExecutors;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Disposables;
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Disposables;
     using Elvex.Toolbox.Extensions;
-    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 
@@ -74,9 +74,11 @@ namespace Democrite.Framework.Node.Models
                                            IObjectConverter objectConverter,
                                            ITimeManager timeManager,
                                            IDemocriteSerializer democriteSerializer,
+                                           SequenceExecutorState rootState,
                                            bool forceFirstContextGeneration = false)
         {
             this.State = state;
+            this.RootState = rootState;
 
             this._timeManager = timeManager;
             this._democriteSerializer = democriteSerializer;
@@ -98,6 +100,11 @@ namespace Democrite.Framework.Node.Models
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// Gets the state of the root.
+        /// </summary>
+        public SequenceExecutorState RootState { get; }
 
         /// <summary>
         /// Gets the current thread state.
@@ -122,6 +129,11 @@ namespace Democrite.Framework.Node.Models
                 }
             }
         }
+
+        /// <summary>
+        /// Gets the customizations.
+        /// </summary>
+        public ExecutionCustomizationDescriptions? Customizations { get; private set; }
 
         #endregion
 
@@ -178,13 +190,42 @@ namespace Democrite.Framework.Node.Models
                                                       this._sequenceExecutorExecThread._stageProvider,
                                                       this._sequenceExecutorExecThread._objectConverter,
                                                       this._sequenceExecutorExecThread._timeManager,
-                                                      this._sequenceExecutorExecThread._democriteSerializer);
+                                                      this._sequenceExecutorExecThread._democriteSerializer,
+                                                      this._sequenceExecutorExecThread.RootState);
             }
 
             /// <inheritdoc />
-            public ISequenceExecutorExecThreadState GetCurrentThreadState()
+            public ISequenceExecutorExecThreadState GetCurrentDoneThreadState()
             {
                 return this._sequenceExecutorExecThread.State;
+            }
+
+            /// <inheritdoc />
+            /// <remarks>
+            ///     Used by post process to evaluate the current thread information
+            /// </remarks>
+            public ISequenceExecutorExecThreadState GetCurrentInProcessThreadState()
+            {
+                var savedState = this._sequenceExecutorExecThread.State;
+                var currentExecContext = this._sequenceExecutorExecThread._executionContext;
+                return new SequenceExecutorExecThreadState(savedState.FlowUid,
+                                                           savedState.FlowDefinitionId,
+                                                           currentExecContext.CurrentExecutionId,
+                                                           currentExecContext.ParentExecutionId,
+                                                           this._sequenceExecutorExecThread._currentStage?.Uid,
+                                                           savedState.Output,
+                                                           this._sequenceExecutorExecThread._nextStageInput,
+                                                           this._sequenceExecutorExecThread._innerThreads?.Select(i => i.State),
+                                                           null,
+                                                           true,
+                                                           false);
+            }
+
+            /// <inheritdoc />
+            public ExecutionCustomizationDescriptions? GetSequenceExecutionCustomization()
+            {
+                //Customization
+                return this._sequenceExecutorExecThread.RootState.Customization;
             }
 
             /// <inheritdoc />
@@ -220,7 +261,7 @@ namespace Democrite.Framework.Node.Models
                     this._sequenceExecutorExecThread.State.Update(this._sequenceExecutorExecThread.State.Cursor,
                                                                   this._sequenceExecutorExecThread.State.CurrentStageExecId,
                                                                   this._sequenceExecutorExecThread.State.Output,
-                                                                  innerState.Select(i => (SequenceExecutorExecThreadState)i.Token.GetCurrentThreadState()));
+                                                                  innerState.Select(i => (SequenceExecutorExecThreadState)i.Token.GetCurrentDoneThreadState()));
                 }
                 finally
                 {
@@ -318,9 +359,17 @@ namespace Democrite.Framework.Node.Models
                                                                         ISequenceExecutorThreadStageProvider stageProviders,
                                                                         IObjectConverter objectConverter,
                                                                         ITimeManager timeManager,
-                                                                        IDemocriteSerializer democriteSerializer)
+                                                                        IDemocriteSerializer democriteSerializer,
+                                                                        SequenceExecutorState rootState)
         {
-            return BuildFromImplAsync(threadState, getSequenceDef, 0, stageProviders, objectConverter, timeManager, democriteSerializer);
+            return BuildFromImplAsync(threadState,
+                                      getSequenceDef,
+                                      0,
+                                      stageProviders,
+                                      objectConverter,
+                                      timeManager,
+                                      democriteSerializer,
+                                      rootState);
         }
 
         /// <summary>
@@ -332,7 +381,8 @@ namespace Democrite.Framework.Node.Models
                                                                                  ISequenceExecutorThreadStageProvider stageProviders,
                                                                                  IObjectConverter objectConverter,
                                                                                  ITimeManager timeManager,
-                                                                                 IDemocriteSerializer democriteSerializer)
+                                                                                 IDemocriteSerializer democriteSerializer,
+                                                                                 SequenceExecutorState rootState)
         {
             var def = await getSequenceDef(threadState.FlowDefinitionId) ?? throw new SequenceDefinitionMissingException(threadState.FlowDefinitionId);
 
@@ -351,7 +401,7 @@ namespace Democrite.Framework.Node.Models
                         return host.InnerFlow;
 
                     return await getSequenceDef(id);
-                }, depth + 1, stageProviders, objectConverter, timeManager, democriteSerializer);
+                }, depth + 1, stageProviders, objectConverter, timeManager, democriteSerializer, rootState);
 
                 innerThreads.Add(innerThread);
             }
@@ -363,6 +413,7 @@ namespace Democrite.Framework.Node.Models
                                                   objectConverter,
                                                   timeManager,
                                                   democriteSerializer,
+                                                  rootState,
                                                   depth == 0);
         }
 

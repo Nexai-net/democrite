@@ -94,7 +94,7 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        ISequencePipelineBuilder ISequencePipelineStageFinalizerBuilder<TInput, TVGrain>.ReturnNoMessage
+        ISequencePipelineBuilder ISequencePipelineStageFinalizerBuilder<TInput, TVGrain>.ReturnNoData
         {
             get
             {

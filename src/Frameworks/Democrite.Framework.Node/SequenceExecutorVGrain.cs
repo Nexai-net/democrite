@@ -107,8 +107,10 @@ namespace Democrite.Framework.Node
 
             var defaultResult = default(TOutput);
 
-            if (typeof(TOutput) == NoneType.Trait)
+            if (NoneType.IsEqualTo<TOutput>())
                 defaultResult = (TOutput)(object)NoneType.Instance;
+            else if (AnyType.IsEqualTo<TOutput>())
+                defaultResult = (TOutput)(object)AnyType.Instance;
 
             ArgumentNullException.ThrowIfNull(state);
 
@@ -143,7 +145,8 @@ namespace Democrite.Framework.Node
                                                                                               this._stageProvider,
                                                                                               this._objectConverter,
                                                                                               this._timeManager,
-                                                                                              this._democriteSerializer);
+                                                                                              this._democriteSerializer,
+                                                                                              state);
 
                     using (var container = this._sequenceVGrainProviderFactory.GetProvider(state.Customization))
                     {
@@ -165,10 +168,20 @@ namespace Democrite.Framework.Node
                                     throw new SequenceExecutionException(state.MainThread.ErrorMessage);
 
                                 var output = state.MainThread.Output;
-                                if (typeof(TOutput) != NoneType.Trait)
+                                if (NoneType.IsEqualTo<TOutput>() == false)
                                 {
                                     if (output is TOutput castOutput)
                                         return castOutput;
+
+                                    if (AnyType.IsEqualTo<TOutput>())
+                                    {
+                                        var anyTypeContainer = AnyType.CreateContainer(output, output?.GetType() ?? sequenceDefintion.Output?.ToType() ?? typeof(object));
+                                        if (anyTypeContainer is TOutput castAnyTypeContainer)
+                                            return castAnyTypeContainer;
+
+                                        throw new InvalidCastException($"Couldn't cast {anyTypeContainer} to {typeof(TOutput)}");
+                                    }
+                                        //return (TOutput) castOutput;
 
                                     execLogger.OptiLog(LogLevel.Error,
                                                        "Invalid output [Expected: {expectedType}] != [Get {getType}] : Details {details}",

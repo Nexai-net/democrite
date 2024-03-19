@@ -62,18 +62,18 @@ namespace Democrite.Framework.Node.ThreadExecutors
                 {
                     var innerThreads = collection.Cast<object>()
                                                  .Select(subInput => token.Token.CreateInnerThread(new SequenceExecutorExecThreadState(sequenceContext.FlowUID,
-                                                                                                                                        step.InnerFlow.Uid,
-                                                                                                                                        Guid.NewGuid(),
-                                                                                                                                        sequenceContext.CurrentExecutionId,
-                                                                                                                                        step.InnerFlow,
-                                                                                                                                        subInput),
+                                                                                                                                       step.InnerFlow.Uid,
+                                                                                                                                       Guid.NewGuid(),
+                                                                                                                                       sequenceContext.CurrentExecutionId,
+                                                                                                                                       step.InnerFlow,
+                                                                                                                                       subInput),
                                                                                                     step.InnerFlow))
                                                  .ToArray();
 
                     foreach (var inner in innerThreads)
                         diagnosticLogger.Log(ExecutionContextChangeDiagnosticLog.From(inner.ExecutionContext));
 
-                    var currentState = token.Token.GetCurrentThreadState();
+                    var currentState = token.Token.GetCurrentDoneThreadState();
 
                     // Register inner execution states
                     token.Token.SetInnerThreads(innerThreads);
@@ -114,7 +114,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
                     try
                     {
-                        var foreachIndexedState = foreachThreadsHandler.ToDictionary(k => k, kv => kv.Token.GetCurrentThreadState());
+                        var foreachIndexedState = foreachThreadsHandler.ToDictionary(k => k, kv => kv.Token.GetCurrentDoneThreadState());
 
                         if (foreachIndexedState.All(i => i.Value.Exception != null))
                         {
@@ -151,14 +151,18 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
                             if (sequenceStageDefinition is SequenceStageForeachDefinition foreachDef && foreachDef.SetMethod is not null)
                             {
-                                var state = handlerSafeToken.Token.GetCurrentThreadState();
+                                var state = handlerSafeToken.Token.GetCurrentDoneThreadState();
                                 var collection = result;
                                 var sourceInst = state.Output;
 
                                 if (sourceInst is not null)
                                 {
                                     var mtdh = foreachDef.SetMethod.ToMethod(sourceInst.GetType());
-                                    mtdh.Invoke(sourceInst, new object?[] { collection });
+
+                                    if (mtdh is null)
+                                        throw new ArgumentNullException($"Foreach call couldn't found set method {foreachDef.SetMethod} in type {sourceInst.GetType()}");
+
+                                    mtdh.Invoke(sourceInst, new [] { collection });
 
                                     // Define output type
                                     collectionType = sourceInst.GetType();

@@ -12,6 +12,8 @@ namespace Democrite.Framework.Core.Models
     using System.Collections;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Diagnostics;
+    using System.Reflection;
     using System.Text;
 
     /// <summary>
@@ -24,7 +26,27 @@ namespace Democrite.Framework.Core.Models
     [ImmutableObject(true)]
     public class ExecutionResult : IExecutionResult
     {
+        #region Fields
+
+        private static readonly MethodInfo s_genericCreateWithResultMethod;
+
+        #endregion
+
         #region ctor
+
+        /// <summary>
+        /// Initializes the <see cref="ExecutionResult"/> class.
+        /// </summary>
+        static ExecutionResult()
+        {
+            var genericCreateWithResultMethod = typeof(ExecutionResult).GetMethods()
+                                                                       .Where(m => m.IsPublic && m.IsStatic && m.Name == nameof(Create) && m.IsGenericMethod)
+                                                                       .Select(m => m.GetGenericMethodDefinition())
+                                                                       .FirstOrDefault();
+
+            Debug.Assert(genericCreateWithResultMethod is not null);
+            s_genericCreateWithResultMethod = genericCreateWithResultMethod;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExecutionResult"/> class.
@@ -103,6 +125,19 @@ namespace Democrite.Framework.Core.Models
                                        GetMessage(exception, message),
                                        false,
                                        null);
+        }
+
+        /// <summary>
+        /// Creates <see cref="IExecutionResult{TResult}"/> from execution informations with result value <paramref name="result"/>
+        /// </summary>
+        public static IExecutionResult CreateWithResult(IExecutionContext executionContext,
+                                                        object? result,
+                                                        Type resultType,
+                                                        Exception? exception,
+                                                        string? message = null,
+                                                        bool? succeeded = null)
+        {
+            return (IExecutionResult)s_genericCreateWithResultMethod.MakeGenericMethod(resultType).Invoke(null, new object?[] { executionContext, result, exception, message, succeeded })!;
         }
 
         /// <summary>

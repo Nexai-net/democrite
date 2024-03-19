@@ -142,6 +142,11 @@ namespace Democrite.Framework.Builders.Sequences
         /// Selects the specified data as input
         /// </summary>
         ISequencePipelineBuilder<TSelected> Select<TSelected>(TSelected select, Action<ISequencePipelineStageConfigurator>? cfg = null);
+
+        /// <summary>
+        /// Add a new stage used to call an existing sequence
+        /// </summary>
+        ISequencePipelineNestedSequenceCallBuilder CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<ISequencePipelineStageConfigurator>? cfg = null);
     }
 
     /// <summary>
@@ -210,6 +215,11 @@ namespace Democrite.Framework.Builders.Sequences
         /// </summary>
         ISequencePipelineStageCallBuilder<TPreviousMessage, TConverterVGrain> Convert<TConverterVGrain>(Action<ISequencePipelineStageConfigurator>? cfg = null)
             where TConverterVGrain : IVGrain;
+
+        /// <summary>
+        /// Add a new stage used to call an existing sequence
+        /// </summary>
+        ISequencePipelineNestedSequenceCallBuilder<TPreviousMessage> CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<ISequencePipelineStageConfigurator>? cfg = null);
 
     }
 }

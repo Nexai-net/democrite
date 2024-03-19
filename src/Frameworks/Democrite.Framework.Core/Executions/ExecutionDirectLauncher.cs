@@ -62,12 +62,14 @@ namespace Democrite.Framework.Core.Executions
         #region Methods
 
         /// <inheritdoc />
-        protected override IExecutionContext GenerateExecutionContext()
+        protected override IExecutionContext GenerateExecutionContext(Guid? flowId, Guid? parentExecutionId)
         {
-            if (NoneType.IsEqualTo<TConfig>())
-                return new ExecutionContext(Guid.NewGuid(), Guid.NewGuid(), null);
+            flowId ??= Guid.NewGuid();
 
-            return new ExecutionContextWithConfiguration<TConfig>(Guid.NewGuid(), Guid.NewGuid(), null, this._config);
+            if (NoneType.IsEqualTo<TConfig>())
+                return new ExecutionContext(flowId.Value, Guid.NewGuid(), parentExecutionId);
+
+            return new ExecutionContextWithConfiguration<TConfig>(flowId.Value, Guid.NewGuid(), parentExecutionId, this._config);
         }
 
         /// <inheritdoc />

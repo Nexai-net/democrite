@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions
 {
+    using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Core.Abstractions.Sequence;
 
     using System;
@@ -55,13 +56,28 @@ namespace Democrite.Framework.Core.Abstractions
         IExecutionLauncher Sequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null);
 
         /// <summary>
+        /// Prepare an execution with schema a <see cref="SequenceDefinition"/>.
+        /// </summary>
+        IExecutionLauncher Sequence(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions);
+
+        /// <summary>
         /// Prepare an execution with schema a <see cref="SequenceDefinition"/> with an input type <typeparamref name="TInput"/>.
         /// </summary>
         IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null);
 
         /// <summary>
+        /// Prepare an execution with schema a <see cref="SequenceDefinition"/> with an input type <typeparamref name="TInput"/>.
+        /// </summary>
+        IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions);
+
+        /// <summary>
         /// Prepare an execution with schema a <see cref="SequenceDefinition"/> with an input.
         /// </summary>
         IExecutionBuilder<object> SequenceWithInput(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null);
+
+        /// <summary>
+        /// Prepare an execution with schema a <see cref="SequenceDefinition"/> with an input.
+        /// </summary>
+        IExecutionBuilder<object> SequenceWithInput(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions);
     }
 }

@@ -15,15 +15,29 @@ namespace Democrite.Framework.Core.Abstractions
     public interface IExecutionLauncher
     {
         /// <summary>
+        /// Specified the execution context responsable for this call
+        /// </summary>
+        /// <remarks>
+        ///     Will tranfert the <see cref="IExecutionContext.FlowUID"/>, <see cref="IExecutionContext.CancellationToken"/>, and Data Context carry
+        /// </remarks>
+        IExecutionLauncher From(IExecutionContext executionContext, bool copyContextData = false);
+
+        /// <summary>
         /// Fires the execution start without waiting any results
         /// </summary>
         Task Fire();
 
         /// <summary>
-        /// Trigger execution, execute and provide result
+        /// Trigger execution, execute and provide no result
         /// </summary>
         /// <exception cref="InvalidInputDemocriteException">Raised when input provide is not expected.</exception>
         Task<IExecutionResult> RunAsync(CancellationToken token = default);
+
+        /// <summary>
+        /// Trigger execution, execute and provide result in any type
+        /// </summary>
+        /// <exception cref="InvalidInputDemocriteException">Raised when input provide is not expected.</exception>
+        Task<IExecutionResult> RunWithAnyResultAsync(CancellationToken token = default);
 
         /// <summary>
         /// Trigger execution, execute and provide result.
@@ -47,6 +61,14 @@ namespace Democrite.Framework.Core.Abstractions
     /// </summary>
     public interface IExecutionLauncher<TResult>
     {
+        /// <summary>
+        /// Specified the execution context responsable for this call
+        /// </summary>
+        /// <remarks>
+        ///     Will tranfert the <see cref="IExecutionContext.FlowUID"/>, <see cref="IExecutionContext.CancellationToken"/>, and Data Context carry
+        /// </remarks>
+        IExecutionLauncher<TResult> From(IExecutionContext executionContext, bool copyContextData = false);
+
         /// <summary>
         /// Fires the execution start without waiting any results
         /// </summary>

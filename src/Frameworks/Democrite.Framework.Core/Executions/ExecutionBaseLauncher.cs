@@ -6,6 +6,7 @@ namespace Democrite.Framework.Core.Executions
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Models;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Extensions;
 
@@ -32,6 +33,9 @@ namespace Democrite.Framework.Core.Executions
 
         private readonly IVGrainProvider _vgrainProvider;
         private readonly ILogger _logger;
+
+        private IExecutionContext? _originContext;
+        private bool _copyContextData;
 
         #endregion
 
@@ -73,6 +77,11 @@ namespace Democrite.Framework.Core.Executions
             return await ((IExecutionLauncher)this).RunAsync<NoneType>(token);
         }
 
+        public Task<IExecutionResult> RunWithAnyResultAsync(CancellationToken token = default)
+        {
+            return RunImplAsync<IAnyType>(token);
+        }
+
         /// <inheritdoc />
         Task<IExecutionResult<TResult>> IExecutionLauncher<TResult>.RunAsync(CancellationToken token)
         {
@@ -100,9 +109,10 @@ namespace Democrite.Framework.Core.Executions
         }
 
         /// <inheritdoc />
-        public Task<IExecutionResult<TExpectedOutput>> RunAsync<TExpectedOutput>(CancellationToken token)
+        public async Task<IExecutionResult<TExpectedOutput>> RunAsync<TExpectedOutput>(CancellationToken token)
         {
-            return RunImplAsync<TExpectedOutput>(token);
+            var result = await RunImplAsync<TExpectedOutput>(token);
+            return (IExecutionResult<TExpectedOutput>)(result);
         }
 
         /// <inheritdoc />
@@ -122,15 +132,39 @@ namespace Democrite.Framework.Core.Executions
             return taskResult;
         }
 
+        /// <inheritdoc />
+        public IExecutionLauncher From(IExecutionContext executionContext, bool copyContextData = false)
+        {
+            this._originContext = executionContext;
+            this._copyContextData = copyContextData;
+            return this;
+        }
+
+        /// <inheritdoc />
+        IExecutionLauncher<TResult> IExecutionLauncher<TResult>.From(IExecutionContext executionContext, bool copyContextData)
+        {
+            this._originContext = executionContext;
+            this._copyContextData = copyContextData;
+            return this;
+        }
+
         #region Tools
 
         /// <summary>
         ///     Generic execution able to call <typeparamref name="TExecutor"/> with diffent parameter
         /// </summary> 
-        private async Task<IExecutionResult<TExpectedOutput>> RunImplAsync<TExpectedOutput>(CancellationToken token,
-                                                                                            bool fire = false)
+        private async Task<IExecutionResult> RunImplAsync<TExpectedOutput>(CancellationToken token, bool fire = false)
         {
-            var executionContext = GenerateExecutionContext();
+            var executionContext = GenerateExecutionContext(this._originContext?.FlowUID, this._originContext?.CurrentExecutionId);
+
+            if (this._originContext is not null && this._copyContextData == true)
+            {
+                var data = this._originContext.GetAllDataContext() ?? EnumerableHelper<IContextDataContainer>.ReadOnly;
+
+                foreach (var contextData in data.Where(d => d is not null))
+                    executionContext.TryPushContextData(contextData, @override: false);
+            }
+
             var input = GetInput();
 
             var executor = await this._vgrainProvider.GetVGrainAsync<TVGrain>(input, executionContext, this._logger);
@@ -160,15 +194,38 @@ namespace Democrite.Framework.Core.Executions
                 exception = executionTask.Exception;
             }
 
-            TExpectedOutput? output = default;
+            object? output = default;
 
-            if (!NoneType.IsEqualTo<TExpectedOutput>() && (executionTask?.IsCompletedSuccessfully ?? false))
-                output = executionTask.GetResult<TExpectedOutput>();
+            if (executionTask is not null && executionTask.IsCompletedSuccessfully)
+            {
+                if (AnyType.IsEqualTo<TExpectedOutput>())
+                {
+                    var result = executionTask?.GetResult();
+                    var resultType = result?.GetType() ?? typeof(TExpectedOutput);
 
-            return ExecutionResult.Create(executionContext,
-                                          output,
-                                          exception,
-                                          succeeded: executionTask?.IsCompletedSuccessfully);
+                    if (result is IAnyTypeContainer container)
+                    {
+                        result = container.GetData();
+                        resultType = container.GetDataType();
+                    }
+
+                    // Call generic ExecutionResult.Create to build result based on the output
+                    return ExecutionResult.CreateWithResult(executionContext,
+                                                            result,
+                                                            resultType,
+                                                            exception,
+                                                            succeeded: executionTask?.IsCompletedSuccessfully);
+                }
+                else if (executionTask.IsCompletedSuccessfully && !NoneType.IsEqualTo<TExpectedOutput>() && (executionTask?.IsCompletedSuccessfully ?? false))
+                {
+                    output = executionTask.GetResult<TExpectedOutput>();
+                }
+            }
+
+            return ExecutionResult.Create<TExpectedOutput>(executionContext,
+                                                           (TExpectedOutput?)output,
+                                                           exception,
+                                                           succeeded: executionTask?.IsCompletedSuccessfully);
         }
 
         /// <summary>
@@ -179,7 +236,7 @@ namespace Democrite.Framework.Core.Executions
         /// <summary>
         /// Generates <see cref="IExecutionContext"/> based on configuration.
         /// </summary>
-        protected abstract IExecutionContext GenerateExecutionContext();
+        protected abstract IExecutionContext GenerateExecutionContext(Guid? flowId, Guid? parentId);
 
         /// <summary>
         /// Called to call the requested vgrain

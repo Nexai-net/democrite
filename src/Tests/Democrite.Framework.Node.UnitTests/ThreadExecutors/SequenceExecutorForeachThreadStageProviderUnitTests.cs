@@ -125,7 +125,8 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                                             execContext.ParentExecutionId,
                                                             null,
                                                             inputs);
-            mockThreadHandler.Setup(p => p.GetCurrentThreadState()).Returns(state);
+
+            mockThreadHandler.Setup(p => p.GetCurrentDoneThreadState()).Returns(state);
 
             // Act
             //var foreachExecutor = foreachExecutor.Provide(foreachDefinition);
@@ -184,7 +185,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
 
                          innerState.SetJobIsDone(new[] { Guid.NewGuid().ToString() });
 
-                         innerThreadHandler.Setup(m => m.GetCurrentThreadState())
+                         innerThreadHandler.Setup(m => m.GetCurrentDoneThreadState())
                                            .Returns(innerState);
 
                          innerMockSecureToken.Setup(m => m.Dispose());

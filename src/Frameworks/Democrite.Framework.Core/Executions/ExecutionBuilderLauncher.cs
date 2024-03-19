@@ -51,7 +51,7 @@ namespace Democrite.Framework.Core.Executions
                                         IVGrainProvider vgrainProvider,
                                         ILogger? logger,
                                         IDemocriteSerializer democriteSerializer,
-                                        ExecutionCustomizationDescriptions? executionCustomization)
+                                        in ExecutionCustomizationDescriptions? executionCustomization)
             : base(logger, vgrainProvider)
         {
             ArgumentNullException.ThrowIfNull(executionSchemaId);
@@ -117,11 +117,11 @@ namespace Democrite.Framework.Core.Executions
         }
 
         /// <inheritdoc />
-        protected override IExecutionContext GenerateExecutionContext()
+        protected override IExecutionContext GenerateExecutionContext(Guid? flowId, Guid? parentId)
         {
-            var ctx = new ExecutionContextWithConfiguration<Guid>(Guid.NewGuid(),
+            var ctx = new ExecutionContextWithConfiguration<Guid>(flowId ?? Guid.NewGuid(),
                                                                   Guid.NewGuid(),
-                                                                  null,
+                                                                  parentId,
                                                                   this._executionSchemaId);
 
             if (this._executionCustomization is not null)
@@ -136,18 +136,20 @@ namespace Democrite.Framework.Core.Executions
             var executionContext = (IExecutionContext<Guid>)executionContextBuilded;
             Task executionTask;
 
+            var noInput = NoneType.IsEqualTo<TInput>();
+
             if (fire)
             {
-                if (NoneType.IsEqualTo<TInput>())
+                if (noInput)
                     executionTask = executor.Fire(executionContext);
                 else
                     executionTask = executor.Fire((TInput?)input, executionContext);
             }
-            else if (NoneType.IsEqualTo<TInput>() && NoneType.IsEqualTo<TExpectedOutput>())
+            else if (noInput && NoneType.IsEqualTo<TExpectedOutput>())
             {
                 executionTask = executor.RunAsync(executionContext);
             }
-            else if (NoneType.IsEqualTo<TInput>())
+            else if (noInput)
             {
                 executionTask = executor.RunAsync<TExpectedOutput>(executionContext);
             }

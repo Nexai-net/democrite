@@ -57,7 +57,7 @@ namespace Democrite.Framework.Core.Models
             s_specializedGenericMthd = new Dictionary<Type, MethodInfo>();
 
             s_duplicateGenericMthd = typeof(ExecutionContext).GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                                                             .Single(m => m.Name == nameof(DuplicateWithContext) && m.IsGenericMethodDefinition);
+                                                             .Single(m => m.Name == nameof(DuplicateWithConfiguration) && m.IsGenericMethodDefinition);
 
             var propGrainRuntime = typeof(GrainReference).GetProperty("Runtime", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetProperty);
             Debug.Assert(propGrainRuntime != null);
@@ -162,7 +162,7 @@ namespace Democrite.Framework.Core.Models
         }
 
         /// <inheritdoc />
-        public IExecutionContext<TContextInfo> DuplicateWithContext<TContextInfo>(TContextInfo contextInfo)
+        public IExecutionContext<TContextInfo> DuplicateWithConfiguration<TContextInfo>(TContextInfo contextInfo)
         {
             var ctx = new ExecutionContextWithConfiguration<TContextInfo>(this.FlowUID,
                                                                           this.CurrentExecutionId,
@@ -173,7 +173,7 @@ namespace Democrite.Framework.Core.Models
         }
 
         /// <inheritdoc />
-        public IExecutionContext DuplicateWithContext(object? contextInfo, Type contextType)
+        public IExecutionContext DuplicateWithConfiguration(object? contextInfo, Type contextType)
         {
             MethodInfo? genericMthd = null;
 
@@ -204,6 +204,14 @@ namespace Democrite.Framework.Core.Models
             }
 
             return (IExecutionContext)(genericMthd?.Invoke(this, new object?[] { contextInfo }) ?? throw new InvalidOperationException("Invalid context cast"));
+        }
+
+        /// <inheritdoc />
+        public virtual IExecutionContext Duplicate()
+        {
+            var duplicate = new ExecutionContext(this.FlowUID, this.CurrentExecutionId, this.ParentExecutionId, this._grainCancelTokenSource);
+            duplicate.InjectAllDataContext(GetAllDataContext());
+            return duplicate;
         }
 
         /// <inheritdoc />
@@ -241,6 +249,23 @@ namespace Democrite.Framework.Core.Models
         }
 
         /// <inheritdoc />
+        public bool TryPushContextData(IContextDataContainer contextDataContainer, bool @override)
+        {
+            var exist = this._contextDataContainers.FirstOrDefault(c => c.IsMatch(contextDataContainer));
+
+            if (exist is not null)
+            {
+                if (!@override)
+                    return false;
+
+                this._contextDataContainers.Remove(exist);
+            }
+
+            this._contextDataContainers.Add(contextDataContainer);
+            return true;
+        }
+
+        /// <inheritdoc />
         public void ClearContextData()
         {
             this._contextDataContainers.Clear();
@@ -258,18 +283,13 @@ namespace Democrite.Framework.Core.Models
             ClearContextData(typeof(TContextData));
         }
 
-        #region Tools
-
-        /// <summary>
-        /// Gets all data context.
-        /// </summary>
-        /// <remarks>
-        ///     Use during serialization
-        /// </remarks>
-        internal IReadOnlyCollection<IContextDataContainer> GetAllDataContext()
+        /// <inheritdoc />
+        public IReadOnlyCollection<IContextDataContainer> GetAllDataContext()
         {
             return this._contextDataContainers;
         }
+
+        #region Tools
 
         /// <summary>
         /// Gets all data context.
