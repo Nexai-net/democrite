@@ -9,10 +9,16 @@ using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
 
 [assembly: AutoConfiguratorKey("mongo")]
 
+// Cluster
 [assembly: AutoConfigurator<IMembershipsAutoConfigurator, AutoMembershipsMongoConfigurator>()]
+
+// Storage
 [assembly: AutoConfigurator<INodeDemocriteMemoryAutoConfigurator, AutoDemocriteMongoConfigurator>()]
 [assembly: AutoConfigurator<INodeDefaultMemoryAutoConfigurator, AutoDefaultMemoryMongoConfigurator>()]
 [assembly: AutoConfigurator<INodeReminderStateMemoryAutoConfigurator, AutoReminderMongoConfigurator>()]
 [assembly: AutoConfigurator<INodeCustomGrainMemoryAutoConfigurator, AutoCustomGrainMemoryMongoConfigurator>()]
-//[assembly: AutoConfigurator<INodeCustomRepositoryMemoryAutoConfigurator, AutoDefaultCustomRepositoryMemoryConfigurator>()]
 [assembly: AutoConfigurator<INodeCustomDefinitionProviderAutoConfigurator, AutoCustomDefinitionProviderMongoConfigurator>()]
+
+// Repository
+[assembly: AutoConfigurator<INodeCustomRepositoryMemoryAutoConfigurator, AutoCustomRepositoryMongoConfigurator>()]
+[assembly: AutoConfigurator<INodeDefaultRepositoryMemoryAutoConfigurator, AutoDefaultRepositoryMongoConfigurator>()]

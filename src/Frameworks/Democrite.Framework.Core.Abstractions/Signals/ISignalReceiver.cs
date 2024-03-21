@@ -6,6 +6,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
 {
     using Orleans.Concurrency;
     using Orleans.Runtime;
+    using Orleans.Services;
 
     using System.Threading.Tasks;
 

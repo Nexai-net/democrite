@@ -4,7 +4,8 @@
 
 namespace Democrite.Framework.Node.Signals.Models
 {
-    using Orleans.Runtime;
+    using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Signals;
 
     using System;
     using System.ComponentModel;
@@ -23,7 +24,7 @@ namespace Democrite.Framework.Node.Signals.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalSubscription"/> class.
         /// </summary>
-        public SignalSubscription(Guid uid, GrainId targetGrainId)
+        public SignalSubscription(Guid uid, DedicatedGrainId<ISignalReceiver> targetGrainId)
         {
             this.Uid = uid;
             this.TargetGrainId = targetGrainId;
@@ -43,7 +44,7 @@ namespace Democrite.Framework.Node.Signals.Models
         /// Gets the target grain identifier.
         /// </summary>
         [Id(1)]
-        public GrainId TargetGrainId { get; }
+        public DedicatedGrainId<ISignalReceiver> TargetGrainId { get; }
 
         #endregion
     }

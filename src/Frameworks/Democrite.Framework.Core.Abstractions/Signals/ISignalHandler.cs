@@ -4,8 +4,6 @@
 
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
-    using Orleans.Runtime;
-
     using System;
     using System.Threading.Tasks;
 
@@ -23,7 +21,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// <returns>
         ///     Return a unique id needed to unsuscribe
         /// </returns>
-        Task<Guid> SubscribeAsync(GrainId grainId, GrainCancellationToken token);
+        Task<Guid> SubscribeAsync(DedicatedGrainId<ISignalReceiver> grainId, GrainCancellationToken token);
 
         /// <summary>
         /// Unsuscribes.

@@ -25,6 +25,7 @@ namespace Democrite.Framework.Node.Signals
     {
         #region Fields
 
+        private readonly IRemoteGrainServiceFactory _remoteGrainServiceFactory;
         private readonly IGrainFactory _grainFactory;
 
         #endregion
@@ -36,9 +37,11 @@ namespace Democrite.Framework.Node.Signals
         /// </summary>
         public BaseSignalVGrain(ILogger<TVGrainInterface> logger,
                                 IPersistentState<SignalHandlerStateSurrogate> persistentState,
-                                IGrainFactory grainFactory)
+                                IGrainFactory grainFactory,
+                                IRemoteGrainServiceFactory remoteGrainServiceFactory)
             : base(logger, persistentState)
         {
+            this._remoteGrainServiceFactory = remoteGrainServiceFactory;
             this._grainFactory = grainFactory;
         }
 
@@ -53,7 +56,7 @@ namespace Democrite.Framework.Node.Signals
         }
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(GrainId grainId, GrainCancellationToken token)
+        public async Task<Guid> SubscribeAsync(DedicatedGrainId<ISignalReceiver> grainId, GrainCancellationToken token)
         {
             await EnsureInitializedAsync(token.CancellationToken);
             var subscriptionId = this.State!.AddOrUpdateSuscription(grainId);
@@ -83,8 +86,19 @@ namespace Democrite.Framework.Node.Signals
 
             foreach (var sub in subscriptions)
             {
-                var addressable = this._grainFactory.GetGrain(sub.TargetGrainId);
-                await addressable.AsReference<ISignalReceiver>().ReceiveSignalAsync(signal!);
+                ISignalReceiver? grain = null;
+
+                if (sub.TargetGrainId.IsGrainService)
+                {
+                    grain = this._remoteGrainServiceFactory.GetRemoteGrainService<ISignalReceiver>(sub.TargetGrainId.Target, sub.TargetGrainId.GrainInterface.ToType());
+                }
+                else
+                {
+                    var addressable = this._grainFactory.GetGrain(sub.TargetGrainId.Target);
+                    grain = addressable.AsReference<ISignalReceiver>();
+                }
+                
+                await grain.ReceiveSignalAsync(signal!);
             }
 
             return signal.Uid;

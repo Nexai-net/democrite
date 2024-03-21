@@ -78,16 +78,21 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// <summary>
         /// Subscribes to signal by name
         /// </summary>
-        Task<Guid> SubscribeAsync(string signalDoorName, ISignalReceiver receiver, CancellationToken token);
+        Task<SubscriptionId> SubscribeAsync(string signalDoorName, ISignalReceiver receiver, CancellationToken token);
 
         /// <summary>
         /// Subscribes to signal by <see cref="SignalId"/>
         /// </summary>
-        Task<Guid> SubscribeAsync(SignalId signalid, ISignalReceiver receiver, CancellationToken token);
+        Task<SubscriptionId> SubscribeAsync(SignalId signalid, ISignalReceiver receiver, CancellationToken token);
 
         /// <summary>
         /// Subscribes to signal by <see cref="SignalId"/>
         /// </summary>
-        Task<Guid> SubscribeAsync(DoorId signalid, ISignalReceiver receiver, CancellationToken token);
+        Task<SubscriptionId> SubscribeAsync(DoorId signalid, ISignalReceiver receiver, CancellationToken token);
+
+        /// <summary>
+        /// Unsubscribes the specified subscription identifier.
+        /// </summary>
+        Task Unsubscribe(SubscriptionId subscriptionId);
     }
 }

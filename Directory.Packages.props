@@ -4,10 +4,10 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Orlean -->
-    <PackageVersion Include="Elvex.Toolbox" Version="1.0.6" />
+    <PackageVersion Include="Elvex.Toolbox" Version="1.0.7" />
     <PackageVersion Include="Elvex.Toolbox.Abstractions" Version="1.0.4" />
-    <PackageVersion Include="Elvex.Toolbox.Configuration" Version="1.0.6" />
-    <PackageVersion Include="Elvex.Toolbox.UnitTests.ToolKit" Version="1.0.6" />
+    <PackageVersion Include="Elvex.Toolbox.Configuration" Version="1.0.7" />
+    <PackageVersion Include="Elvex.Toolbox.UnitTests.ToolKit" Version="1.0.7" />
     <PackageVersion Include="H.Formatters.Newtonsoft.Json" Version="13.0.59" />
     <PackageVersion Include="MessagePack" Version="2.5.140" />
     <PackageVersion Include="Microsoft.Orleans.Clustering.AdoNet" Version="7.2.4" />
@@ -58,7 +58,7 @@
     <!-- SECURITY ISSUE REMOVE MOQ and replace by NSubstitute-->
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
     <PackageVersion Include="Moq" Version="4.20.70" />
-    <PackageVersion Include="NFluent" Version="3.0.3" />
+    <PackageVersion Include="NFluent" Version="3.0.4" />
     <PackageVersion Include="xunit" Version="2.7.0" />
     <PackageVersion Include="xunit.extensibility.core" Version="2.6.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.7" />

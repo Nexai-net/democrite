@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Services
 {
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Services;
     using Democrite.Framework.Node.Abstractions.Services;
 
     /// <summary>

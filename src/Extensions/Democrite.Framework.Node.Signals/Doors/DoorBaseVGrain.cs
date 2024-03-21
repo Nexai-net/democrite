@@ -50,7 +50,7 @@ namespace Democrite.Framework.Node.Signals.Doors
         private readonly SemaphoreSlim _concurrencyStateLock;
         private readonly SemaphoreSlim _concurrencyLock;
 
-        private readonly HashSet<Guid> _subscriptionIds;
+        private readonly HashSet<SubscriptionId> _subscriptionIds;
 
         private readonly TimeSpan _stimulationTimeout;
 
@@ -89,7 +89,7 @@ namespace Democrite.Framework.Node.Signals.Doors
             this._signalService = signalService;
             this._doorDefinitionProvider = doorDefinitionProvider;
 
-            this._subscriptionIds = new HashSet<Guid>();
+            this._subscriptionIds = new HashSet<SubscriptionId>();
         }
 
         #endregion

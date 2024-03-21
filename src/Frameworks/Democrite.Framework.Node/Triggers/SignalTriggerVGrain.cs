@@ -78,6 +78,9 @@ namespace Democrite.Framework.Node.Triggers
         /// <inheritdoc />
         public Task ReceiveSignalAsync(SignalMessage signal)
         {
+            if (this.Enabled == false)
+                return Task.CompletedTask;
+
             return base.FireTriggerAsync(signal);
         }
 

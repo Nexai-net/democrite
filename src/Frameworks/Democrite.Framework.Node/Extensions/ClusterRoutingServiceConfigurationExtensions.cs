@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Extensions
 {
+    using Democrite.Framework.Core.Abstractions.Services;
     using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Services;
 

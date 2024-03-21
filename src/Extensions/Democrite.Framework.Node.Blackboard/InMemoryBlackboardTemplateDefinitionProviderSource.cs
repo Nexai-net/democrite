@@ -4,19 +4,19 @@
 
 namespace Democrite.Framework.Node.Blackboard
 {
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
-    using Elvex.Toolbox.Patterns.Strategy;
 
-    using System;
+    using Elvex.Toolbox.Patterns.Strategy;
 
     /// <summary>
     /// In memory blackboard template definition provider
     /// </summary>
     /// <seealso cref="ProviderStrategyBaseSource{DoorDefinition, Guid}" />
     /// <seealso cref="IDoorDefinitionProviderSource" />
-    internal sealed class InMemoryBlackboardTemplateDefinitionProviderSource : ProviderStrategyBaseSource<BlackboardTemplateDefinition, Guid>, IBlackboardTemplateDefinitionProviderSource
+    internal sealed class InMemoryBlackboardTemplateDefinitionProviderSource : InMemoryBaseDefinitionProvider<BlackboardTemplateDefinition>, IBlackboardTemplateDefinitionProviderSource
     {
         #region Ctor
 
@@ -26,18 +26,6 @@ namespace Democrite.Framework.Node.Blackboard
         public InMemoryBlackboardTemplateDefinitionProviderSource()
             : base(null!)
         {
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        /// Adds or update a new artefact
-        /// </summary>
-        public void AddOrUpdate(BlackboardTemplateDefinition blackboardDefinition)
-        {
-            base.SafeAddOrReplace(blackboardDefinition.Uid, blackboardDefinition);
         }
 
         #endregion

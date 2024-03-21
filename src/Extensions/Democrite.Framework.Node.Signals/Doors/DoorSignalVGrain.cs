@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Signals.Doors
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Signals;
@@ -32,8 +33,9 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// </summary>
         public DoorSignalVGrain(ILogger<IDoorSignalVGrain> logger,
                                 [PersistentState("Signals", nameof(Democrite))] IPersistentState<SignalHandlerStateSurrogate> persistentState,
-                                IGrainFactory grainFactory)
-            : base(logger, persistentState, grainFactory)
+                                IGrainFactory grainFactory,
+                                IRemoteGrainServiceFactory remoteGrainServiceFactory)
+            : base(logger, persistentState, grainFactory, remoteGrainServiceFactory)
         {
         }
 

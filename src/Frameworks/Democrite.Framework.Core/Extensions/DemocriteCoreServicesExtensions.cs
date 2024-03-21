@@ -56,6 +56,7 @@ namespace Democrite.Framework.Core.Extensions
             AddDefaultCoreService<IRepositoryFactory, RepositoryFactory>(serviceCollection);
 
             AddDefaultCoreService<IRemoteGrainServiceFactory, RemoteGrainServiceFactory>(serviceCollection);
+            AddDefaultCoreService<IDynamicDefinitionHandler, DynamicDefinitionHandler>(serviceCollection);
 
             return serviceCollection;
         }

@@ -18,7 +18,7 @@ namespace Democrite.Framework.Core.Services
     /// </summary>
     /// <seealso cref="Orleans.Runtime.Services.GrainServiceClient&lt;Orleans.Services.IGrainService&gt;" />
     /// <seealso cref="Democrite.Framework.Core.Abstractions.IRemoteGrainServiceFactory" />
-    internal class RemoteGrainServiceFactory : IRemoteGrainServiceFactory
+    internal sealed class RemoteGrainServiceFactory : IRemoteGrainServiceFactory
     {
         #region Fields
 

@@ -9,10 +9,17 @@ using Democrite.Framework.Node.Configurations.AutoConfigurator;
 
 [assembly: AutoConfiguratorKey("Default")]
 
+//Cluster
 [assembly: AutoConfigurator<IMembershipsAutoConfigurator, AutoDefaultMembershipsNodeConfigurator>()]
 [assembly: AutoConfigurator<IClusterEndpointAutoConfigurator, AutoDefaultNodeEndpointAutoConfigurator>()]
+
+// Memory
 [assembly: AutoConfigurator<INodeDemocriteMemoryAutoConfigurator, AutoDefaultDemocriteMemoryConfigurator>()]
 [assembly: AutoConfigurator<INodeDemocriteAdminMemoryAutoConfigurator, AutoDefaultDemocriteAdminMemoryConfigurator>()]
 [assembly: AutoConfigurator<INodeReminderStateMemoryAutoConfigurator, AutoDefaultReminderStateMemoryAutoConfigurator>()]
 [assembly: AutoConfigurator<INodeCustomGrainMemoryAutoConfigurator, AutoDefaultCustomGrainMemoryConfigurator>()]
 [assembly: AutoConfigurator<INodeDefaultMemoryAutoConfigurator, AutoDefaultMemoryConfigurator>()]
+
+// Repository
+[assembly: AutoConfigurator<INodeDefaultRepositoryMemoryAutoConfigurator, AutoDefaultRepositoryMemoryConfigurator>()]
+[assembly: AutoConfigurator<INodeCustomRepositoryMemoryAutoConfigurator, AutoDefaultCustomRepositoryMemoryConfigurator>()]

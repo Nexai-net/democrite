@@ -4,7 +4,10 @@
 
 namespace Democrite.Framework.Node.Triggers
 {
+    using Democrite.Framework.Core;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Triggers;
+
     using Elvex.Toolbox.Patterns.Strategy;
 
     using System;
@@ -14,7 +17,7 @@ namespace Democrite.Framework.Node.Triggers
     /// </summary>
     /// <seealso cref="ProviderStrategyBaseSource{TriggerDefinition, Guid}" />
     /// <seealso cref="IStreamQueueDefinitionProviderSource" />
-    public sealed class InMemoryTriggerDefinitionProviderSource : ProviderStrategyBaseSource<TriggerDefinition, Guid>, ITriggerDefinitionProviderSource
+    public sealed class InMemoryTriggerDefinitionProviderSource : InMemoryBaseDefinitionProvider<TriggerDefinition>, ITriggerDefinitionProviderSource, IDefinitionInMemoryFillSourceProvider
     {
         #region Ctor
 
@@ -24,18 +27,6 @@ namespace Democrite.Framework.Node.Triggers
         public InMemoryTriggerDefinitionProviderSource(IServiceProvider serviceProvider)
             : base(serviceProvider)
         {
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        /// Adds or update a new artefact
-        /// </summary>
-        public void AddOrUpdate(TriggerDefinition triggerDefinition)
-        {
-            base.SafeAddOrReplace(triggerDefinition.Uid, triggerDefinition);
         }
 
         #endregion

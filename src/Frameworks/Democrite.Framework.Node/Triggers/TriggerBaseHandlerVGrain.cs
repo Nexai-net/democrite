@@ -16,6 +16,7 @@ namespace Democrite.Framework.Node.Triggers
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Triggers;
+
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Helpers;
 
@@ -65,6 +66,7 @@ namespace Democrite.Framework.Node.Triggers
         /// The targets group by type and dedicated source information
         /// </summary>
         private Dictionary<TargetTypeEnum, IReadOnlyCollection<(DataSourceDefinition? DedicatedOutputDef, Guid[] Targets)>>? _targets;
+        private bool _force;
 
         #endregion
 
@@ -87,14 +89,14 @@ namespace Democrite.Framework.Node.Triggers
         /// Initializes a new instance of the <see cref="TriggerBaseHandlerVGrain{TStates, TVGrainInterface}"/> class.
         /// </summary>
         protected TriggerBaseHandlerVGrain(ILogger<TVGrainInterface> logger,
-                                          IPersistentState<TVGrainState> persistentState,
-                                          ITriggerDefinitionProvider triggerDefinitionProvider,
-                                          ISequenceDefinitionProvider sequenceDefinitionProvider,
-                                          ISignalDefinitionProvider signalDefinitionProvider,
-                                          IDemocriteExecutionHandler democriteExecutionHandler,
-                                          IDataSourceProviderFactory inputSourceProviderFactory,
-                                          IStreamQueueDefinitionProvider streamQueueDefinitionProvider,
-                                          ISignalService signalService)
+                                           IPersistentState<TVGrainState> persistentState,
+                                           ITriggerDefinitionProvider triggerDefinitionProvider,
+                                           ISequenceDefinitionProvider sequenceDefinitionProvider,
+                                           ISignalDefinitionProvider signalDefinitionProvider,
+                                           IDemocriteExecutionHandler democriteExecutionHandler,
+                                           IDataSourceProviderFactory inputSourceProviderFactory,
+                                           IStreamQueueDefinitionProvider streamQueueDefinitionProvider,
+                                           ISignalService signalService)
             : base(logger, persistentState)
         {
             this._dataSourceProviders = new Dictionary<Guid, IDataSourceProvider?>();
@@ -106,6 +108,9 @@ namespace Democrite.Framework.Node.Triggers
             this._dataSourceProviderFactory = inputSourceProviderFactory;
             this._streamQueueDefinitionProvider = streamQueueDefinitionProvider;
             this._signalService = signalService;
+
+            this._triggerDefinitionProvider.DataChanged -= TriggerDefinitionProvider_DataChanged;
+            this._triggerDefinitionProvider.DataChanged += TriggerDefinitionProvider_DataChanged;
         }
 
         #endregion
@@ -119,6 +124,11 @@ namespace Democrite.Framework.Node.Triggers
         {
             get { return this._triggerDefinition ?? throw new NullReferenceException("Consume the definition is not allow before activation or update"); }
         }
+
+        /// <summary>
+        /// Gets a value indicating whether this <see cref="TriggerBaseHandlerVGrain{TVGrainState, TTriggerDefinition, TVGrainInterface}"/> is enabled.
+        /// </summary>
+        public bool Enabled { get; private set; }
 
         #endregion
 
@@ -137,11 +147,16 @@ namespace Democrite.Framework.Node.Triggers
             await EnsureTriggerDefinitionAsync(cancellationToken);
         }
 
+        #region Tools
+
         /// <summary>
         /// Fires target sequence and signal
         /// </summary>
         protected async Task FireTriggerAsync(object? defaultInput = null, bool waitResult = false, CancellationToken token = default)
         {
+            if (this.Enabled == false)
+                return;
+
             await EnsureTriggerDefinitionAsync(token);
 
             using (var timeoutToken = CancellationHelper.DisposableTimeout(s_inputBuildTimeout))
@@ -381,7 +396,18 @@ namespace Democrite.Framework.Node.Triggers
             await tasks.SafeWhenAllAsync(token);
         }
 
-        #region Tools
+        /// <summary>
+        /// Triggers the definition provider data changed.
+        /// </summary>
+        private void TriggerDefinitionProvider_DataChanged(object? sender, IReadOnlyCollection<Guid> e)
+        {
+            var idKey = base.GetGrainId().GetGuidKey();
+            if (e.Contains(idKey))
+            {
+                this._force = true;
+                UpdateAsync().ConfigureAwait(false);
+            }
+        }
 
         /// <summary>
         /// Use <see cref="ISignalDefinitionProvider"/> to get <see cref="ICronTriggerHandlerVGrain"/>
@@ -390,11 +416,13 @@ namespace Democrite.Framework.Node.Triggers
         {
             var triggerDefinitionId = this.GetPrimaryKey();
 
-            if (this._triggerDefinition != null && this._triggerDefinition.Uid == triggerDefinitionId)
+            if (!this._force && this._triggerDefinition != null && this._triggerDefinition.Uid == triggerDefinitionId)
                 return;
 
             if (triggerDefinitionId == Guid.Empty)
                 throw new InvalidVGrainIdException(GetGrainId(), "Trigger definition id");
+
+            this._force = false;
 
             using (var timeoutToken = CancellationHelper.DisposableTimeout(s_inputBuildTimeout))
             using (var ensureCancelToken = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Content, this.VGrainLifecycleToken, cancellationToken))
@@ -403,9 +431,17 @@ namespace Democrite.Framework.Node.Triggers
                 var definition = (await this._triggerDefinitionProvider.GetFirstValueByIdAsync(triggerDefinitionId, ensureCancelToken.Token)) as TTriggerDefinition;
 
 #pragma warning disable IDE0270 // Use coalesce expression
-                if (definition == null)
+                if (definition == null && this._triggerDefinition is null)
                     throw new MissingDefinitionException(typeof(TTriggerDefinition), triggerDefinitionId.ToString());
 #pragma warning restore IDE0270 // Use coalesce expression
+
+                if (definition is null)
+                {
+                    this.Enabled = false;
+                    return;
+                }
+
+                this.Enabled = true;
 
                 this._triggerDefinition = definition;
 

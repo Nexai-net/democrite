@@ -16,11 +16,13 @@ namespace Democrite.Framework.Configurations
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Abstractions.Storages;
     using Democrite.Framework.Core.Abstractions.Streams;
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Core.Diagnostics;
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Core.Streams;
+    using Democrite.Framework.Node;
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.Artifacts;
     using Democrite.Framework.Node.Abstractions.Configurations;
@@ -48,6 +50,7 @@ namespace Democrite.Framework.Configurations
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
@@ -552,6 +555,20 @@ namespace Democrite.Framework.Configurations
                                                                                        s => s.Any(d => (d.ServiceType == typeof(EndpointOptions) && d.ImplementationType != null)),
                                                                                        ConfigurationSectionNames.Endpoints,
                                                                                        logger);
+
+            // Repository
+            AutoConfigBasedOnKeys<INodeCustomRepositoryMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeRepositoryStorages,
+                                                                                                            configuration,
+                                                                                                            indexedAssemblies,
+                                                                                                            (s, key) => s.GetServiceByKey<string, IRepositorySpecificFactory>(key) != null,
+                                                                                                            logger,
+                                                                                                            defaultAutoKey: defaultMemoryAutoKey);
+
+            AutoConfigImpl<INodeDefaultRepositoryMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                                      indexedAssemblies,
+                                                                                                      (s) => s.GetServiceByKey<string, IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey) != null,
+                                                                                                      ConfigurationNodeSectionNames.NodeRepositoryStoragesAutoConfigKey,
+                                                                                                      logger);
         }
 
         /// <summary>
@@ -597,6 +614,13 @@ namespace Democrite.Framework.Configurations
         protected override void OnManualBuildConfigure()
         {
             this._orleanSiloBuilder.AddGrainService<ClusterNodeComponentIdentitCardProvider>();
+            
+            this._orleanSiloBuilder.AddGrainService<SignalLocalGrainServiceRelay>();
+            this._orleanSiloBuilder.Services.AddSingleton<SignalLocalGrainServiceRelayClient>()
+                                            .AddSingleton<ISignalLocalGrainServiceRelayClient>(p => p.GetRequiredService<SignalLocalGrainServiceRelayClient>())
+                                            .AddSingleton<SignalLocalServiceRelay>()
+                                            .AddSingleton<ISignalLocalServiceRelay>(p => p.GetRequiredService<SignalLocalServiceRelay>());
+
             AddService<IComponentIdentitCardProviderClient, ClusterNodeComponentIdentitCardProviderClient>();
 
             var serviceCollection = this._orleanSiloBuilder.Services;
@@ -619,6 +643,8 @@ namespace Democrite.Framework.Configurations
             AddService<ISignalDefinitionProviderSource>(this._signalDefinitionProviderSource);
             AddService<IDoorDefinitionProviderSource>(this._doorDefinitionProviderSource);
             AddService<IStreamQueueDefinitionProviderSource>(this._streamQueueDefinitionProviderSource);
+
+            this._orleanSiloBuilder.Services.TryAddEnumerable(ServiceDescriptor.Singleton(typeof(IDefinitionSourceProvider<>), typeof(DynamicDefinitionSourceProvider<>)));
 
             if (!CheckIsExistSetupInServices<IDataSourceProviderFactory>(serviceCollection))
                 AddService<IDataSourceProviderFactory, DataSourceProviderFactory>();
@@ -657,23 +683,48 @@ namespace Democrite.Framework.Configurations
             // Route & redirection services
             this._orleanSiloBuilder.Services.SetupGrainRoutingServices();
 
-            //this._orleanSiloBuilder.Services.AddSingleton<GrainOrleanFactory>(p =>
-            //{
-            //    var orleanGrainFactory = typeof(MembershipEntry).Assembly.GetTypes().FirstOrDefault(d => d.Name == "GrainFactory" &&
-            //                                                                                            (d.Attributes & System.Reflection.TypeAttributes.NotPublic) == System.Reflection.TypeAttributes.NotPublic &&
-            //                                                                                             d.IsAssignableTo(typeof(IGrainFactory)));
-            //    Debug.Assert(orleanGrainFactory != null);
-            //    return new GrainOrleanFactory((IGrainFactory)p.GetRequiredService(orleanGrainFactory));
-            //});
+            AddDemocriteSystemDefinitions(this._orleanSiloBuilder.Services);
+        }
 
-            //this._orleanSiloBuilder.Services.AddSingleton<IGrainOrleanFactory>(p => p.GetRequiredService<GrainOrleanFactory>());
-            //this._orleanSiloBuilder.Services.AddSingleton<IVGrainDemocriteSystemProvider, VGrainDemocriteSystemProvider>();
+        /// <summary>
+        /// Adds the democrite system definitions.
+        /// </summary>
+        private void AddDemocriteSystemDefinitions(IServiceCollection serviceDescriptors)
+        {
+            var inMemoryStorage = serviceDescriptors.Where(s => s.IsKeyedService == false &&
+                                                                 s.ImplementationInstance is IDefinitionInMemoryFillSourceProvider)
+                                                    .Select(s => (IDefinitionInMemoryFillSourceProvider)s.ImplementationInstance!)
+                                                    .Distinct()
+                                                    .ToArray();
 
-            //this._orleanSiloBuilder.Services.AddSingleton<ISequenceVGrainProviderFactory, SequenceVGrainProviderFactory>();
+            var preferences = new Dictionary<Type, IDefinitionInMemoryFillSourceProvider>();
 
-            //this._orleanSiloBuilder.Services.AddSingleton<GrainRouteSiloRootService>()
-            //                                .AddSingleton<IVGrainRouteService>(p => p.GetRequiredService<GrainRouteSiloRootService>())
-            //                                .AddSingleton<IGrainFactory>(p => new GrainFactoryScoped(p.GetRequiredService<GrainOrleanFactory>().GrainFactory, p.GetRequiredService<IVGrainRouteService>()));
+            foreach (var definition in DemocriteSystemDefinitions.GetAllSystemDefinitions())
+            {
+                var defType = definition.GetType();
+                
+                if (preferences.TryGetValue(defType, out var preferedStoreDef) && preferedStoreDef.CanStore(definition))
+                {
+                    preferedStoreDef.TryStore(definition);
+                    continue;
+                }
+
+                bool stored = false;
+                foreach (var storeDef in inMemoryStorage)
+                {
+                    if (storeDef.CanStore(definition) && storeDef.TryStore(definition))
+                    {
+                        if (!preferences.ContainsKey(defType))
+                            preferences.Add(defType, storeDef);
+
+                        stored = true;
+                        break;
+                    }
+                }
+
+                if (stored == false)
+                    throw new Exception("Couldn't store definition " + definition);
+            }
         }
 
         /// <inheritdoc />

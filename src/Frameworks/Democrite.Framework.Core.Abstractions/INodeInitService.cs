@@ -6,8 +6,6 @@ namespace Democrite.Framework.Core.Abstractions
 {
     using Elvex.Toolbox.Abstractions.Supports;
 
-    using Microsoft.Extensions.DependencyInjection;
-
     /// <summary>
     /// Service at node level that need to be initialize at start
     /// </summary>

@@ -36,6 +36,11 @@ namespace Democrite.Framework.Configurations
         public const string NodeRepositoryStorages = ConfigurationSectionNames.Root + ConfigurationSectionNames.SectionSeparator + "Repositories";
 
         /// <summary>
+        /// The root section in change to configured the storages memberships, vgrain states, reminder, timers ...
+        /// </summary>
+        public const string NodeRepositoryStoragesAutoConfigKey = NodeRepositoryStorages + ConfigurationSectionNames.SectionSeparator + "Default" + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.AutoConfigKey;
+
+        /// <summary>
         /// The section configuring the vgrain state memory
         /// </summary>
         public const string NodeDefaultMemory = NodeStorages + ConfigurationSectionNames.SectionSeparator + "Default";

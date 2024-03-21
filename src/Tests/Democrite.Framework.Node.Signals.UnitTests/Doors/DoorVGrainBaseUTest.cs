@@ -85,10 +85,10 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             var mockSignalService = provider.GetRequiredService<ISignalService>();
 
             mockSignalService.SubscribeAsync(Arg.Is<SignalId>(s => signals.Contains(s)), Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>())
-                             .Returns(Task.FromResult(Guid.NewGuid()));
+                             .Returns(Task.FromResult(new SubscriptionId(Guid.NewGuid(), true, Guid.NewGuid())));
 
             mockSignalService.SubscribeAsync(Arg.Is<DoorId>(s => doors.Contains(s)), Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>())
-                             .Returns(Task.FromResult(Guid.NewGuid()));
+                             .Returns(Task.FromResult(new SubscriptionId(Guid.NewGuid(), true, Guid.NewGuid())));
 
             await fixture.InitVGrain(door);
 
@@ -125,7 +125,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             var doorIdentityCard = provider.GetRequiredService<IComponentDoorIdentityCard>();
 
             mockSignalService.SubscribeAsync(signal, Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>())
-                             .Returns(Task.FromResult(Guid.NewGuid()));
+                             .Returns(Task.FromResult(new SubscriptionId(Guid.NewGuid(), true, Guid.NewGuid())));
 
             // Disabled door logic to apply to test multiple signal receiving without interruption
             doorIdentityCard.CanBeStimuate().Returns(false);
@@ -233,7 +233,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             var def = provider.GetRequiredService<TDoorDefinition>();
 
             mockSignalService.SubscribeAsync(signal, Arg.Any<ISignalReceiver>(), Arg.Any<CancellationToken>())
-                             .Returns(Task.FromResult(Guid.NewGuid()));
+                             .Returns(Task.FromResult(new SubscriptionId(Guid.NewGuid(), true, Guid.NewGuid())));
 
             await fixture.InitVGrain(door);
 

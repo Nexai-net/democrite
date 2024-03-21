@@ -95,9 +95,12 @@ namespace Democrite.Framework.Node.Cron
         /// <inheritdoc />
         public async Task ReceiveReminder(string reminderName, TickStatus status)
         {
+            if (this.Enabled == false)
+                return;
+
             await EnsureTriggerDefinitionAsync(this.VGrainLifecycleToken);
 
-            if (!await UpdateNextTriggerAndCheckCanExecuteAsync(this.TriggerDefinition, this.VGrainLifecycleToken))
+            if (this.Enabled == false || !await UpdateNextTriggerAndCheckCanExecuteAsync(this.TriggerDefinition, this.VGrainLifecycleToken))
                 return;
 
             await base.FireTriggerAsync();
@@ -107,6 +110,11 @@ namespace Democrite.Framework.Node.Cron
         protected override async Task OnEnsureTriggerDefinitionAsync(CancellationToken token)
         {
             await UpdateNextTriggerAndCheckCanExecuteAsync(this.TriggerDefinition!, token);
+        }
+
+        public override Task UpdateAsync()
+        {
+            return base.UpdateAsync();
         }
 
         /// <inheritdoc />

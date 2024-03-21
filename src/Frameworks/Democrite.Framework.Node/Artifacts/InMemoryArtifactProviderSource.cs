@@ -4,9 +4,9 @@
 
 namespace Democrite.Framework.Node.Artifacts
 {
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Node.Abstractions.Artifacts;
-    using Elvex.Toolbox.Patterns.Strategy;
 
     using System;
 
@@ -14,7 +14,7 @@ namespace Democrite.Framework.Node.Artifacts
     /// Artefact provider source used to exposed the one record in memory
     /// </summary>
     /// <seealso cref="IArtifactDefinitionProviderSource" />
-    public sealed class InMemoryArtifactProviderSource : ProviderStrategyBaseSource<ArtifactDefinition, Guid>, IArtifactDefinitionProviderSource
+    public sealed class InMemoryArtifactProviderSource : InMemoryBaseDefinitionProvider<ArtifactDefinition>, IArtifactDefinitionProviderSource
     {
         #region Ctor
 
@@ -24,18 +24,6 @@ namespace Democrite.Framework.Node.Artifacts
         public InMemoryArtifactProviderSource(IServiceProvider serviceProvider) 
             : base(serviceProvider)
         {
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        /// Adds or update a new artefact
-        /// </summary>
-        public void AddOrUpdate(ArtifactDefinition artifactResource)
-        {
-            base.SafeAddOrReplace(artifactResource.Uid, artifactResource);
         }
 
         #endregion

@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Signals
 {
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Elvex.Toolbox.Patterns.Strategy;
 
@@ -14,7 +15,7 @@ namespace Democrite.Framework.Node.Signals
     /// </summary>
     /// <seealso cref="ProviderStrategyBaseSource{DoorDefinition, Guid}" />
     /// <seealso cref="IDoorDefinitionProviderSource" />
-    public sealed class InMemoryDoorDefinitionProviderSource : ProviderStrategyBaseSource<DoorDefinition, Guid>, IDoorDefinitionProviderSource
+    public sealed class InMemoryDoorDefinitionProviderSource : InMemoryBaseDefinitionProvider<DoorDefinition>, IDoorDefinitionProviderSource
     {
         #region Ctor
 
@@ -24,18 +25,6 @@ namespace Democrite.Framework.Node.Signals
         public InMemoryDoorDefinitionProviderSource(IServiceProvider serviceProvider)
             : base(serviceProvider)
         {
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        /// Adds or update a new artefact
-        /// </summary>
-        public void AddOrUpdate(DoorDefinition doorDefinition)
-        {
-            base.SafeAddOrReplace(doorDefinition.Uid, doorDefinition);
         }
 
         #endregion

@@ -8,6 +8,7 @@ namespace Democrite.Framework.Core.Signals
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Signals;
+
     using Elvex.Toolbox;
 
     using Orleans.Concurrency;
@@ -48,8 +49,7 @@ namespace Democrite.Framework.Core.Signals
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalService"/> class.
         /// </summary>
-        public SignalService(ISignalDefinitionProvider signalDefinitionProvider,
-                            IGrainFactory grainFactory)
+        public SignalService(ISignalDefinitionProvider signalDefinitionProvider, IGrainFactory grainFactory)
         {
             this._funcCache = new Dictionary<Type, Func<SignalId, object, CancellationToken, IVGrainInformationProvider?, Task<Guid>>>();
             this._cacheLocker = new ReaderWriterLockSlim();
@@ -184,14 +184,14 @@ namespace Democrite.Framework.Core.Signals
         }
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(string signalName, ISignalReceiver receiver, CancellationToken token)
+        public async Task<SubscriptionId> SubscribeAsync(string signalName, ISignalReceiver receiver, CancellationToken token)
         {
             var definition = await ResolveSignalDefinitionByNameAsync(signalName, token);
             return await SubscribeAsync(definition.SignalId, receiver, token);
         }
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(SignalId signalId, ISignalReceiver receiver, CancellationToken token)
+        public async Task<SubscriptionId> SubscribeAsync(SignalId signalId, ISignalReceiver receiver, CancellationToken token)
         {
             var signalVGrain = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new SignalNotFoundException(signalId.Name);
             token.ThrowIfCancellationRequested();
@@ -199,12 +199,13 @@ namespace Democrite.Framework.Core.Signals
             using (var cancelSource = new GrainCancellationTokenSource())
             {
                 token.Register(() => cancelSource.Cancel());
-                return await signalVGrain.SubscribeAsync(receiver.GetGrainId(), cancelSource.Token);
+                var uid = await signalVGrain.SubscribeAsync(receiver.GetDedicatedGrainId<ISignalReceiver>(), cancelSource.Token);
+                return new SubscriptionId(signalId.Uid, false, uid);
             }
         }
 
         /// <inheritdoc />
-        public async Task<Guid> SubscribeAsync(DoorId doorId, ISignalReceiver receiver, CancellationToken token)
+        public async Task<SubscriptionId> SubscribeAsync(DoorId doorId, ISignalReceiver receiver, CancellationToken token)
         {
             var doorVGrain = this._grainFactory.GetGrain<IDoorSignalVGrain>(doorId.Uid) ?? throw new DoorNotFoundException(doorId.Uid + "/" + doorId.Name);
 
@@ -213,8 +214,15 @@ namespace Democrite.Framework.Core.Signals
             using (var cancelSource = new GrainCancellationTokenSource())
             {
                 token.Register(() => cancelSource.Cancel());
-                return await doorVGrain.SubscribeAsync(receiver.GetGrainId(), cancelSource.Token);
+                var uid = await doorVGrain.SubscribeAsync(receiver.GetDedicatedGrainId<ISignalReceiver>(), cancelSource.Token);
+                return new SubscriptionId(doorId.Uid, true, uid);
             }
+        }
+
+        /// <inheritdoc />
+        public Task Unsubscribe(SubscriptionId subscriptionId)
+        {
+            throw new NotImplementedException();
         }
 
         #region Tools

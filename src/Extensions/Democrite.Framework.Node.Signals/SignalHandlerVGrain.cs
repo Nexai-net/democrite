@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Signals
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Models;
@@ -48,8 +49,9 @@ namespace Democrite.Framework.Node.Signals
                                    [PersistentState("Signals", nameof(Democrite))] IPersistentState<SignalHandlerStateSurrogate> persistentState,
                                    ISignalDefinitionProvider signalDefinitionProvider,
                                    IGrainOrleanFactory grainFactory,
+                                   IRemoteGrainServiceFactory remoteGrainServiceFactory,
                                    ITimeManager timeManager)
-            : base(logger, persistentState, grainFactory)
+            : base(logger, persistentState, grainFactory, remoteGrainServiceFactory)
         {
             this._timeManager = timeManager;
             this._signalDefinitionProvider = signalDefinitionProvider;

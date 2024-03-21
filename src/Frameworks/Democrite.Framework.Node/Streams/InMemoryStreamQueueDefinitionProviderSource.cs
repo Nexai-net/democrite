@@ -4,8 +4,9 @@
 
 namespace Democrite.Framework.Node.Streams
 {
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Streams;
-    using Democrite.Framework.Core.Abstractions.Triggers;
+
     using Elvex.Toolbox.Patterns.Strategy;
 
     using System;
@@ -15,7 +16,7 @@ namespace Democrite.Framework.Node.Streams
     /// </summary>
     /// <seealso cref="ProviderStrategyBaseSource{StreamQueueDefinition, System.Guid}" />
     /// <seealso cref="IStreamQueueDefinitionProviderSource" />
-    public sealed class InMemoryStreamQueueDefinitionProviderSource : ProviderStrategyBaseSource<StreamQueueDefinition, Guid>, IStreamQueueDefinitionProviderSource
+    public sealed class InMemoryStreamQueueDefinitionProviderSource : InMemoryBaseDefinitionProvider<StreamQueueDefinition>, IStreamQueueDefinitionProviderSource
     {
         #region Ctor
 
@@ -25,18 +26,6 @@ namespace Democrite.Framework.Node.Streams
         public InMemoryStreamQueueDefinitionProviderSource(IServiceProvider serviceProvider)
             : base(serviceProvider)
         {
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        /// Adds or update a new <see cref="StreamQueueDefinition"/>
-        /// </summary>
-        public void AddOrUpdate(StreamQueueDefinition streamQueueDefinition)
-        {
-            base.SafeAddOrReplace(streamQueueDefinition.Uid, streamQueueDefinition);
         }
 
         #endregion

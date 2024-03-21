@@ -6,7 +6,6 @@ namespace Democrite.Framework.Core
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
-    using Elvex.Toolbox.Patterns.Strategy;
 
     using System;
 
@@ -14,7 +13,7 @@ namespace Democrite.Framework.Core
     /// <see cref="SequenceDefinition"/> provider register in memory
     /// </summary>
     /// <seealso cref="ISequenceDefinitionSourceProvider" />
-    public sealed class InMemorySequenceDefinitionProvider : ProviderStrategyBaseSource<SequenceDefinition, Guid>, ISequenceDefinitionSourceProvider
+    public sealed class InMemorySequenceDefinitionProvider : InMemoryBaseDefinitionProvider<SequenceDefinition>, ISequenceDefinitionSourceProvider
     {
         #region Ctor
 
@@ -24,18 +23,6 @@ namespace Democrite.Framework.Core
         public InMemorySequenceDefinitionProvider(IServiceProvider serviceProvider)
             : base(serviceProvider)
         {
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        /// Adds or update a new artefact
-        /// </summary>
-        public void AddOrUpdate(SequenceDefinition triggerDefinition)
-        {
-            base.SafeAddOrReplace(triggerDefinition.Uid, triggerDefinition);
         }
 
         #endregion

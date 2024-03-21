@@ -4,6 +4,9 @@
 
 namespace Democrite.Framework.Node.Signals.Models
 {
+    using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Signals;
+
     using Orleans.Runtime;
 
     using System;
@@ -17,7 +20,7 @@ namespace Democrite.Framework.Node.Signals.Models
     {
         #region Fields
 
-        private ImmutableDictionary<GrainId, SignalSubscription> _subscriptions;
+        private ImmutableDictionary<DedicatedGrainId<ISignalReceiver>, SignalSubscription> _subscriptions;
         private readonly ReaderWriterLockSlim _subscriptionLocker;
 
         #endregion
@@ -31,7 +34,7 @@ namespace Democrite.Framework.Node.Signals.Models
         {
             this._subscriptionLocker = new ReaderWriterLockSlim();
             this._subscriptions = subscriptions?.ToImmutableDictionary(s => s.TargetGrainId)
-                                        ?? ImmutableDictionary<GrainId, SignalSubscription>.Empty;
+                                        ?? ImmutableDictionary<DedicatedGrainId<ISignalReceiver>, SignalSubscription>.Empty;
         }
 
         #endregion
@@ -53,7 +56,7 @@ namespace Democrite.Framework.Node.Signals.Models
         /// <summary>
         /// Adds or update a suscriptions.
         /// </summary>
-        public Guid AddOrUpdateSuscription(GrainId targetGrainId)
+        public Guid AddOrUpdateSuscription(DedicatedGrainId<ISignalReceiver> targetGrainId)
         {
             this._subscriptionLocker.EnterReadLock();
 

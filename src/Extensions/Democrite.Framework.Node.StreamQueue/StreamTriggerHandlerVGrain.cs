@@ -13,18 +13,17 @@ namespace Democrite.Framework.Node.StreamQueue
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Abstractions.Triggers;
     using Democrite.Framework.Node.Triggers;
+
     using Elvex.Toolbox.Abstractions.Patterns.Workers;
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Patterns.Workers;
 
     using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json.Linq;
 
     using Orleans.Runtime;
     using Orleans.Streams;
 
     using System;
-    using System.Reflection.Metadata;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -47,8 +46,6 @@ namespace Democrite.Framework.Node.StreamQueue
         //private readonly SemaphoreSlim _tickerLocker;
 
         #endregion
-
-        
 
         #region Ctor
 
@@ -110,6 +107,9 @@ namespace Democrite.Framework.Node.StreamQueue
             // Some value change then unsubscrible previous one and connect to new one
             await (this.State?.StreamSubscription?.UnsubscribeAsync() ?? Task.CompletedTask);
 
+            if (this.Enabled == false)
+                return;
+
             var streamProvider = GrainStreamingExtensions.GetStreamProvider(this, streamInfo.StreamConfiguration);
             var stream = streamProvider.GetStream<object>(streamInfo.ToStreamId());
 
@@ -124,10 +124,22 @@ namespace Democrite.Framework.Node.StreamQueue
         /// </summary>
         private async Task ReceiveStreamData(object item, StreamSequenceToken streamSequenceToken)
         {
+            if (this.Enabled == false)
+            {
+                if (this.State?.StreamSubscription is not null)
+                {
+                    await this.State.StreamSubscription.UnsubscribeAsync();
+                    this.State.StreamSubscription = null;
+
+                    await PushStateAsync(default);
+                }
+                return;
+            }
+
             await _pipelineProcess.ProcessAsync(async () => await FireTriggerAsync(item,
                                                                                    true,
-                                                                                   this.VGrainLifecycleToken), 
-                                                () => item, 
+                                                                                   this.VGrainLifecycleToken),
+                                                () => item,
                                                 this.TriggerDefinition.MaxConcurrentProcess, this.Logger);
         }
 

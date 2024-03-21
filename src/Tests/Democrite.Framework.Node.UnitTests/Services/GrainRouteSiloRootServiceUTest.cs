@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.UnitTests.Services
 {
     using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Core.Abstractions.Models;
+    using Democrite.Framework.Core.Abstractions.Services;
     using Democrite.Framework.Node.Abstractions.Administrations;
     using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Services;
