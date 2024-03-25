@@ -36,6 +36,24 @@ All configurations possible with Orleans are still available, but Democrite offe
 
 ## Features
 
+- [Nodes](#nodes) : Backend part where all the VGrain live to solve requests.
+- [Client](#client) : Proxy used to send query to cluter's node.
+- [Cluster](#cluster) : Group of client and nodes to distribute work allong multiple devices.
+- [Storages](#storages) : Define where and how the data are persisted.
+- [Virtual Grains (vgrain)](#virtual-grains-vgrain) : Democrite extention of orleans grain.
+- [Virtual Grains Id](#virtual-grain-id) : Democrite dynamic usage of id and templating.
+- [Sequences](#sequences) : Linear transformer that chain VGrain to treat a input data and provide an output from it.
+- [Signals](#signals) : Information send through the cluster that could be used as stimulus. (Trigger, Services ...)
+- [Triggers](#triggers) : Connectors designed to initiate reactions based on a stimulus. (Signal, Door, Cron, Stream Queue, ...)
+- [Doors](#door-types) : Connectors designed to initiate reactions based on stimulus that follow specific conditions.
+- [External Code VGrain](#external-code-vgrain) : VGrain write in other technologie than .net, like Python, C++, Javascript, ...
+- [Blackboard](#blackboard) : Technologie of shared memory with intelligent controller. Use to organize and process a specific task, goal.
+- [<font color="green">Redirections</font>](#redirections) : Enable switch of implementations for a particular contract during runtime.
+- [<font color="green">Dynamic Definitions</font>](#dynamic-definitions) : Allow definition to be generated and inject at runtime.
+
+>[!TIP]
+> In green this is the lastest feature integrated
+
 ### Nodes
 
 A node refers to a server within a cluster.<br />
@@ -66,6 +84,7 @@ await using (node)
 > [!TIP]
 > [Next](#next) Incomming: **IHostBuilder** integration to allow configuration on existing application.
 
+---
 ### Client
 
 A client is a separate program that utilizes the cluster's capabilities.<br /> 
@@ -100,7 +119,7 @@ await using (node)
 // Add democrite client
 builder.Host.UseDemocriteClient(cfg => { ... });
 ```
-
+---
 ### Cluster
 
 Like Orleans, Democrite is build to work in cluster. Client and nodes communicates to each other to solve request.<br />
@@ -165,6 +184,7 @@ builder.Host.UseDemocriteClient(b =>
 
 See the full usage in sample [ExternalStorages/MongoDB](/samples/ExternalStorages/MongoDB/)
 
+---
 ### Storages
 
 A Democrite cluster need some information to be stored: <br/>
@@ -226,6 +246,7 @@ You can use the mongo extension to provide storage for all the components:
 
 See the full usage in sample [ExternalStorages/MongoDB](/samples/ExternalStorages/MongoDB/)
 
+---
 ### Virtual Grains (vgrain)
 
 In accordance with Orleans terminology, a grain is a virtual actor that can appear in any compatible silo, with its state being restored if necessary.<br />
@@ -237,6 +258,7 @@ With Democrite, there is no need to explicitly call the grain yourself, it will 
 
 This is the reason we refer to them as **Virtual Grains** (**VGrain**), to denote a behavior that prevent direct call consumption.
 
+---
 ### Sequences
 
 A **Sequence** is a series of virtual grains executed sequentially, where the output of one can be used as input for the next **VGrain**. <br />
@@ -285,6 +307,7 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
                                         })
 ```
 
+---
 ### Triggers
 
 A **Sequences** can be executed manually, but it can also be triggered automatically.
@@ -356,7 +379,7 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
                                         })
 ```
 
-### Stream
+#### Stream
 
 Use an EBS (Entreprise Bus Service) as storage an diffuseur of job to to.
 
@@ -389,6 +412,7 @@ var fromStreamTrigger = Trigger.Stream(streamDef) // <----- Trigger that fire un
 
 ```
 
+---
 ### Signals
 
 The signals feature consists of two components:
@@ -468,6 +492,7 @@ var node = DemocriteNode.Create((ctx, configBuilder) => configBuilder.AddJsonFil
                                         })
 ```
 
+---
 ### Virtual Grain Id
 
 In the Orleans framework, a grain definition can have multiple virtual instances.<br /> 
@@ -497,6 +522,7 @@ This allow :
 > You can access those grain usign the classic orleans [IGrainFactory]() way. <br />
 > **BUT** it is better to use [IDemocriteExecutionHandler](#consume-democrite-cluster) who will use correctly and automatically the correct GrainId.
 
+---
 ### External Code VGrain
 
 With Democrite we can use other satellite program or script to perform jobs.<br />
@@ -512,12 +538,44 @@ To do so you need simple steps:
 A python package exist to handle the communication protocol with democrite [README.md](/src/Extensions/Dist/Python/README.md) <br />
 You can found a full sample [Here](/samples/PythonVGrains/) <br />
 
+---
 ### Blackboard
 
 A blackboard is a temporary shared space with specific controllers to solve a problem. <br />
 The goal is to group specific analyze result and have controllers deciding the next step to acheived to a solution.
 
 You can found a full sample [Here](/samples/Blackboard/) <br />
+
+---
+### Redirections
+
+Democrite has devised a dynamic solution for determining the implementation to be utilized for a **contract**. <br />
+There are several reasons why multiple implementations might be necessary. <br />
+Now, with the introduction of a feature called "**Redirection**" you can dynamically alter the implementation used for a specific **contract**.
+
+It is usefull for:
+- Testing: Ensure that implementation won't break existing sequences
+- Competition: You can them make implementation in competition to select the best related to context.
+- ...
+
+This redirection could be setup a different level:
+- Call Scope: During a call using **IDemocriteExucutorHanlder**. Limit the redirection only to a specific call, you can even specialize to a specific stage.
+- Global Scope: Available on all the cluster
+
+You can found a full sample [Here](/samples/Redirections/) <br />
+
+---
+### Dynamic Definitions
+
+Democrite serves as an orchestrator for vgrains, utilizing serializable definitions as work orders. <br />
+These definitions are primarily formulated and stored in an external system such as databases. <br/><br/>
+
+The objective of the "Dynamic Definitions" feature is to generate definitions (sequences, triggers, etc.) at runtime, with a lifecycle linked to storage.<br/>
+If no specific storage is provided, the definition will exist only for the duration of the cluster's lifetime.<br/><br/>
+
+This capability enables dynamic testing of new sequences, creation of temporary triggers, and activation of temporary debugging features, among other functionalities.
+
+You can found a full sample [Here](/samples/DynamicDefinition/) <br />
 
 ## Quick Start
 
@@ -548,6 +606,7 @@ If you split the agent implementation and definition in separate projet you coul
 - **Democrite.Framework.Bag.DebugTools**: Reference this one by your node project to enable debug sequences or VGrain (Like Display, ...).
 - **Democrite.Framework.Bag.Toolbox**: Reference this one by your node project to enable basic tools sequences or VGrain (like delay, ...).
 
+---
 ### Node
 
 To create a node you just have to follow the example bellow.
@@ -577,6 +636,7 @@ await using (node)
 }
 ```
 
+---
 ### Client
 
 To create a client you just have to follow the example bellow.
@@ -607,12 +667,14 @@ await using (node)
 }
 ```
 
+---
 ### Consume Democrite Cluster
 
 To execute a sequence or call a specific grain you have to use the service [IDemocriteExecutionHandler](/src/Frameworks/Democrite.Framework.Core.Abstractions/IDemocriteExecutionHandler.cs).
 
 This handler follow democrite rules in grain id generation.
 
+---
 ### Tips
 
 1. Normalize your data model and create small [Virtual Grain](#virtual-grains) with small sponsability.
@@ -638,7 +700,7 @@ Fetch reguraly a forex pair value using public web site, store the values and be
 - [Minimal .net API](https://learn.microsoft.com/en-us/aspnet/core/tutorials/min-web-api?view=aspnetcore-8.0&tabs=visual-studio)
 - Democrite client [IDemocriteHandler](#consume-democrite-cluster) usage
 
-
+---
 ### External Storage
 
 **Use case**
@@ -662,6 +724,7 @@ Through the client you can look for the counter value through a swagger api
 **Mongo**<br />
 In the section [samples/ExternalStorages/MongoDB](/samples/ExternalStorages/MongoDB/)
 
+---
 ### Relay Filter Door
 
 In the section [Sample/RelayFilterDoor](/samples/RelayFilterDoor/)
@@ -669,12 +732,16 @@ In the section [Sample/RelayFilterDoor](/samples/RelayFilterDoor/)
 **Use case**
 
 Relay filter door can apply a condition on signal received.
-For example if the signal transport a value of type int i let pass.
+For example if the signal transport a value of type int, let pass.
+
+- Trigger dedicated sequence if function of the data carry
+- Trigger dedicated storage based to the type of data carry
 
 **Features Use**
 - Democrite RelayFilterDoor definition
 
-### PyhtonVGrains
+---
+### Python VGrains
 
 In the section [Sample/PythonVGrains](/samples/PythonVGrains/)
 
@@ -687,21 +754,94 @@ Use Python scripts inside democrite environment like VGrain standard
 > You goal is to be able to support different package provider, <br/>
 > in different format late on. (From api, zip, shared folder, resource embedded ...)
 
+- Use RNN (Neural Network) library in python to solve data
+- Re-use you librairies
+
 **Features Use**
 - Democrite Artifact Definition, Packaging
 - External code executor (allow democrite to used external program as solver)
 
+---
+### Blackboard
+
+In the section [Sample/Blackboard](/samples/Blackboard/)
+
+**Use case**
+
+Use a **Blackboard** as central point to group information related to a specific case and compute them when needed.
+<br/>
+We demonstrate with a simple calculator. We can store in the blackboard different type of numeriacl value and sum them when a limit is reach or manually.
+
+- Process Different modality (Text, Video, Image) in a same place and use dedicated controller to perform advance analyze, remove useless data, archive some others ...
+- Train an IA by storing good data set and rejet others, detect automatically when quality response is reach
+
+**Features Use**
+- Blackboard Storage
+    - Rules
+    - Type check
+    - Multi-Storage
+
+- Blackboard Controller
+    - Storage : Responsable of the data integrity
+    - Event : Responsable to compute when condition are fullfill.
+
+---
+### Streams
+In the section [Sample/Streams](/samples/Streams/)
+
+**Use case**
+
+Use a **Stream** as data input for democrite activity through a specific trigger.
+
+- Buffer a lot of work in a StreamQueue 
+- Communicate with external system in and out
+
+**Features Use**
+- Stream source trigger
+
+---
+### Redirections
+
+In the section [Sample/Redirections](/samples/Redirections/)
+
+**Use case**
+
+- Wanted to change the behavior of some implementation whitout impacting existing.
+- Be able to put in competition multiple implementation an see the best result
+
+**Features Use**
+- Grain Implemation redirection
+    - Local during a call
+    - Global for all the cluster
+
+---
+### Dynamic Defintions
+
+In the section [Sample/DynamicDefinition](/samples/DynamicDefinition//)
+
+**Use case**
+
+- A blackboard need some data processing, it can generate it's own sequence and signal definition at runtime
+- You want to test a VGrain in some condition you can create you sequence using it
+- You pilote IA want to test different algorithm variation
+
+**Features Use**
+- Dynamic definition 
+    - Injection
+    - Activation/Deactivation
+    - Suppression
+
 ## Next
 
-(Processing) v 0.3.1-prerelease :
+**v 0.4.1-prerelease:** <br/>
+[Release Node](/docs/ReleaseNotes.md#041-prerelease)
 
-- [ ] Add method to reference the vgrain assembly in the system to be sure this one is loaded by orleans.
-- [ ] Force grain redirection for a precise sequence execution
-- [ ] Call sequence from sequence
-- [ ] Create sequence definition in runtime
-- [ ] Condition stage to execute different stages base on a simple condition
+- [x] Migrate to .net 8
+- [x] Force grain redirection for a precise sequence execution
+- [x] Call sequence from sequence
+- [x] Create sequence definition in runtime
 
-**v 0.3-prerelease:** <br/>
+**v 0.3.0-prerelease:** <br/>
 [Release Node](/docs/ReleaseNotes.md#03-prerelease)
 - [x] **Blackboard** extensions
 - [x] Create bags as container of generic (toolbox, debug)

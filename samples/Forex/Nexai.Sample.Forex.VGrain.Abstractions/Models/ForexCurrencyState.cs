@@ -5,8 +5,6 @@
 namespace Nexai.Sample.Forex.VGrain.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions.Models;
-    using Democrite.Framework.Toolbox.Extensions;
-    using Democrite.Framework.Toolbox.Helpers;
 
     using System;
     using System.Collections.Generic;

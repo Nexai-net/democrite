@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Redirection.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:53612;http://localhost:53613"
+    }
+  }
+}

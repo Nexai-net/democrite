@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "DynamicDefinition.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:52261;http://localhost:52262"
+    }
+  }
+}

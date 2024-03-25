@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Configurations
 {
     using Democrite.Framework.Core.Abstractions;
+
     using Elvex.Toolbox.Abstractions.Attributes;
     using Elvex.Toolbox.Disposables;
     using Elvex.Toolbox.Extensions;
@@ -120,6 +121,7 @@ namespace Democrite.Framework.Configurations
         /// </summary>
         public async Task StartAsync(Func<IServiceProvider, IDemocriteExecutionHandler, CancellationToken, Task>? runningFunction = null, CancellationToken token = default)
         {
+            IReadOnlyCollection<INodeInitService>? nodeInitServiceAfter = null;
             Task? runningTask = null;
             try
             {
@@ -133,19 +135,15 @@ namespace Democrite.Framework.Configurations
 
                     var serviceToInit = this._host.Services.GetServices<INodeInitService>();
 
-                    var initTasks = serviceToInit.Where(s => !s.IsInitialized && !s.IsInitializing)
-                                                 .Select(s => s.InitializationAsync(this._host.Services, token: token))
-                                                 .ToArray();
+                    var initServices = serviceToInit.Distinct()
+                                                    .GroupBy(s => s.ExpectOrleanStarted)
+                                                    .ToDictionary(k => k.Key, v => v.ToReadOnly());
 
-                    try
-                    {
-                        await initTasks.SafeWhenAllAsync(token);
-                    }
-                    catch (AggregateException ex)
-                    {
-                        foreach (var inner in ex.InnerExceptions)
-                            this._logger.OptiLog(LogLevel.Critical, "Exceptions on INodeInitService : {exception}", inner);
-                    }
+                    if (initServices.TryGetValue(true, out var expectStarted))
+                        nodeInitServiceAfter = expectStarted;
+
+                    if (initServices.TryGetValue(false, out var beforeStartServices))
+                        await InitializeServicesAsync(beforeStartServices, token);
 
                     if (this._hostOwned)
                         this._runningTask = this._host.StartAsync(token);
@@ -165,6 +163,9 @@ namespace Democrite.Framework.Configurations
             if (runningTask != null)
             {
                 await runningTask;
+
+                if (nodeInitServiceAfter is not null && nodeInitServiceAfter.Any())
+                    await InitializeServicesAsync(nodeInitServiceAfter, token);
 
                 if (runningFunction != null)
                     await runningFunction(this._host.Services, this._democriteExecutionHandler, token);
@@ -195,7 +196,7 @@ namespace Democrite.Framework.Configurations
                         await initTasks.SafeWhenAllAsync(token);
                     }
                     catch (OperationCanceledException)
-                    { 
+                    {
                     }
                     catch (AggregateException ex)
                     {
@@ -286,6 +287,27 @@ namespace Democrite.Framework.Configurations
 
             return host;
         }
+
+        /// <summary>
+        /// Initializes the services.
+        /// </summary>
+        private async Task InitializeServicesAsync(IReadOnlyCollection<INodeInitService> beforeStartServices, CancellationToken token)
+        {
+            var initTasks = beforeStartServices.Where(s => !s.IsInitialized && !s.IsInitializing)
+                                               .Select(s => s.InitializationAsync(this._host.Services, token: token))
+                                               .ToArray();
+
+            try
+            {
+                await initTasks.SafeWhenAllAsync(token);
+            }
+            catch (AggregateException ex)
+            {
+                foreach (var inner in ex.InnerExceptions)
+                    this._logger.OptiLog(LogLevel.Critical, "Exceptions on INodeInitService : {exception}", inner);
+            }
+        }
+
 
         #endregion
     }

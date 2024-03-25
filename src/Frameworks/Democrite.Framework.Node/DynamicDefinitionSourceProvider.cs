@@ -82,6 +82,16 @@ namespace Democrite.Framework.Node
 
         #endregion
 
+        #region Properties
+
+        /// <inheritdoc />
+        public bool ExpectOrleanStarted
+        {
+            get { return true; }
+        }
+
+        #endregion
+
         #region Methods
 
         /// <inheritdoc />

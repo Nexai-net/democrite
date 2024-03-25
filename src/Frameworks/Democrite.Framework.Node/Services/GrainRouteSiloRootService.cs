@@ -57,6 +57,12 @@ namespace Democrite.Framework.Node.Services
         #region Properties
 
         /// <inheritdoc />
+        public bool ExpectOrleanStarted
+        {
+            get { return true; }
+        }
+
+        /// <inheritdoc />
         public bool IsInitializing
         {
             get { return this._initImpl.IsInitializing; }

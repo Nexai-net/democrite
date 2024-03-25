@@ -5,9 +5,11 @@
 namespace Nexai.Sample.Forex.VGrain
 {
     using Democrite.Framework.Core;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Toolbox.Extensions;
+
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 
@@ -15,9 +17,6 @@ namespace Nexai.Sample.Forex.VGrain
 
     using Nexai.Sample.Forex.VGrain.Abstractions;
 
-    using Orleans.Runtime;
-
-    using System;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -29,7 +28,7 @@ namespace Nexai.Sample.Forex.VGrain
         #region Fields
 
         private readonly ISignalService _signalService;
-        private Guid _subscriptionId;
+        private SubscriptionId _subscriptionId;
 
         #endregion
 
@@ -60,7 +59,7 @@ namespace Nexai.Sample.Forex.VGrain
         /// <inheritdoc />
         public Task ReceiveSignalAsync(SignalMessage signal)
         {
-            this.Logger.OptiLog<GrainId, string>(LogLevel.Information, "{currentGrainId} received signal : {signal}", GetGrainId(), JsonConvert.SerializeObject(signal, Formatting.Indented));
+            this.Logger.OptiLog(LogLevel.Information, "{currentGrainId} received signal : {signal}", GetGrainId(), JsonConvert.SerializeObject(signal, Formatting.Indented));
             return Task.CompletedTask;
         }
 

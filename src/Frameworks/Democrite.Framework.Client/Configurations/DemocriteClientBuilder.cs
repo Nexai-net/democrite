@@ -5,15 +5,18 @@
 namespace Democrite.Framework.Client.Configurations
 {
     using Democrite.Framework.Client.Model;
+    using Democrite.Framework.Client.Services;
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Configurations;
     using Democrite.Framework.Configurations;
+    using Democrite.Framework.Core.Abstractions.Services;
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
 
     using System;
+    using System.Diagnostics;
 
     /// <see cref="IDemocriteClientBuilder" /> implementation
     internal sealed class DemocriteClientBuilder : ClusterBaseBuilder<IDemocriteClientBuilderWizard, IDemocriteCoreConfigurationWizard, DemocriteClientConfigurationDefinition>,
@@ -83,6 +86,15 @@ namespace Democrite.Framework.Client.Configurations
         }
 
         #region Tools
+
+        /// <inheritdoc />
+        protected override void OnFinalizeManualBuildConfigure(ILogger logger)
+        {
+            var serviceDescriptors = this._orleanClientBuilder.Services;
+            serviceDescriptors.AddSingleton<IVGrainDemocriteSystemProvider, VGrainClientDemocriteSystemProvider>();
+
+            base.OnFinalizeManualBuildConfigure(logger);
+        }
 
         /// <inheritdoc />
         protected override IDemocriteClientBuilderWizard GetWizard()

@@ -21,6 +21,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
     using System;
     using System.Diagnostics;
+    using System.Linq.Expressions;
     using System.Reflection;
     using System.Threading.Tasks;
 
@@ -47,7 +48,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
         /// </summary>
         static SequenceExecutorThreadStagePushToContext()
         {
-            var tryPushData = typeof(IExecutionContext).GetMethod(nameof(IExecutionContext.TryPushContextData));
+            var tryPushData = (((Expression<Func<IExecutionContext, bool>>)((IExecutionContext ctx) => ctx.TryPushContextData<int>(42, false, null!))).Body as MethodCallExpression)!.Method.GetGenericMethodDefinition();
             Debug.Assert(tryPushData != null);
 
             s_tryPushData = tryPushData;

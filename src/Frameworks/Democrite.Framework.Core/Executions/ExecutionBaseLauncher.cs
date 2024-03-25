@@ -194,7 +194,7 @@ namespace Democrite.Framework.Core.Executions
                 exception = executionTask.Exception;
             }
 
-            object? output = default;
+            object? output = default(TExpectedOutput);
 
             if (executionTask is not null && executionTask.IsCompletedSuccessfully)
             {

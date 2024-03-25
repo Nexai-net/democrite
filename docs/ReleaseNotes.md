@@ -7,6 +7,28 @@ Release Notes
 
 # Beta
 
+## 0.4.1-prerelease
+
+In this version we mainly focus on dynamic feature :
+- Definitions
+- Redirections
+
+### Features
+- **Redirections** : Able to change the implementation used during a sequence resolution. In scope local and global.
+- **Sequence Stages Call** : Extend sequence stages.
+    - **Sequence** : Be able to call a sequence from another sequence.
+    - **Select** : Be able to manipulate the input to select a sub element or provider one.
+- **Dynamic Definitions** : Be able to inject definition as runtime
+
+### Breaking Changes
+>[CAUTION]
+> - **ReturnNoMessage** : Renaming end stage method from "ReturnNoMessage" to "ReturnNoData".
+
+### Fix
+- **Trigger** : Fix trigger activation and desactivation based on definition.
+- **Repository** : Auto-configuration default democrite repository
+
+
 # Alpha
 
 ## 0.3-prerelease

@@ -4,10 +4,10 @@
   </PropertyGroup>
   <!-- Democrite -->
   <ItemGroup>
-    <PackageVersion Include="Democrite.Framework.Builders" Version="0.3.0.272-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Node" Version="0.3.0.272-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Builders" Version="0.4.1.377-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Node" Version="0.4.1.377-prerelease" />
     <PackageVersion Include="Democrite.Framework.Node.Cron" Version="0.2.0.185-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Node.Signals" Version="0.3.0.272-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Bag.DebugTools" Version="0.3.0.272-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Node.Signals" Version="0.4.1.377-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Bag.DebugTools" Version="0.4.1.377-prerelease" />
   </ItemGroup>
 </Project>

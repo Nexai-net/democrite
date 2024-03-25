@@ -12,5 +12,9 @@ namespace Democrite.Framework.Core.Abstractions
     /// <seealso cref="ISupportInitialization" />
     public interface INodeInitService : ISupportInitialization<IServiceProvider>
     {
+        /// <summary>
+        /// Gets a value indicating whether [expect orlean started].
+        /// </summary>
+        bool ExpectOrleanStarted { get; }
     }
 }

@@ -6,13 +6,14 @@ using Democrite.Framework.Bag.Toolbox.Abstractions;
 using Democrite.Framework.Builders;
 using Democrite.Framework.Configurations;
 using Democrite.Framework.Core.Abstractions.Enums;
-using Democrite.Framework.Toolbox.Abstractions.Models;
+
+using Elvex.Toolbox.Abstractions.Models;
 
 using Microsoft.Extensions.Logging;
 
 var consumeSeq = Sequence.Build("Display input with deplay")
                          .RequiredInput<int>()
-                         .Use<IDisplayInfoVGrain>().Call((g, m, ctx) => g.DisplayCallInfoAsync(m, ctx)).ReturnNoMessage
+                         .Use<IDisplayInfoVGrain>().Call((g, m, ctx) => g.DisplayCallInfoAsync(m, ctx)).ReturnNoData
                          .Use<IDelayVGrain>().Configure(TimeSpanRange.Create(500, 700))
                                              .Call((g, ctx) => g.RandomDelayAsync(ctx)).Return
                          .Build();

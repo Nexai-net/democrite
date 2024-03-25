@@ -20,6 +20,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="Democrite.Framework.Client" />
 		<InternalsVisibleTo Include="Democrite.Framework.Node" />
 		<InternalsVisibleTo Include="Democrite.Framework.Node.Cron" />
 		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals" />

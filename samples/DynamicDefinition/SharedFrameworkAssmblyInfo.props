@@ -1,0 +1,23 @@
+<Project>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>12</LangVersion>
+
+		<Authors>Nexai</Authors>
+		<Company>Nexai.net</Company>
+
+		<NeutralLanguage>en</NeutralLanguage>
+		<Copyright>Copyright (c) Nexai.net</Copyright>
+		
+		<PackageProjectUrl>https://github.com/nexai-net/democrite</PackageProjectUrl>
+		<PackageIconUrl>https://github.com/nexai-net/democrite/blob/master/docs/logo.png</PackageIconUrl>
+		<PackageLicenseUrl>https://github.com/nexai-net/democrite/blob/master/LICENSE</PackageLicenseUrl>
+		<RepositoryType>Git</RepositoryType>
+		<RepositoryUrl>https://github.com/nexai-net/democrite/</RepositoryUrl>
+
+	</PropertyGroup>
+	
+</Project>

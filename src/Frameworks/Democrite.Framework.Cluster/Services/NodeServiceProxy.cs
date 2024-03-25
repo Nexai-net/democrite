@@ -5,7 +5,7 @@
 namespace Democrite.Framework.Cluster.Services
 {
     using Democrite.Framework.Core.Abstractions;
-    using Elvex.Toolbox.Extensions;
+
     using Elvex.Toolbox.Supports;
 
     using Microsoft.Extensions.DependencyInjection;
@@ -54,17 +54,12 @@ namespace Democrite.Framework.Cluster.Services
             get { return false; }
         }
 
-        ///// <inheritdoc />
-        //public bool IsInitializing
-        //{
-        //    get { return false; }
-        //}
 
-        ///// <inheritdoc />
-        //public bool IsInitialized
-        //{
-        //    get { return false; }
-        //}
+        /// <inheritdoc />
+        public bool ExpectOrleanStarted
+        {
+            get { return false; }
+        }
 
         #endregion
 

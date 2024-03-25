@@ -11,8 +11,9 @@ using Democrite.Framework.Core.Abstractions.Sequence;
 using Democrite.Framework.Core.Abstractions.Triggers;
 using Democrite.Framework.Node.Abstractions.Configurations;
 using Democrite.Framework.Node.Configurations;
-using Democrite.Framework.Toolbox.Abstractions.Enums;
 using Democrite.VGrains.Web.Abstractions;
+
+using Elvex.Toolbox.Abstractions.Enums;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
