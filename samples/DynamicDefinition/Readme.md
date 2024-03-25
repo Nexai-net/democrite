@@ -33,7 +33,7 @@ await this._dynamicDefinitionHandler.GetDynamicDefinitionMetaDatasAsync(token: t
 > Sensible method require an IIdentityCard.
 > This card will be used to managed the security and right.
 > <br/>
-> :warning: During this alpha version, security is still in place but we start puting in place elements to prevent signature breaking change in the future.
+> :warning: During this beta version, security is still in place but we start puting in place elements to prevent signature breaking change in the future.
 
 ## Sample
 
