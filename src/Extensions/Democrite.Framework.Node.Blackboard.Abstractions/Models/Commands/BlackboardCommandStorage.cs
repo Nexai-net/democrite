@@ -21,7 +21,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     /// </summary>
     /// <typeparam name="TData">The type of the data.</typeparam>
     /// <param name="InsertIfNew">Allow creation if doesn't exist.</param>
-    /// <param name="@override">Allow update if exist (Same Uid).</param>
+    /// <param name="@override">Allow update if exist (Same DeferredId).</param>
     [Immutable]
     [Serializable]
     [GenerateSerializer]

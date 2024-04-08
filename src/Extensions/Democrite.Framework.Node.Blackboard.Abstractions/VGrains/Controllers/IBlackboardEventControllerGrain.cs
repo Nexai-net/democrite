@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers
 {
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Events;
+    using Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries;
 
     using Orleans;
 
@@ -21,5 +22,16 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers
         /// Reacts to events
         /// </summary>
         Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(IReadOnlyCollection<BlackboardEvent> events, GrainCancellationToken token);
+
+        /// <summary>
+        /// Process a incoming query
+        /// </summary>
+        /// <returns>
+        /// Specific command responses: <br/>
+        ///     <see cref="RejectActionBlackboardCommand"/> : If query type is not supported. <br/>
+        ///     <see cref="DeferredResponseBlackboardCommand"/> : Define reponse will arrived later through the deferred reponse democrite system. <br/>
+        ///     <see cref="ResponseBlackboardCommand{TResponseRequested}"/> : Provide directly the query response. <br/>
+        /// </returns>
+        Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardQueryRequest request, GrainCancellationToken token);
     }
 }

@@ -132,4 +132,7 @@
   <data name="BlackboardPushValidationException" xml:space="preserve">
     <value>New data doesn't match the required {0} \n Input: {1}</value>
   </data>
+  <data name="BlackboardQueryRejectedException" xml:space="preserve">
+    <value>Query ({0}) have been rejected : {1}</value>
+  </data>
 </root>

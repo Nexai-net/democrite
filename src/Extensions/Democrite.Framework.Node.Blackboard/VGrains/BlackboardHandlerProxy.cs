@@ -4,9 +4,11 @@
 
 namespace Democrite.Framework.Node.Blackboard.VGrains
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
+    using Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Targets;
 
     using Elvex.Toolbox.Abstractions.Services;
@@ -95,6 +97,15 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
+        public async Task<bool> DeleteDataAsync(CancellationToken token, IIdentityCard identity, params Guid[] slotIds)
+        {
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            {
+                return await this._boardGrain.DeleteDataAsync(grainToken.Token, identity, slotIds);
+            }
+        }
+
+        /// <inheritdoc />
         public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataByTypeAsync<TDataProjection>(string? logicTypeFilter, CancellationToken token)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
@@ -173,7 +184,17 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
             {
-                return await this._boardGrain.GetStoredDataAsync<TDataProjection>(dataUid, grainToken.Token);
+                var data = await this._boardGrain.GetStoredDataAsync<TDataProjection>(grainToken.Token, dataUid);
+                return data?.FirstOrDefault();
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(CancellationToken token, params Guid[] dataUids)
+        {
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            {
+                return await this._boardGrain.GetStoredDataAsync<TDataProjection>(grainToken.Token, dataUids);
             }
         }
 
@@ -240,6 +261,15 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                                                             string.Empty),
                                                             pushType,
                                                             grainToken.Token);
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<BlackboardQueryResponse<TResponse>> QueryAsync<TResponse>(BlackboardQueryRequest request, CancellationToken token)
+        {
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            {
+                return await this._boardGrain.QueryAsync<TResponse>(request, grainToken.Token);
             }
         }
 

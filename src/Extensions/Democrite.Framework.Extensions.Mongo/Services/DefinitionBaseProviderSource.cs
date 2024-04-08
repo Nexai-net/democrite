@@ -164,7 +164,7 @@ namespace Democrite.Framework.Extensions.Mongo.Services
             if (!missingKeys.Any())
                 return values;
 
-            //var missingItems = await this._collection.Find(f => missingKeys.Contains(f.Uid), s_querySetting)
+            //var missingItems = await this._collection.Find(f => missingKeys.Contains(f.DeferredId), s_querySetting)
             //                                         .ToListAsync(token);
 
             var missingItems = (await this._repositoryContainer.GetValuesAsync(f => missingKeys.Contains(f.Uid), token))!;

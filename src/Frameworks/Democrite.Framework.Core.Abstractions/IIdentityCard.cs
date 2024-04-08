@@ -9,5 +9,6 @@ namespace Democrite.Framework.Core.Abstractions
     /// </summary>
     public interface IIdentityCard
     {
+        
     }
 }

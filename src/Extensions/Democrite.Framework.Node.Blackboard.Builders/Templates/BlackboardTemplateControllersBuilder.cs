@@ -9,9 +9,11 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
+
     using Elvex.Toolbox.Models;
 
     using System;
+    using System.Reflection;
 
     /// <summary>
     /// Generic controller builder
@@ -21,7 +23,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         where TSpecializedController : IBlackboardBaseControllerGrain
         where TDefaultSpecializedController : TSpecializedController
         where TBaseOption : IControllerOptions
-        where TDefaultOption : ControllerBaseOptions, TBaseOption, new()
+        where TDefaultOption : ControllerBaseOptions, TBaseOption
     {
         #region Fields
 
@@ -32,7 +34,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         private readonly BlackboardControllerTypeEnum _type;
 
         private ConcretType _controller;
-        private ControllerBaseOptions _option;
+        private ControllerBaseOptions? _option;
 
         #endregion
 
@@ -50,12 +52,12 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         /// <summary>
         /// Initializes a new instance of the <see cref="BlackboardTemplateBaseControllerBuilder{TSpecializedController, TBaseOption, TDefaultOption}"/> class.
         /// </summary>
-        public BlackboardTemplateBaseControllerBuilder(IBlackboardTemplateControllerBuilder root, BlackboardControllerTypeEnum type)
+        public BlackboardTemplateBaseControllerBuilder(IBlackboardTemplateControllerBuilder root,
+                                                       BlackboardControllerTypeEnum type)
         {
             this._type = type;
             this._root = root;
             this._controller = s_defaultControllerConcretType;
-            this._option = new TDefaultOption();
         }
 
         #endregion
@@ -75,7 +77,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
             where TControllerOption : ControllerBaseOptions, TBaseOption
         {
             this._controller = (ConcretType)typeof(TStorageController).GetAbstractType();
-            this._option = option;  
+            this._option = option;
             return this._root;
         }
 
@@ -89,8 +91,20 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         /// <inheritdoc />
         public virtual BlackboardTemplateControllerDefinition Build()
         {
-            return new BlackboardTemplateControllerDefinition(Guid.NewGuid(), this._type, this._controller, this._option);
+            return new BlackboardTemplateControllerDefinition(Guid.NewGuid(), this._type, this._controller, this._option ?? BuildDefaultOption());
         }
+
+        #region Tools
+
+        /// <summary>
+        /// Builds the default option
+        /// </summary>
+        protected virtual ControllerBaseOptions BuildDefaultOption()
+        {
+            return Activator.CreateInstance<TDefaultOption>();
+        }
+
+        #endregion
 
         #endregion
     }
@@ -112,8 +126,10 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     /// <summary>
     /// Builder dedicated to event controller
     /// </summary>
-    public sealed class BlackboardTemplateEventControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardEventControllerGrain, IDefaultBlackboardControllerGrain, IControllerEventOptions, DefaultControllerOptions>, IBlackboardTemplateEventControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
+    public sealed class BlackboardTemplateEventControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardEventControllerGrain, IDefaultBlackboardControllerGrain, IControllerEventOptions, EventControllerOptions>, IBlackboardTemplateEventControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
     {
+        #region Ctor
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BlackboardTemplateEventControllerBuilder"/> class.
         /// </summary>
@@ -121,6 +137,18 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
             : base(root, BlackboardControllerTypeEnum.Event)
         {
         }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        protected override ControllerBaseOptions BuildDefaultOption()
+        {
+            return EventControllerOptions.Create(b => { });
+        }
+
+        #endregion
     }
 
     /// <summary>

@@ -5,12 +5,19 @@
 namespace Democrite.Framework.Node.Blackboard.Models
 {
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
+    using Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries;
 
     /// <summary>
     /// 
     /// </summary>
     internal sealed class BlackboardGrainState
     {
+        #region Fields
+
+        private readonly Dictionary<Guid, BlackboardDeferredQueryState> _queries;
+
+        #endregion
+
         #region Ctor
 
         /// <summary>
@@ -19,12 +26,14 @@ namespace Democrite.Framework.Node.Blackboard.Models
         public BlackboardGrainState(BlackboardTemplateDefinition? templateCopy,
                                     BlackboardId blackboardId,
                                     string name,
-                                    BlackboardRecordRegistryState blackboardRecordRegistryState)
+                                    BlackboardRecordRegistryState blackboardRecordRegistryState,
+                                    IEnumerable<BlackboardDeferredQueryState> queries)
         {
             this.TemplateCopy = templateCopy;
             this.BlackboardId = blackboardId;
             this.Name = name;
             this.Registry = blackboardRecordRegistryState;
+            this._queries = queries.ToDictionary(q => q.DeferredId.Uid);
         }
 
         #endregion
@@ -57,11 +66,49 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Gets the registry.
         /// </summary>
-        public BlackboardRecordRegistryState Registry { get;  }
+        public BlackboardRecordRegistryState Registry { get; }
 
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Gets the requests.
+        /// </summary>
+        public IReadOnlyCollection<BlackboardDeferredQueryState> GetRequests()
+        {
+            return this._queries.Values;
+        }
+
+        /// <summary>
+        /// Adds the or update request.
+        /// </summary>
+        public bool AddOrUpdateRequest(BlackboardDeferredQueryState request)
+        {
+            if (!this._queries.TryGetValue(request.DeferredId.Uid, out var existing) || request != existing)
+            {
+                this._queries[request.DeferredId.Uid] = request;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Removes the request.
+        /// </summary>
+        public bool RemoveRequest(BlackboardQueryRequest request)
+        {
+            return RemoveRequest(request.QueryUid);
+        }
+
+        /// <summary>
+        /// Removes the request.
+        /// </summary>
+        public bool RemoveRequest(Guid requestUid)
+        {
+            return this._queries.Remove(requestUid);
+        }
 
         /// <summary>
         /// Builds the using template.

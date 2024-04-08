@@ -13,8 +13,49 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Include="VGrains\BlackboardBaseControllerGrain.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>BlackboardBaseControllerGrain.tt</DependentUpon>
+	  </None>
+	  <None Include="VGrains\BlackboardBaseEventControllerGrain.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>BlackboardBaseEventControllerGrain.tt</DependentUpon>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
 	  <ProjectReference Include="..\Democrite.Framework.Node.Blackboard.Abstractions\Democrite.Framework.Node.Blackboard.Abstractions.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="VGrains\BlackboardBaseControllerGrain.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>BlackboardBaseControllerGrain.cs</LastGenOutput>
+	  </None>
+	  <None Update="VGrains\BlackboardBaseEventControllerGrain.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>BlackboardBaseEventControllerGrain.cs</LastGenOutput>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="VGrains\BlackboardBaseControllerGrain.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>BlackboardBaseControllerGrain.tt</DependentUpon>
+	  </Compile>
+	  <Compile Update="VGrains\BlackboardBaseEventControllerGrain.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>BlackboardBaseEventControllerGrain.tt</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>

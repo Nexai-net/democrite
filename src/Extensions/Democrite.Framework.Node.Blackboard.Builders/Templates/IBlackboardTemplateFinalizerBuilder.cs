@@ -21,5 +21,10 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         /// Logicals the type configuration.
         /// </summary>
         IBlackboardTemplateFinalizerBuilder LogicalTypeConfiguration(string logicRecordTypePattern, Action<ILogicalTypeConfiguration> cfg);
+
+        /// <summary>
+        /// Logicals the type configuration.
+        /// </summary>
+        IBlackboardTemplateFinalizerBuilder AnyLogicalTypeConfiguration(Action<ILogicalTypeConfiguration>? cfg = null);
     }
 }

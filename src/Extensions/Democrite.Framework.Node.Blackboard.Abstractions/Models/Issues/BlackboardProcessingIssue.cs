@@ -25,6 +25,44 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues
     }
 
     /// <summary>
+    /// Not supported process issue
+    /// </summary>
+    [Immutable]
+    [DataContract]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public sealed record class BlackboardNotSupportedProcessingIssue() : BlackboardProcessingIssue(BlackboardProcessingIssueTypeEnum.NotSupported)
+    {
+        #region Ctor        
+
+        /// <summary>
+        /// .cctors this instance.
+        /// </summary>
+        static BlackboardNotSupportedProcessingIssue()
+        {
+            Default = new BlackboardNotSupportedProcessingIssue();
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the default.
+        /// </summary>
+        public static BlackboardNotSupportedProcessingIssue Default { get; }
+
+        #endregion
+
+        /// <inheritdoc />
+        public override string ToDebugDisplayName()
+        {
+            return "NotSupported";
+        }
+    }
+
+    /// <summary>
     /// Aggregate class for any issue occured during any process in the blackboard
     /// </summary>
     [Immutable]

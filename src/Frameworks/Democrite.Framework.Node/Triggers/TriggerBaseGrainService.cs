@@ -4,8 +4,8 @@
 
 namespace Democrite.Framework.Node.Triggers
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Triggers;
-    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Abstractions.Triggers;
 
     using Elvex.Toolbox.Helpers;

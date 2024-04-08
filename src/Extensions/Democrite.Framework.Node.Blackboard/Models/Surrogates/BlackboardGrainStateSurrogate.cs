@@ -4,25 +4,57 @@
 
 namespace Democrite.Framework.Node.Blackboard.Models.Surrogates
 {
+    using Democrite.Framework.Core.Abstractions.Deferred;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Surrogates;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
+    using Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries;
+
+    using Elvex.Toolbox.Models;
+
+    [GenerateSerializer]
+    internal record struct BlackboardDeferredQueryStateSurrogate(DeferredId DeferredId,
+                                                                 IConcretTypeSurrogate ResponseType,
+                                                                 byte[] SerializeQuery);
 
     [GenerateSerializer]
     internal record struct BlackboardGrainStateSurrogate(BlackboardTemplateDefinitionSurrogate? TemplateDefinition,
                                                          BlackboardId BlackboardId,
                                                          string Name,
-                                                         BlackboardRecordRegistryStateSurrogate BlackboardRecordRegistryState);
+                                                         BlackboardRecordRegistryStateSurrogate BlackboardRecordRegistryState,
+                                                         BlackboardDeferredQueryStateSurrogate[] Queries);
 
     [RegisterConverter]
     internal sealed class BlackboardGrainStateConverter : IConverter<BlackboardGrainState, BlackboardGrainStateSurrogate>
     {
+        #region Fields
+
+        private readonly IDemocriteSerializer _democriteSerializer;
+
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BlackboardGrainStateConverter"/> class.
+        /// </summary>
+        public BlackboardGrainStateConverter(IDemocriteSerializer democriteSerializer)
+        {
+            this._democriteSerializer = democriteSerializer;
+        }
+
+        #endregion
+
+        #region Methods
+
         /// <inheritdoc />
         public BlackboardGrainState ConvertFromSurrogate(in BlackboardGrainStateSurrogate surrogate)
         {
             return new BlackboardGrainState((surrogate.TemplateDefinition is not null ? BlackboardTemplateDefinitionConverter.Default.ConvertFromSurrogate(surrogate.TemplateDefinition.Value) : null),
                                             surrogate.BlackboardId,
                                             surrogate.Name,
-                                            BlackboardRecordRegistryStateConverter.Default.ConvertFromSurrogate(surrogate.BlackboardRecordRegistryState));
+                                            BlackboardRecordRegistryStateConverter.Default.ConvertFromSurrogate(surrogate.BlackboardRecordRegistryState),
+                                            surrogate.Queries?.Select(q => BlackboardDeferredQueryState.Create(q, this._democriteSerializer)) ?? EnumerableHelper<BlackboardDeferredQueryState>.ReadOnly);
         }
 
         /// <inheritdoc />
@@ -33,10 +65,13 @@ namespace Democrite.Framework.Node.Blackboard.Models.Surrogates
                 TemplateDefinition = (value.TemplateCopy is not null ? BlackboardTemplateDefinitionConverter.Default.ConvertToSurrogate(value.TemplateCopy) : null),
                 BlackboardId = value.BlackboardId,
                 Name = value.Name,
-                BlackboardRecordRegistryState = BlackboardRecordRegistryStateConverter.Default.ConvertToSurrogate(value.Registry)
+                BlackboardRecordRegistryState = BlackboardRecordRegistryStateConverter.Default.ConvertToSurrogate(value.Registry),
+                Queries = value.GetRequests()?.Select(r => r.ToSurrogate()).ToArray() ?? EnumerableHelper<BlackboardDeferredQueryStateSurrogate>.ReadOnlyArray
             };
 
             return surrogate;
         }
+
+        #endregion
     }
 }

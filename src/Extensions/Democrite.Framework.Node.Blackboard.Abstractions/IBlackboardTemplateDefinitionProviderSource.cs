@@ -12,7 +12,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions
     /// Source provider of <see cref="BlackboardTemplateDefinition"/>
     /// </summary>
     /// <seealso cref="IProviderStrategySource{BlackboardTemplateDefinition, Guid}" />
-    /// <seealso cref="INodeInitService" />
+    /// <seealso cref="IInitService" />
     public interface IBlackboardTemplateDefinitionProviderSource : IDefinitionSourceProvider<BlackboardTemplateDefinition>
     {
     }

@@ -10,7 +10,7 @@ namespace Democrite.Framework.Core.Abstractions
     /// Service at node level that need to be finalized at stop
     /// </summary>
     /// <seealso cref="ISupportFinalization" />
-    public interface INodeFinalizeService : ISupportFinalization
+    public interface IFinalizeService : ISupportFinalization
     {
     }
 }

@@ -201,7 +201,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <summary>
-        /// Populates the board identifier Uid.
+        /// Populates the board identifier DeferredId.
         /// </summary>
         private async Task PopulateBoardId<TInput, TContextInfo>(RequestBuilder<TInput> data,
                                                                  TContextInfo? contextInfo,

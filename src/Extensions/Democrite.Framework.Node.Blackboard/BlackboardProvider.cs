@@ -21,7 +21,7 @@ namespace Democrite.Framework.Node.Blackboard
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Get or provide a blackboad based on specific Uid or couple Name + Template Name
+    /// Get or provide a blackboad based on specific DeferredId or couple Name + Template Name
     /// </summary>
     /// <seealso cref="IBlackboardProvider" />
     internal sealed class BlackboardProvider : IBlackboardProvider

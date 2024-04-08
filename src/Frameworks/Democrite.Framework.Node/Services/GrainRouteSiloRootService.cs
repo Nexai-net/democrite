@@ -20,7 +20,7 @@ namespace Democrite.Framework.Node.Services
     using System.Collections.Generic;
     using System.Threading;
 
-    internal sealed class GrainRouteSiloRootService : GrainRouteBaseService, IVGrainRouteService, INodeInitService
+    internal sealed class GrainRouteSiloRootService : GrainRouteBaseService, IVGrainRouteService, IInitService
     {
         #region Fields
 

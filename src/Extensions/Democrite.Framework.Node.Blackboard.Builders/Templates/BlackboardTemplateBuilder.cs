@@ -30,6 +30,8 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         private readonly string _nameIdentifier;
         private readonly Guid _uid;
 
+        private bool _anyLogicalType;
+
         #endregion
 
         #region Ctor
@@ -136,13 +138,6 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         }
 
         /// <inheritdoc />
-        public IBlackboardTemplateFinalizerBuilder UseDefaultControllers(BlackboardControllerTypeEnum controllerTypes)
-        {
-            Multi(controllerTypes, b => b.UseDefault());
-            return this;
-        }
-
-        /// <inheritdoc />
         public IBlackboardTemplateControllerBuilder Multi(BlackboardControllerTypeEnum types, Action<IBlackboardTemplateGenericControllerBuilder> builder)
         {
             if (types == BlackboardControllerTypeEnum.None)
@@ -169,6 +164,13 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
                                                                                         string.IsNullOrEmpty(storageConfiguration)
                                                                                                     ? BlackboardConstants.BlackboardStorageConfigurationKey
                                                                                                     : storageConfiguration);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IBlackboardTemplateFinalizerBuilder AnyLogicalTypeConfiguration(Action<ILogicalTypeConfiguration>? cfg = null)
+        {
+            this._anyLogicalType = true;
             return this;
         }
 
@@ -200,7 +202,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
             var indexedRules = rules.GroupBy(r => r.LogicalTypePattern)
                                     .ToDictionary(k => k.Key);
 
-            if (!indexedRules.ContainsKey(".*"))
+            if (this._anyLogicalType && !indexedRules.ContainsKey(".*"))
             {
                 rules = rules.Append(new BlackboardOrderLogicalTypeRule(".*", short.MaxValue))
                              .Append(new BlackboardStorageLogicalTypeRule(".*", s_defaultSystemStorage))

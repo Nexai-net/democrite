@@ -45,18 +45,13 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         where TDefaultOption : ControllerBaseOptions, TBaseOption
     {
         /// <summary>
-        /// Configurations the default storage controller.
-        /// </summary>
-        IBlackboardTemplateControllerBuilder UseDefault(TDefaultOption? options = null);
-
-        /// <summary>
         /// Configurations a storage controller.
         /// </summary>
-        IBlackboardTemplateControllerBuilder UseController<TStorageController>()
-            where TStorageController : TSpecializedController;
+        IBlackboardTemplateControllerBuilder UseController<TController>()
+            where TController : TSpecializedController;
 
-        IBlackboardTemplateControllerBuilder UseController<TStorageController, TControllerOption>(TControllerOption option)
-            where TStorageController : TSpecializedController, IBlackboardBaseControllerGrain<TControllerOption>
+        IBlackboardTemplateControllerBuilder UseController<TController, TControllerOption>(TControllerOption option)
+            where TController : TSpecializedController, IBlackboardBaseControllerGrain<TControllerOption>
             where TControllerOption : ControllerBaseOptions, TBaseOption;
     }
 
@@ -65,12 +60,16 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     /// </summary>
     public interface IBlackboardTemplateStorageControllerBuilder : IBlackboardTemplateSpecializedControllerBuilder<IBlackboardStorageControllerGrain, IControllerStorageOptions, DefaultControllerOptions>
     {
+        /// <summary>
+        /// Configurations the default storage controller.
+        /// </summary>
+        IBlackboardTemplateControllerBuilder UseDefault(DefaultControllerOptions? options = null);
     }
 
     /// <summary>
     /// Builder specialized in Event controller
     /// </summary>
-    public interface IBlackboardTemplateEventControllerBuilder : IBlackboardTemplateSpecializedControllerBuilder<IBlackboardEventControllerGrain, IControllerEventOptions, DefaultControllerOptions>
+    public interface IBlackboardTemplateEventControllerBuilder : IBlackboardTemplateSpecializedControllerBuilder<IBlackboardEventControllerGrain, IControllerEventOptions, EventControllerOptions>
     {
     }
 
@@ -82,7 +81,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     }
 
     /// <summary>
-    /// Builder specialized in Event controller
+    /// Builder specialized in Generic controller
     /// </summary>
     public interface IBlackboardTemplateGenericControllerBuilder : IBlackboardTemplateSpecializedControllerBuilder<IBlackboardBaseControllerGrain, IControllerOptions, DefaultControllerOptions>
     {

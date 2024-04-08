@@ -4,19 +4,19 @@
 
 namespace Democrite.Framework.Node.Blackboard.VGrains
 {
-    using Democrite.Framework.Node.Abstractions.Services;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
+
     using Elvex.Toolbox.Disposables;
     using Elvex.Toolbox.Extensions;
 
     /// <summary>
-    /// Handler to use control a controller
+    /// Handler use to control a controller
     /// </summary>
     /// <typeparam name="T"></typeparam>
     internal sealed class BlackboardControllerHandler : SafeDisposable
     {
-
         #region Fields
 
         private readonly BlackboardTemplateDefinition _blackboardTemplate;

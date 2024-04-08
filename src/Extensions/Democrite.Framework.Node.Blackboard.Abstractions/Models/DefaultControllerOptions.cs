@@ -18,7 +18,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class DefaultControllerOptions : ControllerBaseOptions, IControllerStorageOptions, IControllerEventOptions, IControllerStateOptions
+    public sealed class DefaultControllerOptions : ControllerBaseOptions, IControllerStorageOptions, IControllerStateOptions
     {
         #region Ctor
 
@@ -29,10 +29,6 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
         {
             Default = new DefaultControllerOptions();
         }
-
-        #endregion
-
-        #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultControllerOptions"/> class.

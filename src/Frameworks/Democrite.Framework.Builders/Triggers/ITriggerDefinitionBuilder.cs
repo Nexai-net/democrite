@@ -20,32 +20,32 @@ namespace Democrite.Framework.Builders.Triggers
          */
 
         /// <summary>
-        /// Adds the targe id. Sample:  Sequence.Uid
+        /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
         TDefWithExtention AddTargetSequence(Guid targetSequenceId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
 
         /// <summary>
-        /// Adds the targe id. Sample:  Sequence.Uid
+        /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
         TDefWithExtention AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] targetSequenceId);
 
         /// <summary>
-        /// Adds the targe id. Sample:  Sequence.Uid
+        /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
         TDefWithExtention AddTargetSequences(params Guid[] targetSequenceId);
 
         /// <summary>
-        /// Adds the targe id. Sample:  Sequence.Uid
+        /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
         TDefWithExtention AddTargetSequence(SequenceDefinition sequenceDefinition, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
 
         /// <summary>
-        /// Adds the targe id. Sample:  Sequence.Uid
+        /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
         TDefWithExtention AddTargetSequences(params SequenceDefinition[] sequenceDefinition);
 
         /// <summary>
-        /// Adds the targe id. Sample:  Sequence.Uid
+        /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
         TDefWithExtention AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params SequenceDefinition[] sequenceDefinition);
 

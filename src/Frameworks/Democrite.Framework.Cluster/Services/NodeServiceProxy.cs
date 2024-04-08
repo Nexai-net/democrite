@@ -18,7 +18,7 @@ namespace Democrite.Framework.Cluster.Services
     /// <summary>
     /// Service proxy used to initialize and finalize
     /// </summary>
-    internal sealed class NodeServiceProxy : SupportBaseInitialization<IServiceProvider>, INodeInitService, INodeFinalizeService
+    internal sealed class NodeServiceProxy : SupportBaseInitialization<IServiceProvider>, IInitService, IFinalizeService
     {
         #region Fields
 
@@ -69,7 +69,7 @@ namespace Democrite.Framework.Cluster.Services
         public async ValueTask FinalizeAsync(CancellationToken token = default)
         {
             var services = this._serviceProvider.GetServices(this._serviceKey)
-                                                .OfType<INodeFinalizeService>()
+                                                .OfType<IFinalizeService>()
                                                 .ToArray();
 
             var tasks = services.Select(s => s.FinalizeAsync(token))
@@ -82,7 +82,7 @@ namespace Democrite.Framework.Cluster.Services
         protected override async ValueTask OnInitializingAsync(IServiceProvider? serviceProvider, CancellationToken token)
         {
             var services = this._serviceProvider.GetServices(this._serviceKey)
-                                                .OfType<INodeInitService>()
+                                                .OfType<IInitService>()
                                                 .ToArray();
 
             var tasks = services.Select(s => s.InitializationAsync(serviceProvider, token))

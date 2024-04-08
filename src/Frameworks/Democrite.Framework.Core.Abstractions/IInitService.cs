@@ -10,7 +10,7 @@ namespace Democrite.Framework.Core.Abstractions
     /// Service at node level that need to be initialize at start
     /// </summary>
     /// <seealso cref="ISupportInitialization" />
-    public interface INodeInitService : ISupportInitialization<IServiceProvider>
+    public interface IInitService : ISupportInitialization<IServiceProvider>
     {
         /// <summary>
         /// Gets a value indicating whether [expect orlean started].

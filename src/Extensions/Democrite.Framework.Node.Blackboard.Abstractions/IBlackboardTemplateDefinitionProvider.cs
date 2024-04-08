@@ -14,7 +14,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions
     /// Provider of <see cref="BlackboardTemplateDefinition"/> using all the <see cref="IBlackboardTemplateDefinitionProviderSource"/>
     /// </summary>
     /// <seealso cref="IProviderStrategy{BlackboardTemplateDefinition, Guid}" />
-    /// <seealso cref="INodeInitService" />
+    /// <seealso cref="IInitService" />
     public interface IBlackboardTemplateDefinitionProvider : IProviderStrategy<BlackboardTemplateDefinition, Guid>
     {
     }

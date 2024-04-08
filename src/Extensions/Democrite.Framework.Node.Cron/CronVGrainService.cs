@@ -4,9 +4,9 @@
 
 namespace Democrite.Framework.Node.Cron
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Triggers;
-    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Triggers;
 
     using Microsoft.Extensions.Logging;

@@ -290,3 +290,4 @@ dotnet_style_prefer_simplified_interpolation = true:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
 dotnet_style_predefined_type_for_locals_parameters_members = true:warning
 file_header_template =  Copyright (c) Nexai.\nThe Democrite licenses this file to you under the MIT license.\nProduce by nexai & community (cf. docs/Teams.md)
+dotnet_style_prefer_collection_expression = when_types_loosely_match:suggestion

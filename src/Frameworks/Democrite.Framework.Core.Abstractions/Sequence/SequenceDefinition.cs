@@ -157,7 +157,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         }
 
         /// <summary>
-        /// Gets the next stage Uid.
+        /// Gets the next stage DeferredId.
         /// </summary>
         public Guid? GetNextStage(Guid? currentStageId)
         {

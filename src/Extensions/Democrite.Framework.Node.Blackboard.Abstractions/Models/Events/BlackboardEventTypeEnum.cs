@@ -11,6 +11,6 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Events
     {
         None,
         Storage,
-        Reject
+        Reject,
     }
 }

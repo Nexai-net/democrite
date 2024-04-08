@@ -104,5 +104,14 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Resources {
                 return ResourceManager.GetString("BlackboardPushValidationException", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Query ({0}) have been rejected : {1}.
+        /// </summary>
+        internal static string BlackboardQueryRejectedException {
+            get {
+                return ResourceManager.GetString("BlackboardQueryRejectedException", resourceCulture);
+            }
+        }
     }
 }

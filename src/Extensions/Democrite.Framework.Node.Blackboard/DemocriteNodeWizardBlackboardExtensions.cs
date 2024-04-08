@@ -11,8 +11,6 @@ namespace Democrite.Framework.Configurations
 
     using Microsoft.Extensions.DependencyInjection;
 
-    using Orleans.Runtime;
-
     using System.Diagnostics;
 
     public static class DemocriteNodeWizardBlackboardExtensions
@@ -22,6 +20,8 @@ namespace Democrite.Framework.Configurations
         private static readonly string s_blackboardBuilderKey = nameof(DemocriteNodeBlackboardsBuilder) + Guid.NewGuid().ToString();
 
         #endregion
+
+        #region Methods
 
         /// <summary>
         /// Setups blackboards
@@ -61,5 +61,7 @@ namespace Democrite.Framework.Configurations
             Debug.Assert(blackboardBuilder.KeyedImplementationInstance is not null);
             return (DemocriteNodeBlackboardsBuilder)blackboardBuilder.KeyedImplementationInstance;
         }
+
+        #endregion
     }
 }

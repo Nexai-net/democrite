@@ -23,6 +23,7 @@ namespace Democrite.UnitTests.ToolKit.Extensions
     using System.Reflection;
     using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Services;
+    using Democrite.Framework.Core.Services;
 
     /// <summary>
     /// Extesions method that help auto fixture to generate grain

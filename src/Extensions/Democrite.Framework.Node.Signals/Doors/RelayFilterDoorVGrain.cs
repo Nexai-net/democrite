@@ -4,10 +4,10 @@
 
 namespace Democrite.Framework.Node.Signals.Doors
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Node.Abstractions.Services;
 
     using Elvex.Toolbox.Abstractions.Services;
 

@@ -166,4 +166,21 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             return base.Equals(other);
         }
     }
+
+    public static class DemocriteExceptionExtension
+    {
+        /// <summary>
+        /// Create a <see cref="DemocriteInternalException"/> to carry the exception (client side) through democrite enviroment
+        /// </summary>
+        /// <remarks>
+        ///     If exception is arleady a <see cref="DemocriteInternalException"/> the exception is simply returned
+        /// </remarks>
+        public static DemocriteInternalException ToDemocriteInternal(this DemocriteBaseException exception)
+        {
+            if (exception is DemocriteInternalException internalException)
+                return internalException;
+
+            return new DemocriteInternalException(exception);
+        }
+    }
 }

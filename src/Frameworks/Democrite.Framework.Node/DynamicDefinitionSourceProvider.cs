@@ -32,7 +32,7 @@ namespace Democrite.Framework.Node
     /// Definition provider dedicated to <typeparamref name="TDefinition"/> using <see cref="IDynamicDefinitionHandler"/> as sources
     /// </summary>
     /// <typeparam name="TDefinition">The type of the definition.</typeparam>
-    internal sealed class DynamicDefinitionSourceProvider<TDefinition> : ProviderStrategyBaseSource<TDefinition, Guid>, IProviderStrategySource<TDefinition, Guid>, IDefinitionSourceProvider<TDefinition>, INodeInitService
+    internal sealed class DynamicDefinitionSourceProvider<TDefinition> : ProviderStrategyBaseSource<TDefinition, Guid>, IProviderStrategySource<TDefinition, Guid>, IDefinitionSourceProvider<TDefinition>, IInitService
         where TDefinition : class, IDefinition
     {
         #region Fields

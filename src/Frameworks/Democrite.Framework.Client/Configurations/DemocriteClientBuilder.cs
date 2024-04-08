@@ -9,7 +9,9 @@ namespace Democrite.Framework.Client.Configurations
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Configurations;
     using Democrite.Framework.Configurations;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Services;
+    using Democrite.Framework.Core.Services;
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -91,6 +93,18 @@ namespace Democrite.Framework.Client.Configurations
         protected override void OnFinalizeManualBuildConfigure(ILogger logger)
         {
             var serviceDescriptors = this._orleanClientBuilder.Services;
+
+            serviceDescriptors.AddSingleton<GrainOrleanFactory>(p =>
+            {
+                var orleanGrainFactory = typeof(MembershipEntry).Assembly.GetTypes().FirstOrDefault(d => d.Name == "GrainFactory" &&
+                                                                                                        (d.Attributes & System.Reflection.TypeAttributes.NotPublic) == System.Reflection.TypeAttributes.NotPublic &&
+                                                                                                         d.IsAssignableTo(typeof(IGrainFactory)));
+                Debug.Assert(orleanGrainFactory != null);
+                return new GrainOrleanFactory((IGrainFactory)p.GetRequiredService(orleanGrainFactory));
+            });
+
+            serviceDescriptors.AddSingleton<IGrainOrleanFactory>(p => p.GetRequiredService<GrainOrleanFactory>());
+
             serviceDescriptors.AddSingleton<IVGrainDemocriteSystemProvider, VGrainClientDemocriteSystemProvider>();
 
             base.OnFinalizeManualBuildConfigure(logger);

@@ -116,8 +116,8 @@ namespace Democrite.UnitTests.ToolKit.Tests
             }
 
             using (var scope = Check.StartBatch(nameof(SurrogateBaseTest<TSource, TSurrogate, TConverter>) +
-                                    "." +
-                                    nameof(SurrogateBaseTest<TSource, TSurrogate, TConverter>.Ensure_Source_Is_Serializable_Using_Surrogate_And_Converter)))
+                                                "." +
+                                                nameof(SurrogateBaseTest<TSource, TSurrogate, TConverter>.Ensure_Source_Is_Serializable_Using_Surrogate_And_Converter)))
             {
                 tester.Ensure_Source_Is_Serializable_Using_Surrogate_And_Converter();
             }

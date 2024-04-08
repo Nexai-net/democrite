@@ -20,7 +20,8 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="Democrite.Framework.Node" />
-		
+		<InternalsVisibleTo Include="Democrite.Framework.Client" />
+
 		<!-- Testing Purpose -->
 		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals.UnitTests" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />

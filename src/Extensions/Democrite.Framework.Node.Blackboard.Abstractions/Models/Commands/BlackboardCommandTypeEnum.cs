@@ -12,6 +12,10 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
         None,
         Storage,
         Trigger,
-        Reject
+        Reject,
+        NotSupported,
+        Deferred,
+        RetryDeferred,
+        Reponse
     }
 }

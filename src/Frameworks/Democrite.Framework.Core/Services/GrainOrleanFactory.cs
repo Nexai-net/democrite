@@ -2,9 +2,9 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-namespace Democrite.Framework.Node.Services
+namespace Democrite.Framework.Core.Services
 {
-    using Democrite.Framework.Node.Abstractions.Services;
+    using Democrite.Framework.Core.Abstractions;
 
     using Orleans.Runtime;
 

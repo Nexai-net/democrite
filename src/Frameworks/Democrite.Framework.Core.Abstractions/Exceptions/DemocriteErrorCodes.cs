@@ -109,6 +109,12 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             /// </summary>
             [Description("Error code category Data")]
             Data = 0x_11_00_00_00_00_00_00_00,
+
+            /// <summary>
+            /// Error code category query
+            /// </summary>
+            [Description("Error code category Query")]
+            Query = 0x_12_00_00_00_00_00_00_00,
         }
 
         public enum PartType : ulong
@@ -198,6 +204,12 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             /// </summary>
             [Description("Error about Right.")]
             Right = 0x_00_00_0E_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about Right
+            /// </summary>
+            [Description("Error about Deferred.")]
+            Deferred = 0x_00_00_0F_00_00_00_00_00,
         }
 
         public enum ErrorType : ulong
@@ -239,6 +251,12 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             /// </summary>
             [Description("Error When value Conflict.")]
             Conflict = 0x_00_00_06_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about action that Rejected
+            /// </summary>
+            [Description("Error When value Conflict.")]
+            Rejected = 0x_00_00_07_00_00_00_00_00,
 
             /// <summary>
             /// Error about action that failed

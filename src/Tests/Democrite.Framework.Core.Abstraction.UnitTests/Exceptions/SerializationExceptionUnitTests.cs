@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Core.Abstraction.UnitTests.Exceptions
 {
+    using AutoFixture;
+
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.UnitTests.ToolKit.Tests;
     using Democrite.UnitTests.ToolKit.Xunits;
@@ -23,6 +25,13 @@ namespace Democrite.Framework.Core.Abstraction.UnitTests.Exceptions
         public void Node_Exception_Serialization_Through_Surrogate(Type type)
         {
             base.Exception_Serialization_Through_Surrogate(type);
+        }
+
+        protected override void OnSourceCreationSetup<TSource, TSurrogate, TConverter>(Fixture fixture)
+        {
+            fixture.Register<DemocriteBaseException>(() => new DemocriteException("inner error"));
+
+            base.OnSourceCreationSetup<TSource, TSurrogate, TConverter>(fixture);
         }
     }
 }

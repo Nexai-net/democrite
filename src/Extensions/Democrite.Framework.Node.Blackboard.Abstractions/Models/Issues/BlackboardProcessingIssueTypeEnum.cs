@@ -15,6 +15,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues
         Rule = 2,
         Type = 4,
         Aggregate = 8,
+        NotSupported = 16,
     }
 
     /// <summary>

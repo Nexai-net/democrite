@@ -121,7 +121,7 @@ namespace Democrite.Framework.Configurations
         /// </summary>
         public async Task StartAsync(Func<IServiceProvider, IDemocriteExecutionHandler, CancellationToken, Task>? runningFunction = null, CancellationToken token = default)
         {
-            IReadOnlyCollection<INodeInitService>? nodeInitServiceAfter = null;
+            IReadOnlyCollection<IInitService>? nodeInitServiceAfter = null;
             Task? runningTask = null;
             try
             {
@@ -133,7 +133,7 @@ namespace Democrite.Framework.Configurations
                     var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(token, this._runningTaskCancellationTokenSource.Token);
                     token = linkedToken.Token;
 
-                    var serviceToInit = this._host.Services.GetServices<INodeInitService>();
+                    var serviceToInit = this._host.Services.GetServices<IInitService>();
 
                     var initServices = serviceToInit.Distinct()
                                                     .GroupBy(s => s.ExpectOrleanStarted)
@@ -185,7 +185,7 @@ namespace Democrite.Framework.Configurations
                 runningTask = this._runningTask;
                 if (this._runningTask != null)
                 {
-                    var serviceToFinalize = this._host.Services.GetServices<INodeFinalizeService>();
+                    var serviceToFinalize = this._host.Services.GetServices<IFinalizeService>();
 
                     var initTasks = serviceToFinalize.Where(s => !s.IsFinalized && !s.IsFinalizing)
                                                      .Select(s => s.FinalizeAsync(token: token))
@@ -291,7 +291,7 @@ namespace Democrite.Framework.Configurations
         /// <summary>
         /// Initializes the services.
         /// </summary>
-        private async Task InitializeServicesAsync(IReadOnlyCollection<INodeInitService> beforeStartServices, CancellationToken token)
+        private async Task InitializeServicesAsync(IReadOnlyCollection<IInitService> beforeStartServices, CancellationToken token)
         {
             var initTasks = beforeStartServices.Where(s => !s.IsInitialized && !s.IsInitializing)
                                                .Select(s => s.InitializationAsync(this._host.Services, token: token))
@@ -307,7 +307,6 @@ namespace Democrite.Framework.Configurations
                     this._logger.OptiLog(LogLevel.Critical, "Exceptions on INodeInitService : {exception}", inner);
             }
         }
-
 
         #endregion
     }

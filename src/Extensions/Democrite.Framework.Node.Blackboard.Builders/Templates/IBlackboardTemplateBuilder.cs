@@ -13,11 +13,6 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     public interface IBlackboardTemplateBuilder
     {
         /// <summary>
-        /// Uses the default controllers.
-        /// </summary>
-        IBlackboardTemplateFinalizerBuilder UseDefaultControllers(BlackboardControllerTypeEnum controllerTypes = BlackboardControllerTypeEnum.Storage);
-
-        /// <summary>
         /// Setups controllers.
         /// </summary>
         IBlackboardTemplateFinalizerBuilder SetupControllers(Action<IBlackboardTemplateControllerBuilder> builders);

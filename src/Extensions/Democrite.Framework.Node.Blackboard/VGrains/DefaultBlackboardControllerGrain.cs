@@ -28,7 +28,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     /// Default controller in charge to provide basic algorithme 
     /// </summary>
     /// <seealso cref="IDefaultBlackboardControllerGrain" />
-    public sealed class DefaultBlackboardControllerGrain : VGrainBase<DefaultBlackboardControllerState, IDefaultBlackboardControllerGrain>, IDefaultBlackboardControllerGrain
+    public sealed class DefaultBlackboardControllerGrain : BlackboardBaseEventControllerGrain<DefaultBlackboardControllerState, IDefaultBlackboardControllerGrain>, IDefaultBlackboardControllerGrain
     {
         #region Ctor
 
@@ -43,8 +43,9 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// Initializes a new instance of the <see cref="DefaultBlackboardControllerGrain"/> class.
         /// </summary>
         public DefaultBlackboardControllerGrain(ILogger<IDefaultBlackboardControllerGrain> logger,
+                                                IBlackboardProvider blackboardProvider,
                                                 [PersistentState(DemocriteConstants.DefaultDemocriteStateConfigurationKey, DemocriteConstants.DefaultDemocriteStateConfigurationKey)] IPersistentState<DefaultBlackboardControllerState> persistentState)
-            : base(logger, persistentState)
+            : base(logger, blackboardProvider, persistentState)
         {
         }
 
@@ -53,16 +54,10 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public async Task InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        public override async Task InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
         {
             this.State!.Option = (option as DefaultControllerOptions) ?? DefaultControllerOptions.Default;
             await PushStateAsync(cancellationToken.CancellationToken);
-        }
-
-        /// <inheritdoc />
-        public Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(IReadOnlyCollection<BlackboardEvent> events, GrainCancellationToken token)
-        {
-            return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
 
         /// <inheritdoc />

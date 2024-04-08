@@ -10,7 +10,10 @@ namespace Democrite.Framework.Core
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Helpers;
+
     using Elvex.Toolbox.Extensions;
+
+    using MessagePack.Formatters;
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -481,12 +484,13 @@ namespace Democrite.Framework.Core
     /// </remarks>
     public abstract class VGrainBase<TVGrainState, TStateSurrogate, TConverter, TVGrainInterface> : VGrainBase<TVGrainInterface>, ILifecycleParticipant<IGrainLifecycle>
         where TStateSurrogate : struct
-        where TConverter : IConverter<TVGrainState, TStateSurrogate>, new()
+        where TConverter : class, IConverter<TVGrainState, TStateSurrogate>
         where TVGrainInterface : IVGrain
     {
         #region Fields
 
-        private static readonly TConverter s_converter;
+        private static readonly TConverter? s_converter;
+        private TConverter? _localStateConverter;
 
         private readonly IPersistentState<TStateSurrogate> _persistentState;
 
@@ -502,7 +506,13 @@ namespace Democrite.Framework.Core
         /// </summary>
         static VGrainBase()
         {
-            s_converter = new TConverter();
+            var converterTraits = typeof(TConverter);
+            var canConverterDefaultBuild = converterTraits.IsAbstract == false &&
+                                           converterTraits.GetConstructors().Length == 1 &&
+                                           converterTraits.GetConstructors().Single().GetParameters().Length == 0;
+
+            if (canConverterDefaultBuild)
+                s_converter = Activator.CreateInstance<TConverter>();
         }
 
         /// <summary>
@@ -564,7 +574,8 @@ namespace Democrite.Framework.Core
             ct.ThrowIfCancellationRequested();
 
             this._loadEtag = this._persistentState.Etag;
-            this._state = s_converter.ConvertFromSurrogate(this._persistentState.State);
+            var cnv = GetStateConverter();
+            this._state = cnv.ConvertFromSurrogate(this._persistentState.State);
 
             await OnStateRefreshedAsync(this._state);
         }
@@ -588,7 +599,8 @@ namespace Democrite.Framework.Core
             if (this._persistentState == null)
                 return;
 
-            this._persistentState.State = s_converter.ConvertToSurrogate(newState);
+            var converter = GetStateConverter();
+            this._persistentState.State = converter.ConvertToSurrogate(newState);
 
             await this._persistentState.WriteStateAsync();
 
@@ -619,6 +631,20 @@ namespace Democrite.Framework.Core
         protected virtual Task OnDeactivateAsync(TVGrainState? state, DeactivationReason reason, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Gets the state converter.
+        /// </summary>
+        protected virtual TConverter GetStateConverter()
+        {
+            if (s_converter is not null)
+                return s_converter;
+
+            if (this._localStateConverter is null)
+                this._localStateConverter = ActivatorUtilities.CreateInstance<TConverter>(base.ServiceProvider);
+
+            return this._localStateConverter;
         }
 
         #endregion

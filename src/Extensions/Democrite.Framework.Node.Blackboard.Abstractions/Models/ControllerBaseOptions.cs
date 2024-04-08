@@ -4,6 +4,9 @@
 
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
 {
+    using Democrite.Framework.Core.Abstractions.Doors;
+    using Democrite.Framework.Core.Abstractions.Signals;
+
     using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
     using System.Runtime.Serialization;
@@ -29,6 +32,15 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
     /// <seealso cref="IControllerOptions" />
     public interface IControllerEventOptions : IControllerOptions
     {
+        /// <summary>
+        /// Gets the listen signals.
+        /// </summary>
+        IReadOnlyCollection<SignalId> ListenSignals { get; }
+
+        /// <summary>
+        /// Gets the listen doors.
+        /// </summary>
+        IReadOnlyCollection<DoorId> ListenDoors { get; }
     }
 
     /// <summary>
@@ -45,10 +57,12 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
 
     [KnownType(typeof(DefaultControllerOptions))]
-    
+    [KnownType(typeof(EventControllerOptions))]
+
     public abstract class ControllerBaseOptions : IEquatable<ControllerBaseOptions>, IControllerOptions
     {
         #region Methods
