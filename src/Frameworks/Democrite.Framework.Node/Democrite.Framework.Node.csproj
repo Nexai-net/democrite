@@ -22,6 +22,7 @@
 	</ItemGroup>-->
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Extensions\Democrite.Framework.Node.Signals\Democrite.Framework.Node.Signals.csproj" />
 		<ProjectReference Include="..\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
 		<ProjectReference Include="..\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
 		<ProjectReference Include="..\Democrite.Framework.Cluster\Democrite.Framework.Cluster.csproj" />

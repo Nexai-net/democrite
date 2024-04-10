@@ -249,7 +249,7 @@ namespace Democrite.Framework.Builders.UnitTests
         /// Call MUST use as parameter only <see cref="IExecutionContext"/> or input type
         /// </summary>
         [Fact]
-        public void InvalidCallRecord_NotAllow_Arguments()
+        public void External_Arguments()
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
@@ -257,17 +257,17 @@ namespace Democrite.Framework.Builders.UnitTests
                                         .NoInput()
                                         .Use<IBasicTestVGrain>();
 
-            Check.ThatCode(() => sequenceBuild.Call((a, ctx) => a.ExecuteIpAddressAsync('x', ctx)))
-                 .Throws<InvalidCastException>()
-                 .WithProperty(p => p.Message,
-                               "Parameter (System.Char) name 'c' must be of type Democrite.Framework.Core.Abstractions." + nameof(IExecutionContext));
+            Check.ThatCode(() => sequenceBuild.Call((a, ctx) => a.ExecuteIpAddressAsync('x', ctx))).DoesNotThrow();
+            //.Throws<InvalidCastException>()
+            //.WithProperty(p => p.Message,
+            //              "Parameter (System.Char) name 'c' must be of type Democrite.Framework.Core.Abstractions." + nameof(IExecutionContext));
         }
 
         /// <summary>
         /// Call MUST use as parameter only <see cref="IExecutionContext"/> or input type
         /// </summary>
         [Fact]
-        public void InvalidCallRecord_NotAllow_Arguments_DifferentFromInput()
+        public void External_Arguments_DifferentFromInput()
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
@@ -275,10 +275,10 @@ namespace Democrite.Framework.Builders.UnitTests
                                         .NoInput()
                                         .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return;
 
-            Check.ThatCode(() => sequenceBuild.Use<IBasicTestVGrain>().Call((a, input, ctx) => a.ExecuteIpAddressAsync('x', ctx)))
-                 .Throws<InvalidCastException>()
-                 .WithProperty(p => p.Message,
-                               "Parameter (System.Char) name 'c' must be of type Democrite.Framework.Core.Abstractions." + nameof(IExecutionContext) + " or System.String");
+            Check.ThatCode(() => sequenceBuild.Use<IBasicTestVGrain>().Call((a, input, ctx) => a.ExecuteIpAddressAsync('x', ctx))).DoesNotThrow();
+            //.Throws<InvalidCastException>()
+            //.WithProperty(p => p.Message,
+            //              "Parameter (System.Char) name 'c' must be of type Democrite.Framework.Core.Abstractions." + nameof(IExecutionContext) + " or System.String");
         }
 
         /// <summary>
@@ -311,6 +311,23 @@ namespace Democrite.Framework.Builders.UnitTests
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
                                      .Use<IBasicTestOtherVGrain>().Call((a, input, ctx) => a.OtherReturnIpAddressFromStringAsync(input, ctx)).Return
+                                     .Build();
+
+            SerializationTester.SerializeTester(definition);
+        }
+
+        /// <summary>
+        /// Simple the sequence serializer.
+        /// </summary>
+        [Fact]
+        public void Simple_Sequence_Serializer_With_Custom_Access()
+        {
+
+            var definition = Sequence.Build("Simple_Sequence_Serializer")
+                                     .NoInput()
+                                     .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
+                                     // Check input.Length
+                                     .Use<IBasicTestOtherVGrain>().Call((a, input, ctx) => a.OtherReturnIpAddressFromIntAsync(input.Length, ctx)).Return
                                      .Build();
 
             SerializationTester.SerializeTester(definition);

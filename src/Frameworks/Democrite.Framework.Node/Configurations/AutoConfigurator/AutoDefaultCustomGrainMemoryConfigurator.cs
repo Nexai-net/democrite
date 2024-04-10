@@ -16,6 +16,7 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     using Microsoft.Extensions.Logging;
 
     using Orleans.Runtime;
+    using Orleans.Runtime.Hosting;
     using Orleans.Storage;
 
     using System;
@@ -83,10 +84,12 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
             if (buildReadRepository)
             {
                 // Must found the service associate to name key
-                siloBuilder.Services.RemoveKeyedService<string, IGrainStorage>(key);
+                // siloBuilder.Services.RemoveKeyedService<string, IGrainStorage>(key);
 
                 // Setup a new MemoryGrain provider with track to registry
-                siloBuilder.Services.AddKeyedSingleton(key, MemoryGrainStorageRepositoryFactory.Create);
+                // siloBuilder.Services.AddKeyedSingleton<IGrainStorage>(key, (p, o) => MemoryGrainStorageRepositoryFactory.Create(p, (string)o!));
+
+                siloBuilder.Services.AddGrainStorage(key, MemoryGrainStorageRepositoryFactory.Create);
 
                 AutoDefaultCustomRepositoryMemoryConfigurator.Default.AutoConfigure(democriteBuilderWizard,
                                                                                     configuration,

@@ -70,6 +70,8 @@ namespace Democrite.Framework.Node.ThreadExecutors
                 }
             }
 
+            var originInput = input;
+
 #pragma warning restore IDE0270 // Use coalesce expression
 
             var args = mthd.GetParameters()
@@ -87,6 +89,12 @@ namespace Democrite.Framework.Node.ThreadExecutors
                                        sequenceContext = sequenceContext.DuplicateWithConfiguration(configuration, step.Configuration.TargetType.ToType());
                                        return sequenceContext;
                                    }
+                               }
+
+                               // TODO : Work because only one input parameter, if multiple it will failed
+                               if (step.IndexedParameterDefinitions is not null && step.IndexedParameterDefinitions.TryGetValue(p.Position, out var paramAccessDef))
+                               {
+                                   input = paramAccessDef?.Access?.Resolve(originInput) ?? originInput;
                                }
 
                                if (input != null && (paramType == input.GetType() || input.GetType().IsAssignableTo(paramType)))

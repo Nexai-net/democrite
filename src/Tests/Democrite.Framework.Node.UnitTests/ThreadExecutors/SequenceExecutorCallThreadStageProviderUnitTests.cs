@@ -43,6 +43,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                                                      (ConcretType)typeof(ITestExtractEmailTransformer).GetAbstractType(),
                                                                      def,
                                                                      typeof(string[]).GetAbstractType(),
+                                                                     null,
                                                                      null);
 
                 // Get Handler

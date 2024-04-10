@@ -37,6 +37,8 @@ namespace Democrite.Framework.Builders.UnitTests.TestData
         Task<IPAddress> OtherReturnIpAddressFromGuidAsync(Guid arg, IExecutionContext ctx);
 
         Task<IPAddress> OtherReturnIpAddressFromCharAsync(char c, IExecutionContext ctx);
+
+        Task<IPAddress> OtherReturnIpAddressFromIntAsync(int Lenght, IExecutionContext ctx);
     }
 
     public interface ITestStoreVGrain : IVGrain

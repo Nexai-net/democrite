@@ -66,6 +66,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                                                                          (ConcretType)(typeof(string).GetAbstractType()),
                                                                                          def,
                                                                                          null,
+                                                                                         null,
                                                                                          null)))
                      .DoesNotThrow()
                      .And

@@ -49,6 +49,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                                                  (ConcretType)typeof(ITestExtractEmailTransformer).GetAbstractType(),
                                                                  def,
                                                                  typeof(string[]).GetAbstractType(),
+                                                                 null,
                                                                  null);
 
             var innerDef = new SequenceDefinition(Guid.NewGuid(), "test", SequenceOptionDefinition.Default, new[] { callDefinition });

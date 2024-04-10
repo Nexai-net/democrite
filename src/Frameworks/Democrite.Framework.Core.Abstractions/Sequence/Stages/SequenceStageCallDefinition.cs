@@ -5,11 +5,11 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+
     using Elvex.Toolbox.Abstractions.Expressions;
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Models;
 
-    using System;
     using System.ComponentModel;
     using System.Runtime.Serialization;
 
@@ -33,6 +33,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
                                            AbstractMethod callMethodDefinition,
                                            AbstractType? output,
                                            AccessExpressionDefinition? configuration,
+                                           IEnumerable<SequenceStageCallParameterDefinition>? parameterDefinitions,
                                            SequenceOptionStageDefinition? options = null,
                                            bool preventReturn = false,
                                            Guid? uid = null)
@@ -46,6 +47,9 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
             this.VGrainType = vgrainType;
 
             this.Configuration = configuration;
+            this.ParameterDefinitions = parameterDefinitions?.ToArray();
+
+            this.IndexedParameterDefinitions = parameterDefinitions?.ToDictionary(k => k.Position);
         }
 
         #endregion
@@ -70,6 +74,20 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         [DataMember]
         public AccessExpressionDefinition? Configuration { get; }
 
+        /// <summary>
+        /// Gets the parameter definitions.
+        /// </summary>
+        [DataMember]
+        public IReadOnlyCollection<SequenceStageCallParameterDefinition>? ParameterDefinitions { get; }
+
+        /// <summary>
+        /// Gets the parameter definitions.
+        /// </summary>
+        [IgnoreDataMember]
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public IReadOnlyDictionary<int, SequenceStageCallParameterDefinition>? IndexedParameterDefinitions { get; }
+
         #endregion
 
         #region Methods
@@ -79,7 +97,8 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         {
             return other is SequenceStageCallDefinition callOther &&
                    callOther.CallMethodDefinition == this.CallMethodDefinition &&
-                   callOther.VGrainType.Equals((AbstractType)this.VGrainType);
+                   callOther.VGrainType.Equals((AbstractType)this.VGrainType) &&
+                   (callOther.ParameterDefinitions?.SequenceEqual(this.ParameterDefinitions ?? EnumerableHelper<SequenceStageCallParameterDefinition>.ReadOnlyArray) ?? this.ParameterDefinitions is null);
         }
 
         /// <inheritdoc/>

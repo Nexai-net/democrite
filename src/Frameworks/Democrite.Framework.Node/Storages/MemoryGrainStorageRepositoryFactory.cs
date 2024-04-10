@@ -8,7 +8,6 @@ namespace Democrite.Framework.Node.Storages
     using Microsoft.Extensions.Options;
 
     using Orleans.Configuration;
-    using Orleans.Storage;
 
     using System;
 
@@ -20,11 +19,11 @@ namespace Democrite.Framework.Node.Storages
         /// <summary>
         /// Creates a dedicated <see cref="MemoryGrainTrackStorage"/> associate to name
         /// </summary>
-        internal static IGrainStorage Create(IServiceProvider services, string name)
+        internal static MemoryGrainTrackStorage Create(IServiceProvider services, string name)
         {
             return ActivatorUtilities.CreateInstance<MemoryGrainTrackStorage>(services,
-                                                                                   services.GetRequiredService<IOptionsMonitor<MemoryGrainStorageOptions>>().Get(name),
-                                                                                   name);
+                                                                              services.GetRequiredService<IOptionsMonitor<MemoryGrainStorageOptions>>().Get(name),
+                                                                              name);
         }
     }
 }

@@ -8,12 +8,12 @@ namespace Democrite.Framework.Builders.Steps
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Expressions;
     using Elvex.Toolbox.Models;
 
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -29,6 +29,7 @@ namespace Democrite.Framework.Builders.Steps
 
         private static readonly Type s_ctxTraitType = typeof(IExecutionContext);
 
+        private readonly SequenceStageCallParameterDefinition[] _parameterAccessExpressions;
         private readonly MethodInfo _mthd;
         private readonly Type _vgrainType;
 
@@ -39,9 +40,10 @@ namespace Democrite.Framework.Builders.Steps
         /// <summary>
         /// Initializes a new instance of the <see cref="CallStepBuilder"/> class.
         /// </summary>
-        private CallStepBuilder(Type? input, Type vgrainType, MethodInfo mthd, Type? output)
+        private CallStepBuilder(Type? input, SequenceStageCallParameterDefinition[] parameterAccessExpressions, Type vgrainType, MethodInfo mthd, Type? output)
             : base(input, output)
         {
+            this._parameterAccessExpressions = parameterAccessExpressions;
             this._vgrainType = vgrainType;
             this._mthd = mthd;
         }
@@ -84,35 +86,21 @@ namespace Democrite.Framework.Builders.Steps
             if (typeof(TOutput) != NoneType.Trait && !typeof(Task<TOutput>).IsAssignableFrom(mthd.ReturnParameter.ParameterType))
                 throw new InvalidCastException(expression + " must return a Task<" + typeof(TOutput) + ">");
 
-            var ctxArgs = new List<Type>()
-            {
-                s_ctxTraitType
-            };
-
-            var possibleInputs = new List<Type>()
-            {
-                s_ctxTraitType
-            };
-
-            if (input != null && input != NoneType.Trait)
-                possibleInputs.Add(input);
-
-            if (configurationType != null && configurationType != NoneType.Trait)
-            {
-                var ctxInfo = typeof(IExecutionContext<>).MakeGenericType(configurationType);
-                possibleInputs.Add(ctxInfo);
-                ctxArgs.Add(ctxInfo);
-            }
-
             var parameters = mthd.GetParameters();
+            var lambdaParameters = parameters.Where(p => !p.ParameterType.IsAssignableTo(typeof(IVGrain)))
+                                             .Select(p => Expression.Parameter(p.ParameterType, p.Name))
+                                             .ToArray();
 
-            foreach (var param in parameters)
-            {
-                CheckParameterType(param, possibleInputs);
-                possibleInputs.Remove(param.ParameterType);
-            }
+            var parameterAccessExpressions = parameters.Where(p => !p.ParameterType.IsAssignableTo(typeof(IVGrain)) && !p.ParameterType.IsAssignableTo(s_ctxTraitType))
+                                                       .Select(param =>
+                                                       {
+                                                           var setParamExpression = methodCall.Arguments[param.Position];
+                                                           var access = ExpressionExtensions.CreateAccess(Expression.Lambda(setParamExpression, lambdaParameters));
+                                                           return new SequenceStageCallParameterDefinition(param.Position, param.Name ?? string.Empty, access);
+                                                       })
+                                                       .ToArray();
 
-            if (possibleInputs.Intersect(ctxArgs).Count() == ctxArgs.Count)
+            if (!parameters.Any(p => p.ParameterType.IsAssignableTo(s_ctxTraitType)))
                 throw new InvalidCastException(mthd + " MUST take at least IExcutionContext in argument");
 
             if (configurationType != null && configuration != null)
@@ -128,22 +116,7 @@ namespace Democrite.Framework.Builders.Steps
                 }
             }
 
-            return new CallStepBuilder(input, vgrainTrait, mthd, output);
-        }
-
-        /// <summary>
-        /// Checks the type of the parameter.
-        /// </summary>
-        /// <exception cref="System.InvalidCastException">Parameter (" + parameter.ParameterType + ") name '" + parameter.Name + "' must be of type " + string.Join(" or ", possibleInputs)</exception>
-        private static void CheckParameterType(ParameterInfo parameter, IReadOnlyCollection<Type> possibleInputs)
-        {
-            if (parameter.ParameterType == NoneType.Trait)
-                return;
-
-            if (!possibleInputs.Any(t => t.IsAssignableTo(parameter.ParameterType)))
-            {
-                throw new InvalidCastException("Parameter (" + parameter.ParameterType + ") name '" + parameter.Name + "' must be of type " + string.Join(" or ", possibleInputs));
-            }
+            return new CallStepBuilder(input, parameterAccessExpressions, vgrainTrait, mthd, output);
         }
 
         /// <summary>
@@ -152,8 +125,7 @@ namespace Democrite.Framework.Builders.Steps
         public override SequenceStageBaseDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
                                                                            bool preventReturn,
                                                                            AccessExpressionDefinition? configurationAccess)
-
-                        where TContext : default
+            where TContext : default
         {
             var def = this._mthd.GetAbstractMethod();
 
@@ -162,6 +134,7 @@ namespace Democrite.Framework.Builders.Steps
                                                    def,
                                                    this.Output?.GetAbstractType(),
                                                    configurationAccess,
+                                                   this._parameterAccessExpressions,
                                                    options: option,
                                                    preventReturn,
                                                    option?.StageId);
