@@ -64,11 +64,9 @@ namespace Democrite.Framework.Node.Signals
         /// <inheritdoc />
         [OneWay]
         [ReadOnly]
-        public async Task<Guid> Fire(GrainId? sourceId, VGrainMetaData? sourceMetaData, GrainCancellationToken token)
+        public async Task<Guid> Fire(Guid fireId, GrainId? sourceId, VGrainMetaData? sourceMetaData, GrainCancellationToken token)
         {
             await EnsureInitializedAsync(token.CancellationToken);
-
-            var fireId = Guid.NewGuid();
 
             var now = this._timeManager.UtcNow;
             var signalSource = new SignalSource(fireId,
@@ -85,12 +83,11 @@ namespace Democrite.Framework.Node.Signals
         /// <inheritdoc />
         [OneWay]
         [ReadOnly]
-        public async Task<Guid> Fire<TData>(GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData, GrainCancellationToken token) 
+        public async Task<Guid> Fire<TData>(Guid fireId, GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData, GrainCancellationToken token) 
             where TData : struct
         {
             await EnsureInitializedAsync(token.CancellationToken);
 
-            var fireId = Guid.NewGuid();
             var now = this._timeManager.UtcNow;
 
             var signalSource = new SignalSource<TData>(fireId,

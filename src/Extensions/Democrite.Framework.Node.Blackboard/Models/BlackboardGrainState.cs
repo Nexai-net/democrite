@@ -27,12 +27,16 @@ namespace Democrite.Framework.Node.Blackboard.Models
                                     BlackboardId blackboardId,
                                     string name,
                                     BlackboardRecordRegistryState blackboardRecordRegistryState,
-                                    IEnumerable<BlackboardDeferredQueryState> queries)
+                                    IEnumerable<BlackboardDeferredQueryState> queries,
+                                    BlackboardLifeStatusEnum currentLifeStatus)
         {
             this.TemplateCopy = templateCopy;
             this.BlackboardId = blackboardId;
             this.Name = name;
             this.Registry = blackboardRecordRegistryState;
+
+            this.CurrentLifeStatus = currentLifeStatus;
+
             this._queries = queries.ToDictionary(q => q.DeferredId.Uid);
         }
 
@@ -68,6 +72,11 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// </summary>
         public BlackboardRecordRegistryState Registry { get; }
 
+        /// <summary>
+        /// Gets the current life status.
+        /// </summary>
+        public BlackboardLifeStatusEnum CurrentLifeStatus { get; internal set; }
+
         #endregion
 
         #region Methods
@@ -75,7 +84,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Gets the requests.
         /// </summary>
-        public IReadOnlyCollection<BlackboardDeferredQueryState> GetRequests()
+        public IReadOnlyCollection<BlackboardDeferredQueryState> GetQueries()
         {
             return this._queries.Values;
         }
@@ -83,11 +92,11 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Adds the or update request.
         /// </summary>
-        public bool AddOrUpdateRequest(BlackboardDeferredQueryState request)
+        public bool AddOrUpdateQuery(BlackboardDeferredQueryState deferredQuery)
         {
-            if (!this._queries.TryGetValue(request.DeferredId.Uid, out var existing) || request != existing)
+            if (!this._queries.TryGetValue(deferredQuery.DeferredId.Uid, out var existing) || deferredQuery != existing)
             {
-                this._queries[request.DeferredId.Uid] = request;
+                this._queries[deferredQuery.DeferredId.Uid] = deferredQuery;
                 return true;
             }
 
@@ -97,15 +106,15 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Removes the request.
         /// </summary>
-        public bool RemoveRequest(BlackboardQueryRequest request)
+        public bool RemoveQuery(BlackboardBaseQuery request)
         {
-            return RemoveRequest(request.QueryUid);
+            return RemoveQuery(request.QueryUid);
         }
 
         /// <summary>
         /// Removes the request.
         /// </summary>
-        public bool RemoveRequest(Guid requestUid)
+        public bool RemoveQuery(Guid requestUid)
         {
             return this._queries.Remove(requestUid);
         }

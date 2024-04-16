@@ -11,7 +11,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     {
         None,
         Sequence,
-        //Signal,
+        Signal,
         //SendToStream,
         //SendToBlackboard
     }

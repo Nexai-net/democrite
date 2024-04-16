@@ -47,6 +47,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
                                                          now,
                                                          null,
                                                          now,
+                                                         null,
                                                          null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
@@ -61,6 +62,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
                                                                                                     now,
                                                                                                     null,
                                                                                                     now,
+                                                                                                    null,
                                                                                                     null)
                                                                    },
                                                                    newRecord,
@@ -220,6 +222,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(5),
+                                                           null, 
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
@@ -288,6 +291,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(-5),
+                                                           null, 
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
@@ -335,7 +339,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(5),
-                                                           null);
+                                                           null, null);
 
             var conflictTwo = new BlackboardRecordMetadata(Guid.NewGuid(),
                                                            newRecord.LogicalType,
@@ -350,7 +354,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(5),
-                                                           null);
+                                                           null, null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(2,
                                                                    new[] { conflictTwo, conflictOne },
@@ -418,7 +422,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(-5),
-                                                           null);
+                                                           null, null);
 
             var conflictTwo = new BlackboardRecordMetadata(Guid.NewGuid(),
                                                            newRecord.LogicalType,
@@ -433,7 +437,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(-5),
-                                                           null);
+                                                           null, null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(2,
                                                                    new[] { conflictTwo, conflictOne },
@@ -481,6 +485,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force past creation
                                                            newRecord.UTCLastUpdateTime.AddDays(-1),
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
@@ -551,6 +556,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
                                                            // Force newer creation
                                                            newRecord.UTCLastUpdateTime.AddDays(1),
 
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
@@ -600,6 +606,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
                                                            // Force past creation
                                                            newRecord.UTCLastUpdateTime.AddDays(-1),
 
+                                                           null,
                                                            null);
 
             var conflictTwo = new BlackboardRecordMetadata(Guid.NewGuid(),
@@ -617,6 +624,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
                                                            // Force After update to be include in the keep ones
                                                            newRecord.UTCLastUpdateTime.AddDays(1),
 
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(2,
@@ -686,6 +694,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force newer Update
                                                            newRecord.UTCLastUpdateTime.AddDays(1),
+                                                           null,
                                                            null);
 
             var conflictTwo = new BlackboardRecordMetadata(Guid.NewGuid(),
@@ -702,6 +711,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force newer Update
                                                            newRecord.UTCLastUpdateTime.AddDays(0.5),
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(2,
@@ -749,6 +759,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(-5),
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
@@ -817,6 +828,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(5),
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
@@ -864,6 +876,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(-5),
+                                                           null,
                                                            null);
 
             var conflictTwo = new BlackboardRecordMetadata(Guid.NewGuid(),
@@ -879,6 +892,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(5),
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(2,
@@ -947,6 +961,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(5),
+                                                           null,
                                                            null);
 
             var conflictTwo = new BlackboardRecordMetadata(Guid.NewGuid(),
@@ -962,6 +977,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force laster update to ensure that create date is used
                                                            newRecord.UTCLastUpdateTime.AddMinutes(5),
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(2,
@@ -1010,6 +1026,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force past creation
                                                            newRecord.UTCLastUpdateTime.AddDays(1),
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
@@ -1080,6 +1097,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
                                                            // Force newer creation
                                                            newRecord.UTCLastUpdateTime.AddDays(-1),
 
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
@@ -1129,6 +1147,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
                                                            // Force past creation
                                                            newRecord.UTCLastUpdateTime.AddDays(1),
 
+                                                           null,
                                                            null);
 
             var conflictTwo = new BlackboardRecordMetadata(Guid.NewGuid(),
@@ -1146,6 +1165,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
                                                            // Force After update to be include in the keep ones
                                                            newRecord.UTCLastUpdateTime.AddDays(-1),
 
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(2,
@@ -1215,6 +1235,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force newer Update
                                                            newRecord.UTCLastUpdateTime.AddDays(-1),
+                                                           null,
                                                            null);
 
             var conflictTwo = new BlackboardRecordMetadata(Guid.NewGuid(),
@@ -1231,6 +1252,7 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
 
                                                            // Force newer Update
                                                            newRecord.UTCLastUpdateTime.AddDays(-0.5),
+                                                           null,
                                                            null);
 
             var issue = new MaxRecordBlackboardProcessingRuleIssue(2,

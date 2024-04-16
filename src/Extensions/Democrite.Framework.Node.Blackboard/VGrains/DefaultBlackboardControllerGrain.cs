@@ -28,7 +28,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     /// Default controller in charge to provide basic algorithme 
     /// </summary>
     /// <seealso cref="IDefaultBlackboardControllerGrain" />
-    public sealed class DefaultBlackboardControllerGrain : BlackboardBaseEventControllerGrain<DefaultBlackboardControllerState, IDefaultBlackboardControllerGrain>, IDefaultBlackboardControllerGrain
+    public sealed class DefaultBlackboardControllerGrain : BlackboardBaseControllerGrain<DefaultBlackboardControllerState, IDefaultBlackboardControllerGrain>, IDefaultBlackboardControllerGrain
     {
         #region Ctor
 

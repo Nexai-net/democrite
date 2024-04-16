@@ -9,12 +9,11 @@ namespace Democrite.Framework.Node.Blackboard.Models
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules;
+
     using Elvex.Toolbox.Abstractions.Supports;
     using Elvex.Toolbox.Disposables;
-    using Elvex.Toolbox.Helpers;
 
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text.RegularExpressions;
@@ -56,6 +55,11 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// Gets the rule solver.
         /// </summary>
         public IBlackboardDataLogicalTypeRuleSolver? RuleSolver { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether [remain on sealed].
+        /// </summary>
+        public bool RemainOnSealed { get; private set; }
 
         #endregion
 
@@ -140,6 +144,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
                              IBlackboardDataLogicalTypeRuleValidatorProvider blackboardDataLogicalTypeRuleValidatorProvider,
                              BlackboardOrderLogicalTypeRule? order,
                              BlackboardStorageDefinition storage,
+                             BlackboardRemainOnSealedLogicalTypeRule? remain,
                              IReadOnlyCollection<BlackboardLogicalTypeBaseRule>? rules)
         {
             this.Order = order?.Order ?? -1;
@@ -148,6 +153,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
             this._storage = storage;
 
             this._repositoryNeedInitialization = this._repository is ISupportInitialization<string>;
+
+            this.RemainOnSealed = remain is not null;
 
             if (rules is not null && rules.Any())
             {

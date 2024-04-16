@@ -16,26 +16,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public abstract record class BlackboardQueryRequest<TResponseType>(Guid QueryUid) : BlackboardBaseQuery(BlackboardQueryTypeEnum.Request, QueryUid)
+    public abstract record class BlackboardQueryCommand(Guid QueryUid) : BlackboardBaseQuery(BlackboardQueryTypeEnum.Command, QueryUid)
     {
-        #region Fields
-        
-        private static readonly ConcretBaseType s_expectedResponseType;
-        
-        #endregion
-
-        #region Ctor
-
-        /// <summary>
-        /// .cctors this instance.
-        /// </summary>
-        static BlackboardQueryRequest()
-        {
-            s_expectedResponseType = (ConcretBaseType)typeof(TResponseType).GetAbstractType();
-        }
-
-        #endregion
-
         #region Properties
 
         /// <summary>
@@ -43,7 +25,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
         /// </summary>
         public override ConcretBaseType? ExpectedResponseType
         {
-            get { return s_expectedResponseType; }
+            get { return null; }
         }
 
         #endregion
@@ -51,12 +33,12 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
         #region Methods
 
         /// <inheritdoc cref="ISupportDebugDisplayName.ToDebugDisplayName" />
-        protected abstract string OnRequestDebugDisplayName();
+        protected abstract string OnCommandDebugDisplayName();
 
         /// <inheritdoc />
         public sealed override string OnDebugDisplayName()
         {
-            return $"Request {OnRequestDebugDisplayName()}";
+            return $"Command {OnCommandDebugDisplayName()}";
         }
 
         #endregion

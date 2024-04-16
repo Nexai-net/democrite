@@ -33,6 +33,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
         private static readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, MethodInfo>> s_genericConverterAccess;
         private static readonly ConcurrentDictionary<Type, object> s_genericConverter;
 
+        private static readonly BlackboardRemainOnSealedLogicalTypeRuleConverter s_remainCnv;
         private static readonly BlackboardMaxRecordLogicalTypeRuleConverter s_maxRecordCnv;
         private static readonly BlackboardTypeCheckLogicalTypeRuleConverter s_typeCheckCnv;
         private static readonly BlackboardStorageLogicalTypeRuleConverter s_storageCnv;
@@ -60,6 +61,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
 
             s_orderCnv = new BlackboardOrderLogicalTypeRuleConverter();
             s_storageCnv = new BlackboardStorageLogicalTypeRuleConverter();
+            s_remainCnv = new BlackboardRemainOnSealedLogicalTypeRuleConverter();
 
             s_convertToSurrogate = new Dictionary<Predicate<BlackboardLogicalTypeBaseRule>, Func<BlackboardLogicalTypeBaseRule, IBlackboardLogicalTypeBaseRuleSurrogate>>()
             {
@@ -70,6 +72,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
 
                 { r => r is BlackboardOrderLogicalTypeRule, (r) => s_orderCnv.ConvertToSurrogate((BlackboardOrderLogicalTypeRule)r) },
                 { r => r is BlackboardStorageLogicalTypeRule, (r) => s_storageCnv.ConvertToSurrogate((BlackboardStorageLogicalTypeRule)r) },
+                { r => r is BlackboardRemainOnSealedLogicalTypeRule, (r) => s_remainCnv.ConvertToSurrogate((BlackboardRemainOnSealedLogicalTypeRule)r) },
             };
 
             s_convertFromSurrogate = new Dictionary<Predicate<IBlackboardLogicalTypeBaseRuleSurrogate>, Func<IBlackboardLogicalTypeBaseRuleSurrogate, BlackboardLogicalTypeBaseRule>>()
@@ -81,6 +84,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
 
                 { r => r is BlackboardOrderLogicalTypeRuleSurrogate, (r) => s_orderCnv.ConvertFromSurrogate((BlackboardOrderLogicalTypeRuleSurrogate)r) },
                 { r => r is BlackboardStorageLogicalTypeRuleSurrogate, (r) => s_storageCnv.ConvertFromSurrogate((BlackboardStorageLogicalTypeRuleSurrogate)r) },
+                { r => r is BlackboardRemainOnSealedLogicalTypeRuleSurrogate, (r) => s_remainCnv.ConvertFromSurrogate((BlackboardRemainOnSealedLogicalTypeRuleSurrogate)r) },
             };
         }
 

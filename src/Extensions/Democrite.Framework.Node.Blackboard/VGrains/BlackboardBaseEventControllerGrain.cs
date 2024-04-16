@@ -49,13 +49,13 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardQueryRequest request, GrainCancellationToken token)
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardBaseQuery request, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(s_defaultRejectRequest);
         }
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(IReadOnlyCollection<BlackboardEvent> events, GrainCancellationToken token)
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
@@ -96,13 +96,13 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardQueryRequest request, GrainCancellationToken token)
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardBaseQuery request, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(s_defaultRejectRequest);
         }
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(IReadOnlyCollection<BlackboardEvent> events, GrainCancellationToken token)
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
@@ -145,13 +145,13 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardQueryRequest request, GrainCancellationToken token)
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardBaseQuery request, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(s_defaultRejectRequest);
         }
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(IReadOnlyCollection<BlackboardEvent> events, GrainCancellationToken token)
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }

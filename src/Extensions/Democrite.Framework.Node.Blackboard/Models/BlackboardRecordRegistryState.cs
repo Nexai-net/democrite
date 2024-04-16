@@ -7,12 +7,10 @@ namespace Democrite.Framework.Node.Blackboard.Models
     using Democrite.Framework.Core.Abstractions.Surrogates;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Models.Surrogates;
+
     using Elvex.Toolbox.Abstractions.Services;
-    using Elvex.Toolbox.Helpers;
-    using Elvex.Toolbox.Services;
 
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
@@ -80,7 +78,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
                                                         foundExisting ? exist.UTCCreationTime : record.UTCCreationTime,
                                                         foundExisting ? exist.CreatorIdentity : record.CreatorIdentity,
                                                         timeManager.UtcNow,
-                                                        record.LastUpdaterIdentity);
+                                                        record.LastUpdaterIdentity,
+                                                        record.CustomMetadata);
 
             this._recordRegistry[record.Uid] = newEntry;
             return newEntry;
@@ -116,7 +115,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
                                                             entry.UTCCreationTime,
                                                             entry.CreatorIdentity,
                                                             utcNow,
-                                                            entry.LastUpdaterIdentity);
+                                                            entry.LastUpdaterIdentity,
+                                                            entry.CustomMetadata);
                 this._recordRegistry[uid] = newEntry;
                 return newEntry;
             }

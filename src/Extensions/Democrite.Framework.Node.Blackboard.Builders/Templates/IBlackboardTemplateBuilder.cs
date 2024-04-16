@@ -13,6 +13,11 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     public interface IBlackboardTemplateBuilder
     {
         /// <summary>
+        /// Configure blackboard options
+        /// </summary>
+        IBlackboardTemplateBuilder ConfigureOptions(Action<IBlackboardTemplateOptionsBuilder> optionsBuilder);
+
+        /// <summary>
         /// Setups controllers.
         /// </summary>
         IBlackboardTemplateFinalizerBuilder SetupControllers(Action<IBlackboardTemplateControllerBuilder> builders);

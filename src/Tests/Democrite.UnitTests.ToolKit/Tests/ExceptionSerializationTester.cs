@@ -9,6 +9,7 @@ namespace Democrite.UnitTests.ToolKit.Tests
     using Castle.DynamicProxy.Internal;
 
     using Democrite.Framework.Core.Abstractions.Exceptions;
+    using Democrite.Framework.Core.Abstractions.Surrogates;
 
     using Elvex.Toolbox.Models;
     using Elvex.Toolbox.UnitTests.ToolKit.Helpers;
@@ -98,12 +99,16 @@ namespace Democrite.UnitTests.ToolKit.Tests
             var tester = new SurrogateBaseTest<TSource, TSurrogate, TConverter>(sourceCreation: (fixture) =>
                                                                                 {
                                                                                     fixture.Register<AbstractType>(() => ObjectTestHelper.GenerateRandomAbstractType());
+                                                                                    fixture.Register<ConcretBaseType>(() => (ConcretBaseType)ObjectTestHelper.GenerateRandomAbstractType());
+                                                                                    fixture.Register<IConcretTypeSurrogate>(() => ConcretBaseTypeConverter.ConvertToSurrogate((ConcretBaseType)ObjectTestHelper.GenerateRandomAbstractType()));
                                                                                     OnSourceCreationSetup<TSource, TSurrogate, TConverter>(fixture);
                                                                                     return fixture.Create<TSource>();
                                                                                 }, 
                                                                                 surrogateCreation: (fixture) =>
                                                                                 {
                                                                                     fixture.Register<AbstractType>(() => ObjectTestHelper.GenerateRandomAbstractType());
+                                                                                    fixture.Register<ConcretBaseType>(() => (ConcretBaseType)ObjectTestHelper.GenerateRandomAbstractType());
+                                                                                    fixture.Register<IConcretTypeSurrogate>(() => ConcretBaseTypeConverter.ConvertToSurrogate((ConcretBaseType)ObjectTestHelper.GenerateRandomAbstractType()));
                                                                                     OnSurrogateCreationSetup<TSource, TSurrogate, TConverter>(fixture);
                                                                                     return fixture.Create<TSurrogate>();
                                                                                 });

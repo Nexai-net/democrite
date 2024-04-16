@@ -53,6 +53,10 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
         [Id(9)]
         [DataMember]
         public RecordContainerTypeEnum RecordContainerType { get; set; }
+
+        [Id(10)]
+        [DataMember]
+        public RecordMetadata? CustomMetadata { get; set; }
     }
 
     [RegisterConverter]
@@ -92,7 +96,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
                                                   surrogate.UTCCreationTime,
                                                   surrogate.CreatorIdentity,
                                                   surrogate.UTCLastUpdateTime,
-                                                  surrogate.LastUpdaterIdentity);
+                                                  surrogate.LastUpdaterIdentity,
+                                                  surrogate.CustomMetadata);
         }
 
         /// <inheritdoc />
@@ -109,7 +114,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
                 CreatorIdentity = value.CreatorIdentity,
                 UTCCreationTime = value.UTCCreationTime,
                 LastUpdaterIdentity = value.LastUpdaterIdentity,
-                UTCLastUpdateTime = value.UTCLastUpdateTime
+                UTCLastUpdateTime = value.UTCLastUpdateTime,
+                CustomMetadata = value.CustomMetadata
             };
         }
 

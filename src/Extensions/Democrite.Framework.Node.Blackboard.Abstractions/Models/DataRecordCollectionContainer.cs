@@ -5,7 +5,6 @@
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
 {
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates;
-    using Elvex.Toolbox.Helpers;
 
     using System.Collections;
     using System.Collections.Generic;

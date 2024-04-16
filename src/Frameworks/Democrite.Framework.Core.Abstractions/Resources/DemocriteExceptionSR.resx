@@ -192,4 +192,10 @@
   <data name="ConflictDefinitionException" xml:space="preserve">
     <value>Conflict between multiple definitions type '{0}', Source '{1}', Conflict '{2}'</value>
   </data>
+  <data name="EntitySealedExceptionMessage" xml:space="preserve">
+    <value>Entity Type {0} with identifier '{1}' is sealed and can't access any modification.</value>
+  </data>
+  <data name="EntityRequiredInitializationExceptionMessage" xml:space="preserve">
+    <value>Entity Type {0} with identifier '{1}' need to be initialized before any modification.</value>
+  </data>
 </root>

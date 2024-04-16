@@ -26,7 +26,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
 
         private readonly IDemocriteSerializer _democriteSerializer;
 
-        private BlackboardQueryRequest? _queryRequest;
+        private BlackboardBaseQuery? _queryRequest;
         private byte[]? _serializeQuery;
 
         #endregion
@@ -37,10 +37,11 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// Initializes a new instance of the <see cref="BlackboardDeferredQueryState"/> class.
         /// </summary>
         public BlackboardDeferredQueryState(DeferredId deferredId,
-                                            ConcretBaseType responseType,
+                                            ConcretBaseType? responseType,
                                             byte[] serializeQuery,
+                                            BlackboardQueryTypeEnum type,
                                             IDemocriteSerializer democriteSerializer)
-            : this(deferredId, responseType, (BlackboardQueryRequest?)null, democriteSerializer)
+            : this(deferredId, responseType, (BlackboardBaseQuery?)null, democriteSerializer, type)
         {
             this._serializeQuery = serializeQuery;
         }
@@ -49,12 +50,14 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// Initializes a new instance of the <see cref="BlackboardDeferredQueryState"/> class.
         /// </summary>
         private BlackboardDeferredQueryState(DeferredId deferredId,
-                                             ConcretBaseType responseType,
-                                             BlackboardQueryRequest? queryRequest,
-                                             IDemocriteSerializer democriteSerializer)
+                                             ConcretBaseType? responseType,
+                                             BlackboardBaseQuery? queryRequest,
+                                             IDemocriteSerializer democriteSerializer,
+                                             BlackboardQueryTypeEnum type)
         {
             this._democriteSerializer = democriteSerializer;
 
+            this.Type = type;
             this.DeferredId = deferredId;
             this.ResponseType = responseType;
             this._queryRequest = queryRequest;
@@ -72,7 +75,12 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Gets the type of the response.
         /// </summary>
-        public ConcretBaseType ResponseType { get; }
+        public ConcretBaseType? ResponseType { get; }
+
+        /// <summary>
+        /// Gets the type.
+        /// </summary>
+        public BlackboardQueryTypeEnum Type { get; }    
 
         #endregion
 
@@ -81,13 +89,13 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Gets the request.
         /// </summary>
-        public BlackboardQueryRequest GetRequest()
+        public BlackboardBaseQuery GetRequest()
         {
             if (this._queryRequest is null)
             {
                 Debug.Assert(this._serializeQuery is not null && this._serializeQuery.Any());
                 var rawBytes = Convert.FromBase64String(Encoding.UTF8.GetString(this._serializeQuery));
-                this._queryRequest = this._democriteSerializer.Deserialize<BlackboardQueryRequest>(rawBytes);
+                this._queryRequest = this._democriteSerializer.Deserialize<BlackboardBaseQuery>(rawBytes);
             }
 
             return this._queryRequest;
@@ -113,7 +121,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
         internal BlackboardDeferredQueryStateSurrogate ToSurrogate()
         {
             return new BlackboardDeferredQueryStateSurrogate(this.DeferredId,
-                                                             ConcretBaseTypeConverter.ConvertToSurrogate(this.ResponseType),
+                                                             this.ResponseType is null ? null : ConcretBaseTypeConverter.ConvertToSurrogate(this.ResponseType),
+                                                             this.Type,
                                                              GetRequestSerializeBytes());
         }
 
@@ -123,22 +132,24 @@ namespace Democrite.Framework.Node.Blackboard.Models
         public static BlackboardDeferredQueryState Create(BlackboardDeferredQueryStateSurrogate surrogate, IDemocriteSerializer democriteSerializer)
         {
             return new BlackboardDeferredQueryState(surrogate.DeferredId,
-                                                    ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate.ResponseType),
+                                                    surrogate.ResponseType is null ? null : ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate.ResponseType),
                                                     surrogate.SerializeQuery,
+                                                    surrogate.Type,
                                                     democriteSerializer);
         }
 
         /// <summary>
         /// Creates the specified deferred state.
         /// </summary>
-        public static BlackboardDeferredQueryState Create<TResponseType>(DeferredId deferredId,
-                                                                         BlackboardQueryRequest request,
-                                                                         IDemocriteSerializer democriteSerializer)
+        public static BlackboardDeferredQueryState Create(DeferredId deferredId,
+                                                          BlackboardBaseQuery query,
+                                                          IDemocriteSerializer democriteSerializer)
         {
             return new BlackboardDeferredQueryState(deferredId,
-                                                    (ConcretBaseType)typeof(TResponseType).GetAbstractType(),
-                                                    request,
-                                                    democriteSerializer);
+                                                    query.ExpectedResponseType,
+                                                    query,
+                                                    democriteSerializer,
+                                                    query.Type);
         }
 
         /// <inheritdoc />
@@ -151,7 +162,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
                 return true;
 
             return this.DeferredId == other.DeferredId &&
-                   this.ResponseType.Equals(other.ResponseType) &&
+                   (this.ResponseType?.Equals(other.ResponseType) ?? other.ResponseType is null)  &&
+                   this.Type == other.Type &&
                    this.GetRequestSerializeBytes().SequenceEqual(other.GetRequestSerializeBytes());
         }
 

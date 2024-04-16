@@ -271,7 +271,8 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
     [GenerateSerializer]
     [ImmutableObject(true)]
     public record struct ConditionConvertDefinitionSurrogate(IConditionDefinitionPart From,
-                                                             IConcretTypeSurrogate To) : IConditionDefinitionPart;
+                                                             IConcretTypeSurrogate To,
+                                                             bool StrictCast) : IConditionDefinitionPart;
 
     [RegisterConverter]
     public sealed class ConditionConvertDefinitionConverter : IConverter<ConditionConvertDefinition, ConditionConvertDefinitionSurrogate>
@@ -280,14 +281,16 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
         public ConditionConvertDefinition ConvertFromSurrogate(in ConditionConvertDefinitionSurrogate surrogate)
         {
             return new ConditionConvertDefinition(ConditionPartConverterHelper.FromSurrogate<ConditionBaseDefinition>(surrogate.From)!,
-                                                  ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate.To));
+                                                  ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate.To),
+                                                  surrogate.StrictCast);
         }
 
         /// <inheritdoc />
         public ConditionConvertDefinitionSurrogate ConvertToSurrogate(in ConditionConvertDefinition value)
         {
             return new ConditionConvertDefinitionSurrogate(ConditionPartConverterHelper.ToSurrogate<IConditionDefinitionPart>(value.From)!,
-                                                           ConcretBaseTypeConverter.ConvertToSurrogate((ConcretBaseType)value.To));
+                                                           ConcretBaseTypeConverter.ConvertToSurrogate((ConcretBaseType)value.To),
+                                                           value.StrictCast);
         }
     }
 

@@ -11,7 +11,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains
     /// Dabic default controller mainly in charge to resolve data conflict
     /// </summary>
     /// <seealso cref="IBlackboardBaseControllerGrain" />
-    public interface IDefaultBlackboardControllerGrain : IBlackboardEventControllerGrain, IBlackboardStateControllerGrain, IBlackboardStorageControllerGrain, IBlackboardBaseControllerGrain<DefaultControllerOptions>
+    public interface IDefaultBlackboardControllerGrain : IBlackboardStorageControllerGrain, IBlackboardBaseControllerGrain<DefaultControllerOptions>
     {
     }
 }

@@ -6,20 +6,18 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 {
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Targets;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains;
+
     using Elvex.Toolbox.Abstractions.Supports;
-    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 
     using Orleans.Placement;
 
     using System.Collections.Generic;
-    using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -95,7 +93,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             }
             else
             {
-                var results = await board.GetAllStoredDataByTypeAsync<TData>(request.LogicalRecordTypePattern, null, request.RecordStatusFilter, executionContext.CancellationToken);
+                var results = await board.GetAllStoredDataFilteredAsync<TData>(request.LogicalRecordTypePattern, null, request.RecordStatusFilter, executionContext.CancellationToken);
                 if (results is not null && results.Any())
                     allData = results;
             }
@@ -114,6 +112,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                    ((request.Data is ISupportDebugDisplayName debugDisplayName) ? debugDisplayName.ToDebugDisplayName() : request.Data?.ToString()) ?? string.Empty,
                                                    request.NewRecordStatus ?? RecordStatusEnum.Ready,
                                                    request?.PushActionType ?? DataRecordPushRequestTypeEnum.Push,
+                                                   null,
                                                    ctx.CancellationToken);
 
             return result;

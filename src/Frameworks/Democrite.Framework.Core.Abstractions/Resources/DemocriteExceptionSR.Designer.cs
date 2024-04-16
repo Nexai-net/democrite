@@ -151,6 +151,24 @@ namespace Democrite.Framework.Core.Abstractions.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Entity Type {0} with identifier &apos;{1}&apos; need to be initialized before any modification..
+        /// </summary>
+        internal static string EntityRequiredInitializationExceptionMessage {
+            get {
+                return ResourceManager.GetString("EntityRequiredInitializationExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Entity Type {0} with identifier &apos;{1}&apos; is sealed and can&apos;t access any modification..
+        /// </summary>
+        internal static string EntitySealedExceptionMessage {
+            get {
+                return ResourceManager.GetString("EntitySealedExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [Definition: {0} - {1}] failed due to \n {2}..
         /// </summary>
         internal static string InvalidDefinitionErrorMessages {

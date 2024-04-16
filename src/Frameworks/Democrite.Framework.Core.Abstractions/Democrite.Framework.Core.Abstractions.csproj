@@ -21,6 +21,7 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="Democrite.Framework.Node" />
 		<InternalsVisibleTo Include="Democrite.Framework.Client" />
+		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals" />
 
 		<!-- Testing Purpose -->
 		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals.UnitTests" />

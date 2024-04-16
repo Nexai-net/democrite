@@ -5,9 +5,9 @@
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Models;
-    using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Abstractions.Supports;
     using Elvex.Toolbox.Models;
 
@@ -38,7 +38,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                                    DateTime utcCreationTime,
                                    string? creatorIdentity,
                                    DateTime utcLastUpdateTime,
-                                   string? lastUpdaterIdentity)
+                                   string? lastUpdaterIdentity,
+                                   RecordMetadata? customMetadata)
         {
             this.Uid = uid;
             this.LogicalType = logicalType;
@@ -49,6 +50,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
             this.CreatorIdentity = creatorIdentity;
             this.UTCLastUpdateTime = utcLastUpdateTime;
             this.LastUpdaterIdentity = lastUpdaterIdentity;
+            this.CustomMetadata = customMetadata;
         }
 
         #endregion
@@ -115,6 +117,12 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
         [DataMember]
         public string? LastUpdaterIdentity { get; }
 
+        /// <summary>
+        /// Gets the custom metadata.
+        /// </summary>
+        [DataMember]
+        public RecordMetadata? CustomMetadata { get; }
+
         #endregion
 
         #region Methods
@@ -150,6 +158,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
             return other.Uid == this.Uid &&
                    string.Equals(other.LogicalType, this.LogicalType) &&
                    string.Equals(other.DisplayName, this.DisplayName, StringComparison.OrdinalIgnoreCase) &&
+                   (this.CustomMetadata?.Equals(other.CustomMetadata) ?? other.CustomMetadata is null) &&
                    OnEquals(other!);
         }
 
@@ -167,6 +176,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
             return HashCode.Combine(this.Uid,
                                     this.LogicalType,
                                     this.DisplayName,
+                                    this.CustomMetadata,
                                     OnGetHashCode());
         }
 
@@ -230,7 +240,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                                    DateTime utcCreationTime,
                                    string? creatorIdentity,
                                    DateTime utcLastUpdateTime,
-                                   string? lastUpdaterIdentity)
+                                   string? lastUpdaterIdentity,
+                                   RecordMetadata? customMetadata)
             : base(logicalType,
                    uid,
                    displayName,
@@ -239,7 +250,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                    utcCreationTime,
                    creatorIdentity,
                    utcLastUpdateTime,
-                   lastUpdaterIdentity)
+                   lastUpdaterIdentity,
+                   customMetadata)
         {
             this.Data = data;
         }
@@ -285,7 +297,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                                                   this.UTCCreationTime,
                                                   this.CreatorIdentity,
                                                   utcNow,
-                                                  null);
+                                                  null,
+                                                  this.CustomMetadata);
         }
 
         /// <inheritdoc />
@@ -322,7 +335,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                                                                             this.UTCCreationTime,
                                                                             this.CreatorIdentity,
                                                                             this.UTCLastUpdateTime,
-                                                                            this.LastUpdaterIdentity);
+                                                                            this.LastUpdaterIdentity, 
+                                                                            this.CustomMetadata);
             }
 
             return projectionSucceed;

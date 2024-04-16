@@ -183,6 +183,13 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
             return this;
         }
 
+        /// <inheritdoc />
+        public ILogicalTypeConfiguration RemainOnSealed()
+        {
+            EnqueueRule(new BlackboardRemainOnSealedLogicalTypeRule(this.LogicalRecordTypePattern));
+            return this;
+        }
+
         #endregion
     }
 }

@@ -20,5 +20,6 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                                                   DateTime UTCCreationTime,
                                                   string? CreatorIdentity,
                                                   DateTime UTCLastUpdateTime,
-                                                  string? LastUpdaterIdentity);
+                                                  string? LastUpdaterIdentity,
+                                                  RecordMetadata? CustomMetadata);
 }

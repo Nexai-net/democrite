@@ -7,9 +7,29 @@
 <#
 var commonMethodDescription = """
         /// <summary>
+        /// Sealed the blackboard if possible; Maintains the minimal information needed to respond to query based blackboard goals
+        /// </summary>
+        Task<bool> SealedAsync(CancellationToken token);
+
+        /// <summary>
+        /// Initialize the bloackboard. The initialization is allow only once and could insert init data.
+        /// </summary>
+        Task<bool> InitializeAsync(CancellationToken token, IReadOnlyCollection<DataRecordContainer>? initData = null);
+
+        /// <summary>
+        /// Gets blackboard life status
+        /// </summary>
+        Task<BlackboardLifeStatusEnum> GetStatusAsync(CancellationToken token);
+
+        /// <summary>
+        /// Send query type command without expecting any result
+        /// </summary>
+        Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, CancellationToken token);
+
+        /// <summary>
         /// Send query request with response expected
         /// </summary>
-        Task<BlackboardQueryResponse<TResponse>> QueryAsync<TResponse>(BlackboardQueryRequest request, CancellationToken token);
+        Task<BlackboardQueryResponse> QueryAsync<TResponse>(BlackboardQueryRequest<TResponse> request, CancellationToken token);
 
         /// <summary>
         /// Pushes the data asynchronous.
@@ -37,8 +57,8 @@ var commonMethodDescription = """
         /// <summary>
         /// Gets the stored data associate to specific <paramref name="dataUids"/>
         /// </summary>
-         [AlwaysInterleave]
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(CancellationToken token, params Guid[] dataUids);
+        [AlwaysInterleave]
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(IReadOnlyCollection<Guid> dataUids, CancellationToken token);
 
         /// <summary>
         /// Gets all stored's data metadata (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
@@ -51,15 +71,31 @@ var commonMethodDescription = """
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
         [AlwaysInterleave]
-        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataByTypeAsync(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, CancellationToken token);
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, CancellationToken token);
+
+        /// <summary>
+        /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/> (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
+        /// </summary>
+        /// <param name="logicTypeFilter">Filter that support regex expression.</param>
+        [AlwaysInterleave]
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, CancellationToken token);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
-         [AlwaysInterleave]
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataByTypeAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, CancellationToken token);
+        [AlwaysInterleave]
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, CancellationToken token);
+
+        /// <summary>
+        /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
+        /// </summary>
+        /// <param name="logicTypeFilter">Filter that support regex expression.</param>
+        [AlwaysInterleave]
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, CancellationToken token);
 """;
+
+
 
 var refMethod = """
         /// <summary>
@@ -68,7 +104,19 @@ var refMethod = """
         /// <returns>
         ///    Return value associate to Data uid record; otherwise null is an issue occured
         /// </returns>
-        Task<bool> PushDataAsync<TData>(TData? record, Guid uid, string logicType, string displayName, RecordStatusEnum recordStatus, DataRecordPushRequestTypeEnum pushType, CancellationToken token);
+        Task<bool> PushDataAsync<TData>(TData? record,
+                                        Guid uid,
+                                        [NotNull] string logicType,
+                                        string? displayName = null,
+                                        RecordStatusEnum recordStatus = RecordStatusEnum.Ready,
+                                        DataRecordPushRequestTypeEnum pushType = DataRecordPushRequestTypeEnum.Push,
+                                        RecordMetadata? customMetadata = null,
+                                        CancellationToken token = default);
+
+        /// <summary>
+        /// Initialize the bloackboard. The initialization is allow only once and could insert init data.
+        /// </summary>
+        Task<bool> InitializeAsync(CancellationToken token, params DataRecordContainer[] initData);
 
         /// <summary>
         /// Gets the stored data associate to specific <paramref name="dataUid"/>
@@ -81,25 +129,48 @@ var refMethod = """
         /// <returns>
         ///    Return value associate to Data uid record; otherwise null is an issue occured
         /// </returns>
-        Task<bool> PushNewDataAsync<TData>(TData? record, [NotNull] string logicType, string displayName, RecordStatusEnum? recordStatus, DataRecordPushRequestTypeEnum pushType, CancellationToken token);
+        Task<bool> PushNewDataAsync<TData>(TData? record,
+                                   [NotNull] string logicType,
+                                   string? displayName = null,
+                                   RecordStatusEnum recordStatus = RecordStatusEnum.Ready,
+                                   DataRecordPushRequestTypeEnum pushType = DataRecordPushRequestTypeEnum.Push,
+                                   RecordMetadata? customMetadata = null,
+                                   CancellationToken token = default);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataByTypeAsync<TDataProjection>(string? logicTypeFilter, CancellationToken token);
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, CancellationToken token);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataByTypeAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, CancellationToken token);
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, CancellationToken token);
+
+        /// <summary>
+        /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
+        /// </summary>
+        /// <param name="logicTypeFilter">Filter that support regex expression.</param>
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/> (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
-        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataByTypeAsync(string? logicTypeFilter, CancellationToken token);
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, CancellationToken token);
+
+        /// <summary>
+        /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/> (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
+        /// </summary>
+        /// <param name="logicTypeFilter">Filter that support regex expression.</param>
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token);
+
+        /// <summary>
+        /// Gets the stored data associate to specific <paramref name="dataUids"/>
+        /// </summary>
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(CancellationToken token, params Guid[] dataUids);
 """;
 
 #>
@@ -110,10 +181,13 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Targets;
 
+    using Elvex.Toolbox.Abstractions.Conditions;
+
     using Orleans.Concurrency;
 
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq.Expressions;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -138,7 +212,6 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions
     /// </summary>
     public interface IBlackboardRef
     {
-
         #region Properties
 
         /// <summary>
@@ -164,6 +237,5 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions
 <#= refMethod #>
 
         #endregion
-
     }
 }

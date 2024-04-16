@@ -17,7 +17,8 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     /// </summary>
     internal sealed class BlackboardTemplateBuilder : IBlackboardTemplateBuilder,
                                                       IBlackboardTemplateFinalizerBuilder,
-                                                      IBlackboardTemplateControllerBuilder
+                                                      IBlackboardTemplateControllerBuilder,
+                                                      IBlackboardTemplateOptionsBuilder
     {
         #region Fields
 
@@ -31,6 +32,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         private readonly Guid _uid;
 
         private bool _anyLogicalType;
+        private bool _initializationRequired;
 
         #endregion
 
@@ -175,6 +177,20 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         }
 
         /// <inheritdoc />
+        public IBlackboardTemplateBuilder ConfigureOptions(Action<IBlackboardTemplateOptionsBuilder> optionsBuilder)
+        {
+            optionsBuilder?.Invoke(this);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IBlackboardTemplateOptionsBuilder InitializationRequired()
+        {
+            this._initializationRequired = true;
+            return this;
+        }
+
+        /// <inheritdoc />
         public BlackboardTemplateDefinition Build()
         {
             var controllers = this._storageControllers.GroupBy(k => k.Value)
@@ -196,7 +212,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
                                                           throw new InvalidDataException($"Multiple controller option for the same type that use more complex definition type than BlackboardTemplateControllerDefinition. Duplicate Keys {def.ControllerType ^ targetControllerType:G}");
                                                       })
                                                       .ToArray();
-
+             
             var rules = this._logicalTypeDefinitions.Distinct().ToArray();
 
             var indexedRules = rules.GroupBy(r => r.LogicalTypePattern)
@@ -222,8 +238,8 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
                                                     this._nameIdentifier,
                                                     controllers,
                                                     rules,
+                                                    new BlackboardTemplateConfigurationDefinition(this._initializationRequired),
                                                     this._defaultBlackboardStorageDefinitions);
-
         }
 
         #endregion

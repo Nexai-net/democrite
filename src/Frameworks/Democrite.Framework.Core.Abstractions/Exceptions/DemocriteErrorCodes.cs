@@ -115,6 +115,12 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             /// </summary>
             [Description("Error code category Query")]
             Query = 0x_12_00_00_00_00_00_00_00,
+
+            /// <summary>
+            /// Error code category Entity
+            /// </summary>
+            [Description("Error code category Entity")]
+            Entity = 0x_FF_00_00_00_00_00_00_00,
         }
 
         public enum PartType : ulong
@@ -255,15 +261,26 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
             /// <summary>
             /// Error about action that Rejected
             /// </summary>
-            [Description("Error When value Conflict.")]
+            [Description("Error When value Rejected.")]
             Rejected = 0x_00_00_07_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about action that Sealed
+            /// </summary>
+            [Description("Error When value Sealed.")]
+            Sealed = 0x_00_00_08_00_00_00_00_00,
+
+            /// <summary>
+            /// Error about action that NotInitialized
+            /// </summary>
+            [Description("Error When value NotInitialized.")]
+            NotInitialized = 0x_00_00_09_00_00_00_00_00,
 
             /// <summary>
             /// Error about action that failed
             /// </summary>
             [Description("Error about action that failed.")]
             Failed = 0x_00_00_FF_00_00_00_00_00,
-
         }
 
         /// <summary>

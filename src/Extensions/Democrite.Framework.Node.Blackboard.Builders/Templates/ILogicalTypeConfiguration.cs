@@ -39,6 +39,11 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         ILogicalTypeConfiguration AllowType<T>(Action<ILogicalTypeCheckConfiguration<T>>? cfg = null);
 
         /// <summary>
+        /// Flag the logical type to remain after sealing
+        /// </summary>
+        ILogicalTypeConfiguration RemainOnSealed();
+
+        /// <summary>
         /// Allow only one value
         /// </summary>
         ILogicalTypeConfiguration OnlyOne(bool includeDecommissioned = false, bool replacePreviousOne = false);

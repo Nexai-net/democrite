@@ -18,19 +18,19 @@ namespace Democrite.Framework.Core.Abstractions.Signals
     /// </summary>
     /// <seealso cref="IGrainWithGuidKey" />
     [DemocriteSystemVGrain]
-    public interface ISignalVGrain : IGrainWithGuidKey, ISignalHandler
+    internal interface ISignalVGrain : IGrainWithGuidKey, ISignalHandler
     {
         /// <summary>
         /// Fires the signal configured
         /// </summary>
         [OneWay]
-        Task<Guid> Fire(GrainId? sourceId, VGrainMetaData? sourceMetaData, GrainCancellationToken token);
+        Task<Guid> Fire(Guid fireId, GrainId? sourceId, VGrainMetaData? sourceMetaData, GrainCancellationToken token);
 
         /// <summary>
         /// Fires the signal configured
         /// </summary>
         [OneWay]
-        Task<Guid> Fire<TData>(GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData, GrainCancellationToken token) 
+        Task<Guid> Fire<TData>(Guid fireId, GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData, GrainCancellationToken token)
             where TData : struct;
     }
 }

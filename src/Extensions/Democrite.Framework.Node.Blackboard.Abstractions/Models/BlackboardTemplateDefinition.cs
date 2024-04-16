@@ -6,15 +6,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules;
-    using Democrite.Framework.Node.Blackboard.Abstractions.VGrains;
-    using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
-    using Elvex.Toolbox.Extensions;
-    using Elvex.Toolbox.Helpers;
-    using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
-
-    using Newtonsoft.Json;
 
     using System;
     using System.Collections.Generic;
@@ -41,6 +34,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                                             string uniqueTemplateName,
                                             IEnumerable<BlackboardTemplateControllerDefinition>? controllers,
                                             IEnumerable<BlackboardLogicalTypeBaseRule> logicalTypes,
+                                            BlackboardTemplateConfigurationDefinition? configurationDefinition = null,
                                             BlackboardStorageDefinition? defaultStorageConfig = null)
         {
             ArgumentNullException.ThrowIfNull(nameof(uid));
@@ -52,6 +46,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
             this.DisplayName = "Blackboard Tpl: " + uniqueTemplateName;
             this.Controllers = controllers?.ToArray();
             this.LogicalTypes = logicalTypes?.ToArray() ?? EnumerableHelper<BlackboardLogicalTypeBaseRule>.ReadOnlyArray;
+            this.ConfigurationDefinition = configurationDefinition ?? BlackboardTemplateConfigurationDefinition.DefaultConfiguration;
         }
 
         #endregion
@@ -83,6 +78,12 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
         /// </summary>
         [DataMember]
         public IReadOnlyCollection<BlackboardLogicalTypeBaseRule> LogicalTypes { get; }
+
+        /// <summary>
+        /// Gets the configuration definition.
+        /// </summary>
+        [DataMember]
+        public BlackboardTemplateConfigurationDefinition ConfigurationDefinition { get; }
 
         /// <summary>
         /// Gets the default storage configuration.

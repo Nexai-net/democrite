@@ -16,6 +16,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
         NotSupported,
         Deferred,
         RetryDeferred,
-        Reponse
+        Reponse,
+        StateRequestedChange,
     }
 }

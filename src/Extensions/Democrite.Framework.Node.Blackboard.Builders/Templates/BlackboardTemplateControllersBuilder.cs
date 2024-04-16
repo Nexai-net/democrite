@@ -18,36 +18,26 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     /// <summary>
     /// Generic controller builder
     /// </summary>
-    public abstract class BlackboardTemplateBaseControllerBuilder<TSpecializedController, TDefaultSpecializedController, TBaseOption, TDefaultOption> : IBlackboardTemplateSpecializedControllerBuilder<TSpecializedController, TBaseOption, TDefaultOption>,
-                                                                                                                                                        IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
+    public abstract class BlackboardTemplateBaseControllerBuilder<TSpecializedController, TBaseOption, TDefaultOption> : IBlackboardTemplateSpecializedControllerBuilder<TSpecializedController, TBaseOption, TDefaultOption>,
+                                                                                                                         IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
         where TSpecializedController : IBlackboardBaseControllerGrain
-        where TDefaultSpecializedController : TSpecializedController
         where TBaseOption : IControllerOptions
         where TDefaultOption : ControllerBaseOptions, TBaseOption
     {
         #region Fields
 
-        private static readonly ConcretType s_defaultControllerConcretType;
-        private static readonly Type s_defaultController;
+        //private static readonly ConcretType s_defaultControllerConcretType;
+        //private static readonly Type s_defaultController;
 
         private readonly IBlackboardTemplateControllerBuilder _root;
         private readonly BlackboardControllerTypeEnum _type;
 
-        private ConcretType _controller;
+        private ConcretType? _controller;
         private ControllerBaseOptions? _option;
 
         #endregion
 
         #region Ctor
-
-        /// <summary>
-        /// Initializes the <see cref="BlackboardTemplateBaseControllerBuilder{TSpecializedController, TDefaultSpecializedController, TBaseOption, TDefaultOption}"/> class.
-        /// </summary>
-        static BlackboardTemplateBaseControllerBuilder()
-        {
-            s_defaultController = typeof(TDefaultSpecializedController);
-            s_defaultControllerConcretType = (ConcretType)s_defaultController.GetAbstractType();
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BlackboardTemplateBaseControllerBuilder{TSpecializedController, TBaseOption, TDefaultOption}"/> class.
@@ -57,7 +47,6 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         {
             this._type = type;
             this._root = root;
-            this._controller = s_defaultControllerConcretType;
         }
 
         #endregion
@@ -82,16 +71,14 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         }
 
         /// <inheritdoc />
-        public IBlackboardTemplateControllerBuilder UseDefault(TDefaultOption? options = null)
-        {
-            this._controller = s_defaultControllerConcretType;
-            return this._root;
-        }
-
-        /// <inheritdoc />
         public virtual BlackboardTemplateControllerDefinition Build()
         {
-            return new BlackboardTemplateControllerDefinition(Guid.NewGuid(), this._type, this._controller, this._option ?? BuildDefaultOption());
+            ArgumentNullException.ThrowIfNull(this._controller);
+
+            return new BlackboardTemplateControllerDefinition(Guid.NewGuid(),
+                                                              this._type,
+                                                              this._controller,
+                                                              this._option ?? BuildDefaultOption());
         }
 
         #region Tools
@@ -112,7 +99,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     /// <summary>
     /// Builder dedicated to storage controller
     /// </summary>
-    public sealed class BlackboardTemplateStorageControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardStorageControllerGrain, IDefaultBlackboardControllerGrain, IControllerStorageOptions, DefaultControllerOptions>, IBlackboardTemplateStorageControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
+    public sealed class BlackboardTemplateStorageControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardStorageControllerGrain, IControllerStorageOptions, DefaultControllerOptions>, IBlackboardTemplateStorageControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="BlackboardTemplateStorageControllerBuilder"/> class.
@@ -121,12 +108,18 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
             : base(root, BlackboardControllerTypeEnum.Storage)
         {
         }
+
+        /// <inheritdoc />
+        public IBlackboardTemplateControllerBuilder UseDefault(DefaultControllerOptions? options = null)
+        {
+            return UseController<IDefaultBlackboardControllerGrain, DefaultControllerOptions>(options ?? DefaultControllerOptions.Default);
+        }
     }
 
     /// <summary>
     /// Builder dedicated to event controller
     /// </summary>
-    public sealed class BlackboardTemplateEventControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardEventControllerGrain, IDefaultBlackboardControllerGrain, IControllerEventOptions, EventControllerOptions>, IBlackboardTemplateEventControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
+    public sealed class BlackboardTemplateEventControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardEventControllerGrain, IControllerEventOptions, EventControllerOptions>, IBlackboardTemplateEventControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
     {
         #region Ctor
 
@@ -154,7 +147,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     /// <summary>
     /// Builder dedicated to state controller
     /// </summary>
-    public sealed class BlackboardTemplateStateControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardStateControllerGrain, IDefaultBlackboardControllerGrain, IControllerStateOptions, DefaultControllerOptions>, IBlackboardTemplateStateControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
+    public sealed class BlackboardTemplateStateControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardStateControllerGrain, IControllerStateOptions, DefaultControllerOptions>, IBlackboardTemplateStateControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="BlackboardTemplateStateControllerBuilder"/> class.
@@ -168,7 +161,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     /// <summary>
     /// Generic controller builder used to setup a controller used to multiple types
     /// </summary>
-    public sealed class BlackboardTemplateGenericControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardBaseControllerGrain, IDefaultBlackboardControllerGrain, IControllerOptions, DefaultControllerOptions>, IBlackboardTemplateGenericControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
+    public sealed class BlackboardTemplateGenericControllerBuilder : BlackboardTemplateBaseControllerBuilder<IBlackboardBaseControllerGrain, IControllerOptions, DefaultControllerOptions>, IBlackboardTemplateGenericControllerBuilder, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>
     {
         #region Ctor
 

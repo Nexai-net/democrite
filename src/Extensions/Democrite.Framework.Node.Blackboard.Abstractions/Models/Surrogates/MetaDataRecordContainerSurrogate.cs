@@ -18,7 +18,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
                                                           DateTime UTCCreationTime,
                                                           string? CreatorIdentity,
                                                           DateTime UTCLastUpdateTime,
-                                                          string? LastUpdaterIdentity);
+                                                          string? LastUpdaterIdentity,
+                                                          RecordMetadata? CustomMetadata);
 
     [RegisterConverter]
     public sealed class MetaDataRecordContainerConverter : IConverter<MetaDataRecordContainer, MetaDataRecordContainerSurrogate>
@@ -34,7 +35,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
                                                surrogate.UTCCreationTime,
                                                surrogate.CreatorIdentity,
                                                surrogate.UTCLastUpdateTime,
-                                               surrogate.LastUpdaterIdentity);
+                                               surrogate.LastUpdaterIdentity,
+                                               surrogate.CustomMetadata);
         }
 
         /// <inheritdoc />
@@ -51,6 +53,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
                 Uid = value.Uid,
                 CreatorIdentity = value.CreatorIdentity,
                 UTCCreationTime = value.UTCCreationTime,
+                CustomMetadata = value.CustomMetadata
             };
         }
     }

@@ -47,7 +47,8 @@ namespace Democrite.Framework.Core.Abstraction.UnitTests.Exceptions
                                                        fixture.Create<DateTime>(),
                                                        fixture.Create<string>(),
                                                        fixture.Create<DateTime>(),
-                                                       fixture.Create<string>());
+                                                       fixture.Create<string>(),
+                                                       null);
             });
 
             base.OnSourceCreationSetup<TSource, TSurrogate, TConverter>(fixture);

@@ -108,4 +108,20 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
             return $"[{this.ActionType}] - Retry pending query";
         }
     }
+
+    /// <summary>
+    /// Command used to request a stae change
+    /// </summary>
+    [Immutable]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public sealed record class StateRequestedChangeBlackboardCommand(BlackboardLifeStatusEnum NewState) : BlackboardCommand(BlackboardCommandTypeEnum.StateRequestedChange)
+    {
+        /// <inheritdoc />
+        public override string ToDebugDisplayName()
+        {
+            return $"[{this.ActionType}] - State change {this.NewState}";
+        }
+    }
 }

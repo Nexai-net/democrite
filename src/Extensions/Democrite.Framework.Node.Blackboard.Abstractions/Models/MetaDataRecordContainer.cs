@@ -8,11 +8,17 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
     using Elvex.Toolbox.Models;
 
     using System;
+    using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Container about one data record through a blackboard
     /// </summary>
     /// <seealso cref="IEquatable{DataRecordContainer}" />
+    [Immutable]
+    [DataContract]
+    [Serializable]
+    [ImmutableObject(true)]
     public sealed class MetaDataRecordContainer : DataRecordContainer
     {
         #region Fields
@@ -34,7 +40,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                                        DateTime utcCreationTime,
                                        string? creatorIdentity,
                                        DateTime utcLastUpdateTime,
-                                       string? lastUpdaterIdentity)
+                                       string? lastUpdaterIdentity,
+                                       RecordMetadata? customMetadata)
 
             : base(logicalType,
                    uid,
@@ -44,7 +51,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                    utcCreationTime,
                    creatorIdentity,
                    utcLastUpdateTime,
-                   lastUpdaterIdentity)
+                   lastUpdaterIdentity,
+                   customMetadata)
         {
             this._containsType = containsType;
         }
@@ -54,10 +62,15 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
         #region Properties
 
         /// <inheritdoc/>
+        [DataMember]
         public override ConcretBaseType? ContainsType
         {
             get { return this._containsType; }
         }
+
+        #endregion
+
+        #region Methods
 
         /// <summary>
         /// Container type metadata doesn't support direct access to data
@@ -85,7 +98,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                                                this.UTCCreationTime,
                                                this.CreatorIdentity,
                                                this.UTCLastUpdateTime,
-                                               this.LastUpdaterIdentity);
+                                               this.LastUpdaterIdentity,
+                                               this.CustomMetadata);
         }
 
         /// <inheritdoc />

@@ -173,14 +173,18 @@ namespace Democrite.Framework.Core.Signals
         {
             var signalVGrain = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new SignalNotFoundException(signalId.Name);
 
+            var fireId = Guid.NewGuid();
+
             using (var grainToken = token.ToGrainCancellationToken())
             {
                 token.ThrowIfCancellationRequested();
                 if (data is NoneTypeStruct)
-                    return await signalVGrain.Fire(vgrainInformationProvider?.GetGrainId(), vgrainInformationProvider?.MetaData, grainToken.Token);
-
-                return await signalVGrain.Fire<TData>(vgrainInformationProvider?.GetGrainId(), data, vgrainInformationProvider?.MetaData, grainToken.Token);
+                    await signalVGrain.Fire(fireId, vgrainInformationProvider?.GetGrainId(), vgrainInformationProvider?.MetaData, grainToken.Token);
+                else
+                    await signalVGrain.Fire<TData>(fireId, vgrainInformationProvider?.GetGrainId(), data, vgrainInformationProvider?.MetaData, grainToken.Token);
             }
+
+            return fireId;
         }
 
         /// <inheritdoc />

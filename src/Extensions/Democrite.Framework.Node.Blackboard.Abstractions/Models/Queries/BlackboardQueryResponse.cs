@@ -12,11 +12,6 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
     using System.ComponentModel;
     using System.Diagnostics;
 
-    public interface IBlackboardQueryResponse
-    {
-        QueryReponseTypeEnum Type { get; }
-    }
-
     /// <summary>
     /// Base class of every query response
     /// </summary>
@@ -25,7 +20,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
     [GenerateSerializer]
     [ImmutableObject(true)]
     [DebuggerDisplay("{ToDebugDisplayName()}")]
-    public abstract record class BlackboardQueryResponse<TReponseData>(QueryReponseTypeEnum Type) : ISupportDebugDisplayName, IBlackboardQueryResponse
+    public abstract record class BlackboardQueryResponse(QueryReponseTypeEnum Type) : ISupportDebugDisplayName
     {
         /// <inheritdoc />
         public abstract string ToDebugDisplayName();
@@ -39,7 +34,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
     [GenerateSerializer]
     [ImmutableObject(true)]
     [DebuggerDisplay("{ToDebugDisplayName()}")]
-    public sealed record class BlackboardQueryRejectedResponse<TResponseData>(string? Detail) : BlackboardQueryResponse<TResponseData>(QueryReponseTypeEnum.Rejected)
+    public sealed record class BlackboardQueryRejectedResponse(string? Detail) : BlackboardQueryResponse(QueryReponseTypeEnum.Rejected)
     {
         #region Ctor
 
@@ -48,8 +43,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
         /// </summary>
         static BlackboardQueryRejectedResponse()
         {
-            NoController = new BlackboardQueryRejectedResponse<TResponseData>("No Event Controller setup in the template");
-            Default = new BlackboardQueryRejectedResponse<TResponseData>("Controller provide no response DuringQueryProcessing");
+            NoController = new BlackboardQueryRejectedResponse("No Event Controller setup in the template");
+            Default = new BlackboardQueryRejectedResponse("Controller provide no response DuringQueryProcessing");
         }
 
         #endregion
@@ -59,20 +54,19 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
         /// <summary>
         /// Gets reject reponse due to no controller available to process requests
         /// </summary>
-        public static BlackboardQueryRejectedResponse<TResponseData> NoController { get; }
+        public static BlackboardQueryRejectedResponse NoController { get; }
 
         /// <summary>
         /// Gets reject reponse due to controller null reponse.
         /// </summary>
-        public static BlackboardQueryRejectedResponse<TResponseData> Default { get; }
-
+        public static BlackboardQueryRejectedResponse Default { get; }
 
         #endregion
 
         /// <inheritdoc />
         public override string ToDebugDisplayName()
         {
-            return $"[Query] - Rejected - {this.Detail}";
+            return $"[Query/Response] - Rejected - {this.Detail}";
         }
     }
 
@@ -85,12 +79,12 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
     [GenerateSerializer]
     [ImmutableObject(true)]
     [DebuggerDisplay("{ToDebugDisplayName()}")]
-    public sealed record class BlackboardQueryDeferredResponse<TResponseData>(in DeferredId DeferredAwaiterId) : BlackboardQueryResponse<TResponseData>(QueryReponseTypeEnum.Deferred)
+    public sealed record class BlackboardQueryDeferredResponse(in DeferredId DeferredAwaiterId) : BlackboardQueryResponse(QueryReponseTypeEnum.Deferred)
     {
         /// <inheritdoc />
         public override string ToDebugDisplayName()
         {
-            return $"[Query] - Deferred - {this.DeferredAwaiterId}";
+            return $"[Query/Response] - Deferred - {this.DeferredAwaiterId}";
         }
     }
 
@@ -102,12 +96,12 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
     [GenerateSerializer]
     [ImmutableObject(true)]
     [DebuggerDisplay("{ToDebugDisplayName()}")]
-    public sealed record class BlackboardQueryDirectResponse<TResponseData>(in TResponseData Response, Guid QueryId) : BlackboardQueryResponse<TResponseData>(QueryReponseTypeEnum.Direct)
+    public sealed record class BlackboardQueryDirectResponse<TResponseData>(in TResponseData Response, Guid QueryId) : BlackboardQueryResponse(QueryReponseTypeEnum.Direct)
     {
         /// <inheritdoc />
         public override string ToDebugDisplayName()
         {
-            return $"[Query] - Direct - From {this.QueryId}";
+            return $"[Query/Response] - Direct - From {this.QueryId}";
         }
     }
 }

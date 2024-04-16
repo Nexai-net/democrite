@@ -13,15 +13,15 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Controller in charge to managed blackboard events
+    /// Controller in charge to managed blackboard eventBook
     /// </summary>
     /// <seealso cref="IBlackboardBaseControllerGrain" />
     public interface IBlackboardEventControllerGrain : IBlackboardBaseControllerGrain
     {
         /// <summary>
-        /// Reacts to events
+        /// Reacts to eventBook
         /// </summary>
-        Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(IReadOnlyCollection<BlackboardEvent> events, GrainCancellationToken token);
+        Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token);
 
         /// <summary>
         /// Process a incoming query
@@ -32,6 +32,6 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers
         ///     <see cref="DeferredResponseBlackboardCommand"/> : Define reponse will arrived later through the deferred reponse democrite system. <br/>
         ///     <see cref="ResponseBlackboardCommand{TResponseRequested}"/> : Provide directly the query response. <br/>
         /// </returns>
-        Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardQueryRequest request, GrainCancellationToken token);
+        Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardBaseQuery request, GrainCancellationToken token);
     }
 }
