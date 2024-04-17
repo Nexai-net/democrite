@@ -152,7 +152,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 resolutionActions.Add(new BlackboardCommandStorageAddRecord<TData>(sourceInjected, true, true));
 
             if (resolutionActions.Any() == false)
-                resolutionActions.Add(new RejectActionBlackboardCommand(issue));
+                resolutionActions.Add(new BlackboardCommandRejectAction(issue));
 
             return ValueTask.FromResult<IReadOnlyCollection<BlackboardCommand>?>(resolutionActions);
         }

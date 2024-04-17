@@ -58,8 +58,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
         /// </remarks>
         public IReadOnlyCollection<TData?> GetDatas()
         {
-            return this._data.Select(d => d.Data)
-                             .Distinct()
+            return this._data.GroupBy(d => d.Uid)
+                             .Select(grp => grp.First().Data)
                              .ToReadOnly(); 
         }
 

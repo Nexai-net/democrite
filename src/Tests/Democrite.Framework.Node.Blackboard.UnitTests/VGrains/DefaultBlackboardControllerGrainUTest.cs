@@ -303,8 +303,8 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
             var resolutionSteps = await grain.ResolvePushIssueAsync(issue, newRecord, cancellToken);
 
             Check.That(resolutionSteps).IsNotNull().And.CountIs(1);
-            Check.That(resolutionSteps!.First()).IsInstanceOf<RejectActionBlackboardCommand>();
-            Check.That(((RejectActionBlackboardCommand)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
+            Check.That(resolutionSteps!.First()).IsInstanceOf<BlackboardCommandRejectAction>();
+            Check.That(((BlackboardCommandRejectAction)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
         }
 
         /// <summary>
@@ -448,8 +448,8 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
             var resolutionSteps = await grain.ResolvePushIssueAsync(issue, newRecord, cancellToken);
 
             Check.That(resolutionSteps).IsNotNull().And.CountIs(1);
-            Check.That(resolutionSteps!.First()).IsInstanceOf<RejectActionBlackboardCommand>();
-            Check.That(((RejectActionBlackboardCommand)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
+            Check.That(resolutionSteps!.First()).IsInstanceOf<BlackboardCommandRejectAction>();
+            Check.That(((BlackboardCommandRejectAction)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
         }
 
         /// <summary>
@@ -568,8 +568,8 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
             var resolutionSteps = await grain.ResolvePushIssueAsync(issue, newRecord, cancellToken);
 
             Check.That(resolutionSteps).IsNotNull().And.CountIs(1);
-            Check.That(resolutionSteps!.First()).IsInstanceOf<RejectActionBlackboardCommand>();
-            Check.That(((RejectActionBlackboardCommand)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
+            Check.That(resolutionSteps!.First()).IsInstanceOf<BlackboardCommandRejectAction>();
+            Check.That(((BlackboardCommandRejectAction)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
         }
 
         /// <summary>
@@ -723,8 +723,8 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
             var resolutionSteps = await grain.ResolvePushIssueAsync(issue, newRecord, cancellToken);
 
             Check.That(resolutionSteps).IsNotNull().And.CountIs(1);
-            Check.That(resolutionSteps!.First()).IsInstanceOf<RejectActionBlackboardCommand>();
-            Check.That(((RejectActionBlackboardCommand)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
+            Check.That(resolutionSteps!.First()).IsInstanceOf<BlackboardCommandRejectAction>();
+            Check.That(((BlackboardCommandRejectAction)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
         }
 
         /// <summary>
@@ -840,8 +840,8 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
             var resolutionSteps = await grain.ResolvePushIssueAsync(issue, newRecord, cancellToken);
 
             Check.That(resolutionSteps).IsNotNull().And.CountIs(1);
-            Check.That(resolutionSteps!.First()).IsInstanceOf<RejectActionBlackboardCommand>();
-            Check.That(((RejectActionBlackboardCommand)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
+            Check.That(resolutionSteps!.First()).IsInstanceOf<BlackboardCommandRejectAction>();
+            Check.That(((BlackboardCommandRejectAction)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
         }
 
         /// <summary>
@@ -989,8 +989,8 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
             var resolutionSteps = await grain.ResolvePushIssueAsync(issue, newRecord, cancellToken);
 
             Check.That(resolutionSteps).IsNotNull().And.CountIs(1);
-            Check.That(resolutionSteps!.First()).IsInstanceOf<RejectActionBlackboardCommand>();
-            Check.That(((RejectActionBlackboardCommand)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
+            Check.That(resolutionSteps!.First()).IsInstanceOf<BlackboardCommandRejectAction>();
+            Check.That(((BlackboardCommandRejectAction)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
         }
 
         /// <summary>
@@ -1109,8 +1109,8 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
             var resolutionSteps = await grain.ResolvePushIssueAsync(issue, newRecord, cancellToken);
 
             Check.That(resolutionSteps).IsNotNull().And.CountIs(1);
-            Check.That(resolutionSteps!.First()).IsInstanceOf<RejectActionBlackboardCommand>();
-            Check.That(((RejectActionBlackboardCommand)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
+            Check.That(resolutionSteps!.First()).IsInstanceOf<BlackboardCommandRejectAction>();
+            Check.That(((BlackboardCommandRejectAction)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
         }
 
         /// <summary>
@@ -1264,8 +1264,8 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
             var resolutionSteps = await grain.ResolvePushIssueAsync(issue, newRecord, cancellToken);
 
             Check.That(resolutionSteps).IsNotNull().And.CountIs(1);
-            Check.That(resolutionSteps!.First()).IsInstanceOf<RejectActionBlackboardCommand>();
-            Check.That(((RejectActionBlackboardCommand)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
+            Check.That(resolutionSteps!.First()).IsInstanceOf<BlackboardCommandRejectAction>();
+            Check.That(((BlackboardCommandRejectAction)resolutionSteps!.First()).SourceIssue).IsSameReferenceAs(issue);
         }
     }
 }

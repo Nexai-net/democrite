@@ -73,6 +73,21 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Events
             }
         }
 
+        /// <summary>
+        /// Gets the count of LifeStatusChanged events.
+        /// </summary>
+        [IgnoreDataMember]
+        public int LifeStatusChangedEventCount
+        {
+            get
+            {
+                if (this._indexedEvents.TryGetValue(BlackboardEventTypeEnum.LifeStatusChanged, out var events))
+                    return events.Count;
+
+                return 0;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -90,21 +105,50 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Events
         /// </summary>
         public IReadOnlyCollection<BlackboardEventStorage> GetEventStorages(Func<BlackboardEventStorage, bool>? filter = null)
         {
-            if (this._indexedEvents.TryGetValue(BlackboardEventTypeEnum.Storage, out var storages) && storages is not null)
+            return GetFilteredEvents(BlackboardEventTypeEnum.Storage, filter);
+        }
+
+        /// <summary>
+        /// Gets the event storages filtered by type
+        /// </summary>
+        public IReadOnlyCollection<BlackboardEventLifeStatusChanged> GetLifeStatusChangedEvent(BlackboardLifeStatusEnum status)
+        {
+            return GetLifeStatusChangedEvent(e => e.NewStatus == status);
+        }
+
+        /// <summary>
+        /// Gets the event storages filtered
+        /// </summary>
+        public IReadOnlyCollection<BlackboardEventLifeStatusChanged> GetLifeStatusChangedEvent(Func<BlackboardEventLifeStatusChanged, bool>? filter = null)
+        {
+            return GetFilteredEvents(BlackboardEventTypeEnum.LifeStatusChanged, filter);
+        }
+
+        #region Toolbox
+
+        /// <summary>
+        /// Gets the event storages filtered
+        /// </summary>
+        private IReadOnlyCollection<TEvent> GetFilteredEvents<TEvent>(BlackboardEventTypeEnum eventType, Func<TEvent, bool>? filter = null)
+            where TEvent : BlackboardEvent
+        {
+            if (this._indexedEvents.TryGetValue(eventType, out var allEvents) && allEvents is not null)
             {
-                var events = storages.Where(kv => kv.Event is BlackboardEventStorage);
+                var events = allEvents.Where(kv => kv.Event is TEvent);
 
                 if (filter is not null)
-                    events = events.Where(kv => filter((BlackboardEventStorage)kv.Event));
+                    events = events.Where(kv => filter((TEvent)kv.Event));
 
                 return events.OrderBy(e => e.Index)
                              .Select(e => e.Event)
-                             .Cast<BlackboardEventStorage>()
+                             .Cast<TEvent>()
                              .ToArray();
             }
 
-            return EnumerableHelper<BlackboardEventStorage>.ReadOnly;
+            return EnumerableHelper<TEvent>.ReadOnly;
         }
+
+        #endregion
 
         #endregion
     }

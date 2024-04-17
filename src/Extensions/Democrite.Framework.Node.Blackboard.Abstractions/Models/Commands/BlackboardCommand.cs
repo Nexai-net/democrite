@@ -31,16 +31,16 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed record class RejectActionBlackboardCommand(BlackboardProcessingIssue SourceIssue) : BlackboardCommand(BlackboardCommandTypeEnum.Reject)
+    public sealed record class BlackboardCommandRejectAction(BlackboardProcessingIssue SourceIssue) : BlackboardCommand(BlackboardCommandTypeEnum.Reject)
     {
         #region Ctor
 
         /// <summary>
         /// .cctors this instance.
         /// </summary>
-        static RejectActionBlackboardCommand()
+        static BlackboardCommandRejectAction()
         {
-            Default = new RejectActionBlackboardCommand(BlackboardNotSupportedProcessingIssue.Default);
+            Default = new BlackboardCommandRejectAction(BlackboardNotSupportedProcessingIssue.Default);
         }
 
         #endregion
@@ -50,7 +50,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
         /// <summary>
         /// Gets the default reject command.
         /// </summary>
-        public static RejectActionBlackboardCommand Default { get; }
+        public static BlackboardCommandRejectAction Default { get; }
 
         #endregion
 
@@ -68,7 +68,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed record class DeferredResponseBlackboardCommand(Guid QueryUid) : BlackboardCommand(BlackboardCommandTypeEnum.Deferred)
+    public sealed record class BlackboardCommandDeferredResponse(Guid QueryUid) : BlackboardCommand(BlackboardCommandTypeEnum.Deferred)
     {
         /// <inheritdoc />
         public override string ToDebugDisplayName()
@@ -84,7 +84,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed record class ResponseBlackboardCommand<TResponse>(TResponse Response, Guid QueryUid) : BlackboardCommand(BlackboardCommandTypeEnum.Reponse)
+    public sealed record class BlackboardCommandResponse<TResponse>(TResponse Response, Guid QueryUid) : BlackboardCommand(BlackboardCommandTypeEnum.Reponse)
     {
         /// <inheritdoc />
         public override string ToDebugDisplayName()
@@ -100,7 +100,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed record class RetryDeferredQueryBlackboardCommand() : BlackboardCommand(BlackboardCommandTypeEnum.RetryDeferred)
+    public sealed record class BlackboardCommandRetryDeferredQuery() : BlackboardCommand(BlackboardCommandTypeEnum.RetryDeferred)
     {
         /// <inheritdoc />
         public override string ToDebugDisplayName()
@@ -110,18 +110,34 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     }
 
     /// <summary>
-    /// Command used to request a stae change
+    /// Command used to change the blackboard life status
     /// </summary>
     [Immutable]
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed record class StateRequestedChangeBlackboardCommand(BlackboardLifeStatusEnum NewState) : BlackboardCommand(BlackboardCommandTypeEnum.StateRequestedChange)
+    public record class BlackboardCommandLifeStatusChange(BlackboardLifeStatusEnum NewStatus, BlackboardLifeStatusEnum OldStatus) : BlackboardCommand(BlackboardCommandTypeEnum.LifeStatusChange)
     {
         /// <inheritdoc />
         public override string ToDebugDisplayName()
         {
-            return $"[{this.ActionType}] - State change {this.NewState}";
+            return $"[{this.ActionType}] - Life Status change {this.NewStatus}";
+        }
+    }
+
+    /// <summary>
+    /// Command used to change the blackboard life status
+    /// </summary>
+    [Immutable]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public record class BlackboardCommandLifeInitializeChange(BlackboardLifeStatusEnum OldStatus, IReadOnlyCollection<DataRecordContainer>? InitData = null) : BlackboardCommandLifeStatusChange(BlackboardLifeStatusEnum.Running, OldStatus)
+    {
+        /// <inheritdoc />
+        public override string ToDebugDisplayName()
+        {
+            return $"[{this.ActionType}] - Life Init Status change {this.NewStatus}";
         }
     }
 }

@@ -17,6 +17,6 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
         Deferred,
         RetryDeferred,
         Reponse,
-        StateRequestedChange,
+        LifeStatusChange,
     }
 }

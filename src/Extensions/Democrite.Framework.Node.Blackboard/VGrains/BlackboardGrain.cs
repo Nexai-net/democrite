@@ -39,6 +39,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
+    using Newtonsoft.Json.Linq;
+
     using Orleans;
     using Orleans.Runtime;
 
@@ -66,6 +68,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
         private static readonly IReadOnlyDictionary<BlackboardCommandStorageActionTypeEnum, Func<BlackboardGrain, BlackboardCommandStorage, CommandExecutionContext, Task<bool>>> s_rootCommandStorageExecutor;
         private static readonly IReadOnlyDictionary<BlackboardCommandTriggerActionTypeEnum, Func<BlackboardGrain, BlackboardCommandTrigger, CommandExecutionContext, Task<bool>>> s_rootCommandTriggerExecutor;
+        private static readonly IReadOnlyDictionary<BlackboardLifeStatusEnum, Func<BlackboardGrain, BlackboardCommandLifeStatusChange, CommandExecutionContext, Task<bool>>> s_lifeStatusCommandTriggerExecutor;
 
         private static readonly MethodInfo s_cmdTriggerSequence;
         private static readonly MethodInfo s_addCommandToStorage;
@@ -84,6 +87,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         private readonly IGrainOrleanFactory _grainOrleanFactory;
         private readonly IRepositoryFactory _repositoryFactory;
         private readonly IServiceProvider _serviceProvider;
+        private readonly SemaphoreSlim _saveStateLocker;
         private readonly ISignalService _signalService;
         private readonly IObjectConverter _converter;
         private readonly ITimeManager _timeManager;
@@ -128,6 +132,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             {
                 { BlackboardCommandTypeEnum.Storage, (g, cmd, ctx) => CommandExecuteAsync(s_rootCommandStorageExecutor!, c => c.StorageAction, g, (BlackboardCommandStorage)cmd, ctx) },
                 { BlackboardCommandTypeEnum.Trigger, (g, cmd, ctx) => CommandExecuteAsync(s_rootCommandTriggerExecutor!, c => c.TriggerActionType, g, (BlackboardCommandTrigger)cmd, ctx) },
+                { BlackboardCommandTypeEnum.LifeStatusChange, (g, cmd, ctx) => CommandExecuteAsync(s_lifeStatusCommandTriggerExecutor!, c => c.NewStatus, g, (BlackboardCommandLifeStatusChange)cmd, ctx) },
 
                 { BlackboardCommandTypeEnum.Reject, CommandExecuteRejectAsync },
                 { BlackboardCommandTypeEnum.RetryDeferred, (g, cmd, ctx) => g.CommandExecuteRetryDeferredAsync(cmd, ctx) },
@@ -147,7 +152,13 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             {
                 { BlackboardCommandTriggerActionTypeEnum.Sequence, (g, cmd, ctx) => CommandGenericCall(g, cmd, ctx, s_cmdTriggerSequence) },
                 { BlackboardCommandTriggerActionTypeEnum.Signal, (g, cmd, ctx) => g.Command_TriggerSignal((BlackboardCommandTriggerSignal)cmd, ctx) }
+            }.ToFrozenDictionary();
 
+            s_lifeStatusCommandTriggerExecutor = new Dictionary<BlackboardLifeStatusEnum, Func<BlackboardGrain, BlackboardCommandLifeStatusChange, CommandExecutionContext, Task<bool>>>()
+            {
+                { BlackboardLifeStatusEnum.Running, (g, cmd, ctx) => g.Command_LifeStatus_Initialize((BlackboardCommandLifeInitializeChange)cmd, ctx) },
+                { BlackboardLifeStatusEnum.Sealed, (g, cmd, ctx) => g.Command_LifeStatus_Sealed(cmd, ctx) },
+                { BlackboardLifeStatusEnum.Done, (g, cmd, ctx) => g.Command_LifeStatus_Changed(cmd, ctx) },
             }.ToFrozenDictionary();
 
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
@@ -176,6 +187,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             : base(logger, persistentState)
         {
+            this._saveStateLocker = new SemaphoreSlim(1);
+
             this._signalService = signalService;
             this._democriteSerializer = democriteSerializer;
             this._systemVGrainProvider = systemVGrainProvider;
@@ -209,50 +222,52 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             if (this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.Sealed)
                 return false;
 
-            this.State!.CurrentLifeStatus = BlackboardLifeStatusEnum.Sealed;
-            await PushStateAsync(token.CancellationToken);
+            return await CommandExecutionStartPointAsync(token.CancellationToken, new BlackboardCommandLifeStatusChange(BlackboardLifeStatusEnum.Sealed, this.State!.CurrentLifeStatus));
 
-            this._sealing = true;
+            //this.State!.CurrentLifeStatus = BlackboardLifeStatusEnum.Sealed;
+            //await PushStateAsync(token.CancellationToken);
 
-            try
-            {
-                IReadOnlyCollection<BlackboardRecordMetadata> metaDatas;
-                using (this._metaDataLocker.Lock())
-                {
-                    metaDatas = this.State!.Registry.RecordMetadatas.Values.ToArray();
-                }
+            //this._sealing = true;
 
-                var logicalTypeToRemain = this._logicalHandlers.Where(h => h.RemainOnSealed)
-                                                               .ToArray();
+            //try
+            //{
+            //    IReadOnlyCollection<BlackboardRecordMetadata> metaDatas;
+            //    using (this._metaDataLocker.Lock())
+            //    {
+            //        metaDatas = this.State!.Registry.RecordMetadatas.Values.ToArray();
+            //    }
 
-                var toKeepOnSealed = metaDatas.Where(m => m.Status == RecordStatusEnum.Ready && logicalTypeToRemain.Any(h => h.Match(m.LogicalType)))
-                                              .ToArray();
+            //    var logicalTypeToRemain = this._logicalHandlers.Where(h => h.RemainOnSealed)
+            //                                                   .ToArray();
 
-                var toRemove = metaDatas.Except(toKeepOnSealed)
-                                        .ToArray();
+            //    var toKeepOnSealed = metaDatas.Where(m => m.Status == RecordStatusEnum.Ready && logicalTypeToRemain.Any(h => h.Match(m.LogicalType)))
+            //                                  .ToArray();
 
-                var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, token.CancellationToken);
+            //    var toRemove = metaDatas.Except(toKeepOnSealed)
+            //                            .ToArray();
 
-                BlackboardCommand[]? sealingCommands = null;
+            //    var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, token.CancellationToken);
 
-                if (stateController is not null)
-                {
-                    sealingCommands = (await stateController.OnSealed(toKeepOnSealed, toRemove, token))?.ToArray();
-                }
-                else
-                {
-                    sealingCommands = toRemove.Select(t => new BlackboardCommandStorageRemoveRecord(t.Uid)).ToArray();
-                }
+            //    BlackboardCommand[]? sealingCommands = null;
 
-                if (sealingCommands is not null)
-                    await this.CommandExecutionStartPointAsync(token.CancellationToken, sealingCommands);
+            //    if (stateController is not null)
+            //    {
+            //        sealingCommands = (await stateController.OnSealed(toKeepOnSealed, toRemove, token))?.ToArray();
+            //    }
+            //    else
+            //    {
+            //        sealingCommands = toRemove.Select(t => new BlackboardCommandStorageRemoveRecord(t.Uid)).ToArray();
+            //    }
 
-                return true;
-            }
-            finally
-            {
-                this._sealing = false;
-            }
+            //    if (sealingCommands is not null)
+            //        await this.CommandExecutionStartPointAsync(token.CancellationToken, sealingCommands);
+
+            //    return true;
+            //}
+            //finally
+            //{
+            //    this._sealing = false;
+            //}
         }
 
         /// <inheritdoc />
@@ -261,36 +276,38 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             if (this.State!.CurrentLifeStatus != BlackboardLifeStatusEnum.WaitingInitialization)
                 return false;
 
-            this._initializing = true;
-            try
-            {
-                //this.State.TemplateCopy.ConfigurationDefinition.InitializationRequired
+            return await CommandExecutionStartPointAsync(token.CancellationToken, new BlackboardCommandLifeInitializeChange(BlackboardLifeStatusEnum.WaitingInitialization, initData));
 
-                BlackboardCommand[]? initCommands = null;
+            //this._initializing = true;
+            //try
+            //{
+            //    //this.State.TemplateCopy.ConfigurationDefinition.InitializationRequired
 
-                var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, token.CancellationToken);
+            //    BlackboardCommand[]? initCommands = null;
 
-                if (stateController is null)
-                {
-                    initCommands = initData?.Select(d => d.CreateAddCommand(true, true))
-                                            .ToArray();
-                }
-                else
-                {
-                    initCommands = (await stateController.OnInitialize(initData ?? EnumerableHelper<DataRecordContainer>.ReadOnly, token))?.ToArray();
-                }
+            //    var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, token.CancellationToken);
 
-                if (initCommands is not null)
-                    await this.CommandExecutionStartPointAsync(token.CancellationToken, initCommands);
+            //    if (stateController is null)
+            //    {
+            //        initCommands = initData?.Select(d => d.CreateAddCommand(true, true))
+            //                                .ToArray();
+            //    }
+            //    else
+            //    {
+            //        initCommands = (await stateController.OnInitialize(initData ?? EnumerableHelper<DataRecordContainer>.ReadOnly, token))?.ToArray();
+            //    }
 
-                this.State.CurrentLifeStatus = BlackboardLifeStatusEnum.Running;
-                await PushStateAsync(default);
-            }
-            finally
-            {
-                this._initializing = false;
-            }
-            return true;
+            //    if (initCommands is not null)
+            //        await this.CommandExecutionStartPointAsync(token.CancellationToken, initCommands);
+
+            //    this.State.CurrentLifeStatus = BlackboardLifeStatusEnum.Running;
+            //    await PushStateAsync(default);
+            //}
+            //finally
+            //{
+            //    this._initializing = false;
+            //}
+            //return true;
         }
 
         /// <inheritdoc />
@@ -634,19 +651,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
                 if (result)
                 {
-                    // Force save all the 10 push this is to prevent any data lost
-                    if (Interlocked.Increment(ref this._saveCounter) > 10)
-                    {
-                        await this._delaySaving.StopAsync(token);
-                        await DelayPushStateAsync(token);
-                    }
-
-                    // otherwise restart the timer to delay the save
-
-                    // Restart in fire and forget mode the timer to save to prevent save state each time
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    Task.Run(() => this._delaySaving.StartAsync()).ConfigureAwait(false);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    await BlackboardGrainStateSaving(false, token).ConfigureAwait(false);
                 }
 
                 if (newEvents is not null && newEvents.Length > 0)
@@ -664,6 +669,27 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
                 return result;
             }
+        }
+
+        /// <summary>
+        /// Blackboards the grain state saving.
+        /// </summary>
+        private async Task BlackboardGrainStateSaving(bool force, CancellationToken token)
+        {
+            // Force save all the 10 push this is to prevent any data lost
+            if (force && Interlocked.Increment(ref this._saveCounter) > 10)
+            {
+                await this._delaySaving.StopAsync(token);
+                await DelayPushStateAsync(token);
+                return;
+            }
+
+            // otherwise restart the timer to delay the save
+
+            // Restart in fire and forget mode the timer to save to prevent save state each time
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() => this._delaySaving.StartAsync()).ConfigureAwait(false);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         /// <summary>
@@ -798,9 +824,16 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         {
             await Task.Factory.StartNew(async () =>
             {
-                Interlocked.Exchange(ref this._saveCounter, 0);
-                await PushStateAsync(token);
-
+                await this._saveStateLocker.WaitAsync(token);
+                try
+                {
+                    Interlocked.Exchange(ref this._saveCounter, 0);
+                    await PushStateAsync(token);
+                }
+                finally
+                {
+                    this._saveStateLocker.Release();
+                }
             }, token, TaskCreationOptions.None, scheduler: this._activationScheduler!);
         }
 
@@ -895,7 +928,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         private static Task<bool> CommandExecuteRejectAsync(BlackboardGrain grain, BlackboardCommand command, CommandExecutionContext context)
         {
-            grain.Logger.OptiLog(LogLevel.Warning, "Command rejected by the controller after the folling issue {issue}", ((RejectActionBlackboardCommand)command).SourceIssue);
+            grain.Logger.OptiLog(LogLevel.Warning, "Command rejected by the controller after the folling issue {issue}", ((BlackboardCommandRejectAction)command).SourceIssue);
             return Task.FromResult(false);
         }
 
@@ -1040,7 +1073,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             var ctrlResponses = await ctrller.ProcessRequestAsync<TResponse>(query, token);
 
             if (ctrlResponses is null)
-                ctrlResponses = RejectActionBlackboardCommand.Default.AsEnumerable().ToArray();
+                ctrlResponses = BlackboardCommandRejectAction.Default.AsEnumerable().ToArray();
 
             BlackboardQueryResponse? queryResponse = null;
 
@@ -1048,13 +1081,13 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                       .GroupBy(rep => rep.ActionType)
                                       .ToDictionary(k => k.Key, v => v.Last());
 
-            if (result.TryGetValue(BlackboardCommandTypeEnum.Reponse, out var direct) && direct is ResponseBlackboardCommand<TResponse> reponseCmd)
+            if (result.TryGetValue(BlackboardCommandTypeEnum.Reponse, out var direct) && direct is BlackboardCommandResponse<TResponse> reponseCmd)
             {
                 queryResponse = new BlackboardQueryDirectResponse<TResponse>(reponseCmd.Response, queryUid);
                 if (runningDeferred is not null)
                     await this._deferredHandler.FinishDeferredWorkStatusAsync(runningDeferred.Value.DeferredId.Uid, this.IdentityCard, reponseCmd.Response);
             }
-            else if (result.TryGetValue(BlackboardCommandTypeEnum.Reject, out var rejected) && rejected is RejectActionBlackboardCommand rejectCmd)
+            else if (result.TryGetValue(BlackboardCommandTypeEnum.Reject, out var rejected) && rejected is BlackboardCommandRejectAction rejectCmd)
             {
                 if (runningDeferred is not null)
                 {
@@ -1066,7 +1099,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 }
                 queryResponse = new BlackboardQueryRejectedResponse(rejectCmd.SourceIssue?.ToDebugDisplayName());
             }
-            else if (result.TryGetValue(BlackboardCommandTypeEnum.Deferred, out var deferred) && deferred is DeferredResponseBlackboardCommand deferredCmd)
+            else if (result.TryGetValue(BlackboardCommandTypeEnum.Deferred, out var deferred) && deferred is BlackboardCommandDeferredResponse deferredCmd)
             {
                 DeferredId deferredWorkUid;
 
@@ -1098,7 +1131,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             }
 
             if (saveState)
-                await this.PushStateAsync(token.CancellationToken);
+                await BlackboardGrainStateSaving(true, token.CancellationToken);
+            //await this.PushStateAsync(token.CancellationToken);
 
             // Check remain command that are not dedicated to query result
             // Those remain command are executed at the end to prevent any deadlock loop due to a command that could retry the deferred request
@@ -1348,7 +1382,132 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             return fireId != Guid.Empty;
         }
 
+        /// <summary>
+        /// Commands the life status initialize.
+        /// </summary>
+        private async Task<bool> Command_LifeStatus_Initialize(BlackboardCommandLifeInitializeChange cmd, CommandExecutionContext ctx)
+        {
+            if (this.State!.CurrentLifeStatus != BlackboardLifeStatusEnum.WaitingInitialization)
+                return false;
+
+            this._initializing = true;
+            try
+            {
+                BlackboardCommand[]? initCommands = null;
+
+                var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, ctx.CancellationToken);
+
+                if (stateController is null)
+                {
+                    initCommands = cmd.InitData?.Select(d => d.CreateAddCommand(true, true))
+                                            .ToArray();
+                }
+                else
+                {
+                    using (var tokenSource = ctx.CancellationToken.ToGrainCancellationTokenSource())
+                    {
+                        initCommands = (await stateController.OnInitialize(cmd.InitData ?? EnumerableHelper<DataRecordContainer>.ReadOnly, tokenSource.Token))?.ToArray();
+                    }
+                }
+
+                if (initCommands is not null)
+                    await this.CommandExecutionStartPointAsync(ctx.CancellationToken, initCommands, ctx);
+
+                await Command_LifeStatus_Changed(cmd, ctx);
+            }
+            finally
+            {
+                this._initializing = false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Commands the life status sealed.
+        /// </summary>
+        private async Task<bool> Command_LifeStatus_Changed(BlackboardCommandLifeStatusChange cmd, CommandExecutionContext ctx)
+        {
+            if (cmd.OldStatus != this.State!.CurrentLifeStatus)
+                throw new InvalidOperationException("Invalid previous state");
+
+            this.State!.CurrentLifeStatus = cmd.NewStatus;
+            //await PushStateAsync(ctx.CancellationToken);
+            await BlackboardGrainStateSaving(true, ctx.CancellationToken);
+
+            ctx.EnqueueEvent(new BlackboardEventLifeStatusChanged(cmd.NewStatus, cmd.OldStatus));
+
+            return true;
+        }
+
+        /// <summary>
+        /// Commands the life status sealed.
+        /// </summary>
+        private async Task<bool> Command_LifeStatus_Sealed(BlackboardCommandLifeStatusChange cmd, CommandExecutionContext ctx)
+        {
+            if (this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.Sealed)
+                return false;
+
+            await Command_LifeStatus_Changed(cmd, ctx);
+
+            this._sealing = true;
+
+            try
+            {
+                IReadOnlyCollection<BlackboardRecordMetadata> metaDatas;
+                using (this._metaDataLocker.Lock())
+                {
+                    metaDatas = this.State!.Registry.RecordMetadatas.Values.ToArray();
+                }
+
+                var logicalTypeToRemain = this._logicalHandlers.Where(h => h.RemainOnSealed)
+                                                               .ToArray();
+
+                var toKeepOnSealed = metaDatas.Where(m => m.Status == RecordStatusEnum.Ready && logicalTypeToRemain.Any(h => h.Match(m.LogicalType)))
+                                              .ToArray();
+
+                var toRemove = metaDatas.Except(toKeepOnSealed)
+                                        .ToArray();
+
+                var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, ctx.CancellationToken);
+
+                BlackboardCommand[]? sealingCommands = null;
+
+                if (stateController is not null)
+                {
+                    using (var tokenSource = ctx.CancellationToken.ToGrainCancellationTokenSource())
+                    {
+                        sealingCommands = (await stateController.OnSealed(toKeepOnSealed, toRemove, tokenSource.Token))?.ToArray();
+                    }
+                }
+                else
+                {
+                    sealingCommands = toRemove.Select(t => new BlackboardCommandStorageRemoveRecord(t.Uid)).ToArray();
+                }
+
+                if (sealingCommands is not null)
+                    await this.CommandExecutionStartPointAsync(ctx.CancellationToken, sealingCommands, ctx);
+
+                return true;
+            }
+            finally
+            {
+                this._sealing = false;
+            }
+        }
+
         #endregion
+
+        /// <inheritdoc />
+        protected override void DisposeResourcesEnd()
+        {
+            this._delaySaving.DisposeAsync().AsTask().ContinueWith((_) =>
+            {
+                this._metaDataLocker.Dispose();
+                this._saveStateLocker.Dispose();
+            });
+
+            base.DisposeResourcesEnd();
+        }
 
         #endregion
 

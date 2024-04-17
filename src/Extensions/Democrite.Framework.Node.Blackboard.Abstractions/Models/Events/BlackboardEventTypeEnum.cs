@@ -13,5 +13,6 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Events
         Storage,
         Reject,
         Trigger,
+        LifeStatusChanged
     }
 }

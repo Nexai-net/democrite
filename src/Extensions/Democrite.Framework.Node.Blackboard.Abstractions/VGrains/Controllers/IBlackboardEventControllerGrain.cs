@@ -28,9 +28,9 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers
         /// </summary>
         /// <returns>
         /// Specific command responses: <br/>
-        ///     <see cref="RejectActionBlackboardCommand"/> : If query type is not supported. <br/>
-        ///     <see cref="DeferredResponseBlackboardCommand"/> : Define reponse will arrived later through the deferred reponse democrite system. <br/>
-        ///     <see cref="ResponseBlackboardCommand{TResponseRequested}"/> : Provide directly the query response. <br/>
+        ///     <see cref="BlackboardCommandRejectAction"/> : If query type is not supported. <br/>
+        ///     <see cref="BlackboardCommandDeferredResponse"/> : Define reponse will arrived later through the deferred reponse democrite system. <br/>
+        ///     <see cref="BlackboardCommandResponse{TResponseRequested}"/> : Provide directly the query response. <br/>
         /// </returns>
         Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardBaseQuery request, GrainCancellationToken token);
     }

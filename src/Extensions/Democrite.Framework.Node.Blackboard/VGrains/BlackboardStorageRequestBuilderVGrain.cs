@@ -80,7 +80,6 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                                                                             IExecutionContext<TContextInfo> context)
             where TContextInfo : IDataRecordPullRequestOption
         {
-
             return await GetPullTargetWithInputImpl(data, context.Configuration, context);
         }
 

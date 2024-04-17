@@ -29,7 +29,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     {
         #region Fields
 
-        private static readonly IReadOnlyCollection<BlackboardCommand> s_defaultRejectRequest = RejectActionBlackboardCommand.Default.AsEnumerable().ToArray();
+        private static readonly IReadOnlyCollection<BlackboardCommand> s_defaultRejectRequest = BlackboardCommandRejectAction.Default.AsEnumerable().ToArray();
         
         #endregion
 
@@ -75,7 +75,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     {
         #region Fields
 
-        private static readonly IReadOnlyCollection<BlackboardCommand> s_defaultRejectRequest = RejectActionBlackboardCommand.Default.AsEnumerable().ToArray();
+        private static readonly IReadOnlyCollection<BlackboardCommand> s_defaultRejectRequest = BlackboardCommandRejectAction.Default.AsEnumerable().ToArray();
         
         #endregion
 
@@ -124,7 +124,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     {
         #region Fields
 
-        private static readonly IReadOnlyCollection<BlackboardCommand> s_defaultRejectRequest = RejectActionBlackboardCommand.Default.AsEnumerable().ToArray();
+        private static readonly IReadOnlyCollection<BlackboardCommand> s_defaultRejectRequest = BlackboardCommandRejectAction.Default.AsEnumerable().ToArray();
         
         #endregion
 
