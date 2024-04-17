@@ -41,7 +41,6 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
     using Orleans;
     using Orleans.Runtime;
-    using Orleans.Serialization.Invocation;
 
     using System.Collections.Frozen;
     using System.Collections.Generic;
@@ -656,7 +655,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
                     if (eventController is not null)
                     {
-                        var eventActions = await eventController.ReactToEventsAsync(new BlackboardEventBook(newEvents), token.ToGrainCancellationToken().Token);
+                        var eventActions = await eventController.ReactToEventsAsync(new BlackboardEventBook(newEvents), token.ToGrainCancellationTokenSource().Token);
 
                         if (eventActions is not null && eventActions.Any())
                             await CommandExecutionStartPointAsync(token, eventActions, execContext);
@@ -911,7 +910,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             bool requestSolved = false;
 
-            using (var grainCancellation = ctx.CancellationToken.ToGrainCancellationToken())
+            using (var grainCancellation = ctx.CancellationToken.ToGrainCancellationTokenSource())
             {
                 foreach (var req in pendingRequests)
                 {
@@ -974,7 +973,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 {
                     try
                     {
-                        using (var grainCancelToken = ctx.CancellationToken.ToGrainCancellationToken())
+                        using (var grainCancelToken = ctx.CancellationToken.ToGrainCancellationTokenSource())
                         {
                             solvingActions = await controller.ResolvePushIssueAsync(storageIssue, record, grainCancelToken.Token);
                         }

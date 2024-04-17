@@ -87,7 +87,7 @@ namespace Democrite.Framework.Node.Signals.Doors
             try
             {
                 using (var token = this._cancellationContext.Lock())
-                using (var grainCancellationToken = token.Content.ToGrainCancellationToken())
+                using (var grainCancellationToken = token.Content.ToGrainCancellationTokenSource())
                 {
                     var allDoordDefinitions = await this._doorDefinitionProvider.GetAllValuesAsync(token.Content);
 

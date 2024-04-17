@@ -9,8 +9,8 @@ namespace Democrite.Framework.Node.Signals
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Node.Abstractions.Services;
 
+    using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Extensions;
 
@@ -37,6 +37,7 @@ namespace Democrite.Framework.Node.Signals
         private readonly ITimeManager _timeManager;
 
         private SignalDefinition? _signalDefinition;
+        private ISignalHandlerVGrain? _parentSignalHandler;
 
         #endregion
 
@@ -46,7 +47,7 @@ namespace Democrite.Framework.Node.Signals
         /// Initializes a new instance of the <see cref="SignalHandlerVGrain"/> class.
         /// </summary>
         public SignalHandlerVGrain(ILogger<SignalHandlerVGrain> logger,
-                                   [PersistentState("Signals", nameof(Democrite))] IPersistentState<SignalHandlerStateSurrogate> persistentState,
+                                   [PersistentState("Signals", DemocriteConstants.DefaultDemocriteStateConfigurationKey)] IPersistentState<SignalHandlerStateSurrogate> persistentState,
                                    ISignalDefinitionProvider signalDefinitionProvider,
                                    IGrainOrleanFactory grainFactory,
                                    IRemoteGrainServiceFactory remoteGrainServiceFactory,
@@ -66,6 +67,9 @@ namespace Democrite.Framework.Node.Signals
         [ReadOnly]
         public async Task<Guid> Fire(Guid fireId, GrainId? sourceId, VGrainMetaData? sourceMetaData, GrainCancellationToken token)
         {
+            if (this.State is not null && this.State.HasSubscriptions == false)
+                return fireId;
+
             await EnsureInitializedAsync(token.CancellationToken);
 
             var now = this._timeManager.UtcNow;
@@ -77,15 +81,20 @@ namespace Democrite.Framework.Node.Signals
                                                 sourceId,
                                                 sourceMetaData);
 
-            return await Fire(signalSource);
+            await Fire(signalSource);
+            await RelayToParent<NoneTypeStruct>(fireId, sourceId, NoneTypeStruct.Instance, sourceMetaData, token);
+            return fireId;
         }
 
         /// <inheritdoc />
         [OneWay]
         [ReadOnly]
-        public async Task<Guid> Fire<TData>(Guid fireId, GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData, GrainCancellationToken token) 
+        public async Task<Guid> Fire<TData>(Guid fireId, GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData, GrainCancellationToken token)
             where TData : struct
         {
+            if (this.State is not null && this.State.HasSubscriptions == false)
+                return fireId;
+
             await EnsureInitializedAsync(token.CancellationToken);
 
             var now = this._timeManager.UtcNow;
@@ -99,7 +108,9 @@ namespace Democrite.Framework.Node.Signals
                                                        sourceMetaData,
                                                        data);
 
-            return await Fire(signalSource);
+            await Fire(signalSource);
+            await RelayToParent<TData>(fireId, sourceId, data, sourceMetaData, token);
+            return fireId;
         }
 
         #region Tools
@@ -109,7 +120,7 @@ namespace Democrite.Framework.Node.Signals
         /// </summary>
         protected override async ValueTask OnEnsureInitializedAsync(CancellationToken token)
         {
-            if (this._signalDefinition != null)
+            if (this._signalDefinition is not null)
                 return;
 
             var signalDefinitionId = this.GetPrimaryKey();
@@ -132,6 +143,9 @@ namespace Democrite.Framework.Node.Signals
             }
 
             this._signalDefinition = signalDefinitions.First();
+
+            if (this._signalDefinition.ParentSignalId is not null && this._signalDefinition.ParentSignalId.Value.Uid != Guid.Empty)
+                this._parentSignalHandler = this.GrainFactory.GetGrain<ISignalHandlerVGrain>(this._signalDefinition.ParentSignalId.Value.Uid);
         }
 
         /// <inheritdoc cref="ISignalVGrain.Fire"/>
@@ -142,6 +156,21 @@ namespace Democrite.Framework.Node.Signals
                                            signalSource);
 
             return await FireSignal(signal);
+        }
+
+        /// <summary>
+        /// Relays to parent if needed
+        /// </summary>
+        private async Task RelayToParent<TData>(Guid fireId, GrainId? sourceId, TData data, VGrainMetaData? sourceMetaData, GrainCancellationToken token)
+            where TData : struct
+        {
+            if (this._parentSignalHandler is not null)
+            {
+                if (NoneTypeStruct.IsEqualTo<TData>())
+                    await this._parentSignalHandler.Fire(fireId, sourceId, sourceMetaData, token);
+                else
+                    await this._parentSignalHandler.Fire(fireId, sourceId, data, sourceMetaData, token);
+            }
         }
 
         #endregion

@@ -8,6 +8,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
 
     using System;
     using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.Serialization;
 
     /// <summary>
@@ -31,10 +32,12 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// </summary>
         public SignalDefinition(Guid uid,
                                 string name,
-                                string? group = null)
+                                string? group = null,
+                                SignalId? parentSignalId = null)
             : base(uid, name, name, group: group)
         {
             this.SignalId = new SignalId(uid, name);
+            this.ParentSignalId = parentSignalId;
         }
 
         #endregion
@@ -50,6 +53,10 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         [System.Text.Json.Serialization.JsonIgnore]
         public SignalId SignalId { get; }
 
+        [Id(1)]
+        [DataMember]
+        public SignalId? ParentSignalId { get; }
+
         #endregion
 
         #region Methods
@@ -58,6 +65,19 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         protected override bool OnValidate(ILogger logger, bool matchWarningAsError = false)
         {
             return true;
+        }
+
+        /// <inheritdoc />
+        protected override bool OnSignalEquals([NotNull] SignalNetworkBasePartDefinition other)
+        {
+            return other is SignalDefinition otherSignal &&
+                   this.ParentSignalId == otherSignal.ParentSignalId;
+        }
+
+        /// <inheritdoc />
+        protected override int OnSignalGetHashCode()
+        {
+            return this.ParentSignalId?.GetHashCode() ?? 0;
         }
 
         #endregion

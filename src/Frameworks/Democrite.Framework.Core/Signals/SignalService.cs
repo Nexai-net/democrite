@@ -175,7 +175,7 @@ namespace Democrite.Framework.Core.Signals
 
             var fireId = Guid.NewGuid();
 
-            using (var grainToken = token.ToGrainCancellationToken())
+            using (var grainToken = token.ToGrainCancellationTokenSource())
             {
                 token.ThrowIfCancellationRequested();
                 if (data is NoneTypeStruct)

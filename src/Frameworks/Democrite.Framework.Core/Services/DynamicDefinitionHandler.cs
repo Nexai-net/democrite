@@ -51,7 +51,7 @@ namespace Democrite.Framework.Core.Services
         public async Task<bool> ChangeStatus(Guid definitionUid, bool isEnabled, IIdentityCard identity, CancellationToken token)
         {
             var grain = await GetHandlerVGrainAsync();
-            using (var grainCancelToken = token.ToGrainCancellationToken())
+            using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
                 return await grain.ChangeStatus(definitionUid, isEnabled, identity, grainCancelToken.Token);
             }
@@ -67,7 +67,7 @@ namespace Democrite.Framework.Core.Services
         public async Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(CancellationToken token, params Guid[] uids) where TDefinition : IDefinition
         {
             var grain = await GetHandlerVGrainAsync();
-            using (var grainCancelToken = token.ToGrainCancellationToken())
+            using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
                 return await grain.GetDefinitionAsync<TDefinition>(grainCancelToken.Token, uids);
             }
@@ -77,7 +77,7 @@ namespace Democrite.Framework.Core.Services
         public async Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, CancellationToken token) where TDefinition : IDefinition
         {
             var grain = await GetHandlerVGrainAsync();
-            using (var grainCancelToken = token.ToGrainCancellationToken())
+            using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
                 return await grain.GetDefinitionAsync<TDefinition>(filter.Serialize(), grainCancelToken.Token);
             }
@@ -87,7 +87,7 @@ namespace Democrite.Framework.Core.Services
         public async Task<IReadOnlyCollection<DynamicDefinitionMetaData>> GetDynamicDefinitionMetaDatasAsync(ConcretType? typeFilter = null, string? displayNameRegex = null, bool onlyEnabled = false, CancellationToken token = default)
         {
             var grain = await GetHandlerVGrainAsync();
-            using (var grainCancelToken = token.ToGrainCancellationToken())
+            using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
                 return await grain.GetDynamicDefinitionMetaDatasAsync(typeFilter, displayNameRegex, onlyEnabled, grainCancelToken.Token);
             }
@@ -98,7 +98,7 @@ namespace Democrite.Framework.Core.Services
             where TDefinition : class, IDefinition
         {
             var grain = await GetHandlerVGrainAsync();
-            using (var grainCancelToken = token.ToGrainCancellationToken())
+            using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
                 return await grain.PushDefinitionAsync(definition, @override, identity, grainCancelToken.Token);
             }
@@ -114,7 +114,7 @@ namespace Democrite.Framework.Core.Services
         public async Task<bool> RemoveDefinitionAsync(IIdentityCard identity, CancellationToken token, params Guid[] definitionIds)
         {
             var grain = await GetHandlerVGrainAsync();
-            using (var grainCancelToken = token.ToGrainCancellationToken())
+            using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
                 return await grain.RemoveDefinitionAsync(identity, grainCancelToken.Token, definitionIds);
             }

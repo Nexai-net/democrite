@@ -103,7 +103,7 @@ namespace Democrite.Framework.Node.UnitTests.Administrations
             Check.That(adminGrain).IsNotNull();
 
             using (var timeout = CancellationHelper.DisposableTimeout())
-            using (var cancel = timeout.Content.ToGrainCancellationToken())
+            using (var cancel = timeout.Content.ToGrainCancellationTokenSource())
             {
                 var uid = await adminGrain.SubscribeRouteChangeAsync(listener.GetDedicatedGrainId<IAdminEventReceiver>(), cancel.Token);
 
@@ -126,7 +126,7 @@ namespace Democrite.Framework.Node.UnitTests.Administrations
             Check.That(adminGrain).IsNotNull();
 
             using (var timeout = CancellationHelper.DisposableTimeout())
-            using (var cancel = timeout.Content.ToGrainCancellationToken())
+            using (var cancel = timeout.Content.ToGrainCancellationTokenSource())
             {
                 var uid = await adminGrain.SubscribeRouteChangeAsync(listener.GetDedicatedGrainId<IAdminEventReceiver>(), cancel.Token);
                 Check.That(uid).Not.IsDefaultValue();
@@ -156,7 +156,7 @@ namespace Democrite.Framework.Node.UnitTests.Administrations
             Check.That(adminGrain).IsNotNull();
 
             using (var timeout = CancellationHelper.DisposableTimeout())
-            using (var cancel = timeout.Content.ToGrainCancellationToken())
+            using (var cancel = timeout.Content.ToGrainCancellationTokenSource())
             {
                 var uid = await adminGrain.SubscribeRouteChangeAsync(listener.GetDedicatedGrainId<IAdminEventReceiver>(), cancel.Token);
                 Check.That(uid).Not.IsDefaultValue();
@@ -202,7 +202,7 @@ namespace Democrite.Framework.Node.UnitTests.Administrations
             Check.That(adminGrain).IsNotNull();
 
             using (var timeout = CancellationHelper.DisposableTimeout())
-            using (var cancel = timeout.Content.ToGrainCancellationToken())
+            using (var cancel = timeout.Content.ToGrainCancellationTokenSource())
             {
                 var uid = await adminGrain.SubscribeRouteChangeAsync(listener.GetDedicatedGrainId<IAdminEventReceiver>(), cancel.Token);
                 Check.That(uid).Not.IsDefaultValue();
@@ -255,7 +255,7 @@ namespace Democrite.Framework.Node.UnitTests.Administrations
             Check.That(adminGrain).IsNotNull();
 
             using (var timeout = CancellationHelper.DisposableTimeout())
-            using (var cancel = timeout.Content.ToGrainCancellationToken())
+            using (var cancel = timeout.Content.ToGrainCancellationTokenSource())
             {
                 var uid = await adminGrain.SubscribeRouteChangeAsync(listener.GetDedicatedGrainId<IAdminEventReceiver>(), cancel.Token);
                 Check.That(uid).Not.IsDefaultValue();

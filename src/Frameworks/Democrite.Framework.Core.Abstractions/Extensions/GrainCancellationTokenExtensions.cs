@@ -11,15 +11,15 @@ namespace Orleans
         /// <summary>
         /// Converts to <see cref="GrainCancellationTokenSource"/>.
         /// </summary>
-        public static GrainCancellationTokenSource ToGrainCancellationToken(this CancellationTokenSource token)
+        public static GrainCancellationTokenSource ToGrainCancellationTokenSource(this CancellationTokenSource token)
         {
-            return token.Token.ToGrainCancellationToken();
+            return token.Token.ToGrainCancellationTokenSource();
         }
 
         /// <summary>
         /// Converts to <see cref="GrainCancellationTokenSource"/>.
         /// </summary>
-        public static GrainCancellationTokenSource ToGrainCancellationToken(this CancellationToken token)
+        public static GrainCancellationTokenSource ToGrainCancellationTokenSource(this CancellationToken token)
         {
             var grainCancellationTokenSource = new GrainCancellationTokenSource();
             token.Register(() =>

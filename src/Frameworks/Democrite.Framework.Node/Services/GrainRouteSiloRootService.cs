@@ -102,7 +102,7 @@ namespace Democrite.Framework.Node.Services
 
             var registry = await this._democriteSystemProvider.GetVGrainAsync<IClusterRouteRegistryVGrain>(null, this._vgrainRouteServiceLogger);
 
-            using (var grainCancellation = cancellationToken.ToGrainCancellationToken())
+            using (var grainCancellation = cancellationToken.ToGrainCancellationTokenSource())
             {
                 var redirections = await registry.GetGlobalRedirection(this._localRegistryEtag ?? string.Empty, grainCancellation.Token);
 

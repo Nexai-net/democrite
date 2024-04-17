@@ -98,6 +98,20 @@ namespace Democrite.Framework.Core.Abstractions.Doors
             return true;
         }
 
+        /// <inheritdoc />
+        protected override bool OnDoorEquals(DoorDefinition otherDoor)
+        {
+            return otherDoor is RelayFilterDoorDefinition otherRelayDoor &&
+                   this.DontRelaySignalContent == otherRelayDoor.DontRelaySignalContent &&
+                   (this.FilterCondition?.Equals(otherRelayDoor.FilterCondition) ?? otherRelayDoor.FilterCondition is null);
+        }
+
+        /// <inheritdoc />
+        protected override int OnDoorGetHashCode()
+        {
+            return HashCode.Combine(this.FilterCondition, this.DontRelaySignalContent);
+        }
+
         #endregion
     }
 }

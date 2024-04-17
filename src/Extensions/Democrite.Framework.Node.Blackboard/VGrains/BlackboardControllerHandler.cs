@@ -59,7 +59,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         public async ValueTask<TController> GetController<TController>(CancellationToken token)
         {
             using (this._locker.Lock(token))
-            using (var grainTokenSource = token.ToGrainCancellationToken())
+            using (var grainTokenSource = token.ToGrainCancellationTokenSource())
             {
                 if (this._controller == null)
                 {

@@ -11,6 +11,12 @@ namespace Democrite.Framework.Builders.Signals
     /// <inheritdoc cref="ISignalBuilder" />
     internal sealed class SignalBuilder : SignalNetworkBasePartBuilder<ISignalBuilder>, ISignalBuilder
     {
+        #region Fields
+        
+        private SignalDefinition? _parent;
+        
+        #endregion
+
         #region Ctor
 
         /// <summary>
@@ -26,11 +32,19 @@ namespace Democrite.Framework.Builders.Signals
         #region Methods
 
         /// <inheritdoc />
+        public ISignalBuilder Parent(SignalDefinition parent)
+        {
+            this._parent = parent;
+            return this;
+        }
+
+        /// <inheritdoc />
         public SignalDefinition Build()
         {
             return new SignalDefinition(this.Uid,
                                         this.Name,
-                                        this.GroupName);
+                                        this.GroupName,
+                                        this._parent?.SignalId);
         }
 
         #endregion

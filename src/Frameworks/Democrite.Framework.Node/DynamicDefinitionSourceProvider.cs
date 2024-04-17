@@ -164,7 +164,7 @@ namespace Democrite.Framework.Node
         {
             Debug.Assert(this._dynamicProviderGrain is not null);
 
-            using (var grainCancelToken = token.ToGrainCancellationToken())
+            using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
                 var metadata = await this._dynamicProviderGrain!.GetDynamicDefinitionMetaDatasAsync(typeFilter: s_definitionConcretType, null, onlyEnabled: true, grainCancelToken.Token);
 

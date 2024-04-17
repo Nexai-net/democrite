@@ -12,6 +12,7 @@ namespace Democrite.Framework.Core.Abstractions.Doors
 
     using System;
     using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.Serialization;
 
     /// <summary>
@@ -214,6 +215,44 @@ namespace Democrite.Framework.Core.Abstractions.Doors
         /// Called to validate the current definition
         /// </summary>
         protected abstract bool OnDoorChildValidate(ILogger logger, bool matchErrorAsWarning);
+
+        /// <inheritdoc />
+        protected sealed override bool OnSignalEquals([NotNull] SignalNetworkBasePartDefinition other)
+        {
+            return other is DoorDefinition otherDoor &&
+                   this.DisplayName == otherDoor.DisplayName &&
+                   this.VGrainInterfaceFullName == otherDoor.VGrainInterfaceFullName &&
+                   this.NotConsumedMaxRetiention == otherDoor.NotConsumedMaxRetiention &&
+                   this.ActiveWindowInterval == otherDoor.ActiveWindowInterval &&
+                   this.RetentionMaxDelay == otherDoor.RetentionMaxDelay &&
+                   this.HistoryMaxRetention == otherDoor.HistoryMaxRetention &&
+                   this.SignalSourceIds.SequenceEqual(otherDoor.SignalSourceIds) &&
+                   this.DoorSourceIds.SequenceEqual(otherDoor.DoorSourceIds) &&
+                   OnDoorEquals(otherDoor);
+        }
+
+        /// <inheritdoc cref="object.Equals(object?)" />
+        protected abstract bool OnDoorEquals(DoorDefinition otherDoor);
+
+        /// <inheritdoc />
+        protected sealed override int OnSignalGetHashCode()
+        {
+            return HashCode.Combine(this.SignalSourceIds.Aggregate(0, (acc, s) => s.GetHashCode() ^ acc) ^
+                                    this.DoorSourceIds.Aggregate(0, (acc, s) => s.GetHashCode() ^ acc),
+
+                                    this.ActiveWindowInterval,
+                                    this.DisplayName,
+                                    this.VGrainInterfaceFullName,
+
+                                    HashCode.Combine(this.RetentionMaxDelay,
+                                                     this.HistoryMaxRetention,
+                                                     this.NotConsumedMaxRetiention),
+
+                                    OnDoorGetHashCode());
+        }
+
+        /// <inheritdoc cref="object.GetHashCode" />
+        protected abstract int OnDoorGetHashCode();
 
         #endregion
     }

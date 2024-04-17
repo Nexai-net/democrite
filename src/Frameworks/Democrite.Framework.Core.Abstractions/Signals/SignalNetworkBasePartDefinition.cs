@@ -4,21 +4,25 @@
 
 namespace Democrite.Framework.Core.Abstractions.Signals
 {
+    using Elvex.Toolbox;
     using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 
     using System;
     using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Base Definition of any signal/signal
     /// </summary>
     [Immutable]
     [Serializable]
+    [DataContract]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public abstract class SignalNetworkBasePartDefinition : IDefinition
+    public abstract class SignalNetworkBasePartDefinition : IEquatable<SignalNetworkBasePartDefinition>, IDefinition
     {
         #region Ctor
 
@@ -42,22 +46,26 @@ namespace Democrite.Framework.Core.Abstractions.Signals
 
         /// <inheritdoc />
         [Id(0)]
+        [DataMember]
         public Guid Uid { get; }
 
         /// <summary>
         /// Gets the unique name.
         /// </summary>
         [Id(1)]
+        [DataMember]
         public string Name { get; }
 
         /// <inheritdoc />
         [Id(2)]
+        [DataMember]
         public string DisplayName { get; }
 
         /// <summary>
         /// Gets the group.
         /// </summary>
         [Id(3)]
+        [DataMember]
         public string? Group { get; }
 
         #endregion
@@ -86,6 +94,47 @@ namespace Democrite.Framework.Core.Abstractions.Signals
 
         /// <inheritdoc cref="IDefinition.Validate(ILogger, bool)"/>
         protected abstract bool OnValidate(ILogger logger, bool matchWarningAsError = false);
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.Uid,
+                                    this.Name,
+                                    this.DisplayName,
+                                    this.Group,
+                                    OnSignalGetHashCode());
+        }
+
+        /// <inheritdoc />
+        public bool Equals(SignalNetworkBasePartDefinition? other)
+        {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(this, other))
+                return true;
+
+            return this.Uid == other.Uid &&
+                   this.Name == other.Name &&
+                   this.DisplayName == other.DisplayName &&
+                   this.Group == other.Group &&
+                   OnSignalEquals(other);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            if (obj is SignalNetworkBasePartDefinition other)
+                return Equals(other);
+
+            return false;
+        }
+
+        /// <inheritdoc cref="object.Equals(object?)" />
+        protected abstract bool OnSignalEquals([NotNull] SignalNetworkBasePartDefinition other);
+
+        /// <inheritdoc cref="object.GetHashCode" />
+        protected abstract int OnSignalGetHashCode();
 
         #endregion
     }

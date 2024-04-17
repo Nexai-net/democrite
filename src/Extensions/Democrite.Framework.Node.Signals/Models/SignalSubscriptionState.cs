@@ -49,6 +49,14 @@ namespace Democrite.Framework.Node.Signals.Models
             get { return this._subscriptions.Values; }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this instance has subscriptions.
+        /// </summary>
+        public bool HasSubscriptions
+        {
+            get { return this._subscriptions.Count > 0; }
+        }
+
         #endregion
 
         #region Methods

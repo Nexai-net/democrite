@@ -163,7 +163,7 @@ namespace Democrite.Framework.Node.Administrations
             foreach (var subscriptionGrainId in subscriptions)
             {
                 using (var timeout = CancellationHelper.DisposableTimeout(TimeSpan.FromSeconds(2)))
-                using (var grainCancellation = timeout.Content.ToGrainCancellationToken())
+                using (var grainCancellation = timeout.Content.ToGrainCancellationTokenSource())
                 {
                     try
                     {

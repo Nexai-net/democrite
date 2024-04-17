@@ -12,5 +12,10 @@ namespace Democrite.Framework.Builders.Signals
     /// <seealso cref="ISignalNetworkBasePartBuilder{ISignalBuilder, SignalDefinition}" />
     public interface ISignalBuilder : ISignalNetworkBasePartBuilder<ISignalBuilder>, IDefinitionBaseBuilder<SignalDefinition>
     {
+        /// <summary>
+        /// Specific the hierarchy parent signal. All message received by the child will automatically be relay to parent
+        /// </summary>
+        /// <remarks>This is usefull to filter signal by creating a dedicated sub signal and register only to it.</remarks>
+        ISignalBuilder Parent(SignalDefinition parent);
     }
 }

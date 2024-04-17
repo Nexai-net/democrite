@@ -99,6 +99,21 @@ namespace Democrite.Framework.Core.Abstractions.Doors
             return isValid;
         }
 
+        /// <inheritdoc />
+        protected override bool OnDoorEquals(DoorDefinition otherDoor)
+        {
+            return otherDoor is BooleanLogicalDoorDefinition otherLogicalDoor &&
+                   this.LogicalFormula == otherLogicalDoor.LogicalFormula &&
+                   this.VariableNames.SequenceEqual(otherLogicalDoor.VariableNames) &&
+                   this.UseCurrentDoorStatus == otherLogicalDoor.UseCurrentDoorStatus;
+        }
+
+        /// <inheritdoc />
+        protected override int OnDoorGetHashCode()
+        {
+            return HashCode.Combine(this.LogicalFormula, this.VariableNames, this.UseCurrentDoorStatus);
+        }
+
         #endregion
     }
 }

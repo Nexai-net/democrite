@@ -95,7 +95,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<bool> InitializeAsync(CancellationToken token, IReadOnlyCollection<DataRecordContainer>? initData = null)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.InitializeAsync(grainToken.Token, initData);
             }
@@ -110,7 +110,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<bool> SealedAsync(CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.SealedAsync(grainToken.Token);
             }
@@ -119,7 +119,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<BlackboardLifeStatusEnum> GetStatusAsync(CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetStatusAsync(grainToken.Token);
             }
@@ -128,7 +128,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task ChangeRecordDataStatusAsync(Guid uid, RecordStatusEnum recordStatus, CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 await this._boardGrain.ChangeRecordDataStatusAsync(uid, recordStatus, grainToken.Token);
             }
@@ -137,7 +137,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<bool> DeleteDataAsync(CancellationToken token, IIdentityCard identity, params Guid[] slotIds)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.DeleteDataAsync(grainToken.Token, identity, slotIds);
             }
@@ -146,7 +146,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, null, null, grainToken.Token);
             }
@@ -157,7 +157,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                                                                                                    string? displayNameFilter,
                                                                                                                                    CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, null, grainToken.Token);
             }
@@ -169,7 +169,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                                                                                                    RecordStatusEnum? statusFilter,
                                                                                                                                    CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, statusFilter, grainToken.Token);
             }
@@ -178,7 +178,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataAsync(CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetAllStoredMetaDataAsync(grainToken.Token);
             }
@@ -188,7 +188,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter,
                                                                                                         CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, null, null, grainToken.Token);
             }
@@ -199,7 +199,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                                                                           string? displayNameFilter,
                                                                                                           CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, displayNameFilter, null, grainToken.Token);
             }
@@ -211,7 +211,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                                                                         RecordStatusEnum? statusFilter,
                                                                                                         CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, displayNameFilter, statusFilter, grainToken.Token);
             }
@@ -220,7 +220,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(filter, grainToken.Token);
             }
@@ -229,7 +229,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(filter, grainToken.Token);
             }
@@ -262,7 +262,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(IReadOnlyCollection<Guid> dataUids, CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.GetStoredDataAsync<TDataProjection>(dataUids, grainToken.Token);
             }
@@ -271,7 +271,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<bool> PrepareDataSlotAsync(Guid uid, string logicType, string displayName, CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.PrepareDataSlotAsync(uid, logicType, displayName, grainToken.Token);
             }
@@ -282,7 +282,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                      DataRecordPushRequestTypeEnum pushType,
                                                      CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.PushDataAsync(record, pushType, grainToken.Token);
             }
@@ -298,7 +298,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                      RecordMetadata? customMetadata = null,
                                                      CancellationToken token = default)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 var now = this._timeManager.UtcNow;
                 return await this._boardGrain.PushDataAsync(new DataRecordContainer<TData?>(logicType,
@@ -335,7 +335,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<BlackboardQueryResponse> QueryAsync<TResponse>(BlackboardQueryRequest<TResponse> request, CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.QueryAsync<TResponse>(request, grainToken.Token);
             }
@@ -344,7 +344,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, CancellationToken token)
         {
-            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationToken(token))
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
                 return await this._boardGrain.QueryAsync(command, grainToken.Token);
             }
