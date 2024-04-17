@@ -8,6 +8,7 @@ namespace Democrite.Framework.Core.Services
     using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Services;
 
+    using Elvex.Toolbox.Abstractions.Conditions;
     using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ namespace Democrite.Framework.Core.Services
     using System;
     using System.Collections.Generic;
     using System.Linq.Expressions;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -91,6 +93,24 @@ namespace Democrite.Framework.Core.Services
             {
                 return await grain.GetDynamicDefinitionMetaDatasAsync(typeFilter, displayNameRegex, onlyEnabled, grainCancelToken.Token);
             }
+        }
+
+        /// <inheritdoc />
+        public async Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, CancellationToken token)
+            where TDefinition : class, IDefinition
+        {
+            var grain = await GetHandlerVGrainAsync();
+            using (var grainCancelToken = token.ToGrainCancellationTokenSource())
+            {
+                return await grain.PushDefinitionAsync<TDefinition>(existFilter, definition, identity, grainCancelToken.Token);
+            }
+        }
+
+        /// <inheritdoc />
+        public Task<Guid> PushDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, TDefinition definition, IIdentityCard identity, CancellationToken token)
+            where TDefinition : class, IDefinition
+        {
+            return PushDefinitionAsync<TDefinition>(filter.Serialize(), definition, identity, token);
         }
 
         /// <inheritdoc />

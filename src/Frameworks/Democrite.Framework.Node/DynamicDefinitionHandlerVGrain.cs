@@ -83,7 +83,7 @@ namespace Democrite.Framework.Node
                                     .Select(container => container.GetContainDefinition<TDefinition>())
                                     .Distinct()
                                     .ToArray();
-            
+
             return results;
         }
 
@@ -112,50 +112,39 @@ namespace Democrite.Framework.Node
         }
 
         /// <inheritdoc />
-        public async Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, GrainCancellationToken token) 
+        public async Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, GrainCancellationToken token)
             where TDefinition : class, IDefinition
         {
             // TODO : Check identity
             if (definition is null)
                 return false;
 
-            var mainType = (ConcretType)definition.GetType().GetAbstractType();
-
-            var repo = GetRepositoryFromMainType(mainType);
-
-            if (!repo.Any())
-            {
-                throw new InvalidOperationException("Repository not founded");
-            }
+            var repo = GetSafeRepository(definition, out var mainType);
 
             var repository = repo.First().Value;
 
-            if (!@override)
-            {
-                var existing = await repository.GetByIdValueAsync(definition.Uid, token.CancellationToken);
+            return await PushDefinitionImplAsync<TDefinition>(definition, @override, identity, token, repository);
+        }
 
-                if (existing is not null)
-                    return false;
-            }
+        /// <inheritdoc />
+        public async Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, GrainCancellationToken token)
+            where TDefinition : class, IDefinition
+        {
+            // TODO : Check identity
+            ArgumentNullException.ThrowIfNull(definition);
 
-            var pushed = await repository.PushDataRecordAsync(EtagDefinitionContainer.Create(definition), true, token.CancellationToken);
+            var repo = GetSafeRepository(definition, out var mainType);
 
-            if (pushed)
-            {
-                this.State!.PushDefinition(definition, @override, this._timeManager, identity, out var metaDataUpdated);
+            var repository = repo.First().Value;
 
-                if (metaDataUpdated)
-                {
-                    await PushStateAsync(default);
+            var filter = existFilter.ToExpression<TDefinition, bool>().Compile();
 
-                    await this._signalService.Fire(DemocriteSystemDefinitions.Signals.DynamicDefinitionChanged,
-                                                   new CollectionChangeSignalMessage<Guid>(CollectionChangeTypeEnum.Added, definition.Uid.AsEnumerable().ToArray()),
-                                                   token.CancellationToken,
-                                                   this);
-                }
-            }
+            var exist = await repository.GetFirstValueAsync(d => filter(d.GetContainDefinition<TDefinition>()), token.CancellationToken);
+            if (exist is not null)
+                return exist.Uid;
 
-            return pushed;
+            await PushDefinitionImplAsync<TDefinition>(definition, true, identity, token, repository);
+            return definition.Uid;
         }
 
         /// <inheritdoc />
@@ -210,7 +199,7 @@ namespace Democrite.Framework.Node
         {
             var filterExpression = filter.ToExpression<TDefinition, bool>().Compile();
 
-            var fetchTasks = await ApplyActionOn(this.State!.MetaDataIds, (r, ids, t) => r.GetValuesAsync(d => d.IsDefinition<TDefinition>() &&  filterExpression(d.GetContainDefinition<TDefinition>()), t).AsTask(), token.CancellationToken);
+            var fetchTasks = await ApplyActionOn(this.State!.MetaDataIds, (r, ids, t) => r.GetValuesAsync(d => d.IsDefinition<TDefinition>() && filterExpression(d.GetContainDefinition<TDefinition>()), t).AsTask(), token.CancellationToken);
 
             var results = fetchTasks.Where(t => t.IsCompletedSuccessfully)
                                     .SelectMany(t => t.Result ?? EnumerableHelper<EtagDefinitionContainer>.ReadOnly)
@@ -226,7 +215,7 @@ namespace Democrite.Framework.Node
         /// <summary>
         /// Apply any action on items
         /// </summary>
-        public async Task<IReadOnlyCollection<Task<TResult>>> ApplyActionOn<TResult>(IReadOnlyCollection<Guid> definitionIds,
+        private async Task<IReadOnlyCollection<Task<TResult>>> ApplyActionOn<TResult>(IReadOnlyCollection<Guid> definitionIds,
                                                                                      Func<IRepository<EtagDefinitionContainer, Guid>, IReadOnlyCollection<Guid>, CancellationToken, Task<TResult>> func,
                                                                                      CancellationToken token)
         {
@@ -317,6 +306,62 @@ namespace Democrite.Framework.Node
         {
             this._repositoriyCacheLock.Dispose();
             base.DisposeResourcesEnd();
+        }
+
+        /// <summary>
+        /// Gets the safe repository from definition
+        /// </summary>
+        private IReadOnlyDictionary<ConcretType, IRepository<EtagDefinitionContainer, Guid>> GetSafeRepository<TDefinition>(TDefinition definition, out ConcretType mainType)
+            where TDefinition : class, IDefinition
+        {
+            mainType = (ConcretType)definition.GetType().GetAbstractType();
+
+            var repo = GetRepositoryFromMainType(mainType);
+
+            if (!repo.Any())
+            {
+                throw new InvalidOperationException("Repository not founded");
+            }
+
+            return repo;
+        }
+
+        /// <summary>
+        /// Pushes the definition.
+        /// </summary>
+        private async Task<bool> PushDefinitionImplAsync<TDefinition>(TDefinition definition,
+                                                                      bool @override,
+                                                                      IIdentityCard identity,
+                                                                      GrainCancellationToken token,
+                                                                      IRepository<EtagDefinitionContainer, Guid> repository) 
+            where TDefinition : class, IDefinition
+        {
+            if (!@override)
+            {
+                var existing = await repository.GetByIdValueAsync(definition.Uid, token.CancellationToken);
+
+                if (existing is not null)
+                    return false;
+            }
+
+            var pushed = await repository.PushDataRecordAsync(EtagDefinitionContainer.Create(definition), true, token.CancellationToken);
+
+            if (pushed)
+            {
+                this.State!.PushDefinition(definition, @override, this._timeManager, identity, out var metaDataUpdated);
+
+                if (metaDataUpdated)
+                {
+                    await PushStateAsync(default);
+
+                    await this._signalService.Fire(DemocriteSystemDefinitions.Signals.DynamicDefinitionChanged,
+                                                   new CollectionChangeSignalMessage<Guid>(CollectionChangeTypeEnum.Added, definition.Uid.AsEnumerable().ToArray()),
+                                                   token.CancellationToken,
+                                                   this);
+                }
+            }
+
+            return pushed;
         }
 
         #endregion

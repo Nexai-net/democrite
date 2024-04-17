@@ -18,6 +18,17 @@ var commonMethodDescription = """
         Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, CancellationToken token) where TDefinition : class, IDefinition;
 
         /// <summary>
+        /// Push a definition in the dynamic system if doesn't exists
+        /// </summary>
+        /// <returns>
+        ///   Return definition uid
+        /// </returns>
+        /// <remarks>
+        ///   If the push is reject for security reason the result will be false. To identify the real reason look at the logs.
+        /// </remarks>
+        Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, CancellationToken token) where TDefinition : class, IDefinition;
+
+        /// <summary>
         /// Change the enable status of a definition
         /// </summary>
         /// <returns>
@@ -68,6 +79,9 @@ var proxyMethod = """
 
         /// <inheritdoc cref="RemoveDefinitionAsync(IIdentityCard, CancellationToken, Guid[])" />
         Task<bool> RemoveDefinitionAsync(Guid definitionId, IIdentityCard identity, CancellationToken token);
+
+        /// <inheritdoc cref="PushDefinitionAsync{TDefinition}(ConditionExpressionDefinition, TDefinition, IIdentityCard, CancellationToken)" />
+        Task<Guid> PushDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, TDefinition definition, IIdentityCard identity, CancellationToken token) where TDefinition : class, IDefinition;
 """;
 
 #>
