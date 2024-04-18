@@ -9,7 +9,7 @@
 var fieldsCode = """
         #region Fields
 
-        private static readonly IReadOnlyCollection<BlackboardCommand> s_defaultRejectRequest = RejectActionBlackboardCommand.Default.AsEnumerable().ToArray();
+        private static readonly IReadOnlyCollection<BlackboardCommand> s_defaultRejectRequest = BlackboardCommandRejectAction.Default.AsEnumerable().ToArray();
         
         #endregion
 """;
@@ -76,6 +76,12 @@ var coreCode = """
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
 
+        /// <inheritdoc />
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ManagedSignalMessageAsync(SignalMessage message, GrainCancellationToken token)
+        {
+            return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
+        }
+
         #endregion
 """;
 #>
@@ -86,6 +92,7 @@ var coreCode = """
 namespace Democrite.Framework.Node.Blackboard.VGrains
 {
     using Democrite.Framework.Core;
+    using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Events;

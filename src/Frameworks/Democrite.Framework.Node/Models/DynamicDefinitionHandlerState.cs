@@ -31,9 +31,13 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicDefinitionHandlerState"/> class.
         /// </summary>
-        public DynamicDefinitionHandlerState(IEnumerable<DynamicDefinitionMetaData> definitionMetaDatas)
+        public DynamicDefinitionHandlerState(IEnumerable<DynamicDefinitionMetaData> definitionMetaDatas, string etag)
         {
             this._definitionMetaDatas = definitionMetaDatas?.ToDictionary(k => k.Uid) ?? new Dictionary<Guid, DynamicDefinitionMetaData>();
+            this.Etag = etag;
+
+            if (string.IsNullOrEmpty(this.Etag))
+                UpdateEtag();
         }
 
         #endregion
@@ -55,6 +59,11 @@ namespace Democrite.Framework.Node.Models
         {
             get { return this._definitionMetaDatas.Values; }
         }
+
+        /// <summary>
+        /// Gets the etag.
+        /// </summary>
+        public string Etag { get; private set; }
 
         #endregion
 
@@ -122,6 +131,8 @@ namespace Democrite.Framework.Node.Models
             {
                 resultMetaData = metaData.ToUpdated(timeManager, identityCard);
                 this._definitionMetaDatas[definition.Uid] = resultMetaData;
+
+                UpdateEtag();
             }
 
             return resultMetaData;
@@ -135,6 +146,7 @@ namespace Democrite.Framework.Node.Models
             if (this._definitionMetaDatas.TryGetValue(definitionUid, out var metaData) && metaData.IsEnabled != enable)
             {
                 this._definitionMetaDatas[definitionUid] = metaData.ToUpdated(timeManager, identityCard, enable);
+                UpdateEtag();
                 return true;
             }
 
@@ -146,15 +158,31 @@ namespace Democrite.Framework.Node.Models
         /// </summary>
         internal void RemoveDefinitionAsync(IReadOnlyCollection<Guid> definitionIds)
         {
+            bool removed = false;
             foreach (var definitionId in definitionIds)
-                this._definitionMetaDatas.Remove(definitionId);
+                removed |= this._definitionMetaDatas.Remove(definitionId);
+
+            if (removed)
+                UpdateEtag();
         }
+
+        #region Tools
+
+        /// <summary>
+        /// Updates the etag.
+        /// </summary>
+        private void UpdateEtag()
+        {
+            this.Etag = DateTime.UtcNow.Ticks + "-" + Guid.NewGuid().ToString("N");
+        }
+
+        #endregion
 
         #endregion
     }
 
     [GenerateSerializer]
-    internal record struct DynamicDefinitionHandlerStateSurrogate(IReadOnlyCollection<DynamicDefinitionMetaData> DefinitionMetaDatas);
+    internal record struct DynamicDefinitionHandlerStateSurrogate(IReadOnlyCollection<DynamicDefinitionMetaData> DefinitionMetaDatas, string Etag);
 
     [RegisterConverter]
     internal sealed class DynamicDefinitionHandlerConverter : IConverter<DynamicDefinitionHandlerState, DynamicDefinitionHandlerStateSurrogate>
@@ -162,14 +190,13 @@ namespace Democrite.Framework.Node.Models
         /// <inheritdoc />
         public DynamicDefinitionHandlerState ConvertFromSurrogate(in DynamicDefinitionHandlerStateSurrogate surrogate)
         {
-            return new DynamicDefinitionHandlerState(surrogate.DefinitionMetaDatas ?? EnumerableHelper<DynamicDefinitionMetaData>.ReadOnly);
+            return new DynamicDefinitionHandlerState(surrogate.DefinitionMetaDatas ?? EnumerableHelper<DynamicDefinitionMetaData>.ReadOnly, surrogate.Etag);
         }
 
         /// <inheritdoc />
         public DynamicDefinitionHandlerStateSurrogate ConvertToSurrogate(in DynamicDefinitionHandlerState value)
         {
-            return new DynamicDefinitionHandlerStateSurrogate(value.DefinitionMetaDatas.ToArray());
+            return new DynamicDefinitionHandlerStateSurrogate(value.DefinitionMetaDatas.ToArray(), value.Etag);
         }
     }
-
 }

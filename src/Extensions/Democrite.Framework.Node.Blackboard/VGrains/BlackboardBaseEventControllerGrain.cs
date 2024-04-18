@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Blackboard.VGrains
 {
     using Democrite.Framework.Core;
+    using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Events;
@@ -60,6 +61,12 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
 
+        /// <inheritdoc />
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ManagedSignalMessageAsync(SignalMessage message, GrainCancellationToken token)
+        {
+            return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
+        }
+
         #endregion
     }
 
@@ -103,6 +110,12 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
         /// <inheritdoc />
         public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token)
+        {
+            return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
+        }
+
+        /// <inheritdoc />
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ManagedSignalMessageAsync(SignalMessage message, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
@@ -152,6 +165,12 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
         /// <inheritdoc />
         public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token)
+        {
+            return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
+        }
+
+        /// <inheritdoc />
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ManagedSignalMessageAsync(SignalMessage message, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }

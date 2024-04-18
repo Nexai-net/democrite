@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
+    using Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands;
 
     using System.Threading.Tasks;
 
@@ -27,8 +28,8 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers
         ///     If definition template is needed pass a surrogate of it don't pass the definition itself.
         ///     Don't pass id because a blackboard doesn't allow the template build on to changed (Copy in his state)
         /// </remarks>
-        Task InitializationAsync(ControllerBaseOptions? option,
-                                 GrainCancellationToken cancellationToken);
+        Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option,
+                                                                          GrainCancellationToken cancellationToken);
     }
 
     /// <summary>

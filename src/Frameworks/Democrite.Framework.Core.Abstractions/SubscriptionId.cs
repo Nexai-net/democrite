@@ -11,5 +11,5 @@ namespace Democrite.Framework.Core.Abstractions
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public readonly record struct SubscriptionId(Guid signalId, bool fromDoor, Guid subscriptionId);
+    public readonly record struct SubscriptionId(Guid SignalId, bool FromDoor, Guid Uid);
 }

@@ -27,7 +27,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries
     }
 
     /// <summary>
-    /// Reponse used to reject any query 
+    /// Response used to reject any query 
     /// </summary>
     [Immutable]
     [Serializable]

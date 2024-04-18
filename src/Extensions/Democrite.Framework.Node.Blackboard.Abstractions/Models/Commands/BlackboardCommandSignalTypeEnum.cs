@@ -5,19 +5,12 @@
 namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
 {
     /// <summary>
-    /// 
+    /// Type of signal command
     /// </summary>
-    public enum BlackboardCommandTypeEnum
+    public enum BlackboardCommandSignalTypeEnum
     {
         None,
-        Storage,
-        Trigger,
-        Reject,
-        NotSupported,
-        Deferred,
-        RetryDeferred,
-        Response,
-        LifeStatusChange,
-        Signal
+        Attach,
+        Detach,
     }
 }

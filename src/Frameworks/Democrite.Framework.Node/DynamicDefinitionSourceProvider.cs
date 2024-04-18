@@ -5,10 +5,10 @@
 namespace Democrite.Framework.Node
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Services;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Abstractions.Services;
-    using Democrite.Framework.Node.Services;
 
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Patterns.Strategy;
@@ -18,13 +18,10 @@ namespace Democrite.Framework.Node
 
     using Microsoft.Extensions.Logging;
 
-    using Newtonsoft.Json.Linq;
-
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq.Expressions;
-    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -50,6 +47,9 @@ namespace Democrite.Framework.Node
         private IDynamicDefinitionHandlerVGrain? _dynamicProviderGrain;
         private IDisposable? _subscritionToken;
 
+        private readonly SemaphoreSlim _updateRegistryLocker;
+        private string _registryEtag;
+
         #endregion
 
         #region Ctor
@@ -69,11 +69,14 @@ namespace Democrite.Framework.Node
                                                IVGrainDemocriteSystemProvider vgrainDemocriteSystemProvider,
                                                ILogger<DynamicDefinitionSourceProvider<TDefinition>> logger,
                                                ISignalLocalServiceRelay signalLocalServiceRelay)
-            : base(serviceProvider)
+            : base(serviceProvider, supportFallback: true)
         {
             this._indexDefinitionIdUpdates = new Dictionary<Guid, DateTime>();
             this._vgrainDemocriteSystemProvider = vgrainDemocriteSystemProvider;
             this._logger = logger;
+
+            this._updateRegistryLocker = new SemaphoreSlim(1);
+            this._registryEtag = string.Empty;
 
             this._signalLocalServiceRelay = signalLocalServiceRelay;
 
@@ -154,6 +157,7 @@ namespace Democrite.Framework.Node
         /// <inheritdoc />
         private async ValueTask LayInitMethodAsync(NoneType? type, CancellationToken token)
         {
+            // Opti : Use sub signal to refresh more precesily
             this._subscritionToken = await this._signalLocalServiceRelay.SubscribeAsync(OnDynamicDefinitionDataUpdate, DemocriteSystemDefinitions.Signals.DynamicDefinitionChanged);
         }
 
@@ -166,75 +170,95 @@ namespace Democrite.Framework.Node
 
             using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
-                var metadata = await this._dynamicProviderGrain!.GetDynamicDefinitionMetaDatasAsync(typeFilter: s_definitionConcretType, null, onlyEnabled: true, grainCancelToken.Token);
-
-                var existing = this.Keys.ToHashSet();
-                var toAdd = new HashSet<Guid>();
-                var toRemove = new HashSet<Guid>(this.Keys);
-
-                lock (this._indexDefinitionIdUpdates)
+                await this._updateRegistryLocker.WaitAsync(token);
+                try
                 {
-                    foreach (var meta in metadata)
-                    {
-                        toRemove.Remove(meta.Uid);
+                    var etag = await this._dynamicProviderGrain.GetHandlerEtagAsync();
+                    if (string.Equals(etag, this._registryEtag))
+                        return EnumerableHelper<Guid>.ReadOnly;
 
-                        if (existing.Contains(meta.Uid))
-                        {
-                            if (!this._indexDefinitionIdUpdates.TryGetValue(meta.Uid, out var lastUpdate) && lastUpdate >= meta.UTCLastUpdate)
-                            {
-                                // Force an update
-                                toAdd.Add(meta.Uid);
-                            }
-                            continue;
-                        }
-                        else
-                        {
-                            toAdd.Add(meta.Uid);
-                        }
-                    }
-                }
+                    var metadata = await this._dynamicProviderGrain!.GetDynamicDefinitionMetaDatasAsync(typeFilter: s_definitionConcretType, null, onlyEnabled: true, grainCancelToken.Token);
+                    this._registryEtag = metadata.Etag;
 
-                if (toRemove.Any())
-                {
+                    var existing = this.Keys.ToHashSet();
+                    var toAdd = new HashSet<Guid>();
+                    var toRemove = new HashSet<Guid>(this.Keys);
+
                     lock (this._indexDefinitionIdUpdates)
                     {
-                        foreach (var rm in toRemove)
-                            this._indexDefinitionIdUpdates.Remove(rm);
-                    }
-
-                    base.SafeRemoves(toRemove);
-                }
-
-                if (toAdd.Any())
-                {
-                    var definitions = await this._dynamicProviderGrain.GetDefinitionAsync<TDefinition>(grainCancelToken.Token, toAdd);
-
-                    if (definitions.Any())
-                    {
-                        base.SafeAddOrReplace(definitions.Select(d => (d.Uid, d)));
-
-                        lock (this._indexDefinitionIdUpdates)
+                        foreach (var meta in metadata.Info)
                         {
-                            foreach (var meta in metadata)
-                                this._indexDefinitionIdUpdates[meta.Uid] = meta.UTCLastUpdate;
+                            toRemove.Remove(meta.Uid);
+
+                            if (existing.Contains(meta.Uid))
+                            {
+                                if (!this._indexDefinitionIdUpdates.TryGetValue(meta.Uid, out var lastUpdate) && lastUpdate >= meta.UTCLastUpdate)
+                                {
+                                    // Force an update
+                                    toAdd.Add(meta.Uid);
+                                }
+                                continue;
+                            }
+                            else
+                            {
+                                toAdd.Add(meta.Uid);
+                            }
                         }
                     }
-                }
 
-                return (toRemove ?? EnumerableHelper<Guid>.ReadOnly).Concat(toAdd ?? EnumerableHelper<Guid>.ReadOnly).Distinct().ToArray();
+                    if (toRemove.Any())
+                    {
+                        lock (this._indexDefinitionIdUpdates)
+                        {
+                            foreach (var rm in toRemove)
+                                this._indexDefinitionIdUpdates.Remove(rm);
+                        }
+
+                        base.SafeRemoves(toRemove);
+                    }
+
+                    if (toAdd.Any())
+                    {
+                        var definitions = await this._dynamicProviderGrain.GetDefinitionAsync<TDefinition>(grainCancelToken.Token, toAdd);
+
+                        if (definitions.Info.Any())
+                        {
+                            base.SafeAddOrReplace(definitions.Info.Select(d => (d.Uid, d)));
+
+                            lock (this._indexDefinitionIdUpdates)
+                            {
+                                foreach (var meta in metadata.Info)
+                                    this._indexDefinitionIdUpdates[meta.Uid] = meta.UTCLastUpdate;
+                            }
+                        }
+                    }
+
+                    return (toRemove ?? EnumerableHelper<Guid>.ReadOnly).Concat(toAdd ?? EnumerableHelper<Guid>.ReadOnly).Distinct().ToArray();
+                }
+                finally
+                {
+                    this._updateRegistryLocker.Release();
+                }
             }
         }
 
         /// <summary>
         /// Called when [dynamic definition data update].
         /// </summary>
-        private async ValueTask OnDynamicDefinitionDataUpdate(SignalMessage message)
+        private async ValueTask OnDynamicDefinitionDataUpdate(SignalMessage _)
         {
             // Optim: If delete then only check if the current provider have the value instead of by alignments
             var changes = await AlignFromDynamicDefinitionServiceAsync(default);
 
             if (changes is not null && changes.Any())
                 RaisedDataChanged(changes);
+        }
+
+        /// <inheritdoc />
+        protected override async Task FallbackOdRetryFailedAsync(CancellationToken token)
+        {
+            await OnDynamicDefinitionDataUpdate(null!);
+            await base.FallbackOdRetryFailedAsync(token);
         }
 
         /// <summary>

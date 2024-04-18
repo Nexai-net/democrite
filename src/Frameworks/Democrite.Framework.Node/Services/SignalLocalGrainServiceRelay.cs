@@ -58,7 +58,7 @@ namespace Democrite.Framework.Node.Services
         /// <inheritdoc />
         public Task Unsubscribe(SubscriptionId subscriptionId)
         {
-            return this._signalService.Unsubscribe(subscriptionId);
+            return this._signalService.UnsubscribeAsync(subscriptionId, default);
         }
 
         /// <inheritdoc />

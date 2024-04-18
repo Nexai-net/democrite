@@ -93,6 +93,16 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// <summary>
         /// Unsubscribes the specified subscription identifier.
         /// </summary>
-        Task Unsubscribe(SubscriptionId subscriptionId);
+        Task UnsubscribeAsync(SubscriptionId subscriptionId, CancellationToken token);
+
+        /// <summary>
+        /// Unsubscribes the specified subscription identifier.
+        /// </summary>
+        Task UnsubscribeAsync(SignalId signalId, ISignalReceiver receiver, CancellationToken token);
+
+        /// <summary>
+        /// Unsubscribes the specified subscription identifier.
+        /// </summary>
+        Task UnsubscribeAsync(DoorId doorId, ISignalReceiver receiver, CancellationToken token);
     }
 }

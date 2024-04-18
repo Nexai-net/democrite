@@ -7,6 +7,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Democrite.Framework.Core;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
+    using Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
 
     using Microsoft.Extensions.Logging;
@@ -60,9 +61,9 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
 
         /// <inheritdoc />
@@ -123,9 +124,9 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
 
         /// <inheritdoc />
@@ -188,9 +189,9 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
         {
-            return Task.CompletedTask;
+            return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
 
         /// <inheritdoc />

@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Blackboard.Models
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries;
 
@@ -15,6 +16,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
         #region Fields
 
         private readonly Dictionary<Guid, BlackboardDeferredQueryState> _queries;
+        private readonly Dictionary<Guid, SubscriptionId> _subscriptions;
 
         #endregion
 
@@ -28,7 +30,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
                                     string name,
                                     BlackboardRecordRegistryState blackboardRecordRegistryState,
                                     IEnumerable<BlackboardDeferredQueryState> queries,
-                                    BlackboardLifeStatusEnum currentLifeStatus)
+                                    BlackboardLifeStatusEnum currentLifeStatus,
+                                    IEnumerable<SubscriptionId> subscriptionIds)
         {
             this.TemplateCopy = templateCopy;
             this.BlackboardId = blackboardId;
@@ -37,7 +40,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
 
             this.CurrentLifeStatus = currentLifeStatus;
 
-            this._queries = queries.ToDictionary(q => q.DeferredId.Uid);
+            this._queries = queries?.ToDictionary(q => q.DeferredId.Uid) ?? new Dictionary<Guid, BlackboardDeferredQueryState>();
+            this._subscriptions = subscriptionIds?.ToDictionary(s => s.SignalId) ?? new Dictionary<Guid, SubscriptionId>();
         }
 
         #endregion
@@ -126,6 +130,41 @@ namespace Democrite.Framework.Node.Blackboard.Models
         {
             this.TemplateCopy = tmpl;
             this.BlackboardId = blackboardId;
+        }
+
+        /// <summary>
+        /// Adds a signal/door subscriptions.
+        /// </summary>
+        internal void AddSubscription(in SubscriptionId subscription)
+        {
+            this._subscriptions[subscription.SignalId] = subscription;
+        }
+
+        /// <summary>
+        /// Get subscription by signal/door uid
+        /// </summary>
+        internal SubscriptionId? GetSubscription(in Guid signalUid)
+        {
+            if (this._subscriptions.TryGetValue(signalUid, out var subscription))
+                return subscription;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Get all subscriptions
+        /// </summary>
+        internal IEnumerable<SubscriptionId> GetSubscriptions()
+        {
+            return this._subscriptions.Values;
+        }
+
+        /// <summary>
+        /// Removes a signal/door subscriptions.
+        /// </summary>
+        internal void RemoveSubscription(in SubscriptionId subscription)
+        {
+            this._subscriptions.Remove(subscription.SignalId);
         }
 
         #endregion

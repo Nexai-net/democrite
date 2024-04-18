@@ -84,7 +84,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed record class BlackboardCommandResponse<TResponse>(TResponse Response, Guid QueryUid) : BlackboardCommand(BlackboardCommandTypeEnum.Reponse)
+    public sealed record class BlackboardCommandResponse<TResponse>(TResponse Response, Guid QueryUid) : BlackboardCommand(BlackboardCommandTypeEnum.Response)
     {
         /// <inheritdoc />
         public override string ToDebugDisplayName()
@@ -138,6 +138,22 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
         public override string ToDebugDisplayName()
         {
             return $"[{this.ActionType}] - Life Init Status change {this.NewStatus}";
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [Immutable]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public sealed record class BlackboardCommandSignal(Guid SignalUid, string DisplayName, bool IsDoor, BlackboardCommandSignalTypeEnum Type) : BlackboardCommand(BlackboardCommandTypeEnum.Signal)
+    {
+        /// <inheritdoc />
+        public override string ToDebugDisplayName()
+        {
+            return $"[Type:{this.Type}] - {this.SignalUid} ({this.DisplayName})";
         }
     }
 }

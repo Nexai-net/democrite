@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Blackboard.Models.Surrogates
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Deferred;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Surrogates;
@@ -22,7 +23,8 @@ namespace Democrite.Framework.Node.Blackboard.Models.Surrogates
                                                          string Name,
                                                          BlackboardRecordRegistryStateSurrogate BlackboardRecordRegistryState,
                                                          BlackboardDeferredQueryStateSurrogate[] Queries,
-                                                         BlackboardLifeStatusEnum CurrentLifeStatus);
+                                                         BlackboardLifeStatusEnum CurrentLifeStatus,
+                                                         SubscriptionId[] SubscriptionIds);
 
     [RegisterConverter]
     internal sealed class BlackboardGrainStateConverter : IConverter<BlackboardGrainState, BlackboardGrainStateSurrogate>
@@ -55,7 +57,8 @@ namespace Democrite.Framework.Node.Blackboard.Models.Surrogates
                                             surrogate.Name,
                                             BlackboardRecordRegistryStateConverter.Default.ConvertFromSurrogate(surrogate.BlackboardRecordRegistryState),
                                             surrogate.Queries?.Select(q => BlackboardDeferredQueryState.Create(q, this._democriteSerializer)) ?? EnumerableHelper<BlackboardDeferredQueryState>.ReadOnly,
-                                            surrogate.CurrentLifeStatus);
+                                            surrogate.CurrentLifeStatus,
+                                            surrogate.SubscriptionIds);
         }
 
         /// <inheritdoc />
@@ -68,7 +71,8 @@ namespace Democrite.Framework.Node.Blackboard.Models.Surrogates
                 Name = value.Name,
                 BlackboardRecordRegistryState = BlackboardRecordRegistryStateConverter.Default.ConvertToSurrogate(value.Registry),
                 Queries = value.GetQueries()?.Select(r => r.ToSurrogate()).ToArray() ?? EnumerableHelper<BlackboardDeferredQueryStateSurrogate>.ReadOnlyArray,
-                CurrentLifeStatus = value.CurrentLifeStatus
+                CurrentLifeStatus = value.CurrentLifeStatus,
+                SubscriptionIds = value.GetSubscriptions().ToArray()
             };
 
             return surrogate;

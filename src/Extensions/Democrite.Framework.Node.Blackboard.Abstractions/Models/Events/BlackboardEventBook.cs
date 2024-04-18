@@ -64,13 +64,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Events
         [IgnoreDataMember]
         public int StorageEventCount
         {
-            get 
-            {
-                if (this._indexedEvents.TryGetValue(BlackboardEventTypeEnum.Storage, out var events))
-                    return events.Count;
-
-                return 0;
-            }
+            get { return CountEvents(BlackboardEventTypeEnum.Storage); }
         }
 
         /// <summary>
@@ -79,18 +73,23 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Events
         [IgnoreDataMember]
         public int LifeStatusChangedEventCount
         {
-            get
-            {
-                if (this._indexedEvents.TryGetValue(BlackboardEventTypeEnum.LifeStatusChanged, out var events))
-                    return events.Count;
-
-                return 0;
-            }
+            get { return CountEvents(BlackboardEventTypeEnum.LifeStatusChanged); }
         }
 
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Get the number of events related to <paramref name="eventType"/>
+        /// </summary>
+        public int CountEvents(BlackboardEventTypeEnum eventType)
+        {
+            if (this._indexedEvents.TryGetValue(eventType, out var events))
+                return events.Count;
+
+            return 0;
+        }
 
         /// <summary>
         /// Gets the event storages filtered by type

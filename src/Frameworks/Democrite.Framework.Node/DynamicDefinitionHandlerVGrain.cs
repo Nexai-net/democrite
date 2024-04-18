@@ -74,7 +74,13 @@ namespace Democrite.Framework.Node
         #region Methods
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(GrainCancellationToken token, IReadOnlyCollection<Guid> uids) where TDefinition : IDefinition
+        public Task<string> GetHandlerEtagAsync()
+        {
+            return Task.FromResult(this.State!.Etag);
+        }
+
+        /// <inheritdoc />
+        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(GrainCancellationToken token, IReadOnlyCollection<Guid> uids) where TDefinition : IDefinition
         {
             var fetchTasks = await ApplyActionOn(uids, (r, ids, t) => r.GetByIdsValueAsync(ids, t).AsTask(), token.CancellationToken);
 
@@ -84,11 +90,11 @@ namespace Democrite.Framework.Node
                                     .Distinct()
                                     .ToArray();
 
-            return results;
+            return new EtagContainer<IReadOnlyCollection<TDefinition>>(this.State!.Etag, results);
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<DynamicDefinitionMetaData>> GetDynamicDefinitionMetaDatasAsync(ConcretType? typeFilter, string? displayNameRegex, bool onlyEnabled, GrainCancellationToken token)
+        public Task<EtagContainer<IReadOnlyCollection<DynamicDefinitionMetaData>>> GetDynamicDefinitionMetaDatasAsync(ConcretType? typeFilter, string? displayNameRegex, bool onlyEnabled, GrainCancellationToken token)
         {
             IEnumerable<DynamicDefinitionMetaData> metaDataFiltered = this.State!.DefinitionMetaDatas;
 
@@ -108,7 +114,7 @@ namespace Democrite.Framework.Node
 
             // Keep to array instead of toReadonly because ToReadOnly keep the original type if no convertion is needed by performance choice.
             // To prevent sending no serializable collection if no filter is needed we use ToArray
-            return Task.FromResult<IReadOnlyCollection<DynamicDefinitionMetaData>>(metaDataFiltered.ToArray());
+            return Task.FromResult(new EtagContainer<IReadOnlyCollection<DynamicDefinitionMetaData>>(this.State!.Etag, metaDataFiltered.ToArray()));
         }
 
         /// <inheritdoc />
@@ -195,7 +201,7 @@ namespace Democrite.Framework.Node
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(ConditionExpressionDefinition filter, GrainCancellationToken token) where TDefinition : IDefinition
+        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(ConditionExpressionDefinition filter, GrainCancellationToken token) where TDefinition : IDefinition
         {
             var filterExpression = filter.ToExpression<TDefinition, bool>().Compile();
 
@@ -207,7 +213,7 @@ namespace Democrite.Framework.Node
                                     .Distinct()
                                     .ToArray();
 
-            return results;
+            return new EtagContainer<IReadOnlyCollection<TDefinition>>(this.State!.Etag, results);
         }
 
         #region Tools

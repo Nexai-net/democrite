@@ -70,7 +70,19 @@ namespace Democrite.Framework.Node.Signals
         public async Task UnsuscribeAsync(Guid subscritionId, GrainCancellationToken token)
         {
             await EnsureInitializedAsync(token.CancellationToken);
+
             this.State!.RemoveSuscription(subscritionId);
+            await PushStateAsync(token.CancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task UnsuscribeAsync(DedicatedGrainId<ISignalReceiver> grainId, GrainCancellationToken token)
+        {
+            await EnsureInitializedAsync(token.CancellationToken);
+            var subscriptionId = this.State!.GetSuscription(grainId);
+
+            if (subscriptionId is not null)
+                await UnsuscribeAsync(subscriptionId.Value, token);
         }
 
         #region Tools
@@ -97,7 +109,7 @@ namespace Democrite.Framework.Node.Signals
                     var addressable = this._grainFactory.GetGrain(sub.TargetGrainId.Target);
                     grain = addressable.AsReference<ISignalReceiver>();
                 }
-                
+
                 await grain.ReceiveSignalAsync(signal!);
             }
 

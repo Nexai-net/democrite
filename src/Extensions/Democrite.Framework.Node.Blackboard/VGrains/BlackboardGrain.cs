@@ -8,6 +8,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Deferred;
+    using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Services;
@@ -60,7 +61,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     /// <seealso cref="IVGrain" />
     /// <seealso cref="IGrainWithGuidKey" />
     [DemocriteSystemVGrain]
-    internal sealed class BlackboardGrain : VGrainBase<BlackboardGrainState, BlackboardGrainStateSurrogate, BlackboardGrainStateConverter, IBlackboardGrain>, IBlackboardGrain
+    internal sealed class BlackboardGrain : VGrainBase<BlackboardGrainState, BlackboardGrainStateSurrogate, BlackboardGrainStateConverter, IBlackboardGrain>, IBlackboardGrain, ISignalReceiver
     {
         #region Fields
 
@@ -87,10 +88,13 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         private readonly IGrainOrleanFactory _grainOrleanFactory;
         private readonly IRepositoryFactory _repositoryFactory;
         private readonly IServiceProvider _serviceProvider;
-        private readonly SemaphoreSlim _saveStateLocker;
+
         private readonly ISignalService _signalService;
         private readonly IObjectConverter _converter;
         private readonly ITimeManager _timeManager;
+
+        private readonly SemaphoreSlim _singleMessageTreatmentLocker;
+        private readonly SemaphoreSlim _saveStateLocker;
 
         private readonly CancellationTokenSource _lifetimeToken;
         private readonly DelayTimer _delaySaving;
@@ -128,6 +132,9 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             Expression<Func<BlackboardGrain, BlackboardCommandTriggerSignal<int>, CommandExecutionContext, Task<bool>>> cmdSignalWithData = (g, cmd, ctx) => g.Command_TriggerSignalWithData<int>(cmd, ctx);
             s_cmdSignalWithData = ((MethodCallExpression)cmdSignalWithData.Body).Method.GetGenericMethodDefinition();
 
+            Expression<Func<BlackboardGrain, BlackboardBaseQuery, DeferredId?, GrainCancellationToken, Task<BlackboardQueryResponse>>> solveQueryExpr = (grain, q, d, t) => grain.SolveQueryRequestAsync<int>(q, d, t);
+            s_solveGenericQueryRequest = ((MethodCallExpression)solveQueryExpr.Body).Method.GetGenericMethodDefinition();
+
             s_rootCommandExecutor = new Dictionary<BlackboardCommandTypeEnum, Func<BlackboardGrain, BlackboardCommand, CommandExecutionContext, Task<bool>>>()
             {
                 { BlackboardCommandTypeEnum.Storage, (g, cmd, ctx) => CommandExecuteAsync(s_rootCommandStorageExecutor!, c => c.StorageAction, g, (BlackboardCommandStorage)cmd, ctx) },
@@ -136,7 +143,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
                 { BlackboardCommandTypeEnum.Reject, CommandExecuteRejectAsync },
                 { BlackboardCommandTypeEnum.RetryDeferred, (g, cmd, ctx) => g.CommandExecuteRetryDeferredAsync(cmd, ctx) },
-
+                { BlackboardCommandTypeEnum.Signal, (g, cmd, ctx) => g.CommandExecuteSignalAsync(cmd, ctx) }
             }.ToFrozenDictionary();
 
             s_rootCommandStorageExecutor = new Dictionary<BlackboardCommandStorageActionTypeEnum, Func<BlackboardGrain, BlackboardCommandStorage, CommandExecutionContext, Task<bool>>>()
@@ -160,13 +167,6 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 { BlackboardLifeStatusEnum.Sealed, (g, cmd, ctx) => g.Command_LifeStatus_Sealed(cmd, ctx) },
                 { BlackboardLifeStatusEnum.Done, (g, cmd, ctx) => g.Command_LifeStatus_Changed(cmd, ctx) },
             }.ToFrozenDictionary();
-
-#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-
-            Expression<Func<BlackboardGrain, Task<BlackboardQueryResponse>>> solveQueryExpr = (BlackboardGrain grain) => grain.SolveQueryRequestAsync<int>(null, null, null);
-            s_solveGenericQueryRequest = ((System.Linq.Expressions.MethodCallExpression)solveQueryExpr.Body).Method.GetGenericMethodDefinition();
-
-#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
         }
 
         /// <summary>
@@ -188,6 +188,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             : base(logger, persistentState)
         {
             this._saveStateLocker = new SemaphoreSlim(1);
+            this._singleMessageTreatmentLocker = new SemaphoreSlim(1);
 
             this._signalService = signalService;
             this._democriteSerializer = democriteSerializer;
@@ -223,91 +224,40 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 return false;
 
             return await CommandExecutionStartPointAsync(token.CancellationToken, new BlackboardCommandLifeStatusChange(BlackboardLifeStatusEnum.Sealed, this.State!.CurrentLifeStatus));
-
-            //this.State!.CurrentLifeStatus = BlackboardLifeStatusEnum.Sealed;
-            //await PushStateAsync(token.CancellationToken);
-
-            //this._sealing = true;
-
-            //try
-            //{
-            //    IReadOnlyCollection<BlackboardRecordMetadata> metaDatas;
-            //    using (this._metaDataLocker.Lock())
-            //    {
-            //        metaDatas = this.State!.Registry.RecordMetadatas.Values.ToArray();
-            //    }
-
-            //    var logicalTypeToRemain = this._logicalHandlers.Where(h => h.RemainOnSealed)
-            //                                                   .ToArray();
-
-            //    var toKeepOnSealed = metaDatas.Where(m => m.Status == RecordStatusEnum.Ready && logicalTypeToRemain.Any(h => h.Match(m.LogicalType)))
-            //                                  .ToArray();
-
-            //    var toRemove = metaDatas.Except(toKeepOnSealed)
-            //                            .ToArray();
-
-            //    var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, token.CancellationToken);
-
-            //    BlackboardCommand[]? sealingCommands = null;
-
-            //    if (stateController is not null)
-            //    {
-            //        sealingCommands = (await stateController.OnSealed(toKeepOnSealed, toRemove, token))?.ToArray();
-            //    }
-            //    else
-            //    {
-            //        sealingCommands = toRemove.Select(t => new BlackboardCommandStorageRemoveRecord(t.Uid)).ToArray();
-            //    }
-
-            //    if (sealingCommands is not null)
-            //        await this.CommandExecutionStartPointAsync(token.CancellationToken, sealingCommands);
-
-            //    return true;
-            //}
-            //finally
-            //{
-            //    this._sealing = false;
-            //}
         }
 
         /// <inheritdoc />
         public async Task<bool> InitializeAsync(GrainCancellationToken token, IReadOnlyCollection<DataRecordContainer>? initData = null)
         {
-            if (this.State!.CurrentLifeStatus != BlackboardLifeStatusEnum.WaitingInitialization)
-                return false;
+            if (this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.WaitingInitialization || this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.None)
+            {
+                var initResult = await CommandExecutionStartPointAsync(token.CancellationToken, new BlackboardCommandLifeInitializeChange(this.State!.CurrentLifeStatus, initData));
 
-            return await CommandExecutionStartPointAsync(token.CancellationToken, new BlackboardCommandLifeInitializeChange(BlackboardLifeStatusEnum.WaitingInitialization, initData));
+                if (initResult)
+                {
+                    var signalCmds = this.State!.TemplateCopy?
+                                                .Controllers?
+                                                .Where(c => c.ControllerType == BlackboardControllerTypeEnum.Event)
+                                                .Select(c => c.Options)
+                                                .OfType<EventControllerOptions>()
+                                                .SelectMany(options => options.ListenSignals.Select(s => new BlackboardCommandSignal(s.Uid,
+                                                                                                                                     s.Name,
+                                                                                                                                     false,
+                                                                                                                                     BlackboardCommandSignalTypeEnum.Attach))
 
-            //this._initializing = true;
-            //try
-            //{
-            //    //this.State.TemplateCopy.ConfigurationDefinition.InitializationRequired
+                                                                              .Concat(options.ListenDoors.Select(s => new BlackboardCommandSignal(s.Uid,
+                                                                                                                                                  s.Name,
+                                                                                                                                                  true,
+                                                                                                                                                  BlackboardCommandSignalTypeEnum.Attach))))
+                                                .ToArray() ?? EnumerableHelper<BlackboardCommandSignal>.ReadOnlyArray;
 
-            //    BlackboardCommand[]? initCommands = null;
+                    if (signalCmds.Any())
+                        await CommandExecutionStartPointAsync(token.CancellationToken, signalCmds);
+                }
 
-            //    var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, token.CancellationToken);
-
-            //    if (stateController is null)
-            //    {
-            //        initCommands = initData?.Select(d => d.CreateAddCommand(true, true))
-            //                                .ToArray();
-            //    }
-            //    else
-            //    {
-            //        initCommands = (await stateController.OnInitialize(initData ?? EnumerableHelper<DataRecordContainer>.ReadOnly, token))?.ToArray();
-            //    }
-
-            //    if (initCommands is not null)
-            //        await this.CommandExecutionStartPointAsync(token.CancellationToken, initCommands);
-
-            //    this.State.CurrentLifeStatus = BlackboardLifeStatusEnum.Running;
-            //    await PushStateAsync(default);
-            //}
-            //finally
-            //{
-            //    this._initializing = false;
-            //}
-            //return true;
+                return initResult;
+            }
+            return false;
         }
 
         /// <inheritdoc />
@@ -317,6 +267,13 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
+        /// <remarks>
+        ///     No CONTROLLER MUST be called from this method, this could create a dead lock.
+        ///     
+        ///     Controller that inherite from BlackboardBaseControllerGrain will try to get the IBlackboardRef proxy
+        ///     during activation.
+        ///     
+        /// </remarks>
         public async Task BuildFromTemplateAsync(Guid blackboardTemplateUid, BlackboardId blackboardId)
         {
             if (this.State!.IsBuild == false)
@@ -329,7 +286,9 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                     throw new MissingDefinitionException(typeof(BlackboardTemplateDefinition), blackboardTemplateUid.ToString());
 #pragma warning restore IDE0270 // Use coalesce expression
 
-                this.State.CurrentLifeStatus = (tmpl.ConfigurationDefinition?.InitializationRequired == true ? BlackboardLifeStatusEnum.WaitingInitialization : BlackboardLifeStatusEnum.Running);
+                if (tmpl.ConfigurationDefinition?.InitializationRequired == true)
+                    this.State.CurrentLifeStatus = BlackboardLifeStatusEnum.WaitingInitialization;
+
                 this.State!.BuildUsingTemplate(tmpl, blackboardId);
 
                 await PushStateAsync(default);
@@ -589,6 +548,41 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             return base.OnActivateAsync(cancellationToken);
         }
 
+        /// <inheritdoc />
+        public async Task ReceiveSignalAsync(SignalMessage message)
+        {
+            if (this._initializing == false &&
+                this._sealing == false &&
+                (this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.WaitingInitialization ||
+                 this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.None ||
+                 this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.Sealed))
+            {
+                this.Logger.OptiLog(LogLevel.Critical, "Blackboard not ready for receiving signal messages {BlackboardStatus}", this.State!.CurrentLifeStatus);
+                return;
+            }
+
+            var eventController = await GetControllerAsync<IBlackboardEventControllerGrain>(BlackboardControllerTypeEnum.Event, default);
+
+            if (eventController is not null)
+            {
+                await this._singleMessageTreatmentLocker.WaitAsync(this._lifetimeToken.Token);
+                try
+                {
+                    using (var grainCancelSource = this._lifetimeToken.ToGrainCancellationTokenSource())
+                    {
+                        var cmds = await eventController.ManagedSignalMessageAsync(message, grainCancelSource.Token);
+
+                        if (cmds is not null && cmds.Any())
+                            await CommandExecutionStartPointAsync(grainCancelSource.Token.CancellationToken, cmds, null);
+                    }
+                }
+                finally
+                {
+                    this._singleMessageTreatmentLocker.Release();
+                }
+            }
+        }
+
         #endregion
 
         #region Tools
@@ -596,7 +590,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         private static bool QueryRequestCommandFilter(BlackboardCommand c)
         {
             return c.ActionType == BlackboardCommandTypeEnum.Reject ||
-                   c.ActionType == BlackboardCommandTypeEnum.Reponse ||
+                   c.ActionType == BlackboardCommandTypeEnum.Response ||
                    c.ActionType == BlackboardCommandTypeEnum.Deferred;
         }
 
@@ -633,7 +627,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
                 var newEvents = events ?? EnumerableHelper<BlackboardEvent>.ReadOnlyArray;
 
-                if (oldEvents is not null)
+                if (oldEvents is not null && oldEvents.Any())
                     newEvents = newEvents.Except(oldEvents).ToArray();
 
                 if (newEvents is not null && this.Logger.IsEnabled(LogLevel.Debug))
@@ -650,13 +644,11 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 }
 
                 if (result)
-                {
-                    await BlackboardGrainStateSaving(false, token).ConfigureAwait(false);
-                }
+                    await BlackboardGrainStateSaving(false, token);
 
                 if (newEvents is not null && newEvents.Length > 0)
                 {
-                    var eventController = await GetControllerAsync<IBlackboardEventControllerGrain>(BlackboardControllerTypeEnum.Event, token);
+                    var eventController = await GetControllerAsync<IBlackboardEventControllerGrain>(BlackboardControllerTypeEnum.Event, token, parentContext);
 
                     if (eventController is not null)
                     {
@@ -677,7 +669,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         private async Task BlackboardGrainStateSaving(bool force, CancellationToken token)
         {
             // Force save all the 10 push this is to prevent any data lost
-            if (force && Interlocked.Increment(ref this._saveCounter) > 10)
+            if (force || Interlocked.Increment(ref this._saveCounter) > 10)
             {
                 await this._delaySaving.StopAsync(token);
                 await DelayPushStateAsync(token);
@@ -687,9 +679,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             // otherwise restart the timer to delay the save
 
             // Restart in fire and forget mode the timer to save to prevent save state each time
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            Task.Run(() => this._delaySaving.StartAsync()).ConfigureAwait(false);
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            await this._delaySaving.StartAsync();
         }
 
         /// <summary>
@@ -898,11 +888,18 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <summary>
         /// Gets the controller after initialization if needed
         /// </summary>
-        private async ValueTask<TSpecializedController?> GetControllerAsync<TSpecializedController>(BlackboardControllerTypeEnum controllerType, CancellationToken token)
+        private async ValueTask<TSpecializedController?> GetControllerAsync<TSpecializedController>(BlackboardControllerTypeEnum controllerType, CancellationToken token, CommandExecutionContext? parentContext = null)
             where TSpecializedController : IBlackboardBaseControllerGrain
         {
             if (this._controllers.TryGetValue(controllerType, out var controller))
-                return await controller.GetController<TSpecializedController>(token);
+            {
+                var iniCmds = await controller.GetController<TSpecializedController>(token);
+
+                if (iniCmds.InitControllerActions is not null && iniCmds.InitControllerActions.Any())
+                    await CommandExecutionStartPointAsync(token, iniCmds.InitControllerActions, parentContext);
+
+                return iniCmds.Controller;
+            }
 
             return default;
         }
@@ -917,8 +914,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                                                 CommandExecutionContext context)
             where TRootCommand : BlackboardCommand
         {
-            if (processors.TryGetValue(getKeyFromCommand(command), out var storageAction))
-                return await storageAction(grain, command, context);
+            if (processors.TryGetValue(getKeyFromCommand(command), out var actions))
+                return await actions(grain, command, context);
 
             throw new KeyNotFoundException($"[Blacboard] No action executor for type {command.ToDebugDisplayName()}");
         }
@@ -977,6 +974,40 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <summary>
+        /// Method that managed message attach and dettach action
+        /// </summary>
+        private async Task<bool> CommandExecuteSignalAsync(BlackboardCommand cmd, CommandExecutionContext ctx)
+        {
+            if (cmd is BlackboardCommandSignal signalCmd)
+            {
+                if (signalCmd.Type == BlackboardCommandSignalTypeEnum.Attach)
+                {
+                    SubscriptionId subscription;
+
+                    if (signalCmd.IsDoor)
+                        subscription = await this._signalService.SubscribeAsync(new DoorId(signalCmd.SignalUid, signalCmd.DisplayName), this, ctx.CancellationToken);
+                    else
+                        subscription = await this._signalService.SubscribeAsync(new SignalId(signalCmd.SignalUid, signalCmd.DisplayName), this, ctx.CancellationToken);
+
+                    this.State!.AddSubscription(subscription);
+                }
+                else
+                {
+                    var subscription = this.State!.GetSubscription(signalCmd.SignalUid);
+
+                    if (subscription is null)
+                        return false;
+
+                    await this._signalService.UnsubscribeAsync(subscription.Value, ctx.CancellationToken);
+                    this.State!.RemoveSubscription(subscription.Value);
+                }
+
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Check and resolved possible issue related to <paramref name="record"/> be added
         /// </summary>
         /// <returns>
@@ -994,7 +1025,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             if (pushIssue is not null)
             {
-                var controller = await GetControllerAsync<IBlackboardStorageControllerGrain>(BlackboardControllerTypeEnum.Storage, ctx.CancellationToken);
+                var controller = await GetControllerAsync<IBlackboardStorageControllerGrain>(BlackboardControllerTypeEnum.Storage, ctx.CancellationToken, ctx);
 
                 if (controller is null)
                     throw new BlackboardPushValidationException(record, "Missing controller for type " + BlackboardControllerTypeEnum.Storage + " : " + pushIssue.ToDebugDisplayName(), null);
@@ -1081,7 +1112,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                       .GroupBy(rep => rep.ActionType)
                                       .ToDictionary(k => k.Key, v => v.Last());
 
-            if (result.TryGetValue(BlackboardCommandTypeEnum.Reponse, out var direct) && direct is BlackboardCommandResponse<TResponse> reponseCmd)
+            if (result.TryGetValue(BlackboardCommandTypeEnum.Response, out var direct) && direct is BlackboardCommandResponse<TResponse> reponseCmd)
             {
                 queryResponse = new BlackboardQueryDirectResponse<TResponse>(reponseCmd.Response, queryUid);
                 if (runningDeferred is not null)
@@ -1167,7 +1198,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             var status = this.State!.CurrentLifeStatus;
 
-            if (this.State!.TemplateCopy?.ConfigurationDefinition?.InitializationRequired == true && (status == BlackboardLifeStatusEnum.None || status == BlackboardLifeStatusEnum.WaitingInitialization))
+            if (status == BlackboardLifeStatusEnum.None || status == BlackboardLifeStatusEnum.WaitingInitialization)
                 throw new EntityRequiredInitializationException(this, this.State!.TemplateCopy!.DisplayName + ":" + this.GetPrimaryKeyString());
         }
 
@@ -1361,7 +1392,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <summary>
-        /// Commands the trigger signal.
+        /// Commands the trigger message.
         /// </summary>
         private async Task<bool> Command_TriggerSignal(BlackboardCommandTriggerSignal cmd, CommandExecutionContext ctx)
         {
@@ -1373,7 +1404,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <summary>
-        /// Commands the trigger signal.
+        /// Commands the trigger message.
         /// </summary>
         private async Task<bool> Command_TriggerSignalWithData<TData>(BlackboardCommandTriggerSignal<TData> cmd, CommandExecutionContext ctx)
             where TData : struct
@@ -1387,7 +1418,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         private async Task<bool> Command_LifeStatus_Initialize(BlackboardCommandLifeInitializeChange cmd, CommandExecutionContext ctx)
         {
-            if (this.State!.CurrentLifeStatus != BlackboardLifeStatusEnum.WaitingInitialization)
+            if (this.State!.CurrentLifeStatus != BlackboardLifeStatusEnum.WaitingInitialization && this.State!.CurrentLifeStatus != BlackboardLifeStatusEnum.None)
                 return false;
 
             this._initializing = true;
@@ -1395,7 +1426,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             {
                 BlackboardCommand[]? initCommands = null;
 
-                var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, ctx.CancellationToken);
+                var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, ctx.CancellationToken, ctx);
 
                 if (stateController is null)
                 {
@@ -1468,20 +1499,28 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 var toRemove = metaDatas.Except(toKeepOnSealed)
                                         .ToArray();
 
-                var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, ctx.CancellationToken);
+                var stateController = await GetControllerAsync<IBlackboardStateControllerGrain>(BlackboardControllerTypeEnum.State, ctx.CancellationToken, ctx);
 
-                BlackboardCommand[]? sealingCommands = null;
+                List<BlackboardCommand>? sealingCommands = null;
 
                 if (stateController is not null)
                 {
                     using (var tokenSource = ctx.CancellationToken.ToGrainCancellationTokenSource())
                     {
-                        sealingCommands = (await stateController.OnSealed(toKeepOnSealed, toRemove, tokenSource.Token))?.ToArray();
+                        sealingCommands = (await stateController.OnSealed(toKeepOnSealed, toRemove, tokenSource.Token))?.ToList<BlackboardCommand>();
                     }
                 }
                 else
                 {
-                    sealingCommands = toRemove.Select(t => new BlackboardCommandStorageRemoveRecord(t.Uid)).ToArray();
+                    sealingCommands = toRemove.Select(t => new BlackboardCommandStorageRemoveRecord(t.Uid)).ToList<BlackboardCommand>();
+                }
+
+                foreach (var signalSubscription in this.State!.GetSubscriptions())
+                {
+                    sealingCommands = sealingCommands.AddOnNull((BlackboardCommand)new BlackboardCommandSignal(signalSubscription.SignalId,
+                                                                                                               "",
+                                                                                                               signalSubscription.FromDoor,
+                                                                                                               BlackboardCommandSignalTypeEnum.Detach));
                 }
 
                 if (sealingCommands is not null)
@@ -1498,12 +1537,20 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #endregion
 
         /// <inheritdoc />
+        protected override void DisposeResourcesBegin()
+        {
+            this._lifetimeToken.Cancel();
+            base.DisposeResourcesBegin();
+        }
+
+        /// <inheritdoc />
         protected override void DisposeResourcesEnd()
         {
             this._delaySaving.DisposeAsync().AsTask().ContinueWith((_) =>
             {
                 this._metaDataLocker.Dispose();
                 this._saveStateLocker.Dispose();
+                this._singleMessageTreatmentLocker.Dispose();
             });
 
             base.DisposeResourcesEnd();

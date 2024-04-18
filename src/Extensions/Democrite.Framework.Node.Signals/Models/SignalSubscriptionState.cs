@@ -62,6 +62,26 @@ namespace Democrite.Framework.Node.Signals.Models
         #region Methods
 
         /// <summary>
+        /// Get suscription by <paramref name="targetGrainId"/>
+        /// </summary>
+        public Guid? GetSuscription(DedicatedGrainId<ISignalReceiver> targetGrainId)
+        {
+            this._subscriptionLocker.EnterReadLock();
+
+            try
+            {
+                if (this._subscriptions.TryGetValue(targetGrainId, out var existingSubscription))
+                    return existingSubscription.Uid;
+            }
+            finally
+            {
+                this._subscriptionLocker.ExitReadLock();
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Adds or update a suscriptions.
         /// </summary>
         public Guid AddOrUpdateSuscription(DedicatedGrainId<ISignalReceiver> targetGrainId)

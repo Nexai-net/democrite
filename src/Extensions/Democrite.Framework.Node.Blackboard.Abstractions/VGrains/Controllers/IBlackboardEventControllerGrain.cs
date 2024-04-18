@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers
 {
+    using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Events;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries;
@@ -23,6 +24,11 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers
         /// </summary>
         Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token);
 
+        /// <summary>
+        /// Reacts to signal message
+        /// </summary>
+        Task<IReadOnlyCollection<BlackboardCommand>?> ManagedSignalMessageAsync(SignalMessage message, GrainCancellationToken token);
+        
         /// <summary>
         /// Process a incoming query
         /// </summary>

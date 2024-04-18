@@ -29,6 +29,14 @@ var commonMethodDescription = """
         Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, CancellationToken token) where TDefinition : class, IDefinition;
 
         /// <summary>
+        /// Gets the etag version of the definition registry
+        /// </summary>
+        /// <returns>
+        ///   Return dynamic registry etag
+        /// </returns>
+        Task<string> GetHandlerEtagAsync();
+
+        /// <summary>
         /// Change the enable status of a definition
         /// </summary>
         /// <returns>
@@ -54,7 +62,7 @@ var commonMethodDescription = """
         /// <summary>
         /// Get dynamic definition metadata in the system; Could be filter by related type <param cref="typeFilter" /> and/or by <param cref="displayNameRegex" />
         /// </summary>
-        Task<IReadOnlyCollection<DynamicDefinitionMetaData>> GetDynamicDefinitionMetaDatasAsync(ConcretType? typeFilter = null, string? displayNameRegex = null, bool onlyEnabled = false, CancellationToken token = default);
+        Task<EtagContainer<IReadOnlyCollection<DynamicDefinitionMetaData>>> GetDynamicDefinitionMetaDatasAsync(ConcretType? typeFilter = null, string? displayNameRegex = null, bool onlyEnabled = false, CancellationToken token = default);
 
         /// <summary>
         /// Get dynamic definition based on is unique identifier
@@ -62,7 +70,7 @@ var commonMethodDescription = """
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(CancellationToken token, params Guid[] uid) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(CancellationToken token, params Guid[] uid) where TDefinition : IDefinition;
 
         /// <summary>
         /// Get dynamic definition based filter
@@ -70,7 +78,7 @@ var commonMethodDescription = """
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, CancellationToken token) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, CancellationToken token) where TDefinition : IDefinition;
 """;
 
 var proxyMethod = """

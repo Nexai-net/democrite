@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
+    using Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains.Controllers;
 
     using Elvex.Toolbox.Disposables;
@@ -56,21 +57,26 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public async ValueTask<TController> GetController<TController>(CancellationToken token)
+        public async ValueTask<(TController Controller, IReadOnlyCollection<BlackboardCommand>? InitControllerActions)> GetController<TController>(CancellationToken token)
         {
+            List<BlackboardCommand>? iniCommands = null;
+
             using (this._locker.Lock(token))
             using (var grainTokenSource = token.ToGrainCancellationTokenSource())
             {
                 if (this._controller == null)
                 {
                     var controller = this._grainFactory.GetGrain(this._controllerType, this._boardId).AsReference<IBlackboardBaseControllerGrain>();
-                    await controller.InitializationAsync(this._option, grainTokenSource.Token);
+                    var initCmdResuls = await controller.InitializationAsync(this._option, grainTokenSource.Token);
 
                     this._controller = controller;
+
+                    if (initCmdResuls is not null && initCmdResuls.Any())
+                        iniCommands = iniCommands.AddRangeOnNull(initCmdResuls);
                 }
             }
 
-            return this._controller.AsReference<TController>();
+            return (this._controller.AsReference<TController>(), (IReadOnlyCollection<BlackboardCommand>?)iniCommands);
         }
 
         #endregion

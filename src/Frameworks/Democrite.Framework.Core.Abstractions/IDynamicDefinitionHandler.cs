@@ -41,6 +41,14 @@
         Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, GrainCancellationToken token) where TDefinition : class, IDefinition;
 
         /// <summary>
+        /// Gets the etag version of the definition registry
+        /// </summary>
+        /// <returns>
+        ///   Return dynamic registry etag
+        /// </returns>
+        Task<string> GetHandlerEtagAsync();
+
+        /// <summary>
         /// Change the enable status of a definition
         /// </summary>
         /// <returns>
@@ -66,7 +74,7 @@
         /// <summary>
         /// Get dynamic definition metadata in the system; Could be filter by related type <param cref="typeFilter" /> and/or by <param cref="displayNameRegex" />
         /// </summary>
-        Task<IReadOnlyCollection<DynamicDefinitionMetaData>> GetDynamicDefinitionMetaDatasAsync(ConcretType? typeFilter, string? displayNameRegex, bool onlyEnabled, GrainCancellationToken token);
+        Task<EtagContainer<IReadOnlyCollection<DynamicDefinitionMetaData>>> GetDynamicDefinitionMetaDatasAsync(ConcretType? typeFilter, string? displayNameRegex, bool onlyEnabled, GrainCancellationToken token);
 
         /// <summary>
         /// Get dynamic definition based on is unique identifier
@@ -74,7 +82,7 @@
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(GrainCancellationToken token, IReadOnlyCollection<Guid> uid) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(GrainCancellationToken token, IReadOnlyCollection<Guid> uid) where TDefinition : IDefinition;
 
         /// <summary>
         /// Get dynamic definition based filter
@@ -82,7 +90,7 @@
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(ConditionExpressionDefinition filter, GrainCancellationToken token) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(ConditionExpressionDefinition filter, GrainCancellationToken token) where TDefinition : IDefinition;
 
         #endregion
     }
@@ -117,6 +125,14 @@
         Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, CancellationToken token) where TDefinition : class, IDefinition;
 
         /// <summary>
+        /// Gets the etag version of the definition registry
+        /// </summary>
+        /// <returns>
+        ///   Return dynamic registry etag
+        /// </returns>
+        Task<string> GetHandlerEtagAsync();
+
+        /// <summary>
         /// Change the enable status of a definition
         /// </summary>
         /// <returns>
@@ -142,7 +158,7 @@
         /// <summary>
         /// Get dynamic definition metadata in the system; Could be filter by related type <param cref="typeFilter" /> and/or by <param cref="displayNameRegex" />
         /// </summary>
-        Task<IReadOnlyCollection<DynamicDefinitionMetaData>> GetDynamicDefinitionMetaDatasAsync(ConcretType? typeFilter = null, string? displayNameRegex = null, bool onlyEnabled = false, CancellationToken token = default);
+        Task<EtagContainer<IReadOnlyCollection<DynamicDefinitionMetaData>>> GetDynamicDefinitionMetaDatasAsync(ConcretType? typeFilter = null, string? displayNameRegex = null, bool onlyEnabled = false, CancellationToken token = default);
 
         /// <summary>
         /// Get dynamic definition based on is unique identifier
@@ -150,7 +166,7 @@
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(CancellationToken token, params Guid[] uid) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(CancellationToken token, params Guid[] uid) where TDefinition : IDefinition;
 
         /// <summary>
         /// Get dynamic definition based filter
@@ -158,7 +174,7 @@
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<IReadOnlyCollection<TDefinition>> GetDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, CancellationToken token) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, CancellationToken token) where TDefinition : IDefinition;
 
         /// <inheritdoc cref="GetDefinitionAsync{TDefinition}(CancellationToken, Guid[])" />
         Task<TDefinition?> GetDefinitionAsync<TDefinition>(Guid uid, CancellationToken token) where TDefinition : IDefinition;

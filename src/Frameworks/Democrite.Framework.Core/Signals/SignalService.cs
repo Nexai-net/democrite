@@ -19,6 +19,8 @@ namespace Democrite.Framework.Core.Signals
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
 
+    using static Democrite.Framework.Core.Abstractions.DemocriteSystemDefinitions;
+
     /// <inheritdoc />
     internal sealed class SignalService : ISignalService
     {
@@ -200,33 +202,43 @@ namespace Democrite.Framework.Core.Signals
             var signalVGrain = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new SignalNotFoundException(signalId.Name);
             token.ThrowIfCancellationRequested();
 
-            using (var cancelSource = new GrainCancellationTokenSource())
-            {
-                token.Register(() => cancelSource.Cancel());
-                var uid = await signalVGrain.SubscribeAsync(receiver.GetDedicatedGrainId<ISignalReceiver>(), cancelSource.Token);
-                return new SubscriptionId(signalId.Uid, false, uid);
-            }
+            return await SubscribeImplAsync(signalId.Uid, receiver, signalVGrain, token);
         }
 
         /// <inheritdoc />
         public async Task<SubscriptionId> SubscribeAsync(DoorId doorId, ISignalReceiver receiver, CancellationToken token)
         {
-            var doorVGrain = this._grainFactory.GetGrain<IDoorSignalVGrain>(doorId.Uid) ?? throw new DoorNotFoundException(doorId.Uid + "/" + doorId.Name);
-
+            var doorVGrain = this._grainFactory.GetGrain<IDoorSignalVGrain>(doorId.Uid) ?? throw new DoorNotFoundException("Door:" + doorId.Uid + "/" + doorId.Name);
             token.ThrowIfCancellationRequested();
 
-            using (var cancelSource = new GrainCancellationTokenSource())
-            {
-                token.Register(() => cancelSource.Cancel());
-                var uid = await doorVGrain.SubscribeAsync(receiver.GetDedicatedGrainId<ISignalReceiver>(), cancelSource.Token);
-                return new SubscriptionId(doorId.Uid, true, uid);
-            }
+            return await SubscribeImplAsync(doorId.Uid, receiver, doorVGrain, token);
         }
 
         /// <inheritdoc />
-        public Task Unsubscribe(SubscriptionId subscriptionId)
+        public async Task UnsubscribeAsync(SubscriptionId subscriptionId, CancellationToken token)
         {
-            throw new NotImplementedException();
+            ISignalHandler signalHandler;
+
+            if (subscriptionId.FromDoor)
+                signalHandler = this._grainFactory.GetGrain<IDoorSignalVGrain>(subscriptionId.SignalId) ?? throw new DoorNotFoundException("Door : " + subscriptionId.SignalId);
+            else
+                signalHandler = this._grainFactory.GetGrain<ISignalVGrain>(subscriptionId.SignalId) ?? throw new DoorNotFoundException("Signal : " + subscriptionId.SignalId);
+
+            await UnsubscribeImplAsync(signalHandler, null, subscriptionId, token);
+        }
+
+        /// <inheritdoc />
+        public async Task UnsubscribeAsync(SignalId signalId, ISignalReceiver receiver, CancellationToken token)
+        {
+            var signalHandler = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new DoorNotFoundException("Signal:" + signalId.Uid + "/" + signalId.Name);
+            await UnsubscribeImplAsync(signalHandler, receiver, null, token);
+        }
+
+        /// <inheritdoc />
+        public async Task UnsubscribeAsync(DoorId doorId, ISignalReceiver receiver, CancellationToken token)
+        {
+            var signalHandler = this._grainFactory.GetGrain<IDoorSignalVGrain>(doorId.Uid) ?? throw new DoorNotFoundException("Door:" + doorId.Uid + "/" + doorId.Name);
+            await UnsubscribeImplAsync(signalHandler, receiver, null, token);
         }
 
         #region Tools
@@ -244,6 +256,29 @@ namespace Democrite.Framework.Core.Signals
 #pragma warning restore IDE0270 // Use coalesce expression
 
             return definition;
+        }
+
+        /// <inheritdoc cref="ISignalService.SubscribeAsync(string, ISignalReceiver, CancellationToken)" />
+        private static async Task<SubscriptionId> SubscribeImplAsync(Guid signalId, ISignalReceiver receiver, ISignalHandler signalHandler, CancellationToken token)
+        {
+            using (var cancelSource = new GrainCancellationTokenSource())
+            {
+                token.Register(() => cancelSource.Cancel());
+                var uid = await signalHandler.SubscribeAsync(receiver.GetDedicatedGrainId<ISignalReceiver>(), cancelSource.Token);
+                return new SubscriptionId(signalId, false, uid);
+            }
+        }
+
+        /// <inheritdoc cref="ISignalService.UnsubscribeAsync(SubscriptionId, CancellationToken)" />
+        private async Task UnsubscribeImplAsync(ISignalHandler signalHandler, ISignalReceiver? receiver, SubscriptionId? subscriptionId, CancellationToken token)
+        {
+            using (var cancelSource = new GrainCancellationTokenSource())
+            {
+                if (subscriptionId is not null)
+                    await signalHandler.UnsuscribeAsync(subscriptionId.Value.Uid, cancelSource.Token);
+                else if (receiver is not null)
+                    await signalHandler.UnsuscribeAsync(receiver.GetDedicatedGrainId<ISignalReceiver>(), cancelSource.Token);
+            }
         }
 
         #endregion

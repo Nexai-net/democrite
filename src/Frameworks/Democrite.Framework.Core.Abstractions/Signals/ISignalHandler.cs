@@ -24,9 +24,13 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         Task<Guid> SubscribeAsync(DedicatedGrainId<ISignalReceiver> grainId, GrainCancellationToken token);
 
         /// <summary>
-        /// Unsuscribes.
+        /// Unsuscribes signals
         /// </summary>
-        /// <param name="subscritionId">The subscrition identifier returned on <see cref="SubscribeAsync(ISignalReceiver)"/>.</param>
         Task UnsuscribeAsync(Guid subscritionId, GrainCancellationToken token);
+
+        /// <summary>
+        /// Unsuscribes signals
+        /// </summary>
+        Task UnsuscribeAsync(DedicatedGrainId<ISignalReceiver> grainId, GrainCancellationToken token);
     }
 }
