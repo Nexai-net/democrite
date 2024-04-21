@@ -18,5 +18,15 @@ namespace Democrite.Framework.Core.Abstractions.Deferred
         /// Gets the deferred work awaiter.
         /// </summary>
         Task<IExecutionResult<TResponse>> GetDeferredWorkAwaiterAsync<TResponse>(Guid id, CancellationToken token = default);
+
+        /// <summary>
+        /// Reserve a slot to be filled later on
+        /// </summary>
+        Task<Guid> ReservedDeferredWorkSlot<TResponse>(Guid? sourceId = null);
+
+        /// <summary>
+        /// Cleans up deferred work information
+        /// </summary>
+        Task CleanUpDeferredWork(Guid deferredId);
     }
 }

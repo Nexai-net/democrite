@@ -231,4 +231,29 @@ namespace Democrite.Framework.Core.Models
 
         #endregion
     }
+
+    /// <summary>
+    /// Result container that provide information about execution and result <typeparamref name="TResult"/>
+    /// </summary>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <seealso cref="IExecutionResult" />
+    [Immutable]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public record struct ExecutionResultStruct<TResult>(TResult? Output,
+                                                        Guid ExecutionId,
+                                                        bool Succeeded,
+                                                        bool Cancelled,
+                                                        string? ErrorCode,
+                                                        string? Message,
+                                                        bool HasOutput,
+                                                        string? OutputType) : IExecutionResult<TResult>
+    {
+        /// <inheritdoc />
+        public object? GetOutput()
+        {
+            return (object?)this.Output;
+        }
+    }
 }

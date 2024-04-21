@@ -6,6 +6,7 @@ namespace Democrite.Framework.Core
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Customizations;
+    using Democrite.Framework.Core.Abstractions.Deferred;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Executions;
     using Elvex.Toolbox;
@@ -25,6 +26,7 @@ namespace Democrite.Framework.Core
     {
         #region Fields
 
+        private readonly IDeferredAwaiterHandler _deferredAwaiterHandler;
         private readonly ILogger<IDemocriteExecutionHandler> _logger;
         private readonly IDemocriteSerializer _democriteSerializer;
         private readonly IVGrainProvider _vgrainProvider;
@@ -38,10 +40,12 @@ namespace Democrite.Framework.Core
         /// </summary>
         public DemocriteExecutionHandler(IVGrainProvider vgrainProvider,
                                          IDemocriteSerializer democriteSerializer,
+                                         IDeferredAwaiterHandler deferredAwaiterHandler,
                                          ILogger<IDemocriteExecutionHandler>? logger = null)
         {
             this._vgrainProvider = vgrainProvider;
             this._democriteSerializer = democriteSerializer;
+            this._deferredAwaiterHandler = deferredAwaiterHandler;
             this._logger = logger ?? NullLogger<IDemocriteExecutionHandler>.Instance;
         }
 
@@ -76,37 +80,37 @@ namespace Democrite.Framework.Core
         }
 
         /// <inheritdoc />
-        public IExecutionLauncher Sequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
+        public IExecutionFlowLauncher Sequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
         {
             return SequenceImpl<NoneType>(sequenceId, cfgBuilder, null);
         }
 
         /// <inheritdoc />
-        public IExecutionLauncher Sequence(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
+        public IExecutionFlowLauncher Sequence(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
         {
             return SequenceImpl<NoneType>(sequenceId, null, customizationDescriptions);
         }
 
         /// <inheritdoc />
-        public IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
+        public IExecutionBuilder<TInput, IExecutionFlowLauncher> Sequence<TInput>(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
         {
             return SequenceImpl<TInput>(sequenceId, cfgBuilder, null);
         }
 
         /// <inheritdoc />
-        public IExecutionBuilder<TInput> Sequence<TInput>(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
+        public IExecutionBuilder<TInput, IExecutionFlowLauncher> Sequence<TInput>(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
         {
             return SequenceImpl<TInput>(sequenceId, null, customizationDescriptions);
         }
 
         /// <inheritdoc />
-        public IExecutionBuilder<object> SequenceWithInput(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
+        public IExecutionBuilder<object, IExecutionFlowLauncher> SequenceWithInput(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
         {
             return SequenceImpl<object>(sequenceId, cfgBuilder, null);
         }
 
         /// <inheritdoc />
-        public IExecutionBuilder<object> SequenceWithInput(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
+        public IExecutionBuilder<object, IExecutionFlowLauncher> SequenceWithInput(Guid sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
         {
             return SequenceImpl<object>(sequenceId, null, customizationDescriptions);
         }
@@ -121,7 +125,7 @@ namespace Democrite.Framework.Core
         }
 
         /// <inheritdoc />
-        public ExecutionBuilderLauncher<ISequenceExecutorVGrain, TInput> SequenceImpl<TInput>(Guid sequenceId,
+        private ExecutionFlowLauncher<ISequenceExecutorVGrain, TInput> SequenceImpl<TInput>(Guid sequenceId,
                                                                                               Action<IExecutionConfigurationBuilder>? cfgBuilder,
                                                                                               in ExecutionCustomizationDescriptions? customizationDescriptions)
         {
@@ -136,11 +140,12 @@ namespace Democrite.Framework.Core
                 executionCustomization = builder.Build();
             }
 
-            return new ExecutionBuilderLauncher<ISequenceExecutorVGrain, TInput>(sequenceId,
-                                                                                 this._vgrainProvider,
-                                                                                 this._logger,
-                                                                                 this._democriteSerializer,
-                                                                                 executionCustomization);
+            return new ExecutionFlowLauncher<ISequenceExecutorVGrain, TInput>(sequenceId,
+                                                                              this._vgrainProvider,
+                                                                              this._logger,
+                                                                              this._democriteSerializer,
+                                                                              executionCustomization,
+                                                                              this._deferredAwaiterHandler);
         }
 
         #endregion

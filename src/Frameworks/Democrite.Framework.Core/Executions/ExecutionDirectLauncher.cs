@@ -21,7 +21,7 @@ namespace Democrite.Framework.Core.Executions
     /// <summary>
     /// Launcher used to call a vgrain method and provide the result
     /// </summary>
-    internal sealed class ExecutionDirectLauncher<TVGrain, TInput, TConfig, TResult> : ExecutionBaseLauncher<TVGrain, TResult>
+    internal sealed class ExecutionDirectLauncher<TVGrain, TInput, TConfig, TResult> : ExecutionBaseLauncher<TVGrain, TResult, IExecutionDirectLauncher>
         where TVGrain : IVGrain
     {
         #region Fields

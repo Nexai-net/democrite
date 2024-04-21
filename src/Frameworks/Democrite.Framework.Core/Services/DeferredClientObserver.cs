@@ -12,12 +12,14 @@ namespace Democrite.Framework.Core.Services
 
     using Elvex.Toolbox.Disposables;
     using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Models;
     using Elvex.Toolbox.Services;
     using Elvex.Toolbox.Supports;
     using Elvex.Toolbox.Tasks;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Newtonsoft.Json.Linq;
 
     using System;
     using System.Linq.Expressions;
@@ -144,8 +146,12 @@ namespace Democrite.Framework.Core.Services
                     if (statusChangeMessage.Status == DeferredStatusEnum.Cancelled || statusChangeMessage.Status == DeferredStatusEnum.Failed || statusChangeMessage.Status == DeferredStatusEnum.Finished)
                     {
                         requiredResponse = pendingTask;
+                    }
+                    else if (statusChangeMessage.Status == DeferredStatusEnum.Cleanup)
+                    {
                         this._awaitingTasks.Remove(deferredId);
                         this._deferredStatus.Remove(deferredId);
+                        return;
                     }
                 }
             }
@@ -165,49 +171,7 @@ namespace Democrite.Framework.Core.Services
         /// <inheritdoc />
         public async Task<IExecutionResult<TResponse>> GetDeferredWorkAwaiterAsync<TResponse>(Guid id, CancellationToken token)
         {
-            Task<IExecutionResult<TResponse>>? task = null;
-            using (await this._deferredLocker.LockAsync())
-            {
-                token.ThrowIfCancellationRequested();
-                if (this._awaitingTasks.TryGetValue(id, out var pendingTask))
-                {
-                    task = (Task<IExecutionResult<TResponse>>)pendingTask;
-                }
-                else
-                {
-                    if (this._deferredStatus.TryGetValue(id, out var deferredStatusMessage))
-                    {
-                        if (deferredStatusMessage.Status == DeferredStatusEnum.Cancelled)
-                            throw new OperationCanceledException();
-
-                        // TODO : managed failed status
-                    }
-
-                    var taskCompletion = new TaskCompletionSourceEx<IExecutionResult<TResponse>>(typeof(TResponse));
-                    task = taskCompletion.Task;
-                    this._awaitingTasks.Add(id, taskCompletion);
-                }
-            }
-
-            token.Register(uid =>
-            {
-                var deferredTaskUid = (Guid)uid!;
-
-                this._deferredLocker.Lock();
-                try
-                {
-                    if (this._awaitingTasks.TryGetValue(deferredTaskUid, out var pendingTask))
-                    {
-                        this._awaitingTasks.Remove(deferredTaskUid);
-                        pendingTask.TrySetCanceled();
-                    }
-                }
-                finally
-                {
-                    this._deferredLocker.Release();
-                }
-            }, id, true);
-
+            var task = await ReservedDeferredWorkSlotImpl<TResponse>(id, token);
             return await task;
         }
 
@@ -229,13 +193,83 @@ namespace Democrite.Framework.Core.Services
             return this._finalizer.InitializationAsync(token);
         }
 
+        /// <inheritdoc />
+        public async Task<Guid> ReservedDeferredWorkSlot<TResponse>(Guid? sourceId = null)
+        {
+            var handler = await this._grainDemocriteSystemProvider.GetVGrainAsync<IDeferredHandlerVGrain>(null, this._logger);
+            var workId = await handler.CreateDeferredWorkAsync(sourceId, null, (ConcretBaseType)typeof(TResponse).GetAbstractType());
+
+            await ReservedDeferredWorkSlotImpl<TResponse>(workId);
+            return workId;
+        }
+
+        /// <inheritdoc />
+        public async Task CleanUpDeferredWork(Guid deferredId)
+        {
+            var handler = await this._grainDemocriteSystemProvider.GetVGrainAsync<IDeferredHandlerVGrain>(null, this._logger);
+            await handler.CleanUpDeferredWork(deferredId);
+        }
+
         #region Tools
+
+        /// <inheritdoc />
+        public async Task<Task<IExecutionResult<TResponse>>> ReservedDeferredWorkSlotImpl<TResponse>(Guid id, CancellationToken? token = null)
+        {
+            Task<IExecutionResult<TResponse>>? task = null;
+
+            using (await this._deferredLocker.LockAsync())
+            {
+                token?.ThrowIfCancellationRequested();
+                if (this._awaitingTasks.TryGetValue(id, out var pendingTask))
+                {
+                    task = (Task<IExecutionResult<TResponse>>)pendingTask.GetTask();
+                }
+                else
+                {
+                    if (this._deferredStatus.TryGetValue(id, out var deferredStatusMessage))
+                    {
+                        if (deferredStatusMessage.Status == DeferredStatusEnum.Cancelled)
+                            throw new OperationCanceledException();
+
+                        // TODO : managed failed status
+                    }
+
+                    var taskCompletion = new TaskCompletionSourceEx<IExecutionResult<TResponse>>(typeof(TResponse));
+                    task = taskCompletion.Task;
+                    this._awaitingTasks.Add(id, taskCompletion);
+                }
+            }
+
+            token?.Register(uid =>
+            {
+                var deferredTaskUid = (Guid)uid!;
+
+                this._deferredLocker.Lock();
+                try
+                {
+                    if (this._awaitingTasks.TryGetValue(deferredTaskUid, out var pendingTask))
+                    {
+                        this._awaitingTasks.Remove(deferredTaskUid);
+                        pendingTask.TrySetCanceled();
+                    }
+                }
+                finally
+                {
+                    this._deferredLocker.Release();
+                }
+            }, id, true);
+
+            return task;
+        }
 
         /// <summary>
         /// Fetches pending <see cref="ITaskCompletionSourceEx"/> response
         /// </summary>
         private async Task FetchTaskResponseAsync<TExpectedResponse>(DeferredStatusMessage statusChangeMessage, ITaskCompletionSourceEx requiredResponse)
         {
+            if (requiredResponse.GetTask().IsCompleted)
+                return;
+
             var deferredId = statusChangeMessage.DeferredId.Uid;
 
             var handler = await this._grainDemocriteSystemProvider.GetVGrainAsync<IDeferredHandlerVGrain>(null, this._logger);
@@ -245,7 +279,7 @@ namespace Democrite.Framework.Core.Services
 
             if (statusChangeMessage.Status == DeferredStatusEnum.Failed)
             {
-                internalException = await handler.ConsumeDeferredReponseAsync<DemocriteInternalException>(deferredId);
+                internalException = await handler.ConsumeDeferredResponseAsync<DemocriteInternalException>(deferredId);
                 internalException ??= new DemocriteInternalException("no exception",
                                                                      null!,
                                                                      DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Execution,
@@ -255,7 +289,7 @@ namespace Democrite.Framework.Core.Services
             }
             else if (statusChangeMessage.Status == DeferredStatusEnum.Finished)
             {
-                result = await handler.ConsumeDeferredReponseAsync<TExpectedResponse>(deferredId);
+                result = await handler.ConsumeDeferredResponseAsync<TExpectedResponse>(deferredId);
             }
 
             var executionResult = new ExecutionResult<TExpectedResponse>(statusChangeMessage.DeferredId.SourceId,

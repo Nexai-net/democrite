@@ -7,7 +7,8 @@ namespace Democrite.Framework.Core.Abstractions
     /// <summary>
     /// Builder used to setup execution
     /// </summary>
-    public interface IExecutionBuilder<TInput>
+    public interface IExecutionBuilder<TInput, TLauncher>
+        where TLauncher : IExecutionLauncher
     {
         /// <summary>
         /// Sets the execution input.
@@ -15,13 +16,14 @@ namespace Democrite.Framework.Core.Abstractions
         /// <remarks>
         ///     Last set remain
         /// </remarks>
-        IExecutionLauncher SetInput(TInput? input);
+        TLauncher SetInput(TInput? input);
     }
 
     /// <summary>
     /// Builder used to setup execution
     /// </summary>
-    public interface IExecutionBuilder
+    public interface IExecutionBuilder<TLauncher>
+        where TLauncher : IExecutionLauncher
     {
         /// <summary>
         /// Sets the execution input.
@@ -29,6 +31,6 @@ namespace Democrite.Framework.Core.Abstractions
         /// <remarks>
         ///     Last set remain
         /// </remarks>
-        IExecutionLauncher SetInput(object? input);
+        TLauncher SetInput(object? input);
     }
 }

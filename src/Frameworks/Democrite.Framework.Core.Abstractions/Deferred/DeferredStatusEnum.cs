@@ -35,5 +35,10 @@ namespace Democrite.Framework.Core.Abstractions.Deferred
         /// Define a deferred work that failed.
         /// </summary>
         Failed,
+
+        /// <summary>
+        /// The cleanup
+        /// </summary>
+        Cleanup
     }
 }

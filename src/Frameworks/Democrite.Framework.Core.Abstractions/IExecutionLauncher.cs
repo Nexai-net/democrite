@@ -12,7 +12,8 @@ namespace Democrite.Framework.Core.Abstractions
     /// <summary>
     /// Last step of the trigger process <see cref="IDemocriteExecutionHandler"/> that launch the execution and return the result
     /// </summary>
-    public interface IExecutionLauncher
+    public interface ICommonExecutionLauncher<TLauncher>
+        where TLauncher : ICommonExecutionLauncher<TLauncher>
     {
         /// <summary>
         /// Specified the execution context responsable for this call
@@ -20,13 +21,19 @@ namespace Democrite.Framework.Core.Abstractions
         /// <remarks>
         ///     Will tranfert the <see cref="IExecutionContext.FlowUID"/>, <see cref="IExecutionContext.CancellationToken"/>, and Data Context carry
         /// </remarks>
-        IExecutionLauncher From(IExecutionContext executionContext, bool copyContextData = false);
+        TLauncher From(IExecutionContext executionContext, bool copyContextData = false);
 
         /// <summary>
         /// Fires the execution start without waiting any results
         /// </summary>
         Task Fire();
+    }
 
+    /// <summary>
+    /// Last step of the trigger process <see cref="IDemocriteExecutionHandler"/> that launch the execution and return the result
+    /// </summary>
+    public interface IExecutionLauncher
+    {
         /// <summary>
         /// Trigger execution, execute and provide no result
         /// </summary>
@@ -62,23 +69,42 @@ namespace Democrite.Framework.Core.Abstractions
     public interface IExecutionLauncher<TResult>
     {
         /// <summary>
-        /// Specified the execution context responsable for this call
-        /// </summary>
-        /// <remarks>
-        ///     Will tranfert the <see cref="IExecutionContext.FlowUID"/>, <see cref="IExecutionContext.CancellationToken"/>, and Data Context carry
-        /// </remarks>
-        IExecutionLauncher<TResult> From(IExecutionContext executionContext, bool copyContextData = false);
-
-        /// <summary>
-        /// Fires the execution start without waiting any results
-        /// </summary>
-        Task Fire();
-
-        /// <summary>
         /// Trigger execution, execute and provide result.
         /// </summary>
         /// <exception cref="InvalidInputDemocriteException">Raised when input provide is not expected.</exception>
         /// <exception cref="InvalidOutputDemocriteException">Raised when output required doesn't match the execution schema definition.</exception>
         Task<IExecutionResult<TResult>> RunAsync(CancellationToken token = default);
+    }
+
+    /// <summary>
+    /// Last step of the trigger process <see cref="IDemocriteExecutionHandler"/> that launch the execution and return the result
+    /// </summary>
+    public interface IExecutionFlowLauncher : ICommonExecutionLauncher<IExecutionFlowLauncher>, IExecutionLauncher
+    {
+        /// <summary>
+        /// Fires the execution start with result pass by deferred
+        /// </summary>
+        Task<Guid> FireWithDeferred<TResult>();
+    }
+
+    /// <summary>
+    /// Last step of the trigger process <see cref="IDemocriteExecutionHandler"/> that launch the execution and return the result
+    /// </summary>
+    public interface IExecutionFlowLauncher<TResult> : ICommonExecutionLauncher<IExecutionFlowLauncher<TResult>>, IExecutionLauncher<TResult>
+    {
+    }
+
+    /// <summary>
+    /// Last step of the trigger process <see cref="IDemocriteExecutionHandler"/> that launch the execution and return the result
+    /// </summary>
+    public interface IExecutionDirectLauncher : ICommonExecutionLauncher<IExecutionDirectLauncher>, IExecutionLauncher
+    {
+    }
+
+    /// <summary>
+    /// Last step of the trigger process <see cref="IDemocriteExecutionHandler"/> that launch the execution and return the result
+    /// </summary>
+    public interface IExecutionDirectLauncher<TResult> : ICommonExecutionLauncher<IExecutionDirectLauncher<TResult>>, IExecutionLauncher<TResult>
+    {
     }
 }

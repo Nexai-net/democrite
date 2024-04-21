@@ -4,6 +4,9 @@
 
 namespace Democrite.Framework.Core.Abstractions.Customizations
 {
+    using Democrite.Framework.Core.Abstractions.Deferred;
+    using Democrite.Framework.Core.Abstractions.Signals;
+
     using System;
     using System.ComponentModel;
 
@@ -14,7 +17,9 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public record struct ExecutionCustomizationDescriptions(IReadOnlyCollection<StageVGrainRedirectionDescription> VGrainRedirection);
+    public record struct ExecutionCustomizationDescriptions(IReadOnlyCollection<StageVGrainRedirectionDescription> VGrainRedirection, 
+                                                            IReadOnlyCollection<EndSignalFireDescription> SignalFireDescriptions,
+                                                            DeferredId? DeferredId);
 
     /// <summary>
     /// Define a grain redirection dedicated to a specific stage and children
@@ -24,4 +29,13 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
     [GenerateSerializer]
     [ImmutableObject(true)]
     public record struct StageVGrainRedirectionDescription(Guid? StageUid, VGrainRedirectionDefinition RedirectionDefinition);
+
+    /// <summary>
+    /// Define a signal to send at the end of the execution
+    /// </summary>
+    [Immutable]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public record struct EndSignalFireDescription(SignalId SignalId, bool IncludeResult);
 }

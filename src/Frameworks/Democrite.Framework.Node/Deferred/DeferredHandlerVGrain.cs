@@ -78,7 +78,18 @@ namespace Democrite.Framework.Node.Deferred
         }
 
         /// <inheritdoc />
-        public async Task<TResponse?> ConsumeDeferredReponseAsync<TResponse>(Guid deferredWorkUid)
+        public Task CleanUpDeferredWork(Guid deferredId)
+        {
+            var work = this.State!.GetDeferredWorkById(deferredId);
+
+            if (work is not null)
+                CleanUpDeferredWorkImpl(work);
+
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc />
+        public async Task<TResponse?> ConsumeDeferredResponseAsync<TResponse>(Guid deferredWorkUid)
         {
             var work = this.State!.GetDeferredWorkById(deferredWorkUid);
 
@@ -87,6 +98,8 @@ namespace Democrite.Framework.Node.Deferred
 
             this.State!.Remove(work);
             await PushStateAsync(default);
+
+            CleanUpDeferredWorkImpl(work);
 
             if (work.Response is null)
                 return default;
@@ -131,7 +144,23 @@ namespace Democrite.Framework.Node.Deferred
         }
 
         /// <inheritdoc />
-        public async Task<bool> FinishDeferredWorkStatusAsync<TData>(Guid deferredWorkUid, IIdentityCard identityCard, TData response)
+        public Task<bool> FinishDeferredWorkWithResultAsync(Guid deferredWorkUid, IIdentityCard identityCard, IExecutionResult response)
+        {
+            if (response.Cancelled)
+                return CancelDeferredWorkStatusAsync(deferredWorkUid, identityCard);
+
+            if (!response.Succeeded)
+            {
+                return ExceptionDeferredWorkStatusAsync(deferredWorkUid,
+                                                        identityCard,
+                                                        new DemocriteException("[ErrorCode:{0}] - Message: {1}".WithArguments(response.ErrorCode, response.Message)).ToDemocriteInternal());
+            }
+
+            return FinishDeferredWorkWithDataAsync(deferredWorkUid, identityCard, response.GetOutput());
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> FinishDeferredWorkWithDataAsync<TData>(Guid deferredWorkUid, IIdentityCard identityCard, TData response)
         {
             // TODO : Check security : identityCard
             if (identityCard is not null)
@@ -226,9 +255,16 @@ namespace Democrite.Framework.Node.Deferred
         {
             // Optim : Add predicate filter
 
-            var msg =new DeferredStatusMessage(work.DeferredId, work.Status, work.UTCLastUpdate);
+            var msg = new DeferredStatusMessage(work.DeferredId, work.Status, work.UTCLastUpdate);
 
             await this._deferredObserverManager.Notify(d => d.DeferredStatusChangedNotification(msg));
+        }
+
+        /// <inheritdoc />
+        public async void CleanUpDeferredWorkImpl(DeferredWork work)
+        {
+            work.ChangeStatus(DeferredStatusEnum.Cleanup, this._timeManager);
+            await SendNotificationAsync(work);
         }
 
         #endregion

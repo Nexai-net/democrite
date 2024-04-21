@@ -31,9 +31,14 @@ namespace Democrite.Framework.Core.Abstractions.Deferred
         Task<DeferredStatusMessage?> GetLastDeferredStatusAsync(Guid deferredId);
 
         /// <summary>
-        /// Consumes the deferred reponse asynchronous.
+        /// Consumes the deferred reponse.
         /// </summary>
-        Task<TResponse?> ConsumeDeferredReponseAsync<TResponse>(Guid deferredId);
+        Task<TResponse?> ConsumeDeferredResponseAsync<TResponse>(Guid deferredId);
+
+        /// <summary>
+        /// Cleans up deferred work information
+        /// </summary>
+        Task CleanUpDeferredWork(Guid deferredId);
 
         /// <summary>
         /// Gets the last deferred word status from <paramref name="sourceId"/>
@@ -80,6 +85,14 @@ namespace Democrite.Framework.Core.Abstractions.Deferred
         /// <remarks>
         ///     Only the owner of the deferred work (The one that create throught CreateDeferredWorkAsync)
         /// </remarks>
-        Task<bool> FinishDeferredWorkStatusAsync<TData>(Guid deferredWorkUid, IIdentityCard identityCard, TData response);
+        Task<bool> FinishDeferredWorkWithDataAsync<TData>(Guid deferredWorkUid, IIdentityCard identityCard, TData response);
+
+        /// <summary>
+        /// Finish deferred work
+        /// </summary>
+        /// <remarks>
+        ///     Only the owner of the deferred work (The one that create throught CreateDeferredWorkAsync)
+        /// </remarks>
+        Task<bool> FinishDeferredWorkWithResultAsync(Guid deferredWorkUid, IIdentityCard identityCard, IExecutionResult response);
     }
 }

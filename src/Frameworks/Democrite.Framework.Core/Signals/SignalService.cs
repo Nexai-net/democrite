@@ -19,8 +19,6 @@ namespace Democrite.Framework.Core.Signals
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
 
-    using static Democrite.Framework.Core.Abstractions.DemocriteSystemDefinitions;
-
     /// <inheritdoc />
     internal sealed class SignalService : ISignalService
     {

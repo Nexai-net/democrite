@@ -7,10 +7,14 @@ namespace Democrite.Framework.Node
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
+    using Democrite.Framework.Core.Abstractions.Deferred;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
+    using Democrite.Framework.Core.Abstractions.Services;
+    using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Models;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.Models;
     using Democrite.Framework.Node.Services;
@@ -28,6 +32,8 @@ namespace Democrite.Framework.Node
 
     using System;
     using System.Diagnostics;
+    using System.Linq.Expressions;
+    using System.Reflection;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -39,18 +45,31 @@ namespace Democrite.Framework.Node
     {
         #region Fields
 
+        private static readonly MethodInfo s_generateResultStruct;
+
         private readonly ISequenceVGrainProviderFactory _sequenceVGrainProviderFactory;
+        private readonly IVGrainDemocriteSystemProvider _grainDemocriteSystemProvider;
         private readonly ISequenceDefinitionProvider _sequenceDefinitionManager;
         private readonly ISequenceExecutorThreadStageProvider _stageProvider;
         private readonly IDemocriteSerializer _democriteSerializer;
         private readonly IDiagnosticLogger _diagnosticLogger;
         private readonly IObjectConverter _objectConverter;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ISignalService _signalService;
         private readonly ITimeManager _timeManager;
 
         #endregion
 
         #region Ctor
+
+        /// <summary>
+        /// Initializes the <see cref="SequenceExecutorVGrain"/> class.
+        /// </summary>
+        static SequenceExecutorVGrain()
+        {
+            Expression<Func<SequenceExecutorVGrain, SequenceExecutorState, IExecutionResult>> generateResultStruct = (g, s) => g.GenerateResultStruct<NoneType>(s);
+            s_generateResultStruct = ((MethodCallExpression)generateResultStruct.Body).Method.GetGenericMethodDefinition();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceVGrain"/> class.
@@ -64,16 +83,20 @@ namespace Democrite.Framework.Node
                                       IObjectConverter objectConverter,
                                       IDemocriteSerializer democriteSerializer,
                                       ISequenceExecutorThreadStageProvider stageProvider,
-                                      ISequenceVGrainProviderFactory sequenceVGrainProviderFactory)
+                                      ISequenceVGrainProviderFactory sequenceVGrainProviderFactory,
+                                      ISignalService signalService,
+                                      IVGrainDemocriteSystemProvider grainDemocriteSystemProvider)
             : base(logger, sequenceExecutorState)
         {
             this._sequenceVGrainProviderFactory = sequenceVGrainProviderFactory;
+            this._grainDemocriteSystemProvider = grainDemocriteSystemProvider;
             this._sequenceDefinitionManager = sequenceDefinitionManager;
             this._democriteSerializer = democriteSerializer;
             this._diagnosticLogger = diagnosticLogger;
             this._objectConverter = objectConverter;
             this._loggerFactory = loggerFactory;
             this._stageProvider = stageProvider;
+            this._signalService = signalService;
             this._timeManager = timeManager;
         }
 
@@ -161,6 +184,31 @@ namespace Democrite.Framework.Node
 
                             if (state.MainThread.JobDone)
                             {
+                                var customization = state.Customization;
+                                if (customization is not null && 
+                                    ((customization.Value.SignalFireDescriptions is not null && customization.Value.SignalFireDescriptions.Any()) || 
+                                      customization.Value.DeferredId is not null))
+                                {
+                                    var resultFormat = GenerateResultStruct<TOutput>(state);
+
+                                    if (customization.Value.SignalFireDescriptions is not null && customization.Value.SignalFireDescriptions.Any())
+                                    {
+                                        foreach (var signal in customization.Value.SignalFireDescriptions)
+                                        {
+                                            if (signal.IncludeResult == false)
+                                                await this._signalService.Fire(signal.SignalId, default, this);
+                                            else
+                                                await this._signalService.Fire(signal.SignalId, resultFormat, default, this);
+                                        }
+                                    }
+
+                                    if (customization.Value.DeferredId is not null)
+                                    {
+                                        var deferredHandlerGrain = await this._grainDemocriteSystemProvider.GetVGrainAsync<IDeferredHandlerVGrain>(null, this.Logger);
+                                        await deferredHandlerGrain.FinishDeferredWorkWithResultAsync(customization.Value.DeferredId.Value.Uid, this.IdentityCard, resultFormat);
+                                    }
+                                }
+
                                 if (state.MainThread.Exception != null)
                                     throw state.MainThread.Exception;
 
@@ -181,7 +229,7 @@ namespace Democrite.Framework.Node
 
                                         throw new InvalidCastException($"Couldn't cast {anyTypeContainer} to {typeof(TOutput)}");
                                     }
-                                        //return (TOutput) castOutput;
+                                    //return (TOutput) castOutput;
 
                                     execLogger.OptiLog(LogLevel.Error,
                                                        "Invalid output [Expected: {expectedType}] != [Get {getType}] : Details {details}",
@@ -259,6 +307,48 @@ namespace Democrite.Framework.Node
         {
             return RunAsync<NoneType, TInput>(input, executionContext);
         }
+
+        #region Tools
+
+        /// <summary>
+        /// Generates the result structure.
+        /// </summary>
+        private IExecutionResult GenerateResultStruct<TOutput>(SequenceExecutorState state)
+        {
+            Exception? exception = null;
+            TOutput? outputCast = default;
+
+            if (state.MainThread!.Exception != null)
+                exception = state.MainThread.Exception;
+            else if (!string.IsNullOrEmpty(state.MainThread.ErrorMessage))
+                exception = new SequenceExecutionException(state.MainThread.ErrorMessage);
+
+            var output = state.MainThread.Output;
+
+            if (output is TOutput castOutput)
+            {
+                outputCast = castOutput;
+            }
+            else if (output is not null) // !NoneType.IsEqualTo<TOutput>() && 
+            {
+                return (IExecutionResult)s_generateResultStruct.MakeGenericMethodWithCache(output.GetType()).Invoke(this, new[] { state })!;
+            }
+
+            return new ExecutionResultStruct<TOutput>(outputCast,
+                                                      state.FlowUid,
+                                                      exception is null,
+                                                      exception is OperationCanceledException,
+
+                                                      (exception is IDemocriteException democriteException)
+                                                            ? (string?)democriteException.ErrorCode.ToString()
+                                                            : (string?)null,
+
+                                                      exception?.GetFullString(),
+                                                      !NoneType.IsEqualTo<TOutput>(),
+                                                      typeof(TOutput).FullName);
+        }
+
+        #endregion
 
         #endregion
     }

@@ -1116,7 +1116,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             {
                 queryResponse = new BlackboardQueryDirectResponse<TResponse>(reponseCmd.Response, queryUid);
                 if (runningDeferred is not null)
-                    await this._deferredHandler.FinishDeferredWorkStatusAsync(runningDeferred.Value.DeferredId.Uid, this.IdentityCard, reponseCmd.Response);
+                    await this._deferredHandler.FinishDeferredWorkWithDataAsync(runningDeferred.Value.DeferredId.Uid, this.IdentityCard, reponseCmd.Response);
             }
             else if (result.TryGetValue(BlackboardCommandTypeEnum.Reject, out var rejected) && rejected is BlackboardCommandRejectAction rejectCmd)
             {
@@ -1374,7 +1374,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         {
             CheckInitializationRequiredOrSealedStatus();
 
-            IExecutionLauncher? exec = null;
+            IExecutionFlowLauncher? exec = null;
 
             if (!NoneType.IsEqualTo<TInput>())
             {

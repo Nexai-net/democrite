@@ -46,6 +46,9 @@ namespace Democrite.Framework.Node.UnitTests
     using Democrite.Framework.Core.Abstractions.Customizations;
     using Elvex.Toolbox.Disposables;
     using NSubstitute.Core;
+    using Democrite.Framework.Core.Abstractions.Signals;
+    using Democrite.Framework.Core.Abstractions.Services;
+    using Democrite.Framework.Core.Abstractions.Deferred;
 
     /// <summary>
     /// Test <see cref="SequenceExecutorVGrain"/>
@@ -164,7 +167,9 @@ namespace Democrite.Framework.Node.UnitTests
                                                       objectConvertMock.Object,
                                                       democriteSerializerMock,
                                                       threadStageExecutorProviderMock,
-                                                      sequenceVGrainProviderFactoryMock);
+                                                      sequenceVGrainProviderFactoryMock,
+                                                      Substitute.For<ISignalService>(),
+                                                      Substitute.For<IVGrainDemocriteSystemProvider>());
 
             var result = await executor.RunAsync<string[], string>(EMAIL_SAMPLE_TEST, execCtx);
 
@@ -357,6 +362,7 @@ namespace Democrite.Framework.Node.UnitTests
             builder.AddRemoteMockService(remote =>
             {
                 remote.AddSingleton(defManager.Object);
+                remote.AddSingleton(Substitute.For<ISignalDefinitionProvider>());
                 remote.AddSingleton<IDiagnosticLogConsumer>(executionLog);
 
                 controller = remote.Build();
@@ -378,7 +384,8 @@ namespace Democrite.Framework.Node.UnitTests
                 await cluster.DeployAsync();
 
                 var client = new DemocriteExecutionHandler(new VGrainProvider(cluster.GrainFactory, localServices.GetRequiredService<IVGrainIdFactory>()),
-                                                           Substitute.For<IDemocriteSerializer>());
+                                                           Substitute.For<IDemocriteSerializer>(),
+                                                           Substitute.For<IDeferredAwaiterHandler>());
 
                 var result = await exec(client);
 

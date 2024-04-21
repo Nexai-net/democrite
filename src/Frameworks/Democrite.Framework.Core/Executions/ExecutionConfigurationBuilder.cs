@@ -6,6 +6,7 @@ namespace Democrite.Framework.Core.Executions
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Customizations;
+    using Democrite.Framework.Core.Abstractions.Signals;
 
     using Elvex.Toolbox.Models;
 
@@ -20,6 +21,7 @@ namespace Democrite.Framework.Core.Executions
         #region Fields
 
         private readonly Dictionary<RedirectionKey, VGrainRedirectionDefinition> _grainRedirectionDefinitions;
+        private readonly Dictionary<Guid, EndSignalFireDescription> _endSignalResult;
 
         #endregion
 
@@ -31,6 +33,7 @@ namespace Democrite.Framework.Core.Executions
         public ExecutionConfigurationBuilder()
         {
             this._grainRedirectionDefinitions = new Dictionary<RedirectionKey, VGrainRedirectionDefinition>();
+            this._endSignalResult = new Dictionary<Guid, EndSignalFireDescription>();
         }
 
         #endregion
@@ -76,9 +79,20 @@ namespace Democrite.Framework.Core.Executions
             if (this._grainRedirectionDefinitions.Any())
             {
                 return new ExecutionCustomizationDescriptions(this._grainRedirectionDefinitions.Select(kv => new StageVGrainRedirectionDescription(kv.Key.StageUid, kv.Value))
-                                                                                               .ToArray());
+                                                                                               .ToArray(),
+
+                                                              this._endSignalResult.Values.ToArray(),
+                                                              DeferredId: null);
             }
+
             return null;
+        }
+
+        /// <inheritdoc />
+        public IExecutionConfigurationBuilder ResultSignal(in SignalId signalId, bool includeResult = false)
+        {
+            this._endSignalResult[signalId.Uid] = new EndSignalFireDescription(signalId, includeResult);
+            return this;
         }
 
         #endregion

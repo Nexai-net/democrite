@@ -24,7 +24,7 @@ namespace Democrite.Framework.Core.Executions
     /// <summary>
     /// Launcher used to call a vgrain method and provide the result
     /// </summary>
-    internal abstract class ExecutionBaseLauncher<TVGrain, TResult> : IExecutionLauncher, IExecutionLauncher<TResult>
+    internal abstract class ExecutionBaseLauncher<TVGrain, TResult, TLauncher> : IExecutionLauncher, IExecutionLauncher<TResult>
         where TVGrain : IVGrain
     {
         #region Fields
@@ -46,7 +46,7 @@ namespace Democrite.Framework.Core.Executions
         /// </summary>
         static ExecutionBaseLauncher()
         {
-            var trait = typeof(ExecutionBaseLauncher<TVGrain, TResult>);
+            var trait = typeof(ExecutionBaseLauncher<TVGrain, TResult, TLauncher>);
             var genericCallMethod = trait.GetMethods()
                                          .FirstOrDefault(m => m.Name == nameof(IExecutionLauncher.RunAsync) &&
                                                               m.IsGenericMethod &&
@@ -92,20 +92,7 @@ namespace Democrite.Framework.Core.Executions
         [OneWay]
         public Task Fire()
         {
-            return Task.Factory.StartNew(async () =>
-            {
-                try
-                {
-                    await RunImplAsync<NoneType>(default, true);
-                }
-                catch (Exception ex)
-                {
-                    this._logger.OptiLog(LogLevel.Error,
-                                         "[{context}] Fire Task result on exception : {exception}",
-                                         OnFireFailedBuildContext(ex),
-                                         ex);
-                }
-            }).Unwrap();
+            return FireImpl<NoneType>();
         }
 
         /// <inheritdoc />
@@ -133,22 +120,41 @@ namespace Democrite.Framework.Core.Executions
         }
 
         /// <inheritdoc />
-        public IExecutionLauncher From(IExecutionContext executionContext, bool copyContextData = false)
+        public TLauncher From(IExecutionContext executionContext, bool copyContextData = false)
         {
             this._originContext = executionContext;
             this._copyContextData = copyContextData;
-            return this;
-        }
-
-        /// <inheritdoc />
-        IExecutionLauncher<TResult> IExecutionLauncher<TResult>.From(IExecutionContext executionContext, bool copyContextData)
-        {
-            this._originContext = executionContext;
-            this._copyContextData = copyContextData;
-            return this;
+            return GetLauncher();
         }
 
         #region Tools
+
+        protected virtual TLauncher GetLauncher()
+        {
+            if (this is TLauncher launcher)
+                return launcher;
+
+            throw new InvalidOperationException("Must be overrided");
+        }
+
+        /// <inheritdoc />
+        protected Task FireImpl<TExpectedResult>()
+        {
+            return Task.Factory.StartNew(async () =>
+            {
+                try
+                {
+                    await RunImplAsync<TExpectedResult>(default, true);
+                }
+                catch (Exception ex)
+                {
+                    this._logger.OptiLog(LogLevel.Error,
+                                         "[{context}] Fire Task result on exception : {exception}",
+                                         OnFireFailedBuildContext(ex),
+                                         ex);
+                }
+            }).Unwrap();
+        }
 
         /// <summary>
         ///     Generic execution able to call <typeparamref name="TExecutor"/> with diffent parameter

@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Core.Abstractions
 {
+    using Democrite.Framework.Core.Abstractions.Signals;
+
     using System;
 
     /// <summary>
@@ -18,5 +20,10 @@ namespace Democrite.Framework.Core.Abstractions
         IExecutionConfigurationBuilder RedirectGrain<TOldGrain, TNewGrain>(params Guid[] stageUids)
             where TNewGrain : TOldGrain
             where TOldGrain : IVGrain;
+
+        /// <summary>
+        /// Define a signal to send at the end of the execution
+        /// </summary>
+        IExecutionConfigurationBuilder ResultSignal(in SignalId signalId, bool includeResult = false);
     }
 }
