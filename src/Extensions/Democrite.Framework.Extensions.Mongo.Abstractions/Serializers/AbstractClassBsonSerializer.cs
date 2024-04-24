@@ -264,7 +264,7 @@ namespace Democrite.Framework.Extensions.Mongo.Abstractions.Serializers
                 if (rootType is not null)
                 {
                     var arguments = match.Groups["Arguments"].Value;
-                    var args = arguments.OptiSplit(true,
+                    var args = arguments.OptiSplit(StringIncludeSeparatorMode.Isolated,
                                                    StringComparison.OrdinalIgnoreCase,
                                                    StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries,
                                                    s_parameterSeparators);

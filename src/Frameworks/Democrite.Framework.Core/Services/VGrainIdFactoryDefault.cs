@@ -33,7 +33,7 @@ namespace Democrite.Framework.Core.Services
         /// <inheritdoc />
         public IVGrainId BuildNewId(Type vgrainType,
                                     object? input,
-                                    IExecutionContext executionContext,
+                                    IExecutionContext? executionContext,
                                     ILogger? logger = null)
         {
             object primary;

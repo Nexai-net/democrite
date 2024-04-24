@@ -109,6 +109,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.DataMod
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Extensions.Mongo.Builders", "src\Extensions\Democrite.Framework.Extensions.Mongo.Builders\Democrite.Framework.Extensions.Mongo.Builders.csproj", "{C482919A-AD5A-4942-8FB1-841472495983}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Extensions.Docker", "src\Extensions\Democrite.Framework.Extensions.Docker\Democrite.Framework.Extensions.Docker.csproj", "{F7E96355-FB9F-4303-B62B-6B2E0435BDC7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Extensions.Docker.Abstractions", "src\Extensions\Democrite.Framework.Extensions.Docker.Abstractions\Democrite.Framework.Extensions.Docker.Abstractions.csproj", "{FF0F2C7C-D442-4627-8395-59F83BDC606F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Extensions.Docker.Builders", "src\Extensions\Democrite.Framework.Extensions.Docker.Builders\Democrite.Framework.Extensions.Docker.Builders.csproj", "{A8726AE1-43F7-49E7-986A-C10805A34DAC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -259,6 +265,18 @@ Global
 		{C482919A-AD5A-4942-8FB1-841472495983}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C482919A-AD5A-4942-8FB1-841472495983}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C482919A-AD5A-4942-8FB1-841472495983}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7E96355-FB9F-4303-B62B-6B2E0435BDC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7E96355-FB9F-4303-B62B-6B2E0435BDC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7E96355-FB9F-4303-B62B-6B2E0435BDC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7E96355-FB9F-4303-B62B-6B2E0435BDC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF0F2C7C-D442-4627-8395-59F83BDC606F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF0F2C7C-D442-4627-8395-59F83BDC606F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF0F2C7C-D442-4627-8395-59F83BDC606F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF0F2C7C-D442-4627-8395-59F83BDC606F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8726AE1-43F7-49E7-986A-C10805A34DAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8726AE1-43F7-49E7-986A-C10805A34DAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8726AE1-43F7-49E7-986A-C10805A34DAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8726AE1-43F7-49E7-986A-C10805A34DAC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -303,6 +321,9 @@ Global
 		{6C5EEEC8-CE48-4F3B-9325-E38BDC1ACBCD} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
 		{A4C1A1DE-69CC-4240-84CD-9088709186F6} = {6BF28FB3-9FA0-4A68-A66F-B7701CD93C69}
 		{C482919A-AD5A-4942-8FB1-841472495983} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
+		{F7E96355-FB9F-4303-B62B-6B2E0435BDC7} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
+		{FF0F2C7C-D442-4627-8395-59F83BDC606F} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
+		{A8726AE1-43F7-49E7-986A-C10805A34DAC} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {89BCBB25-4DD3-406C-91A9-BB2F978C23F2}

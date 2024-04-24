@@ -55,7 +55,7 @@ namespace Democrite.Framework.Core.Services
         private static readonly MethodInfo s_newGuid;
         private static readonly MethodInfo s_newLong;
 
-        private readonly Dictionary<Type, (Func<object?, IExecutionContext, object> primaryGenerator, Func<object?, IExecutionContext, string?>? extensionGenerator)> _cachedBuilder;
+        private readonly Dictionary<Type, (Func<object?, IExecutionContext?, object> primaryGenerator, Func<object?, IExecutionContext?, string?>? extensionGenerator)> _cachedBuilder;
         private readonly ReaderWriterLockSlim _locker;
 
         #endregion
@@ -145,7 +145,7 @@ namespace Democrite.Framework.Core.Services
         /// </summary>
         public VGrainIdFactoryDedicatedTemplates()
         {
-            this._cachedBuilder = new Dictionary<Type, (Func<object?, IExecutionContext, object> primaryGenerator, Func<object?, IExecutionContext, string?>? extensionGenerator)>();
+            this._cachedBuilder = new Dictionary<Type, (Func<object?, IExecutionContext?, object> primaryGenerator, Func<object?, IExecutionContext?, string?>? extensionGenerator)>();
             this._locker = new ReaderWriterLockSlim();
         }
 
@@ -163,7 +163,7 @@ namespace Democrite.Framework.Core.Services
         public IVGrainId BuildNewId(VGrainIdBaseFormatorAttribute attr,
                                     Type vgrainType,
                                     object? input,
-                                    IExecutionContext executionContext,
+                                    IExecutionContext? executionContext,
                                     ILogger? logger = null)
         {
             CheckAndThrowIfDisposed();
@@ -172,7 +172,7 @@ namespace Democrite.Framework.Core.Services
 
             var formatAttribute = (VGrainIdFormatAttribute)attr;
 
-            (Func<object?, IExecutionContext, object> primaryGenerator, Func<object?, IExecutionContext, string?>? extensionGenerator) builder = default;
+            (Func<object?, IExecutionContext?, object> primaryGenerator, Func<object?, IExecutionContext?, string?>? extensionGenerator) builder = default;
             using (this._locker.LockRead())
             {
                 if (this._cachedBuilder.TryGetValue(vgrainType, out var cachedBuilder))
@@ -273,12 +273,12 @@ namespace Democrite.Framework.Core.Services
         /// <summary>
         /// Generates the builder function based on template <see cref="VGrainIdFormatAttribute"/>.
         /// </summary>
-        private (Func<object?, IExecutionContext, object> primaryGenerator, Func<object?, IExecutionContext, string?>? extensionGenerator) GenerateBuilderFunctionBasedOnTemplate(Type vgrainType,
-                                                                                                                                                                                  VGrainIdFormatAttribute formatAttribute,
-                                                                                                                                                                                  ILogger logger,
-                                                                                                                                                                                  object? input,
-                                                                                                                                                                                  IExecutionContext executionContext,
-                                                                                                                                                                                  out bool useFallback)
+        private (Func<object?, IExecutionContext?, object> primaryGenerator, Func<object?, IExecutionContext?, string?>? extensionGenerator) GenerateBuilderFunctionBasedOnTemplate(Type vgrainType,
+                                                                                                                                                                                   VGrainIdFormatAttribute formatAttribute,
+                                                                                                                                                                                   ILogger logger,
+                                                                                                                                                                                   object? input,
+                                                                                                                                                                                   IExecutionContext? executionContext,
+                                                                                                                                                                                   out bool useFallback)
         {
             useFallback = false;
 
@@ -322,11 +322,11 @@ namespace Democrite.Framework.Core.Services
                 secondParamExpression = Expression.Call(secondParamExpression, s_toString);
             }
 
-            var primaryGenerator = Expression.Lambda<Func<object?, IExecutionContext, object>>(Expression.Convert(firstParamExpression, typeof(object)), inputParam, executionContextParam);
+            var primaryGenerator = Expression.Lambda<Func<object?, IExecutionContext?, object>>(Expression.Convert(firstParamExpression, typeof(object)), inputParam, executionContextParam);
 
             var extensionKeyGenerator = secondParamExpression is null
                                                  ? null
-                                                 : Expression.Lambda<Func<object?, IExecutionContext, string?>>(secondParamExpression, inputParam, executionContextParam).Compile();
+                                                 : Expression.Lambda<Func<object?, IExecutionContext?, string?>>(secondParamExpression, inputParam, executionContextParam).Compile();
 
             return (primaryGenerator.Compile(), extensionKeyGenerator);
         }

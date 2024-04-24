@@ -1,0 +1,6 @@
+﻿FROM <<PARENT_IMAGE>>
+WORKDIR /usr/src/app
+
+<<COPY_FILES>>
+
+RUN pip install democrite

@@ -11,7 +11,7 @@
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class AutoComputeBlackboardOptions : ControllerBaseOptions, IControllerEventOptions
+    public sealed class AutoComputeBlackboardOptions : EventControllerOptions, IControllerEventOptions
     {
         #region Ctor
 
@@ -20,6 +20,7 @@
         /// </summary>
         /// <param name="computeSequenceUid">The compute sequence uid.</param>
         public AutoComputeBlackboardOptions(Guid computeSequenceUid)
+            : base(null, null)
         {
             this.ComputeSequenceUid = computeSequenceUid;
         }
@@ -40,14 +41,14 @@
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnEquals([NotNull] ControllerBaseOptions other)
+        protected override bool OnEventControllerEquals(EventControllerOptions other)
         {
             return other is AutoComputeBlackboardOptions auto &&
                    auto.ComputeSequenceUid == this.ComputeSequenceUid;
         }
 
         /// <inheritdoc />
-        protected override int OnGetHashCode()
+        protected override int OnEventControllerHashCode()
         {
             return this.ComputeSequenceUid.GetHashCode();
         }

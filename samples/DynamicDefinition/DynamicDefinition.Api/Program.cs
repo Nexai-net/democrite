@@ -89,7 +89,7 @@ app.MapGet("/definition/dynamics/Remove", async ([FromServices] IDynamicDefiniti
 app.MapGet("/definition/dynamics/Clear", async ([FromServices] IDynamicDefinitionHandler handler, CancellationToken token) =>
 {
     var allDefinitions = await handler.GetDynamicDefinitionMetaDatasAsync(token: token);
-    return await handler.RemoveDefinitionAsync(null!, token, allDefinitions.Select(i => i.Uid).ToArray());
+    return await handler.RemoveDefinitionAsync(null!, token, allDefinitions.Info.Select(i => i.Uid).ToArray());
 });
 
 app.UseSwaggerUI();

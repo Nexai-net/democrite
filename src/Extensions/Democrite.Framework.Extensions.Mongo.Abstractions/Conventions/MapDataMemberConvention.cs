@@ -112,6 +112,7 @@ namespace Democrite.Framework.Extensions.Mongo.Abstractions.Conventions
 
                 if (!BsonClassMap.IsClassMapRegistered(member.MemberType) && member.MemberType.IsClass && classType != typeof(object))
                 {
+#pragma warning disable CS0168 // Variable is declared but never used
                     try
                     {
                         BsonClassMap.LookupClassMap(member.MemberType);
@@ -119,6 +120,7 @@ namespace Democrite.Framework.Extensions.Mongo.Abstractions.Conventions
                     catch (Exception ex)
                     {
                     }
+#pragma warning restore CS0168 // Variable is declared but never used
                 }
             }
 

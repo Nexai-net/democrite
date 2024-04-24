@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="..\..\..\\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
 	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
 
 	<PropertyGroup>
 
 		<IsPackable>true</IsPackable>
-		<Description>Democrite extension cluster library using mnongDB.</Description>
+		<Description>Democrite extension cluster library using mongDB.</Description>
 
 		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agents;Framework;Cluster;Mongo;Extension</PackageTags>
 

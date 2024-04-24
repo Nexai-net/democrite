@@ -81,7 +81,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         {
             return new EntitySealedExceptionSurrogate()
             {
-                EntityType = ConcretBaseTypeConverter.ConvertToSurrogate((ConcretBaseType?)value.Data[nameof(EntitySealedExceptionSurrogate.EntityType)]),
+                EntityType = ConcretBaseTypeConverter.ConvertToSurrogate((ConcretBaseType?)value.Data[nameof(EntitySealedExceptionSurrogate.EntityType)]!),
                 EntityIdentity = (string?)value.Data[nameof(EntitySealedExceptionSurrogate.EntityIdentity)],
                 Message = value.Message,
                 ErrorCode = value.ErrorCode,

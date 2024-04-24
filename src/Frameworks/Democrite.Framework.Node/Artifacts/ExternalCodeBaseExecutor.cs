@@ -37,7 +37,7 @@ namespace Democrite.Framework.Node.Artifacts
         /// </summary>
         public ExternalCodeBaseExecutor(ArtifactExecutableDefinition artifactExecutableDefinition,
                                         IJsonSerializer jsonSerializer,
-                                        Uri workingDirectory)
+                                        Uri? workingDirectory)
         {
             this.ArtifactExecutableDefinition = artifactExecutableDefinition;
             this.WorkingDir = workingDirectory;
@@ -56,7 +56,7 @@ namespace Democrite.Framework.Node.Artifacts
         /// <summary>
         /// Gets the working dir absolute path.
         /// </summary>
-        public Uri WorkingDir { get; }
+        public Uri? WorkingDir { get; }
 
         /// <summary>
         /// Gets the json serializer.

@@ -13,9 +13,14 @@ parameters:
     values:
     - true
     - false
+  
+  - name: FinalPkgVersionNumber
+    displayName: Pkg Version Number
+    type: string
+    default: None
 
 variables:
-  - template: Templates/azure-pipeline-pkg-version.yml
+  #- template: Templates/azure-pipeline-pkg-version.yml
 
   - name: localReleasePublic
     value: $(ReleasePublic)
@@ -50,9 +55,9 @@ steps:
   - script: python -m pip install --upgrade build
     displayName: 'Python package builder'
 
-  - script: sed -i 's/__VERSION__/${{ variables.FinalPkgVersionNumber }}/' pyproject.toml
+  - script: sed -i 's/__VERSION__/${{ parameters.FinalPkgVersionNumber }}/' pyproject.toml
     workingDirectory: ${{ variables.PythonPkgFolder }}
-    displayName: 'Setup pkg version : ${{ variables.FinalPkgVersionNumber }}'
+    displayName: 'Setup pkg version : ${{ parameters.FinalPkgVersionNumber }}'
   
   - script: python -m build
     workingDirectory: ${{ variables.PythonPkgFolder }}

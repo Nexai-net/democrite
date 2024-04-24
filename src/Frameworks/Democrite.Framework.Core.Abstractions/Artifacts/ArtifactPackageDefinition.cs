@@ -7,10 +7,16 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
     using Elvex.Toolbox.Helpers;
 
     using System;
+    using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Define an artifact that target a package
     /// </summary>
+    [Immutable]
+    [Serializable]
+    [DataContract]
+    [ImmutableObject(true)]
     public class ArtifactPackageDefinition : ArtifactDefinition
     {
         #region Ctor
@@ -44,16 +50,19 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         /// <summary>
         /// Gets the package source.
         /// </summary>
+        [DataMember]
         public Uri PackageSource { get; }
 
         /// <summary>
         /// Gets the package files.
         /// </summary>
+        [DataMember]
         public IReadOnlyCollection<string> PackageFiles { get; }
 
         /// <summary>
         /// Gets the type of the package.
         /// </summary>
+        [DataMember]
         public ArtifactPackageTypeEnum PackageType { get; }
 
         #endregion

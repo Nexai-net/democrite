@@ -42,7 +42,7 @@
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<RecordDisplay>> GetAllValuesAsync(IExecutionContext<string> ctx)
         {
-            var data = await this._blackboard!.GetAllStoredDataByTypeAsync<double>(".*", ctx.CancellationToken);
+            var data = await this._blackboard!.GetAllStoredDataFilteredAsync<double>(".*", ctx.CancellationToken);
             return data.Select(d => new RecordDisplay(d.Data, d.LogicalType, d.Status.ToString())).ToReadOnly();
         }
 
@@ -56,7 +56,7 @@
         /// <inheritdoc />
         public async Task PushNewValueAsync<TData>(TData val, IExecutionContext<string> ctx)
         {
-            await this._blackboard!.PushNewDataAsync(val, "Values", "Val" + (val?.ToString() ?? string.Empty), RecordStatusEnum.Ready, DataRecordPushRequestTypeEnum.OnlyNew, ctx.CancellationToken);
+            await this._blackboard!.PushNewDataAsync(val, "Values", "Val" + (val?.ToString() ?? string.Empty), RecordStatusEnum.Ready, DataRecordPushRequestTypeEnum.OnlyNew, token: ctx.CancellationToken);
         }
 
         /// <inheritdoc />

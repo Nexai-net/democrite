@@ -140,6 +140,8 @@ namespace Democrite.Framework.Extensions.Mongo.Services
                                                                                            Func<TDocumentType, bool> _,
                                                                                            CancellationToken token)
         {
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
+#pragma warning disable CS0168 // Variable is declared but never used
             try
             {
                 await EnsureProviderIsInitialized();
@@ -150,6 +152,8 @@ namespace Democrite.Framework.Extensions.Mongo.Services
             {
                 throw;
             }
+#pragma warning restore CS0168 // Variable is declared but never used
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
         }
 
         /// <inheritdoc />

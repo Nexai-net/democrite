@@ -8,9 +8,9 @@ namespace Democrite.Framework.Node.Artifacts
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Node.Abstractions.Artifacts;
     using Democrite.Framework.Node.Models;
+
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Disposables;
-    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 
@@ -27,7 +27,7 @@ namespace Democrite.Framework.Node.Artifacts
     /// </summary>
     /// <seealso cref="SafeAsyncDisposable" />
     /// <seealso cref="IArtifactExternalCodeExecutor" />
-    public sealed class ExternalCodeCLIExecutor : ExternalCodeBaseExecutor, IArtifactExternalCodeExecutor
+    public class ExternalCodeCLIExecutor : ExternalCodeBaseExecutor, IArtifactExternalCodeExecutor
     {
         #region Fields
 
@@ -44,7 +44,7 @@ namespace Democrite.Framework.Node.Artifacts
         public ExternalCodeCLIExecutor(ArtifactExecutableDefinition artifactExecutableDefinition,
                                        IProcessSystemService processSystemService,
                                        IJsonSerializer jsonSerializer,
-                                       Uri workingDirectory)
+                                       Uri? workingDirectory)
             : base(artifactExecutableDefinition, jsonSerializer, workingDirectory)
         {
             this._processSystemService = processSystemService;
@@ -72,10 +72,7 @@ namespace Democrite.Framework.Node.Artifacts
             ExtractCommandLineExec(out var executor, out var args);
             args.Add("--cmd:'" + base64Cmd + "'");
 
-            using (var processor = await this._processSystemService.StartAsync(executor,
-                                                                               this.WorkingDir.LocalPath,
-                                                                               cancellationToken,
-                                                                               args.ToArray()))
+            using (var processor = await LaunchProcessAsync(executor, args, this.ArtifactExecutableDefinition, cancellationToken))
             {
                 await processor.GetAwaiterTask();
 
@@ -113,6 +110,17 @@ namespace Democrite.Framework.Node.Artifacts
                                                     logs,
                                                     logger);
             }
+        }
+
+        /// <summary>
+        /// Launches the process.
+        /// </summary>
+        protected virtual async Task<IExternalProcess> LaunchProcessAsync(string executor, List<string> args, ArtifactExecutableDefinition definition, CancellationToken token)
+        {
+            return await this._processSystemService.StartAsync(executor,
+                                                               this.WorkingDir!.LocalPath,
+                                                               token,
+                                                               args.ToArray());
         }
 
         /// <summary>

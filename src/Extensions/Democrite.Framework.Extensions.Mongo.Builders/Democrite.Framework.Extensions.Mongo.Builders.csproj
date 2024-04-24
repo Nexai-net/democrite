@@ -6,7 +6,7 @@
 	<PropertyGroup>
 
 		<IsPackable>true</IsPackable>
-		<Description>Democrite extension cluster library using mnongDB tools to save definitions, interfaces ...</Description>
+		<Description>Democrite extension cluster library using mongDB tools to save definitions, interfaces ...</Description>
 
 		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agents;Framework;Cluster;Mongo;Extension</PackageTags>
 

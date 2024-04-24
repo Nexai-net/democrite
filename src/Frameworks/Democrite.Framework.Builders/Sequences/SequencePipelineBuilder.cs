@@ -404,7 +404,7 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        ISequencePipelineNestedSequenceCallBuilder<TInput> ISequencePipelineBuilder<TInput>.CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        ISequencePipelineNestedSequenceCallBuilder<TInput> ISequencePipelineBuilder<TInput>.CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder, Action<ISequencePipelineStageConfigurator>? cfg)
         {
             return new SequencePipelineNestedSequenceCallBuilder<TInput>(this, sequenceId, cfgBuilder, cfg);
         }

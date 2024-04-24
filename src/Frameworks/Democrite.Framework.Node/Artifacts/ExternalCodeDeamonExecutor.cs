@@ -10,6 +10,7 @@ namespace Democrite.Framework.Node.Artifacts
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions.Artifacts;
     using Democrite.Framework.Node.Models;
+
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Communications;
     using Elvex.Toolbox.Disposables;
@@ -19,7 +20,6 @@ namespace Democrite.Framework.Node.Artifacts
     using Microsoft.Extensions.Logging;
 
     using Newtonsoft.Json.Linq;
-    using Newtonsoft.Json.Schema;
 
     using System;
     using System.Reactive.Linq;
@@ -33,7 +33,7 @@ namespace Democrite.Framework.Node.Artifacts
     /// </summary>
     /// <seealso cref="SafeAsyncDisposable" />
     /// <seealso cref="IArtifactExternalCodeExecutor" />
-    public sealed class ExternalCodeDeamonExecutor : ExternalCodeBaseExecutor, IArtifactExternalCodeExecutor
+    public class ExternalCodeDeamonExecutor : ExternalCodeBaseExecutor, IArtifactExternalCodeExecutor
     {
         #region Fields
 
@@ -44,7 +44,6 @@ namespace Democrite.Framework.Node.Artifacts
         private readonly SemaphoreSlim _locker;
 
         private ComClientProxy? _remoteClient;
-        private IExternalProcess? _processor;
         private ComServer? _comServer;
 
         #endregion
@@ -58,7 +57,7 @@ namespace Democrite.Framework.Node.Artifacts
                                           IProcessSystemService processSystemService,
                                           IJsonSerializer jsonSerializer,
                                           INetworkInspector networkInspector,
-                                          Uri workingDirectory)
+                                          Uri? workingDirectory)
             : base(artifactExecutableDefinition, jsonSerializer, workingDirectory)
         {
             this._processSystemService = processSystemService;
@@ -68,6 +67,15 @@ namespace Democrite.Framework.Node.Artifacts
             this._stopTimer = DelayTimer.Create(KillTargetRemoteAsync, startDelay: TimeSpan.FromMinutes(5));
             this._locker = new SemaphoreSlim(1);
         }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the processor.
+        /// </summary>
+        public IExternalProcess? Processor { get; private set; }
 
         #endregion
 
@@ -83,7 +91,7 @@ namespace Democrite.Framework.Node.Artifacts
             using (var launchingCancelTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
             using (await this._locker.LockAsync(launchingCancelTokenSource.Token))
             {
-                if (this._processor != null)
+                if (this.Processor != null)
                 {
                     // If so try to ping
                     var proxies = this._comServer?.GetClientProxies();
@@ -112,10 +120,7 @@ namespace Democrite.Framework.Node.Artifacts
                         var clientTask = this._comServer.WaitNextClientAsync(launchingCancelTokenSource.Token);
                         await this._comServer.StartAsync(launchingCancelTokenSource.Token);
 
-                        processor = await this._processSystemService.StartAsync(executor,
-                                                                                this.WorkingDir.LocalPath,
-                                                                                launchingCancelTokenSource.Token,
-                                                                                args.ToArray());
+                        processor = await LaunchProcess(executor, args, this.ArtifactExecutableDefinition, launchingCancelTokenSource.Token);
 
                         // If process failed then it MUST stop the client connection
 #pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods
@@ -131,7 +136,7 @@ namespace Democrite.Framework.Node.Artifacts
                         RegisterDisposableDependency(errorToken);
 
                         this._remoteClient = await clientTask;
-                        this._processor = processor;
+                        this.Processor = processor;
 
                         if (await this._remoteClient.PingAsync(cancellationToken) == false)
                             throw new ArtifactRemoteException(this.ArtifactExecutableDefinition.Uid, "Ping failed", executionContext);
@@ -206,6 +211,17 @@ namespace Democrite.Framework.Node.Artifacts
         #region Tools
 
         /// <summary>
+        /// Launches the process.
+        /// </summary>
+        protected virtual async Task<IExternalProcess> LaunchProcess(string executor, List<string> args, ArtifactExecutableDefinition definition, CancellationToken token)
+        {
+            return await this._processSystemService.StartAsync(executor,
+                                                               this.WorkingDir!.LocalPath,
+                                                               token,
+                                                               args.ToArray());
+        }
+
+        /// <summary>
         /// Manageds the system message.
         /// </summary>
         private void ManagedSystemMessage(ComClientProxy.UnmanagedMessage message, IExecutionContext executionContext, ILogger logger)
@@ -270,8 +286,8 @@ namespace Democrite.Framework.Node.Artifacts
             if (tmp != null)
                 await tmp.DisposeAsync();
 
-            var processorTmp = this._processor;
-            this._processor = null;
+            var processorTmp = this.Processor;
+            this.Processor = null;
 
             if (processorTmp != null)
                 await processorTmp.KillAsync(token);

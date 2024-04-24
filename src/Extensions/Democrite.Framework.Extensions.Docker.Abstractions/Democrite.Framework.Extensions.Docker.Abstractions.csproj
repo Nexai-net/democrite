@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>true</IsPackable>
+		<Description>Democrite extension cluster library using Docker.</Description>
+
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agents;Framework;Cluster;Docker;Extension</PackageTags>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
+	</ItemGroup>
+</Project>

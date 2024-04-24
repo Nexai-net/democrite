@@ -19,6 +19,7 @@ namespace Democrite.Framework.Builders.Artifacts
     internal sealed class ArtifactExecutablePackageBuilder : IArtifactExecutablePackageResourceBuilder,
                                                              IArtifactCodePackageResourceBuilderFrom,
                                                              IArtifactCodePackageResourceBuilderFromSource,
+                                                             IArtifactCodePackageResourceEnvironmentBuilder,
                                                              IArtifactCodePackageResourceBuilderFinalizer
     {
         #region Fields
@@ -36,6 +37,7 @@ namespace Democrite.Framework.Builders.Artifacts
         private readonly string _displayName;
         private readonly Guid _uid;
 
+        private IDefinitionBaseBuilder<ArtifactExecutableEnvironmentDefinition>? _environmentBuilder;
         private IReadOnlyCollection<string>? _arguments;
         private ArtifactPackageTypeEnum? _packageType;
         private Version? _executorVersion;
@@ -274,7 +276,22 @@ namespace Democrite.Framework.Builders.Artifacts
                                                           : this._executor + ":" + this._executorVersion),
                                                     this._packageSource,
                                                     this._packageFiles.OrderBy(p => p).ToArray(),
-                                                    this._packageType.GetValueOrDefault());
+                                                    this._packageType.GetValueOrDefault(),
+                                                    this._environmentBuilder?.Build());
+        }
+
+        /// <inheritdoc />
+        public IArtifactCodePackageResourceBuilderFinalizer ExecEnvironment(Action<IArtifactCodePackageResourceEnvironmentBuilder> envBuilder)
+        {
+            ArgumentNullException.ThrowIfNull(envBuilder);
+            envBuilder(this);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public void Builder(IDefinitionBaseBuilder<ArtifactExecutableEnvironmentDefinition> environmentBuilder)
+        {
+            this._environmentBuilder = environmentBuilder;
         }
 
         #region Tools

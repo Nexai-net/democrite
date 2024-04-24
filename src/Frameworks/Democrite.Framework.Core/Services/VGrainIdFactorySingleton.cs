@@ -59,7 +59,7 @@ namespace Democrite.Framework.Core.Services
         public IVGrainId BuildNewId(VGrainIdBaseFormatorAttribute attr,
                                     Type vgrainType,
                                     object? input,
-                                    IExecutionContext executionContext,
+                                    IExecutionContext? executionContext,
                                     ILogger? logger = null)
         {
             return BuildNewId(attr.FormatType, vgrainType, (attr as VGrainIdSingletonAttribute)?.SingletonValue);

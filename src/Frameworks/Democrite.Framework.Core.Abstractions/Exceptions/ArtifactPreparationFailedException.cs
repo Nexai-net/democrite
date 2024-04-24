@@ -24,13 +24,13 @@ namespace Democrite.Framework.Node.Abstractions.Exceptions
         /// Initializes a new instance of the <see cref="ArtifactPreparationFailedException"/> class.
         /// </summary>
         public ArtifactPreparationFailedException(string details,
-                                                  IExecutionContext executionContext,
+                                                  IExecutionContext? executionContext,
                                                   Exception? innerException = null)
             : this(DemocriteExceptionSR.ArtifactPreparationFailed.WithArguments(details),
                    details?.ToString() ?? string.Empty,
-                   executionContext.FlowUID,
-                   executionContext.ParentExecutionId,
-                   executionContext.CurrentExecutionId,
+                   executionContext?.FlowUID ?? Guid.Empty,
+                   executionContext?.ParentExecutionId,
+                   executionContext?.CurrentExecutionId ?? Guid.Empty,
                    DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Artifact,
                                              DemocriteErrorCodes.PartType.Setup,
                                              DemocriteErrorCodes.ErrorType.Failed),

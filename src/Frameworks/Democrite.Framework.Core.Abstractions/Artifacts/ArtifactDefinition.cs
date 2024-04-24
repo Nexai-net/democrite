@@ -9,11 +9,17 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
     using Microsoft.Extensions.Logging;
 
     using System;
+    using System.ComponentModel;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Base implementation of <see cref="IArtifactResourceDefinition"/>
     /// </summary>
     /// <seealso cref="IArtifactResourceDefinition" />
+    [Immutable]
+    [Serializable]
+    [DataContract]
+    [ImmutableObject(true)]
     public abstract class ArtifactDefinition : ISupportDebugDisplayName, IDefinition
     {
         #region Ctor
@@ -48,24 +54,31 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         #region Properties
 
         /// <inheritdoc />
+        [DataMember]
         public Guid Uid { get; }
 
         /// <inheritdoc />
+        [DataMember]
         public virtual string DisplayName { get; }
 
         /// <inheritdoc />
+        [DataMember]
         public string? Description { get; }
 
         /// <inheritdoc />
+        [DataMember]
         public Version? Version { get; }
 
         /// <inheritdoc />
+        [DataMember]
         public string Hash { get; }
 
         /// <inheritdoc />
+        [DataMember]
         public DateTime CreationOn { get; }
 
         /// <inheritdoc />
+        [DataMember]
         public ArtifactTypeEnum ArtifactType { get; }
 
         #endregion

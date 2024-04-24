@@ -81,7 +81,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         {
             return new EntityRequiredInitializationExceptionSurrogate()
             {
-                EntityType = ConcretBaseTypeConverter.ConvertToSurrogate((ConcretBaseType?)value.Data[nameof(EntityRequiredInitializationExceptionSurrogate.EntityType)]),
+                EntityType = ConcretBaseTypeConverter.ConvertToSurrogate((ConcretBaseType?)value.Data[nameof(EntityRequiredInitializationExceptionSurrogate.EntityType)]!),
                 EntityIdentity = (string?)value.Data[nameof(EntityRequiredInitializationExceptionSurrogate.EntityIdentity)],
                 Message = value.Message,
                 ErrorCode = value.ErrorCode,

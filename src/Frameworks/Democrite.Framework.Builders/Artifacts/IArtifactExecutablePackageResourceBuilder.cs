@@ -46,7 +46,6 @@ namespace Democrite.Framework.Builders.Artifacts
         IArtifactCodePackageResourceBuilderFromSource From(string packageUri, ArtifactPackageTypeEnum packageTypeEnum, string? version = null);
     }
 
-
     /// <summary>
     /// Builder in charge to produce a code artifact after type defined (Python, c++, ...)
     /// </summary>
@@ -89,7 +88,6 @@ namespace Democrite.Framework.Builders.Artifacts
         IArtifactCodePackageResourceBuilderFinalizer ExecuteFile(string exec);
     }
 
-
     /// <summary>
     /// Builder in charge to produce a code artifact after type defined (Python, c++, ...)
     /// </summary>
@@ -104,5 +102,21 @@ namespace Democrite.Framework.Builders.Artifacts
         /// Define if the executable managed to stay alive after usage.
         /// </summary>
         IArtifactCodePackageResourceBuilderFinalizer Persistent();
+
+        /// <summary>
+        /// Define if the executable environment docker, anaconda, ...
+        /// </summary>
+        IArtifactCodePackageResourceBuilderFinalizer ExecEnvironment(Action<IArtifactCodePackageResourceEnvironmentBuilder> envBuilder);
+    }
+
+    /// <summary>
+    /// Build execution environment host docker, anaconda, ...
+    /// </summary>
+    public interface IArtifactCodePackageResourceEnvironmentBuilder
+    {
+        /// <summary>
+        /// Builders the specified builder.
+        /// </summary>
+        void Builder(IDefinitionBaseBuilder<ArtifactExecutableEnvironmentDefinition> builder);
     }
 }

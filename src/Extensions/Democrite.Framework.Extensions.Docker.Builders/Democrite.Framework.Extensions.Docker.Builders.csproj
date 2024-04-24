@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>true</IsPackable>
+		<Description>Democrite extension used to build docker usage definitions.</Description>
+
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agents;Framework;Cluster;Mongo;Extension</PackageTags>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Builders\Democrite.Framework.Builders.csproj" />
+	  <ProjectReference Include="..\Democrite.Framework.Extensions.Docker.Abstractions\Democrite.Framework.Extensions.Docker.Abstractions.csproj" />
+	</ItemGroup>
+
+</Project>

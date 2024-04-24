@@ -651,6 +651,8 @@ namespace Democrite.Framework.Configurations
 
             if (!CheckIsExistSetupInServices<IArtifactExecutorFactory>(serviceCollection))
                 AddService<IArtifactExecutorFactory, ArtifactExecutorFactory>();
+            
+            AddService<IArtifactExecutorDedicatedFactory, ArtifactExecutorCLIDedicatedFactory>();
 
             if (!CheckIsExistSetupInServices<ITriggerDefinitionProvider>(serviceCollection))
                 AddService<IDoorDefinitionProvider, DoorDefinitionProvider>();

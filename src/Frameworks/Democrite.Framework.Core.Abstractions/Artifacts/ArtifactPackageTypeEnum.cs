@@ -12,6 +12,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         None,
         Zip,
         Npm,
-        Directory
+        Directory,
+        EnvironmentRepository
     }
 }

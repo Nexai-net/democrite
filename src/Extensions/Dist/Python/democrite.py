@@ -7,7 +7,7 @@ import codecs
 import concurrent.futures
 
 from abc import ABC, abstractmethod 
-from asyncio.windows_events import NULL
+# from asyncio.windows_events import NULL
 
 class LogLevel:
     """
@@ -56,8 +56,9 @@ class _messageType:
     PONG = 3
 
 class _remoteCommandServer:
-    def __init__(self, port:int, callback):
+    def __init__(self, port:int, serverIp:str, callback):
         self._port = port
+        self._serverIP = serverIp
         self._callback = callback
         self._executor = concurrent.futures.ThreadPoolExecutor()
 
@@ -65,7 +66,7 @@ class _remoteCommandServer:
         finalData = struct.pack("!B", messageType)
         finalData += codecs.utf_8_encode(id)[0] 
 
-        if(result != NULL):
+        if(result is not None):
             finalData += codecs.utf_8_encode(result)[0] 
 
         fullFinalData = struct.pack("H", len(finalData)) + finalData
@@ -83,7 +84,7 @@ class _remoteCommandServer:
             return
 
         self._socket = socket.socket(socket.AddressFamily.AF_INET, socket.SocketKind.SOCK_STREAM);
-        self._socket.connect(("localhost", self._port));
+        self._socket.connect((self._serverIP, self._port));
 
         pkgSize = [] 
         while (True):
@@ -108,7 +109,7 @@ class _remoteCommandServer:
                 # msg = base64.b64encode(msgDataStr)
 
             if (msgType == _messageType.PING):
-                self.__private__sendResponse_with_message_type(msgId, NULL, _messageType.PONG)
+                self.__private__sendResponse_with_message_type(msgId, None, _messageType.PONG)
                 continue
 
             if (msgType == _messageType.USER):
@@ -217,8 +218,12 @@ class vgrain:
     
     def __init__(self, args: list[str]):
 
+        self._serverIP = "127.0.0.1"
+        self._remotePort = -1
+
         # Search in arguments the command information "--cmd:'CMD_JSON_BASE64'"
-        for arg in args:
+        argCopy = args.copy();
+        for arg in argCopy:
 
             if (arg.startswith("--cmd:'")):
                 remainLen = len(arg) - 1
@@ -230,7 +235,14 @@ class vgrain:
                 self._remotePort = int(arg[7:remainLen])
                 args.remove(arg)
 
+            if (arg.startswith("--server:")):
+                remainLen = len(arg)
+                self._serverIP = arg[9:remainLen]
+                args.remove(arg)
+
         self._arguments = args
+        if (self._remotePort > -1):
+            print("ServerIp: " + self._serverIP + ":" + str(self._remotePort))
         
     def test(self, data, func: execFunc):
         """ Execute the command pass by argument to test """
@@ -244,7 +256,7 @@ class vgrain:
         formatCommand = self.__private_format_command(testCommandContainer)
         result, _ = self.__private_execute_command(formatCommand, func)
 
-        if (result != NULL):
+        if (result is not None):
             print("Result : " + json.dumps(result))
 
         print("Original Data : " + json.dumps(data))
@@ -252,7 +264,7 @@ class vgrain:
     def execute(self, func: execFunc) -> None:
         """ Execute the command pass by command line arguments in oneshot """
 
-        if self._command == NULL:
+        if self._command is None:
             raise KeyError("Command not found, ensure the command is pass using --cmd:'CMD_JSON_BASE64'")
 
         response, cmd  = self.__private_execute_command(self._command, func)
@@ -262,10 +274,10 @@ class vgrain:
     def run(self, func: execFunc):
         """ Run in background and process all command send """
         callback = lambda compressedMsg=str : self.__private_execute_command_and_format(compressedMsg, func)
-        self._remoteServer = _remoteCommandServer(self._remotePort, callback)
+        self._remoteServer = _remoteCommandServer(self._remotePort, self._serverIP, callback)
         self._remoteServer.run()
 
-    def __private_execute_command(self, compressCommand: str, func: execFunc) -> dict[str, any] | vgrainCommand:
+    def __private_execute_command(self, compressCommand: str, func: execFunc) -> dict[str, any]:
         """ Execute  compressCommand (UTF-8 Json in base64 ) """
 
         bytes = base64.b64decode(compressCommand)
@@ -307,6 +319,6 @@ class vgrain:
         formatCommand = base64.b64encode(byte_data);
         return codecs.utf_8_decode(formatCommand)[0]
     
-    def __private_execute_command_and_format(self, compressCommand: str, func: execFunc) -> dict[str, any] | vgrainCommand:
+    def __private_execute_command_and_format(self, compressCommand: str, func: execFunc) -> dict[str, any]:
         response, cmd  = self.__private_execute_command(compressCommand, func)
         return self.__private_format_command(response)
