@@ -5,14 +5,11 @@
 namespace Democrite.Framework.Extensions.Mongo.Repositories
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
-    using Democrite.Framework.Extensions.Mongo.Models;
 
     using Microsoft.Extensions.Options;
 
-    using MongoDB.Bson;
     using MongoDB.Bson.Serialization;
     using MongoDB.Driver;
-    using MongoDB.Driver.Core.Misc;
 
     using Orleans.Providers.MongoDB.Configuration;
     using Orleans.Providers.MongoDB.Utils;
@@ -21,7 +18,6 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq.Expressions;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -29,7 +25,7 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
     /// 
     /// </summary>
     /// <seealso cref="Core.Abstractions.Storages.IStorageReadRepository" />
-    [DebuggerDisplay("MONGO ReadOnly Repository {s_entityTraits} : {_storageName}")]
+    [DebuggerDisplay("MONGO ReadOnly Repository {s_entityTrait} : {_collectionName}")]
     internal class MongoStorageReadOnlyRepository<TEntity> : MongoReadOnlyBaseRepository<TEntity>
     {
         #region Ctor
@@ -48,7 +44,7 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         public MongoStorageReadOnlyRepository(IMongoClientFactory mongoClientFactory,
                                       IServiceProvider serviceProvider,
                                       string? collectionName = null,
-                                      IOptions<MongoDBOptions>? mongoDBOptions = null) 
+                                      IOptions<MongoDBOptions>? mongoDBOptions = null)
             : base(mongoClientFactory, serviceProvider, collectionName, mongoDBOptions)
         {
         }
@@ -76,7 +72,7 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
     /// 
     /// </summary>
     /// <seealso cref="Core.Abstractions.Storages.IStorageReadRepository" />
-    [DebuggerDisplay("MONGO Repository {s_entityTraits} : {_storageName}")]
+    [DebuggerDisplay("MONGO Repository {s_entityTrait} : {_collectionName}")]
     internal class MongoStorageRepository<TEntity, TEntityId> : MongoStorageReadOnlyRepository<TEntity>, IRepository<TEntity>, IRepository<TEntity, TEntityId>
         where TEntity : IEntityWithId<TEntityId>
         where TEntityId : IEquatable<TEntityId>
@@ -111,6 +107,12 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         }
 
         /// <inheritdoc />
+        public ValueTask<IReadOnlyCollection<TProjection>> GetByIdsValueAsync<TProjection>([NotNull] IReadOnlyCollection<TEntityId> entityIds, CancellationToken token)
+        {
+            return base.GetValuesAsync<TProjection>((TEntity e) => entityIds.Contains(e.Uid), token);
+        }
+
+        /// <inheritdoc />
         public ValueTask<TEntity?> GetByIdValueAsync([NotNull] TEntityId entityId, CancellationToken token)
         {
             return base.GetFirstValueAsync(e => e.Uid.Equals(entityId), token);
@@ -119,9 +121,9 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         /// <inheritdoc />
         public async Task<bool> PushDataRecordAsync(TEntity entity, bool insertIfNew, CancellationToken token)
         {
-            var result = await this.GetMongoCollection().ReplaceOneAsync(Builders<TEntity>.Filter.Eq(e => e.Uid, entity.Uid), 
-                                                                         entity, 
-                                                                         new ReplaceOptions() { IsUpsert = insertIfNew }, 
+            var result = await this.GetMongoCollection().ReplaceOneAsync(Builders<TEntity>.Filter.Eq(e => e.Uid, entity.Uid),
+                                                                         entity,
+                                                                         new ReplaceOptions() { IsUpsert = insertIfNew },
                                                                          token);
 
             return (result?.ModifiedCount ?? 0) == 1 || result?.UpsertedId is not null;
@@ -153,11 +155,17 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         #endregion
     }
 
-    [DebuggerDisplay("MONGO ReadOnly Repository {s_entityTraits}[{s_entityIdTraits}] : {_storageName}")]
+    [DebuggerDisplay("MONGO ReadOnly Repository {s_entityTrait}[{s_entityIdTraits}] : {_collectionName}")]
     internal sealed class MongoStorageReadOnlyRepository<TEntity, TEntityId> : MongoStorageReadOnlyRepository<TEntity>, IReadOnlyRepository<TEntity, TEntityId>
         where TEntity : IEntityWithId<TEntityId>
         where TEntityId : IEquatable<TEntityId>
     {
+        #region Fields
+
+        private static readonly Type s_entityIdTraits = typeof(TEntityId);
+
+        #endregion
+
         #region Ctor
 
         /// <summary>
@@ -166,7 +174,7 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         public MongoStorageReadOnlyRepository(IMongoClientFactory mongoClientFactory,
                                       IServiceProvider serviceProvider,
                                       string? collectionName = null,
-                                      IOptions<MongoDBOptions>? mongoDBOptions = null) 
+                                      IOptions<MongoDBOptions>? mongoDBOptions = null)
             : base(mongoClientFactory, serviceProvider, collectionName, mongoDBOptions)
         {
         }
@@ -179,6 +187,12 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         public ValueTask<IReadOnlyCollection<TEntity>> GetByIdsValueAsync([NotNull] IReadOnlyCollection<TEntityId> entityIds, CancellationToken token)
         {
             return base.GetValuesAsync((TEntity e) => entityIds.Contains(e.Uid), token);
+        }
+
+        /// <inheritdoc />
+        public ValueTask<IReadOnlyCollection<TProjection>> GetByIdsValueAsync<TProjection>([NotNull] IReadOnlyCollection<TEntityId> entityIds, CancellationToken token)
+        {
+            return base.GetValuesAsync<TProjection>((TEntity e) => entityIds.Contains(e.Uid), token);
         }
 
         /// <inheritdoc />

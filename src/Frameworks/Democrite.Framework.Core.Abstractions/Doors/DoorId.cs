@@ -14,5 +14,5 @@ namespace Democrite.Framework.Core.Abstractions.Doors
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public readonly record struct DoorId(Guid Uid, string Name);
+    public readonly record struct DoorId(Guid Uid, string? Name);
 }

@@ -37,6 +37,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
         private static readonly BlackboardMaxRecordLogicalTypeRuleConverter s_maxRecordCnv;
         private static readonly BlackboardTypeCheckLogicalTypeRuleConverter s_typeCheckCnv;
         private static readonly BlackboardStorageLogicalTypeRuleConverter s_storageCnv;
+        private static readonly BlackboardLogicalTypeUniqueRuleConverter s_uniqueCnv;
         private static readonly BlackboardOrderLogicalTypeRuleConverter s_orderCnv;
         private static readonly BlackboardRegexLogicalTypeRuleConverter s_regexCnv;
 
@@ -62,6 +63,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
             s_orderCnv = new BlackboardOrderLogicalTypeRuleConverter();
             s_storageCnv = new BlackboardStorageLogicalTypeRuleConverter();
             s_remainCnv = new BlackboardRemainOnSealedLogicalTypeRuleConverter();
+            s_uniqueCnv = new BlackboardLogicalTypeUniqueRuleConverter();
 
             s_convertToSurrogate = new Dictionary<Predicate<BlackboardLogicalTypeBaseRule>, Func<BlackboardLogicalTypeBaseRule, IBlackboardLogicalTypeBaseRuleSurrogate>>()
             {
@@ -73,6 +75,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
                 { r => r is BlackboardOrderLogicalTypeRule, (r) => s_orderCnv.ConvertToSurrogate((BlackboardOrderLogicalTypeRule)r) },
                 { r => r is BlackboardStorageLogicalTypeRule, (r) => s_storageCnv.ConvertToSurrogate((BlackboardStorageLogicalTypeRule)r) },
                 { r => r is BlackboardRemainOnSealedLogicalTypeRule, (r) => s_remainCnv.ConvertToSurrogate((BlackboardRemainOnSealedLogicalTypeRule)r) },
+                { r => r is BlackboardLogicalTypeUniqueRule, (r) => s_uniqueCnv.ConvertToSurrogate((BlackboardLogicalTypeUniqueRule)r) },
             };
 
             s_convertFromSurrogate = new Dictionary<Predicate<IBlackboardLogicalTypeBaseRuleSurrogate>, Func<IBlackboardLogicalTypeBaseRuleSurrogate, BlackboardLogicalTypeBaseRule>>()
@@ -85,6 +88,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Surrogates
                 { r => r is BlackboardOrderLogicalTypeRuleSurrogate, (r) => s_orderCnv.ConvertFromSurrogate((BlackboardOrderLogicalTypeRuleSurrogate)r) },
                 { r => r is BlackboardStorageLogicalTypeRuleSurrogate, (r) => s_storageCnv.ConvertFromSurrogate((BlackboardStorageLogicalTypeRuleSurrogate)r) },
                 { r => r is BlackboardRemainOnSealedLogicalTypeRuleSurrogate, (r) => s_remainCnv.ConvertFromSurrogate((BlackboardRemainOnSealedLogicalTypeRuleSurrogate)r) },
+                { r => r is BlackboardLogicalTypeUniqueRuleSurrogate, (r) => s_uniqueCnv.ConvertFromSurrogate((BlackboardLogicalTypeUniqueRuleSurrogate)r) },
             };
         }
 

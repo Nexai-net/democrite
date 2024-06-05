@@ -29,6 +29,16 @@ namespace Democrite
         public const string DefaultDemocriteStateConfigurationKey = nameof(Democrite);
 
         /// <summary>
+        /// The default dmocrite dynamic definitions
+        /// </summary>
+        public const string DefaultDemocriteDynamicDefinitionsConfigurationKey = nameof(Democrite) + "DynamicDefinitions";
+
+        /// <summary>
+        /// The default dmocrite dynamic definitions
+        /// </summary>
+        public const string DefaultDemocriteDynamicDefinitionsRepositoryConfigurationKey = DefaultDemocriteDynamicDefinitionsConfigurationKey + "Repository";
+
+        /// <summary>
         /// The default dmocrite System state storage configuration
         /// </summary>
         public const string DefaultDemocriteAdminStateConfigurationKey = nameof(Democrite) + "Admin";

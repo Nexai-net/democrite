@@ -59,13 +59,15 @@ namespace Democrite.Framework.Core.Services
         }
 
         /// <inheritdoc />
-        public async Task<TDefinition?> GetDefinitionAsync<TDefinition>(Guid uid, CancellationToken token) where TDefinition : IDefinition
+        public async Task<TDefinition?> GetDefinitionAsync<TDefinition>(Guid uid, CancellationToken token) 
+            where TDefinition : class, IDefinition
         {
             return (await GetDefinitionAsync<TDefinition>(token, uid)).Info.FirstOrDefault();
         }
 
         /// <inheritdoc />
-        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(CancellationToken token, params Guid[] uids) where TDefinition : IDefinition
+        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(CancellationToken token, params Guid[] uids) 
+            where TDefinition : class, IDefinition
         {
             var grain = await GetHandlerVGrainAsync();
             using (var grainCancelToken = token.ToGrainCancellationTokenSource())
@@ -75,7 +77,8 @@ namespace Democrite.Framework.Core.Services
         }
 
         /// <inheritdoc />
-        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, CancellationToken token) where TDefinition : IDefinition
+        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, CancellationToken token) 
+            where TDefinition : class, IDefinition
         {
             var grain = await GetHandlerVGrainAsync();
             using (var grainCancelToken = token.ToGrainCancellationTokenSource())
@@ -102,31 +105,31 @@ namespace Democrite.Framework.Core.Services
         }
 
         /// <inheritdoc />
-        public async Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, CancellationToken token)
+        public async Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, CancellationToken token, bool preventNotification = false)
             where TDefinition : class, IDefinition
         {
             var grain = await GetHandlerVGrainAsync();
             using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
-                return await grain.PushDefinitionAsync<TDefinition>(existFilter, definition, identity, grainCancelToken.Token);
+                return await grain.PushDefinitionAsync<TDefinition>(existFilter, definition, identity, grainCancelToken.Token, preventNotification);
             }
         }
 
         /// <inheritdoc />
-        public Task<Guid> PushDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, TDefinition definition, IIdentityCard identity, CancellationToken token)
+        public Task<Guid> PushDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, TDefinition definition, IIdentityCard identity, CancellationToken token, bool preventNotification = false)
             where TDefinition : class, IDefinition
         {
-            return PushDefinitionAsync<TDefinition>(filter.Serialize(), definition, identity, token);
+            return PushDefinitionAsync<TDefinition>(filter.Serialize(), definition, identity, token, preventNotification);
         }
 
         /// <inheritdoc />
-        public async Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, CancellationToken token)
+        public async Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, CancellationToken token, bool preventNotification = false)
             where TDefinition : class, IDefinition
         {
             var grain = await GetHandlerVGrainAsync();
             using (var grainCancelToken = token.ToGrainCancellationTokenSource())
             {
-                return await grain.PushDefinitionAsync(definition, @override, identity, grainCancelToken.Token);
+                return await grain.PushDefinitionAsync(definition, @override, identity, grainCancelToken.Token, preventNotification);
             }
         }
 

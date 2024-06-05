@@ -5,22 +5,21 @@
 namespace Democrite.Framework.Node.UnitTests
 {
     using Democrite.Framework.Builders;
-    using Democrite.Framework.Builders.Sequences;
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Customizations;
+    using Democrite.Framework.Core.Abstractions.Deferred;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
+    using Democrite.Framework.Core.Abstractions.Services;
+    using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Extensions;
     using Democrite.Framework.Core.Models;
-    using Democrite.Framework.Core.Services;
     using Democrite.Framework.Node.Abstractions.Models;
+    using Democrite.Framework.Node.Services;
     using Democrite.Framework.Node.ThreadExecutors;
     using Democrite.Framework.Node.UnitTests.Extensions;
-    using Elvex.Toolbox;
-    using Elvex.Toolbox.Abstractions.Models;
-    using Elvex.Toolbox.Helpers;
-    using Elvex.Toolbox.Services;
     using Democrite.Test.Interfaces;
     using Democrite.Test.VGrains;
     using Democrite.UnitTests.ToolKit;
@@ -28,6 +27,11 @@ namespace Democrite.Framework.Node.UnitTests
     using Democrite.UnitTests.ToolKit.Sequences;
     using Democrite.UnitTests.ToolKit.Services;
     using Democrite.UnitTests.ToolKit.VGrains.Transformers;
+
+    using Elvex.Toolbox.Abstractions.Models;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Helpers;
+    using Elvex.Toolbox.Services;
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -37,18 +41,12 @@ namespace Democrite.Framework.Node.UnitTests
     using NFluent;
 
     using NSubstitute;
+    using NSubstitute.Core;
 
     using Orleans.Runtime;
     using Orleans.TestingHost;
 
     using Xunit.Abstractions;
-    using Democrite.Framework.Node.Services;
-    using Democrite.Framework.Core.Abstractions.Customizations;
-    using Elvex.Toolbox.Disposables;
-    using NSubstitute.Core;
-    using Democrite.Framework.Core.Abstractions.Signals;
-    using Democrite.Framework.Core.Abstractions.Services;
-    using Democrite.Framework.Core.Abstractions.Deferred;
 
     /// <summary>
     /// Test <see cref="SequenceExecutorVGrain"/>
@@ -100,7 +98,11 @@ namespace Democrite.Framework.Node.UnitTests
             var sequenceVGrainProviderFactoryMock = Substitute.For<ISequenceVGrainProviderFactory>();
             var sequenceVGrainProviderMock = Substitute.For<ISequenceVGrainProvider>();
 
-            var threadStageExecutorProviderMock = (ISequenceExecutorThreadStageProvider)SequenceExecutorThreadStageProviderMock.Create();
+            var serviceCollection = new ServiceCollection();
+
+            serviceCollection.AddSingleton<IDemocriteSerializer>(democriteSerializerMock);
+
+            var threadStageExecutorProviderMock = (ISequenceExecutorThreadStageProvider)SequenceExecutorThreadStageProviderMock.Create(serviceCollection);
             var timeManager = new TimeManager();
 
             var executionLog = new TestDiagnosticLogConsumer();

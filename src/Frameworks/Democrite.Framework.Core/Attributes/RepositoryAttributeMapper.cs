@@ -7,6 +7,7 @@ namespace Democrite.Framework.Core.Attributes
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
+
     using Elvex.Toolbox.Abstractions.Supports;
 
     using Microsoft.Extensions.DependencyInjection;
@@ -24,9 +25,9 @@ namespace Democrite.Framework.Core.Attributes
     public sealed class RepositoryAttributeMapper : IAttributeToFactoryMapper<RepositoryAttribute>
     {
         #region Fields
-        
+
         private static readonly MethodInfo s_factoryWithEntityGenericMth;
-        
+
         #endregion
 
         #region Ctor
@@ -52,7 +53,7 @@ namespace Democrite.Framework.Core.Attributes
             var repositoryType = parameter.ParameterType
                                           .GetTypeInfoExtension()
                                           .GetAllCompatibleTypes()
-                                          .FirstOrDefault(t => t.IsInterface && 
+                                          .FirstOrDefault(t => t.IsInterface &&
                                                                t.GetGenericArguments().Length.IsBetween(1, 2) &&
                                                                (t.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<>) ||
                                                                 t.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<,>)));
@@ -80,14 +81,18 @@ namespace Democrite.Framework.Core.Attributes
             return ctx =>
             {
                 var factory = ctx.ActivationServices.GetRequiredService<IRepositoryFactory>();
-                var inst = factory.Get<TTargetRepo, TEntity>(metadata.StateName, metadata.StorageName);
+                var repositoryValueTask = factory.GetAsync<TTargetRepo, TEntity>(metadata.StateName, metadata.StorageName);
 
-                if (inst is ISupportInitialization<string> initInst && initInst.IsInitialized == false)
+                if (repositoryValueTask.IsCompleted == false)
                 {
-                    Task.Run(async () => await initInst.InitializationAsync(metadata.StorageName, default)).GetAwaiter().GetResult();
+                    // due to IAttributeToFactoryMapper<RepositoryAttribute> signaure async could not be used
+                    // So we have to block the current thread waiting.
+
+                    // Attention : dead lock normally .GetAwaiter().GetResult(); prevent it
+                    return repositoryValueTask.GetAwaiter().GetResult();
                 }
 
-                return inst;
+                return repositoryValueTask.Result;
             };
         }
 

@@ -30,6 +30,12 @@ namespace Democrite.Framework.Builders.Sequences
         /// Add execution context
         /// </summary>
         ISequencePipelineStageConfiguredCallBuilder<TSequenceVGrain, TCtx> Configure<TCtx>(TCtx context);
+
+        /// <summary>
+        /// Add onfiguration from <see cref="IExecutionContext.TryGetContextData{TContextData}(Core.Abstractions.Repositories.IDemocriteSerializer)"/>
+        /// </summary>
+        ISequencePipelineStageConfiguredCallBuilder<TSequenceVGrain, TCtx> ConfigureFromContext<TContextData, TCtx>(Expression<Func<TContextData, TCtx>> executionConfiguration);
+        
     }
 
     /// <summary>
@@ -52,6 +58,11 @@ namespace Democrite.Framework.Builders.Sequences
         /// Add execution context configuration
         /// </summary>
         ISequencePipelineStageConfiguredCallBuilder<TSequenceVGrain, TCtx, TInputMessage> Configure<TCtx>(TCtx context);
+
+        /// <summary>
+        /// Add configuration from <see cref="IExecutionContext.TryGetContextData{TContextData}(Core.Abstractions.Repositories.IDemocriteSerializer)"/>
+        /// </summary>
+        ISequencePipelineStageConfiguredCallBuilder<TSequenceVGrain, TCtx, TInputMessage> ConfigureFromContext<TContextData, TCtx>(Expression<Func<TContextData, TCtx>> executionConfiguration);
 
         /// <summary>
         /// Add execution context configuration from input data

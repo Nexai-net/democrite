@@ -15,7 +15,7 @@ namespace Democrite.Framework.Core.Abstractions
     [Immutable]
     [Serializable]
     [DataContract]
-    [ImmutableObject(true)]
     [GenerateSerializer]
+    [ImmutableObject(true)]
     public record struct DedicatedGrainId<TType>(GrainId Target, bool IsGrainService, ConcretType GrainInterface);
 }

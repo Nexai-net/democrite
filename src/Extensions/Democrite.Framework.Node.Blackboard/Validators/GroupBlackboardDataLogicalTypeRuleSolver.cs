@@ -8,6 +8,7 @@ namespace Democrite.Framework.Node.Blackboard.Validators
     using Democrite.Framework.Node.Blackboard.Abstractions.Exceptions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues;
+
     using Elvex.Toolbox.Abstractions.Enums;
 
     using System;
@@ -65,12 +66,24 @@ namespace Democrite.Framework.Node.Blackboard.Validators
         /// <inheritdoc />
         public async ValueTask<BlackboardProcessingIssue?> ValidateAsync<TData>(DataRecordContainer<TData> data, IReadOnlyDictionary<Guid, BlackboardRecordMetadata> recordMetadata)
         {
+            List<BlackboardProcessingIssue>? issues = null;
+
             foreach (var rule in this._validators)
             {
                 var ruleIssue = await rule.ValidateAsync(data, recordMetadata);
 
-                if (this.ValidationMode == ValidationModeEnum.AtLeastOne && ruleIssue is null)
-                    return null;
+                if (this.ValidationMode == ValidationModeEnum.AtLeastOne)
+                {
+                    if (ruleIssue is null)
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        issues ??= new List<BlackboardProcessingIssue>();
+                        issues.Add(ruleIssue);
+                    }
+                }
 
                 if (this.ValidationMode == ValidationModeEnum.All && ruleIssue is not null)
                     return ruleIssue;
@@ -78,6 +91,9 @@ namespace Democrite.Framework.Node.Blackboard.Validators
                 if (this.ValidationMode == ValidationModeEnum.NoOne && ruleIssue is null)
                     return new BlackboardProcessingGenericRuleIssues($"No rule mus be valid, Rule valid {rule.ToDebugDisplayName()}");
             }
+
+            if (issues is not null && issues.Count > 0)
+                return new BlackboardAggregateProcessingIssue(issues);
 
             return null;
         }

@@ -14,6 +14,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Elvex.Toolbox.Abstractions.Conditions;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
 
@@ -21,9 +22,11 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Orleans.Serialization.Invocation;
 
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
+    using System.Reflection;
     using System.Security.Cryptography;
     using System.Threading;
     using System.Threading.Tasks;
@@ -36,17 +39,27 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     {
         #region Fields
 
+        private static readonly MethodInfo s_getStoreDataGeneric;
+
         private readonly ILogger<BlackboardHandlerProxy> _logger;
         private readonly IGrainFactory _grainFactory;
         private readonly GrainId _blackboardGrainId;
         private readonly ITimeManager _timeManager;
-
         private IBlackboardGrain _boardGrain;
         private BlackboardId _boardId;
 
         #endregion
 
         #region Ctor
+
+        /// <summary>
+        /// Initializes the <see cref="BlackboardHandlerProxy"/> class.
+        /// </summary>
+        static BlackboardHandlerProxy()
+        {
+            Expression<Func<BlackboardHandlerProxy, Guid, Task<IReadOnlyCollection<DataRecordContainer<int>>>>> getStoreDataGeneric = (b, g) => b.GetStoredDataAsync<int>(default, g);
+            s_getStoreDataGeneric = ((MethodCallExpression)getStoreDataGeneric.Body).Method.GetGenericMethodDefinition();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BlackboardHandlerProxy"/> class.
@@ -248,6 +261,21 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
+        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(IReadOnlyCollection<Guid> dataUids, CancellationToken token)
+        {
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
+            {
+                return await this._boardGrain.GetStoredMetaDataAsync(dataUids, grainToken.Token);
+            }
+        }
+
+        /// <inheritdoc />
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(CancellationToken token, params Guid[] dataUids)
+        {
+            return GetStoredMetaDataAsync(dataUids, token);
+        }
+
+        /// <inheritdoc />
         public async Task<DataRecordContainer<TDataProjection?>?> GetStoredDataAsync<TDataProjection>(Guid dataUid, CancellationToken token)
         {
             return (await GetStoredDataAsync<TDataProjection>(token, dataUid))?.SingleOrDefault();
@@ -257,6 +285,22 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(CancellationToken token, params Guid[] dataUids)
         {
             return GetStoredDataAsync<TDataProjection>(dataUids, token);
+        }
+
+        /// <inheritdoc />
+        public async Task<IReadOnlyCollection<DataRecordContainer>> GetStoredDataAsync(ConcretBaseType dataProjectionType, CancellationToken token, params Guid[] dataUids)
+        {
+            var speMthd = s_getStoreDataGeneric.MakeGenericMethodWithCache(dataProjectionType.ToType());
+
+            var resultTask = (Task)speMthd.Invoke(this, new object[] { token, dataUids })!;
+
+            await resultTask;
+
+            var resultData = (resultTask.GetResult() as IEnumerable)
+                                    ?.OfType<DataRecordContainer>()
+                                    .ToArray() ?? EnumerableHelper<DataRecordContainer>.ReadOnlyArray;
+
+            return resultData;
         }
 
         /// <inheritdoc />

@@ -34,6 +34,9 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         private bool _anyLogicalType;
         private bool _initializationRequired;
 
+        private bool _allLogicalTypeUnique;
+        private bool _allLogicalTypeUniqueAllowReplace;
+
         #endregion
 
         #region Ctor
@@ -43,7 +46,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         /// </summary>
         static BlackboardTemplateBuilder()
         {
-            s_defaultSystemStorage = new BlackboardStorageDefinition(BlackboardConstants.BlackboardStorageStateKey, BlackboardConstants.BlackboardStorageConfigurationKey);
+            s_defaultSystemStorage = new BlackboardStorageDefinition(BlackboardConstants.BlackboardStorageRecordsKey, BlackboardConstants.BlackboardStorageConfigurationKey);
         }
 
         /// <summary>
@@ -62,8 +65,10 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
             this._storageControllers = new Dictionary<BlackboardControllerTypeEnum, IDefinitionBaseBuilder<BlackboardTemplateControllerDefinition>>();
 
             // Only BlackboardControllerTypeEnum.Storage have a controller setups by default
-            var genericControllerBuilder = new BlackboardTemplateGenericControllerBuilder(this, BlackboardControllerTypeEnum.Storage);
-            this._storageControllers[BlackboardControllerTypeEnum.Storage] = genericControllerBuilder;
+            this.Storage.UseDefault();
+
+            //var genericControllerBuilder = new BlackboardTemplateGenericControllerBuilder(this, BlackboardControllerTypeEnum.Storage);
+            //this._storageControllers[BlackboardControllerTypeEnum.Storage] = genericControllerBuilder;
         }
 
         #endregion
@@ -191,6 +196,14 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         }
 
         /// <inheritdoc />
+        public IBlackboardTemplateOptionsBuilder AllLogicalTypeUnique(bool replace = false)
+        {
+            this._allLogicalTypeUnique = true;
+            this._allLogicalTypeUniqueAllowReplace = replace;
+            return this;
+        }
+
+        /// <inheritdoc />
         public BlackboardTemplateDefinition Build()
         {
             var controllers = this._storageControllers.GroupBy(k => k.Value)
@@ -224,7 +237,6 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
                              .Append(new BlackboardStorageLogicalTypeRule(".*", s_defaultSystemStorage))
                              .ToArray();
             }
-
             else if (indexedRules.TryGetValue(".*", out var defaultRules))
             {
                 if (!defaultRules.Select(r => r).OfType<BlackboardOrderLogicalTypeRule>().Any())
@@ -232,6 +244,18 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
 
                 if (!defaultRules.Select(r => r).OfType<BlackboardStorageLogicalTypeRule>().Any())
                     rules = rules.Append(new BlackboardStorageLogicalTypeRule(".*", s_defaultSystemStorage)).ToArray();
+            }
+
+            if (this._allLogicalTypeUnique)
+            {
+                var uniqueRules = new List<BlackboardLogicalTypeUniqueRule>();
+                foreach (var logicalType in rules.GroupBy(r => r.LogicalTypePattern)
+                                                 .Where(rls => rls.OfType<BlackboardLogicalTypeUniqueRule>().Any() == false))
+                {
+                    uniqueRules.Add(new BlackboardLogicalTypeUniqueRule(logicalType.Key, this._allLogicalTypeUniqueAllowReplace));
+                }
+
+                rules = rules.Concat(uniqueRules).ToArray();
             }
 
             return new BlackboardTemplateDefinition(this._uid,

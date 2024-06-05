@@ -79,7 +79,7 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
                                                bool buildReadRepository)
         {
             var siloBuilder = democriteBuilderWizard.GetSiloBuilder();
-            siloBuilder.AddMemoryGrainStorage(key);
+            siloBuilder.AddMemoryGrainStorage(key, MemoryConfiguratorHelper.OptionConfigurator);
 
             if (buildReadRepository)
             {

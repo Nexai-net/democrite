@@ -12,6 +12,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Abstractions;
     using Democrite.Framework.Node.Abstractions.Models;
+
     using Elvex.Toolbox.Abstractions.Disposables;
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Abstractions.Services;
@@ -77,14 +78,14 @@ namespace Democrite.Framework.Node.ThreadExecutors
             if (fire.Multi && data is System.Collections.IEnumerable collection)
             {
                 var sendTasks = collection.OfType<object>()
-                                          .Select(d => FireAsync(sequenceContext, fire, d))
+                                          .Select(d => FireAsync(sequenceContext, fire, d, input))
                                           .ToArray();
 
                 await sendTasks.SafeWhenAllAsync(sequenceContext.CancellationToken);
             }
             else
             {
-                await FireAsync(sequenceContext, fire, data);
+                await FireAsync(sequenceContext, fire, data, input);
             }
 
             // output diagnosticlog
@@ -100,20 +101,35 @@ namespace Democrite.Framework.Node.ThreadExecutors
         /// <summary>
         /// Fires the specified signal with the specific message.
         /// </summary>
-        private async Task FireAsync(IExecutionContext sequenceContext, SequenceStageFireSignalDefinition fire, object? data)
+        private async Task FireAsync(IExecutionContext sequenceContext, SequenceStageFireSignalDefinition fire, object? data, object? input)
         {
-            if (fire.SignalId is not null && fire.SignalId != Guid.Empty)
+            var signalInfo = fire.SignalInfo!.Resolve(input);
+
+            Guid? signalId;
+            string? signalName;
+
+            signalId = signalInfo as Guid?;
+            signalName = signalInfo as string;
+
+            var info = signalInfo as SignalId?;
+            if (info is not null)
             {
-                await this._signalService.Fire(new SignalId(fire.SignalId.Value, fire.SignalName ?? string.Empty), data, sequenceContext.CancellationToken);
+                signalId = info.Value.Uid;
+                signalName = info.Value.Name;
             }
-            else if (!string.IsNullOrEmpty(fire.SignalName))
+
+            if (signalId is not null && signalId != Guid.Empty)
             {
-                await this._signalService.Fire(fire.SignalName, data, sequenceContext.CancellationToken);
+                await this._signalService.Fire(new SignalId(signalId.Value, signalName ?? string.Empty), data, sequenceContext.CancellationToken);
+            }
+            else if (!string.IsNullOrEmpty(signalName))
+            {
+                await this._signalService.Fire(signalName, data, sequenceContext.CancellationToken);
             }
             else
             {
-                throw new SignalNotFoundException($"Stage '{fire.ToDebugDisplayName()}' -> No valid signal information id: '{fire.SignalId}'/'{fire.SignalName}'",
-                                                  fire.SignalName ?? string.Empty,
+                throw new SignalNotFoundException($"Stage '{fire.ToDebugDisplayName()}' -> No valid signal information id: '{signalId}'/'{signalName}'",
+                                                  signalName ?? string.Empty,
                                                   DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Signal, DemocriteErrorCodes.PartType.Execution, DemocriteErrorCodes.ErrorType.Invalid),
                                                   null);
             }

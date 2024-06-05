@@ -13,5 +13,11 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         /// Initializations is required.
         /// </summary>
         IBlackboardTemplateOptionsBuilder InitializationRequired();
+
+        /// <summary>
+        /// Tolerate only one record by logical type that match the configuration
+        /// </summary>
+        /// <param name="replace">Allow replacement if id differ</param>
+        IBlackboardTemplateOptionsBuilder AllLogicalTypeUnique(bool replace = false);
     }
 }

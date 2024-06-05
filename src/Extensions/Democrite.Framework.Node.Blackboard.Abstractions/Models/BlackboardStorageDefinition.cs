@@ -30,7 +30,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
             ArgumentNullException.ThrowIfNullOrEmpty(storageKey);
 
             this.StorageKey = storageKey;
-            this.StorageConfiguration = string.IsNullOrEmpty(storageConfiguration) ? nameof(Democrite) : storageConfiguration;
+            this.StorageConfiguration = string.IsNullOrEmpty(storageConfiguration) ? DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey: storageConfiguration;
         }
 
         #endregion

@@ -74,6 +74,28 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues
     }
 
     /// <summary>
+    /// Emit when adding a new record in that conflict with record
+    /// </summary>
+    [Immutable]
+    [DataContract]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public record class UniqueBlackboardProcessingRuleIssue(DataRecordContainer NewRecord)
+
+                                             : BlackboardProcessingStorageIssue(NewRecord,
+                                                                                BlackboardProcessingIssueTypeEnum.Rule,
+                                                                                BlackboardProcessingIssueStorageTypeEnum.Conflict)
+    {
+        /// <inheritdoc />
+        public override string ToDebugDisplayName()
+        {
+            return $"[{this.SectorType:G}] [{this.IssueStorageType:G}] - Unique'";
+        }
+    }
+
+
+    /// <summary>
     /// Emit when adding a new record in string format that doesn't respect the regec format
     /// </summary>
     [Immutable]

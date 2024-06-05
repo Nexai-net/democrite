@@ -16,6 +16,11 @@ namespace Democrite.Framework.Core.Models
         bool IsMatch(Type type);
 
         /// <summary>
+        /// Determines whether the specified type is match.
+        /// </summary>
+        bool IsMatch(ConcretBaseType type);
+
+        /// <summary>
         /// Determines whether the specified context data container is match.
         /// </summary>
         bool IsMatch(IContextDataContainer contextDataContainer);
@@ -74,6 +79,12 @@ namespace Democrite.Framework.Core.Models
         public bool IsMatch(Type type)
         {
             return this._type.IsEqualTo(type, true);
+        }
+
+        /// <inheritdoc />
+        public bool IsMatch(ConcretBaseType type)
+        {
+            return this._type.Equals(type);
         }
 
         /// <inheritdoc />

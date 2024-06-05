@@ -8,6 +8,7 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Expressions;
 
@@ -61,9 +62,9 @@ namespace Democrite.Framework.Builders.Sequences
         ISequencePipelineStageCallBuilder<TVGrain> ISequencePipelineBuilder.Use<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg)
         {
             var stageBuilder = new SequencePipelineVGrainStageCallBuilder<TVGrain, NoneType, NoneType>(this,
-                                                                                                     cfg == null
-                                                                                                          ? null
-                                                                                                          : (i) => cfg.Invoke((ISequencePipelineStageConfigurator)(object)i));
+                                                                                                       cfg == null
+                                                                                                            ? null
+                                                                                                            : (i) => cfg.Invoke((ISequencePipelineStageConfigurator)(object)i));
             return stageBuilder;
         }
 
@@ -93,7 +94,7 @@ namespace Democrite.Framework.Builders.Sequences
         {
             return this._sequenceBuilder.Build();
         }
-        
+
         /// <inheritdoc />
         public ISequencePipelineBuilder PushToContext<TInfo>(Expression<Func<TInfo>> data, bool @override)
         {
@@ -132,174 +133,66 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder FireSignal(string signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder> ISequencePipelineSignalBuilder<ISequencePipelineBuilder>.FireSignal(string signalName)
         {
-            var fireStage = FireSignalImpl(signalName);
-            return EnqueueStage(fireStage);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            return builder;
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder FireSignal(Guid signalId)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder> ISequencePipelineSignalBuilder<ISequencePipelineBuilder>.FireSignal(Guid signalName)
         {
-            var fireStage = FireSignalImpl(signalId);
-            return EnqueueStage(fireStage);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            return builder;
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder FireSignal(SignalId signalId)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder> ISequencePipelineSignalBuilder<ISequencePipelineBuilder>.FireSignal(SignalId signalName)
         {
-            var fireStage = FireSignalImpl(signalId.Uid);
-            return EnqueueStage(fireStage);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            return builder;
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder FireSignal<TMessage>(string signalName, TMessage message)
-            where TMessage : struct
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(string signalName)
         {
-            var fireStage = FireSignalImpl(signalName, message);
-            return EnqueueStage(fireStage);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            return builder;
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder FireSignal<TMessage>(Guid signalId, TMessage message)
-            where TMessage : struct
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Guid signalName)
         {
-            var fireStage = FireSignalImpl(signalId, message);
-            return EnqueueStage(fireStage);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            return builder;
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder FireSignal<TMessage>(SignalId signalId, TMessage message)
-            where TMessage : struct
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(SignalId signalName)
         {
-            var fireStage = FireSignalImpl(signalId.Uid , message);
-            return EnqueueStage(fireStage);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            return builder;
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder FireSignals<TMessage>(string signalName, IEnumerable<TMessage> messages) where TMessage : struct
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Expression<Func<TInput, string>> signalName)
         {
-            var fireStage = FireSignalImpl(signalName, messages);
-            return EnqueueStage(fireStage);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            return builder;
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder FireSignals<TMessage>(Guid signalName, IEnumerable<TMessage> messages) where TMessage : struct
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Expression<Func<TInput, Guid>> signalName)
         {
-            var fireStage = FireSignalImpl(signalName, messages);
-            return EnqueueStage(fireStage);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            return builder;
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder FireSignals<TMessage>(SignalId signalName, IEnumerable<TMessage> messages) where TMessage : struct
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Expression<Func<TInput, SignalId>> signalName)
         {
-            var fireStage = FireSignalImpl(signalName.Uid, messages);
-            return EnqueueStage(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineBuilder<TInput>.FireSignal<TMessage>(string signalName, Expression<Func<TInput, TMessage>> messageBuilder)
-        {
-            var fireStage = FireSignalImpl(signalName, messageBuilder);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineBuilder<TInput>.FireSignal<TMessage>(Guid signalId, Expression<Func<TInput, TMessage>> messageBuilder)
-        {
-            var fireStage = FireSignalImpl(signalId, messageBuilder);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineBuilder<TInput>.FireSignal<TMessage>(SignalId signalId, Expression<Func<TInput, TMessage>> messageBuilder)
-        {
-            var fireStage = FireSignalImpl(signalId.Uid, messageBuilder);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>>.FireSignal(string signalName)
-        {
-            var fireStage = FireSignalImpl(signalName);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>>.FireSignal(Guid signalId)
-        {
-            var fireStage = FireSignalImpl(signalId);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>>.FireSignal(SignalId signalId)
-        {
-            var fireStage = FireSignalImpl(signalId.Uid);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>>.FireSignal<TMessage>(string signalName, TMessage message)
-        {
-            var fireStage = FireSignalImpl(signalName, message);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>>.FireSignal<TMessage>(Guid signalId, TMessage message)
-        {
-            var fireStage = FireSignalImpl(signalId, message);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>>.FireSignal<TMessage>(SignalId signalId, TMessage message)
-        {
-            var fireStage = FireSignalImpl(signalId.Uid, message);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        public ISequencePipelineBuilder<TInput> FireSignals<TMessage>(string signalName, Expression<Func<TInput, IEnumerable<TMessage>>> messages) where TMessage : struct
-        {
-            var fireStage = FireSignalImpl(signalName, messages);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        public ISequencePipelineBuilder<TInput> FireSignals<TMessage>(Guid signalId, Expression<Func<TInput, IEnumerable<TMessage>>> messages) where TMessage : struct
-        {
-            var fireStage = FireSignalImpl(signalId, messages);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        public ISequencePipelineBuilder<TInput> FireSignals<TMessage>(SignalId signalId, Expression<Func<TInput, IEnumerable<TMessage>>> messages) where TMessage : struct
-        {
-            var fireStage = FireSignalImpl(signalId.Uid, messages);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>>.FireSignals<TMessage>(string signalName, IEnumerable<TMessage> messages)
-        {
-            var fireStage = FireSignalImpl(signalName, messages);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>>.FireSignals<TMessage>(Guid signalName, IEnumerable<TMessage> messages)
-        {
-            var fireStage = FireSignalImpl(signalName, messages);
-            return EnqueueStage<TInput>(fireStage);
-        }
-
-        /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>>.FireSignals<TMessage>(SignalId signalName, IEnumerable<TMessage> messages)
-        {
-            var fireStage = FireSignalImpl(signalName.Uid, messages);
-            return EnqueueStage<TInput>(fireStage);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            return builder;
         }
 
         /// <inheritdoc />
@@ -329,73 +222,80 @@ namespace Democrite.Framework.Builders.Sequences
             return EnqueueStage<TSelected>(selectStage);
         }
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, NoneTypeStruct?> FireSignalImpl(string signalName)
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, NoneTypeStruct?>(signalName, null, null, null, false, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, NoneTypeStruct?> FireSignalImpl(string signalName)
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, NoneTypeStruct?>(signalName, null, null, null, null, false, null);
+        //}
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, NoneTypeStruct?> FireSignalImpl(Guid signalId)
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, NoneTypeStruct?>(null, signalId, null, null, false, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, NoneTypeStruct?> FireSignalImpl(Guid signalId)
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, NoneTypeStruct?>(null, signalId, null, null, null, false, null);
+        //}
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, TMessage> FireSignalImpl<TMessage>(string signalName, TMessage message)
-            where TMessage : struct
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, TMessage>(signalName, null, message, null, false, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, TMessage> FireSignalImpl<TMessage>(string signalName, TMessage message)
+        //    where TMessage : struct
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, TMessage>(signalName, null, null, message, null, false, null);
+        //}
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>> FireSignalImpl<TMessage>(string signalName, IEnumerable<TMessage> message)
-            where TMessage : struct
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>>(signalName, null, message, null, true, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>> FireSignalImpl<TMessage>(string signalName, IEnumerable<TMessage> message)
+        //    where TMessage : struct
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>>(signalName, null, null, message, null, true, null);
+        //}
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, TMessage> FireSignalImpl<TMessage>(Guid signalId, TMessage message)
-            where TMessage : struct
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, TMessage>(null, signalId, message, null, false, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, TMessage> FireSignalImpl<TMessage>(Guid signalId, TMessage message)
+        //    where TMessage : struct
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, TMessage>(null, signalId, null, message, null, false, null);
+        //}
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>> FireSignalImpl<TMessage>(Guid signalId, IEnumerable<TMessage> messages)
-            where TMessage : struct
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>>(null, signalId, messages, null, true, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>> FireSignalImpl<TMessage>(Guid signalId, IEnumerable<TMessage> messages)
+        //    where TMessage : struct
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>>(null, signalId, null, messages, null, true, null);
+        //}
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, TMessage> FireSignalImpl<TMessage>(string signalName, Expression<Func<TInput, TMessage>> messageBuilder)
-            where TMessage : struct
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, TMessage>(signalName, null, default, messageBuilder, false, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, TMessage> FireSignalImpl<TMessage>(LambdaExpression signalAccess, Expression<Func<TInput, TMessage>> messageBuilder)
+        //    where TMessage : struct
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, TMessage>(null, null, signalAccess, default, messageBuilder, false, null);
+        //}
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>> FireSignalImpl<TMessage>(string signalName, Expression<Func<TInput, IEnumerable<TMessage>>> messageBuilder)
-            where TMessage : struct
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>>(signalName, null, null, messageBuilder, true, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, TMessage> FireSignalImpl<TMessage>(string signalName, Expression<Func<TInput, TMessage>> messageBuilder)
+        //    where TMessage : struct
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, TMessage>(signalName, null, null, default, messageBuilder, false, null);
+        //}
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, TMessage> FireSignalImpl<TMessage>(Guid signalId, Expression<Func<TInput, TMessage>> messageBuilder)
-            where TMessage : struct
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, TMessage>(null, signalId, default, messageBuilder, false, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>> FireSignalImpl<TMessage>(string signalName, Expression<Func<TInput, IEnumerable<TMessage>>> messageBuilder)
+        //    where TMessage : struct
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>>(signalName, null, null, null, messageBuilder, true, null);
+        //}
 
-        /// <inheritdoc />
-        private SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>> FireSignalImpl<TMessage>(Guid signalId, Expression<Func<TInput, IEnumerable<TMessage>>> messageBuilder)
-            where TMessage : struct
-        {
-            return new SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>>(null, signalId, null, messageBuilder, true, null);
-        }
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, TMessage> FireSignalImpl<TMessage>(Guid signalId, Expression<Func<TInput, TMessage>> messageBuilder)
+        //    where TMessage : struct
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, TMessage>(null, signalId, null, default, messageBuilder, false, null);
+        //}
+
+        ///// <inheritdoc />
+        //private SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>> FireSignalImpl<TMessage>(Guid signalId, Expression<Func<TInput, IEnumerable<TMessage>>> messageBuilder)
+        //    where TMessage : struct
+        //{
+        //    return new SequencePipelineFireSignalStageBuilder<TInput, IEnumerable<TMessage>>(null, signalId, null, null, messageBuilder, true, null);
+        //}
 
         /// <inheritdoc />
         public ISequencePipelineNestedSequenceCallBuilder CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<ISequencePipelineStageConfigurator>? cfg = null)

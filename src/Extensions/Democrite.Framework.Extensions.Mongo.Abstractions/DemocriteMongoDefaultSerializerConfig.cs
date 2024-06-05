@@ -63,6 +63,14 @@ namespace Democrite.Framework.Extensions.Mongo.Abstractions
 
             try
             {
+                BsonSerializer.TryRegisterSerializer(GrainIdSerializer.Instance);
+            }
+            catch
+            {
+            }
+
+            try
+            {
                 BsonSerializer.TryRegisterSerializer(new TypeSerializer());
             }
             catch

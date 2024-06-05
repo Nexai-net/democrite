@@ -164,7 +164,7 @@ namespace Democrite.Framework.Core
             }
             catch (Exception ex)
             {
-                this.Logger.LogCritical(ex, $"{0}.{1} - VGrain {2} - Exception : {3}", GetType().Name, nameof(ActivationSetupState), this.GrainReference.GrainId, ex.Message);
+                this.Logger.OptiLog(LogLevel.Critical, "{grainName}.{method} - VGrain {grainId} - Exception : {exception}", GetType().Name, nameof(ActivationSetupState), this.GrainReference.GrainId, ex);
                 throw;
             }
         }
@@ -316,6 +316,7 @@ namespace Democrite.Framework.Core
             var validatorAttributes = GetType().GetCustomAttributes()
                                                .OfType<VGrainIdBaseValidatorAttribute>()
                                                .ToArray();
+
             if (validatorAttributes.Length == 0)
                 return;
 
@@ -342,15 +343,13 @@ namespace Democrite.Framework.Core
     /// <remarks>
     ///     This base class must be used instead of <see cref="Grain"/> to allow vgrain system (orleans) to be replace more easily if needed
     /// </remarks>
-    public abstract class VGrainBase<TVGrainState, TVGrainInterface> : VGrainBase<TVGrainInterface>, ILifecycleParticipant<IGrainLifecycle>
+    public abstract class VGrainStatedBase<TVGrainState, TVGrainInterface> : VGrainBase<TVGrainInterface>, ILifecycleParticipant<IGrainLifecycle>
         where TVGrainInterface : IVGrain
         where TVGrainState : class
     {
         #region Fields
 
         protected static readonly Type s_stateTraits = typeof(TVGrainState);
-
-        private readonly IPersistentState<TVGrainState> _persistentState;
 
         private TVGrainState? _state;
 
@@ -361,15 +360,13 @@ namespace Democrite.Framework.Core
         /// <summary>
         /// Initializes a new instance of the <see cref="VGrainBase"/> class.
         /// </summary>
-        protected VGrainBase(ILogger<TVGrainInterface> logger,
-                             IPersistentState<TVGrainState> persistentState)
+        protected VGrainStatedBase(ILogger<TVGrainInterface> logger, bool stateStorageEnabled = true)
             : base(logger)
         {
-            this._persistentState = persistentState;
+            this.StateStorageEnabled = stateStorageEnabled;
 
             if (s_stateTraits.GetTypeInfoExtension().IsCSharpScalarType)
                 logger.OptiLog(LogLevel.Warning, "Direct scalar type ({grainStateRisky}) as state is not managed by this kind of repository.", s_stateTraits);
-
         }
 
         #endregion
@@ -383,6 +380,11 @@ namespace Democrite.Framework.Core
         {
             get { return this._state ?? default; }
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether state storage is enabled.
+        /// </summary>
+        protected bool StateStorageEnabled { get; set; }
 
         #endregion
 
@@ -410,40 +412,33 @@ namespace Democrite.Framework.Core
         /// <summary>
         /// Loads the state from storage.
         /// </summary>
-        protected async Task PullStateAsync(CancellationToken ct)
+        protected async ValueTask PullStateAsync(CancellationToken ct)
         {
-            if (this._persistentState == null)
+            if (this.State is not null && this.StateStorageEnabled == false)
                 return;
 
-            await this._persistentState.ReadStateAsync();
-            ct.ThrowIfCancellationRequested();
-
-            this._state = this._persistentState.State;
-            await OnStateRefreshedAsync(this._state);
+            var state = await OnPullStateAsync(ct);
+            this._state = state;
         }
 
         /// <summary>
         /// Push <paramref name="newState"/> to storage
         /// </summary>
-        protected Task PushStateAsync(CancellationToken ct)
+        protected ValueTask PushStateAsync(CancellationToken ct)
         {
-            if (this._state is null)
-                return Task.CompletedTask;
-
-            return PushStateAsync(this._state, ct);
+            return PushStateAsync(this.State!, ct);
         }
 
         /// <summary>
         /// Push <paramref name="newState"/> to storage
         /// </summary>
-        protected async Task PushStateAsync(TVGrainState newState, CancellationToken ct)
+        protected async ValueTask PushStateAsync(TVGrainState newState, CancellationToken ct)
         {
-            if (this._persistentState == null)
+            if (this.StateStorageEnabled == false)
                 return;
 
-            this._persistentState.State = newState;
             this._state = newState;
-            await this._persistentState.WriteStateAsync();
+            await OnPushStateAsync(newState, ct);
         }
 
         /// <summary>
@@ -471,6 +466,83 @@ namespace Democrite.Framework.Core
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Loads the state from storage.
+        /// </summary>
+        protected abstract ValueTask<TVGrainState> OnPullStateAsync(CancellationToken ct);
+
+        /// <summary>
+        /// Push <paramref name="newState"/> to storage
+        /// </summary>
+        protected abstract ValueTask OnPushStateAsync(TVGrainState newState, CancellationToken ct);
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Base implementation of <see cref="IVGrain"/> with a specific <typeparamref name="TVGrainState"/>
+    /// </summary>
+    /// <seealso cref="Grain" />
+    /// <seealso cref="IVGrain" />
+    /// <remarks>
+    ///     This base class must be used instead of <see cref="Grain"/> to allow vgrain system (orleans) to be replace more easily if needed
+    /// </remarks>
+    public abstract class VGrainBase<TVGrainState, TVGrainInterface> : VGrainStatedBase<TVGrainState, TVGrainInterface>, ILifecycleParticipant<IGrainLifecycle>
+        where TVGrainInterface : IVGrain
+        where TVGrainState : class
+    {
+        #region Fields
+
+        private readonly IPersistentState<TVGrainState> _persistentState;
+
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VGrainBase"/> class.
+        /// </summary>
+        protected VGrainBase(ILogger<TVGrainInterface> logger,
+                             IPersistentState<TVGrainState> persistentState, 
+                             bool stateStorageEnabled = true)
+            : base(logger, stateStorageEnabled)
+        {
+            this._persistentState = persistentState;
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Loads the state from storage.
+        /// </summary>
+        protected override async ValueTask<TVGrainState> OnPullStateAsync(CancellationToken ct)
+        {
+            if (this._persistentState == null)
+                return this.State!;
+
+            await this._persistentState.ReadStateAsync();
+            ct.ThrowIfCancellationRequested();
+
+            var state = this._persistentState.State;
+            await OnStateRefreshedAsync(state);
+
+            return state;
+        }
+
+        /// <summary>
+        /// Push <paramref name="newState"/> to storage
+        /// </summary>
+        protected override async ValueTask OnPushStateAsync(TVGrainState newState, CancellationToken ct)
+        {
+            if (this._persistentState == null || this.StateStorageEnabled == false)
+                return;
+
+            this._persistentState.State = newState;
+            await this._persistentState.WriteStateAsync();
+        }
+
         #endregion
     }
 
@@ -482,8 +554,9 @@ namespace Democrite.Framework.Core
     /// <remarks>
     ///     This base class must be used instead of <see cref="Grain"/> to allow vgrain system (orleans) to be replace more easily if needed
     /// </remarks>
-    public abstract class VGrainBase<TVGrainState, TStateSurrogate, TConverter, TVGrainInterface> : VGrainBase<TVGrainInterface>, ILifecycleParticipant<IGrainLifecycle>
+    public abstract class VGrainBase<TVGrainState, TStateSurrogate, TConverter, TVGrainInterface> : VGrainStatedBase<TVGrainState, TVGrainInterface>, ILifecycleParticipant<IGrainLifecycle>
         where TStateSurrogate : struct
+        where TVGrainState : class
         where TConverter : class, IConverter<TVGrainState, TStateSurrogate>
         where TVGrainInterface : IVGrain
     {
@@ -493,9 +566,6 @@ namespace Democrite.Framework.Core
         private TConverter? _localStateConverter;
 
         private readonly IPersistentState<TStateSurrogate> _persistentState;
-
-        private TVGrainState? _state;
-        private string? _loadEtag;
 
         #endregion
 
@@ -519,22 +589,11 @@ namespace Democrite.Framework.Core
         /// Initializes a new instance of the <see cref="VGrainBase"/> class.
         /// </summary>
         protected VGrainBase(ILogger<TVGrainInterface> logger,
-                             IPersistentState<TStateSurrogate> persistentState)
-            : base(logger)
+                             IPersistentState<TStateSurrogate> persistentState, 
+                             bool stateStorageEnabled = true)
+            : base(logger, stateStorageEnabled)
         {
             this._persistentState = persistentState;
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets saved state.
-        /// </summary>
-        public TVGrainState? State
-        {
-            get { return this._state ?? default; }
         }
 
         #endregion
@@ -542,59 +601,28 @@ namespace Democrite.Framework.Core
         #region Methods
 
         /// <summary>
-        /// Called on <see cref="VGrainBase" /> setup.
-        /// </summary>
-        protected sealed override async Task OnActivationSetupState(CancellationToken ct)
-        {
-            await PullStateAsync(ct);
-
-            await (OnActivationSetupState(this.State, ct) ?? Task.CompletedTask);
-        }
-
-        /// <inheritdoc />
-        public sealed override async Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
-        {
-            if (this._state != null)
-                await PushStateAsync(cancellationToken);
-
-            await base.OnDeactivateAsync(reason, cancellationToken);
-
-            await (OnDeactivateAsync(this._state, reason, cancellationToken) ?? Task.CompletedTask);
-        }
-
-        /// <summary>
         /// Loads the state from storage.
         /// </summary>
-        protected virtual async Task PullStateAsync(CancellationToken ct)
+        protected override async ValueTask<TVGrainState> OnPullStateAsync(CancellationToken ct)
         {
             if (this._persistentState == null)
-                return;
+                return this.State!;
 
             await this._persistentState.ReadStateAsync();
             ct.ThrowIfCancellationRequested();
 
-            this._loadEtag = this._persistentState.Etag;
             var cnv = GetStateConverter();
-            this._state = cnv.ConvertFromSurrogate(this._persistentState.State);
+            var state = cnv.ConvertFromSurrogate(this._persistentState.State);
 
-            await OnStateRefreshedAsync(this._state);
+            await OnStateRefreshedAsync(state);
+
+            return state;
         }
 
         /// <summary>
         /// Push <paramref name="newState"/> to storage
         /// </summary>
-        protected Task PushStateAsync(CancellationToken ct)
-        {
-            if (this._state is null)
-                return Task.CompletedTask;
-
-            return PushStateAsync(this._state, ct);
-        }
-
-        /// <summary>
-        /// Push <paramref name="newState"/> to storage
-        /// </summary>
-        protected virtual async Task PushStateAsync(TVGrainState newState, CancellationToken ct)
+        protected override async ValueTask OnPushStateAsync(TVGrainState newState, CancellationToken ct)
         {
             if (this._persistentState == null)
                 return;
@@ -603,34 +631,6 @@ namespace Democrite.Framework.Core
             this._persistentState.State = converter.ConvertToSurrogate(newState);
 
             await this._persistentState.WriteStateAsync();
-
-            this._loadEtag = this._persistentState.Etag;
-            this._state = newState;
-        }
-
-        /// <summary>
-        /// Called on <see cref="VGrainBase" /> setup.
-        /// </summary>
-        protected virtual Task OnActivationSetupState(TVGrainState? state, CancellationToken ct)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Called when state refreshed.
-        /// </summary>
-        protected virtual Task OnStateRefreshedAsync(TVGrainState vgrainState)
-        {
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
-        ///  Call after push state on desactivation
-        /// </summary>
-        /// <inheritdoc cref="OnDeactivateAsync(DeactivationReason, CancellationToken)" />
-        protected virtual Task OnDeactivateAsync(TVGrainState? state, DeactivationReason reason, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
         }
 
         /// <summary>

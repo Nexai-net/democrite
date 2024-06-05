@@ -18,8 +18,9 @@ namespace Democrite.Framework.Node.StreamQueue
     [DataContract]
     public class StreamTriggerState : TriggerState
     {
-        [Id(0)]
-        [DataMember]
+        [IgnoreDataMember]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public StreamSubscriptionHandle<object>? StreamSubscription { get; set; }
     }
 }

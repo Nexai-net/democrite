@@ -14,7 +14,27 @@ namespace Democrite.Framework.Core.Abstractions.Storages
         /// <summary>
         /// Get a new repository based on <paramref name="storageName"/> and <paramref name="stateName"/>
         /// </summary>
-        TTargetRepo Get<TTargetRepo, TEntity>(string stateName, string? storageName = null)
+        /// <remarks>
+        ///     Initialize the repository if needed
+        /// </remarks>
+        ValueTask<TTargetRepo> GetAsync<TTargetRepo, TEntity>(string stateName,
+                                                              string? storageName = null,
+                                                              bool blockInitialization = false,
+                                                              CancellationToken cancellationToken = default)
             where TTargetRepo : IReadOnlyRepository<TEntity>;
+
+        ///// <summary>
+        ///// Get a new repository based on <paramref name="storageName"/> and <paramref name="stateName"/>
+        ///// </summary>
+        ///// <remarks>
+        /////     Initialize the repository if needed
+        ///// </remarks>
+        //ValueTask<TTargetRepo> GetAsync<TTargetRepo, TEntity>(Type targetRepo,
+        //                                                      Type entityType,
+        //                                                      string stateName,
+        //                                                      string? storageName = null,
+        //                                                      bool blockInitialization = false,
+        //                                                      CancellationToken cancellationToken = default)
+        //    where TTargetRepo : IReadOnlyRepository<TEntity>;
     }
 }

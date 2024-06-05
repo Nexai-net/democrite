@@ -182,7 +182,7 @@ namespace Democrite.Framework.Node.Models
     }
 
     [GenerateSerializer]
-    internal record struct DynamicDefinitionHandlerStateSurrogate(IReadOnlyCollection<DynamicDefinitionMetaData> DefinitionMetaDatas, string Etag);
+    internal record struct DynamicDefinitionHandlerStateSurrogate(IReadOnlyCollection<DynamicDefinitionMetaDataSurrogate> DefinitionMetaDatas, string Etag);
 
     [RegisterConverter]
     internal sealed class DynamicDefinitionHandlerConverter : IConverter<DynamicDefinitionHandlerState, DynamicDefinitionHandlerStateSurrogate>
@@ -190,13 +190,18 @@ namespace Democrite.Framework.Node.Models
         /// <inheritdoc />
         public DynamicDefinitionHandlerState ConvertFromSurrogate(in DynamicDefinitionHandlerStateSurrogate surrogate)
         {
-            return new DynamicDefinitionHandlerState(surrogate.DefinitionMetaDatas ?? EnumerableHelper<DynamicDefinitionMetaData>.ReadOnly, surrogate.Etag);
+            return new DynamicDefinitionHandlerState(surrogate.DefinitionMetaDatas?
+                                                              .Select(d => DynamicDefinitionMetaDataConverter.Instance.ConvertFromSurrogate(d)) ?? EnumerableHelper<DynamicDefinitionMetaData>.ReadOnlyArray, 
+                                                     surrogate.Etag);
         }
 
         /// <inheritdoc />
         public DynamicDefinitionHandlerStateSurrogate ConvertToSurrogate(in DynamicDefinitionHandlerState value)
         {
-            return new DynamicDefinitionHandlerStateSurrogate(value.DefinitionMetaDatas.ToArray(), value.Etag);
+            return new DynamicDefinitionHandlerStateSurrogate(value.DefinitionMetaDatas
+                                                                   .Select(d => DynamicDefinitionMetaDataConverter.Instance.ConvertToSurrogate(d))
+                                                                   .ToArray(), 
+                                                              value.Etag);
         }
     }
 }

@@ -23,7 +23,27 @@ namespace Democrite.Framework.Extensions.Mongo.Models
 
         #endregion
 
-        #region Methods
+        #region Ctor
+
+        /// <summary>
+        /// Initializes the <see cref="MongoDBConnectionOptions"/> class.
+        /// </summary>
+        static MongoDBConnectionOptions()
+        {
+            Default = new MongoDBConnectionOptions()
+            {
+                ConnectionString = "mongodb://127.0.0.1:27017"
+            };
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the default.
+        /// </summary>
+        public static MongoDBConnectionOptions Default { get; }
 
         /// <summary>
         /// Gets or sets the order.

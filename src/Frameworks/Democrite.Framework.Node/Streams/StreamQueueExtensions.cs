@@ -18,19 +18,19 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         public static StreamId ToStreamId(this StreamQueueDefinition definition)
         {
             ArgumentNullException.ThrowIfNull(definition);
-            ArgumentNullException.ThrowIfNullOrEmpty(definition.StreamKey);
+            ArgumentNullException.ThrowIfNullOrEmpty(definition.StreamNamespace);
 
-            if (string.IsNullOrEmpty(definition.StreamCustomKey))
+            if (string.IsNullOrEmpty(definition.StreamKey))
             {
-                if (definition.StreamCustomUid is not null)
-                    return StreamId.Create(definition.StreamKey, definition.StreamCustomUid.Value);
+                if (definition.StreamUid is not null)
+                    return StreamId.Create(definition.StreamNamespace, definition.StreamUid.Value);
             }
             else
             {
-                if (definition.StreamCustomUid is null)
-                    return StreamId.Create(definition.StreamKey, definition.StreamCustomKey);
+                if (definition.StreamUid is null)
+                    return StreamId.Create(definition.StreamNamespace, definition.StreamKey);
                 else
-                    return StreamId.Create(definition.StreamKey, definition.StreamCustomKey + "-" + definition.StreamCustomUid);
+                    return StreamId.Create(definition.StreamNamespace, definition.StreamKey + "-" + definition.StreamUid);
             }
 
             throw new NotSupportedException("A streamQueue MUST have a key or a custom UID Failed def (" + definition.Uid + ")");

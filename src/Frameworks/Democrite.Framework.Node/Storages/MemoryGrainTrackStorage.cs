@@ -25,10 +25,14 @@ namespace Democrite.Framework.Node.Storages
     {
         #region Fields
 
-        private readonly IMemoryStorageRegistryGrain<string> _registryGrain;
-
         private readonly static Func<MemoryGrainStorage, string, IMemoryStorageGrain> s_getStorageGrain;
         private readonly static Func<string, GrainId, string> s_makeKey;
+
+        private readonly ReaderWriterLockSlim _locker;
+
+        private readonly HashSet<string> _keyNotified;
+        private readonly IGrainFactory _grainFactory;
+        private readonly string _storageConfig;
 
         #endregion
 
@@ -53,14 +57,17 @@ namespace Democrite.Framework.Node.Storages
         /// <summary>
         /// Initializes a new instance of the <see cref="MemoryGrainTrackStorage"/> class.
         /// </summary>
-        public MemoryGrainTrackStorage(string name,
+        public MemoryGrainTrackStorage(string storageConfig,
                                        MemoryGrainStorageOptions options,
                                        ILogger<MemoryGrainStorage> logger,
                                        IGrainFactory grainFactory,
                                        IGrainStorageSerializer defaultGrainStorageSerializer)
-            : base(name, options, logger, grainFactory, defaultGrainStorageSerializer)
+            : base(storageConfig, options, logger, grainFactory, defaultGrainStorageSerializer)
         {
-            this._registryGrain = grainFactory.GetGrain<IMemoryStorageRegistryGrain<string>>(name);
+            this._locker = new ReaderWriterLockSlim();
+            this._keyNotified = new HashSet<string>();
+            this._grainFactory = grainFactory;
+            this._storageConfig = storageConfig;
         }
 
         #endregion
@@ -93,18 +100,49 @@ namespace Democrite.Framework.Node.Storages
         /// <summary>
         /// Report to registry storage any activity
         /// </summary>
-        private async Task ReportToRegistryAsync(StoreActionEnum storeAction, string grainType, Type? requestedEntityType, GrainId sourceGrainId)
+        private async Task ReportToRegistryAsync(StoreActionEnum storeAction, string stateName, Type? requestedEntityType, GrainId sourceGrainId)
         {
-            var key = s_makeKey(grainType, sourceGrainId);
+            var key = s_makeKey(stateName, sourceGrainId);
             var targetStorageGrain = s_getStorageGrain(this, key);
 
-            await this._registryGrain.ReportActionAsync(storeAction,
-                                                        grainType,
-                                                        key,
-                                                        requestedEntityType?.GetAbstractType(),
-                                                        requestedEntityType?.GetAllCompatibleAbstractTypes(),
-                                                        sourceGrainId,
-                                                        targetStorageGrain?.GetGrainId());
+            this._locker.EnterReadLock();
+            try
+            {
+                if (storeAction != StoreActionEnum.Clear && this._keyNotified.Contains(key))
+                    return;
+            }
+            finally
+            {
+                this._locker.ExitReadLock();
+            }
+
+            this._locker.EnterWriteLock();
+            try
+            {
+                if (storeAction != StoreActionEnum.Clear && this._keyNotified.Contains(key))
+                    return;
+
+                if (storeAction == StoreActionEnum.Clear)
+                    this._keyNotified.Remove(key);
+                else
+                    this._keyNotified.Add(key);
+
+            }
+            finally
+            {
+                this._locker.ExitWriteLock();
+            }
+            
+            var grainIndx = targetStorageGrain.GetPrimaryKeyLong();
+
+            // IMemoryStorageStateRegistryGrain => GRAIN STATE Registry
+            var registry = this._grainFactory.GetGrain<IMemoryStorageStateRegistryGrain<string>>(grainIndx / 10, MemoryStorageRegistryHelper.ComputeRegistryExtName(stateName, this._storageConfig));
+            await registry.ReportActionAsync(storeAction,
+                                             key,
+                                             requestedEntityType?.GetAbstractType(),
+                                             requestedEntityType?.GetAllCompatibleAbstractTypes(),
+                                             sourceGrainId,
+                                             targetStorageGrain?.GetGrainId());
         }
 
         #endregion

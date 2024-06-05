@@ -67,6 +67,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                                                                          def,
                                                                                          null,
                                                                                          null,
+                                                                                         null,
                                                                                          null)))
                      .DoesNotThrow()
                      .And

@@ -7,6 +7,7 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Expressions;
 
     using System.Linq.Expressions;
 
@@ -18,10 +19,9 @@ namespace Democrite.Framework.Builders.Sequences
     {
         #region Fields
 
+        private readonly AccessExpressionDefinition _signalInfo;
         private readonly LambdaExpression? _fetchMessage;
         private readonly TMessage? _directMessage;
-        private readonly string? _signalName;
-        private readonly Guid? _signalUid;
         private readonly bool _multi;
 
         #endregion
@@ -31,16 +31,14 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Initializes a new instance of the <see cref="SequencePipelineFireSignalStageBuilder"/> class.
         /// </summary>
-        public SequencePipelineFireSignalStageBuilder(string? signalName,
-                                                      Guid? signalUid,
+        public SequencePipelineFireSignalStageBuilder(AccessExpressionDefinition signalInfo,
                                                       TMessage? directMessage,
                                                       LambdaExpression? fetchMessage,
                                                       bool multi,
                                                       Action<ISequencePipelineStageConfigurator>? configAction)
             : base(configAction)
         {
-            this._signalName = signalName;
-            this._signalUid = signalUid;
+            this._signalInfo = signalInfo;
             this._multi = multi;
             this._directMessage = directMessage;
             this._fetchMessage = fetchMessage;
@@ -56,8 +54,7 @@ namespace Democrite.Framework.Builders.Sequences
             var messageAccess = this._fetchMessage?.CreateAccess() ?? this._directMessage?.CreateAccess();
 
             return new SequenceStageFireSignalDefinition(NoneType.IsEqualTo<TInput>() ? null : typeof(TInput).GetAbstractType(),
-                                                         this._signalName,
-                                                         this._signalUid,
+                                                         this._signalInfo,
                                                          this._multi,
                                                          messageAccess);
         }

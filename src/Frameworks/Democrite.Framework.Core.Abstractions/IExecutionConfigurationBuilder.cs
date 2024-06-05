@@ -25,5 +25,10 @@ namespace Democrite.Framework.Core.Abstractions
         /// Define a signal to send at the end of the execution
         /// </summary>
         IExecutionConfigurationBuilder ResultSignal(in SignalId signalId, bool includeResult = false);
+
+        /// <summary>
+        /// Prevents the sequence executor state storage.
+        /// </summary>
+        IExecutionConfigurationBuilder PreventSequenceExecutorStateStorage();
     }
 }

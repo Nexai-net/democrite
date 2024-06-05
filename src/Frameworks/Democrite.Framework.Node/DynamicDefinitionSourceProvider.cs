@@ -178,7 +178,6 @@ namespace Democrite.Framework.Node
                         return EnumerableHelper<Guid>.ReadOnly;
 
                     var metadata = await this._dynamicProviderGrain!.GetDynamicDefinitionMetaDatasAsync(typeFilter: s_definitionConcretType, null, onlyEnabled: true, grainCancelToken.Token);
-                    this._registryEtag = metadata.Etag;
 
                     var existing = this.Keys.ToHashSet();
                     var toAdd = new HashSet<Guid>();
@@ -233,7 +232,12 @@ namespace Democrite.Framework.Node
                         }
                     }
 
+                    this._registryEtag = metadata.Etag;
                     return (toRemove ?? EnumerableHelper<Guid>.ReadOnly).Concat(toAdd ?? EnumerableHelper<Guid>.ReadOnly).Distinct().ToArray();
+                }
+                catch (Exception ex)
+                {
+                    throw;
                 }
                 finally
                 {

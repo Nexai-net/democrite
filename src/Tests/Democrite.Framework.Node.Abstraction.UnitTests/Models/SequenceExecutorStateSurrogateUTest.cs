@@ -87,6 +87,7 @@ namespace Democrite.Framework.Node.Abstraction.UnitTests.Models
             });
 
             return new SequenceExecutorState(Guid.NewGuid(),
+                                             Guid.NewGuid().ToString(),
                                              Guid.NewGuid(),
                                              Guid.NewGuid(),
                                              fixture.Create<SequenceExecutorExecThreadState>(),

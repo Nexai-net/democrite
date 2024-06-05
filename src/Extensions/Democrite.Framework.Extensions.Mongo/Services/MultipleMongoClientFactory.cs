@@ -50,7 +50,7 @@ namespace Democrite.Framework.Extensions.Mongo.Services
             this._configuredConnections = configuredConnections.GroupBy(c => c.Key?.ToLower() ?? string.Empty)
                                                                .ToDictionary(k => k.Key, v => v.Select(vv => vv).Last(), StringComparer.OrdinalIgnoreCase);
 
-            this._rootDefaultOptions = ExtractDefaultOption(this._configuredConnections) ?? throw new InvalidDataException("Missing mongo connection string");
+            this._rootDefaultOptions = ExtractDefaultOption(this._configuredConnections) ?? MongoDBConnectionOptions.Default;
         }
 
         #endregion

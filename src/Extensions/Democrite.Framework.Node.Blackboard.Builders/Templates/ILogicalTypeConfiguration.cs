@@ -7,6 +7,8 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules;
 
+    using System.Xml;
+
     /// <summary>
     /// Configuration dedicated to one type on record on the blackboard
     /// </summary>
@@ -63,6 +65,12 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         /// Define default storage usage
         /// </summary>
         ILogicalTypeConfiguration Storage(string storageKey, string? storageConfiguration = null);
+
+        /// <summary>
+        /// Tolerate only one record by logical type that match the configuration
+        /// </summary>
+        /// <param name="replace">Allow replacement if id differ</param>
+        ILogicalTypeConfiguration Unique(bool replace = false);
 
         /// <summary>
         /// Set an order manually; by default the order will the declaration one

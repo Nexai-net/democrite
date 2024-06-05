@@ -29,7 +29,8 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
                     return Merge(source,
                                  new ExecutionCustomizationDescriptions(EnumerableHelper<StageVGrainRedirectionDescription>.ReadOnly,
                                                                         EnumerableHelper<EndSignalFireDescription>.ReadOnly,
-                                                                        null),
+                                                                        null,
+                                                                        source.Value.PreventSequenceExecutorStateStorage),
                                  stageKeyProvider);
                 }
 
@@ -70,7 +71,8 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
                                                                  .ToArray(),
 
                                                           // Don't diffuse the deferred id
-                                                          local?.DeferredId);
+                                                          local?.DeferredId,
+                                                          (source?.PreventSequenceExecutorStateStorage ?? false) || (local?.PreventSequenceExecutorStateStorage ?? false));
         }
     }
 }

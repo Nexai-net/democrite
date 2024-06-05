@@ -22,6 +22,7 @@ namespace Democrite.Framework.Core.Executions
 
         private readonly Dictionary<RedirectionKey, VGrainRedirectionDefinition> _grainRedirectionDefinitions;
         private readonly Dictionary<Guid, EndSignalFireDescription> _endSignalResult;
+        private bool _preventSequenceExecutorStateStorage;
 
         #endregion
 
@@ -71,28 +72,36 @@ namespace Democrite.Framework.Core.Executions
             return this;
         }
 
-        /// <summary>
-        /// Builds configuration
-        /// </summary>
-        public ExecutionCustomizationDescriptions? Build()
-        {
-            if (this._grainRedirectionDefinitions.Any())
-            {
-                return new ExecutionCustomizationDescriptions(this._grainRedirectionDefinitions.Select(kv => new StageVGrainRedirectionDescription(kv.Key.StageUid, kv.Value))
-                                                                                               .ToArray(),
-
-                                                              this._endSignalResult.Values.ToArray(),
-                                                              DeferredId: null);
-            }
-
-            return null;
-        }
-
         /// <inheritdoc />
         public IExecutionConfigurationBuilder ResultSignal(in SignalId signalId, bool includeResult = false)
         {
             this._endSignalResult[signalId.Uid] = new EndSignalFireDescription(signalId, includeResult);
             return this;
+        }
+
+        /// <inheritdoc />
+        public IExecutionConfigurationBuilder PreventSequenceExecutorStateStorage()
+        {
+            this._preventSequenceExecutorStateStorage = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Builds configuration
+        /// </summary>
+        public ExecutionCustomizationDescriptions? Build()
+        {
+            if (this._grainRedirectionDefinitions.Any() || this._endSignalResult.Any() || this._preventSequenceExecutorStateStorage)
+            {
+                return new ExecutionCustomizationDescriptions(this._grainRedirectionDefinitions.Select(kv => new StageVGrainRedirectionDescription(kv.Key.StageUid, kv.Value))
+                                                                                               .ToArray(),
+
+                                                              this._endSignalResult.Values.ToArray(),
+                                                              DeferredId: null,
+                                                              PreventSequenceExecutorStateStorage: this._preventSequenceExecutorStateStorage);
+            }
+
+            return null;
         }
 
         #endregion

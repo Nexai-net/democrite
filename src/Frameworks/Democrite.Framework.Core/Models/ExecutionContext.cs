@@ -7,6 +7,8 @@ namespace Democrite.Framework.Core.Models
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Repositories;
 
+    using Elvex.Toolbox.Models;
+
     using Microsoft.Extensions.Logging;
 
     using Orleans.Runtime;
@@ -224,6 +226,17 @@ namespace Democrite.Framework.Core.Models
                 return default;
 
             return (TContextData?)container.GetData(serializer);
+        }
+
+        /// <inheritdoc />
+        public object? TryGetContextData(ConcretType type, IDemocriteSerializer serializer)
+        {
+            var container = this._contextDataContainers.FirstOrDefault(c => c.IsMatch(type));
+
+            if (container is null)
+                return default;
+
+            return container.GetData(serializer);
         }
 
         /// <inheritdoc />

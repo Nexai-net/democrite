@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Node.Storages
 {
+    using Elvex.Toolbox.Abstractions.Models;
+
     using Microsoft.Extensions.Logging;
 
     using Orleans;
@@ -26,8 +28,9 @@ namespace Democrite.Framework.Node.Storages
         /// Initializes a new instance of the <see cref="MemoryStorageRegistryGrain"/> class.
         /// </summary>
         public MemoryStorageRegistryStateGrain(IGrainFactory grainFactory,
-                                               ILogger<IMemoryStorageRegistryGrain<string>> logger)
-            : base(grainFactory, logger)
+                                               ILogger<IMemoryStorageRegistryGrain> logger,
+                                               IDedicatedObjectConverter dedicatedObjectConverter)
+            : base(grainFactory, logger, dedicatedObjectConverter)
         {
         }
 

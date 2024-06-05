@@ -12,7 +12,6 @@ namespace Democrite.Framework.Node
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Storages;
-    using Democrite.Framework.Extensions.Mongo.Models;
     using Democrite.Framework.Node.Models;
 
     using Elvex.Toolbox.Abstractions.Conditions;
@@ -55,7 +54,7 @@ namespace Democrite.Framework.Node
         /// Initializes a new instance of the <see cref="DynamicDefinitionHandlerVGrain"/> class.
         /// </summary>
         public DynamicDefinitionHandlerVGrain(ILogger<IDynamicDefinitionHandlerVGrain> logger,
-                                              [PersistentState("DynamicDefinitions", DemocriteConstants.DefaultDemocriteStateConfigurationKey)] IPersistentState<DynamicDefinitionHandlerStateSurrogate> persistentState,
+                                              [PersistentState("DynamicDefinitions", DemocriteConstants.DefaultDemocriteDynamicDefinitionsConfigurationKey)] IPersistentState<DynamicDefinitionHandlerStateSurrogate> persistentState,
                                               IRepositoryFactory repositoryFactory,
                                               ITimeManager timeManager,
                                               ISignalService signalService)
@@ -80,9 +79,10 @@ namespace Democrite.Framework.Node
         }
 
         /// <inheritdoc />
-        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(GrainCancellationToken token, IReadOnlyCollection<Guid> uids) where TDefinition : IDefinition
+        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(GrainCancellationToken token, IReadOnlyCollection<Guid> uids)
+            where TDefinition : class, IDefinition
         {
-            var fetchTasks = await ApplyActionOn(uids, (r, ids, t) => r.GetByIdsValueAsync(ids, t).AsTask(), token.CancellationToken);
+            var fetchTasks = await ApplyActionOn(uids, (r, ids, t) => r.GetByIdsValueAsync<EtagDefinitionContainer<TDefinition>>(ids, t).AsTask(), token.CancellationToken);
 
             var results = fetchTasks.Where(t => t.IsCompletedSuccessfully)
                                     .SelectMany(t => t.Result ?? EnumerableHelper<EtagDefinitionContainer>.ReadOnly)
@@ -118,38 +118,41 @@ namespace Democrite.Framework.Node
         }
 
         /// <inheritdoc />
-        public async Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, GrainCancellationToken token)
+        public async Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, GrainCancellationToken token, bool preventNotification = false)
             where TDefinition : class, IDefinition
         {
             // TODO : Check identity
             if (definition is null)
                 return false;
 
-            var repo = GetSafeRepository(definition, out var mainType);
+            var tpl = await GetSafeRepositoryAsync(definition, token.CancellationToken);
 
-            var repository = repo.First().Value;
+            var repository = tpl.repositories.First().Value;
 
-            return await PushDefinitionImplAsync<TDefinition>(definition, @override, identity, token, repository);
+            return await PushDefinitionImplAsync<TDefinition>(definition, @override, identity, token, repository, preventNotification);
         }
 
         /// <inheritdoc />
-        public async Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, GrainCancellationToken token)
+        public async Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, GrainCancellationToken token, bool preventNotification = false)
             where TDefinition : class, IDefinition
         {
             // TODO : Check identity
             ArgumentNullException.ThrowIfNull(definition);
 
-            var repo = GetSafeRepository(definition, out var mainType);
+            var tpl = await GetSafeRepositoryAsync(definition, token.CancellationToken);
 
-            var repository = repo.First().Value;
+            var repository = tpl.repositories.First().Value;
 
-            var filter = existFilter.ToExpression<TDefinition, bool>().Compile();
+            var rootFilter = existFilter.ToExpression<TDefinition, bool>();
 
-            var exist = await repository.GetFirstValueAsync(d => filter(d.GetContainDefinition<TDefinition>()), token.CancellationToken);
+            var filter = rootFilter.ReplaceParameter<TDefinition, EtagDefinitionContainer, bool>(p => ((EtagDefinitionContainer<TDefinition>)p).Definition);
+
+            // d => filter(d.GetContainDefinition<TDefinition>())
+            var exist = await repository.GetFirstValueAsync(filter, token.CancellationToken);
             if (exist is not null)
                 return exist.Uid;
 
-            await PushDefinitionImplAsync<TDefinition>(definition, true, identity, token, repository);
+            await PushDefinitionImplAsync<TDefinition>(definition, true, identity, token, repository, preventNotification);
             return definition.Uid;
         }
 
@@ -201,7 +204,8 @@ namespace Democrite.Framework.Node
         }
 
         /// <inheritdoc />
-        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(ConditionExpressionDefinition filter, GrainCancellationToken token) where TDefinition : IDefinition
+        public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(ConditionExpressionDefinition filter, GrainCancellationToken token) 
+            where TDefinition : class, IDefinition
         {
             var filterExpression = filter.ToExpression<TDefinition, bool>().Compile();
 
@@ -233,7 +237,7 @@ namespace Democrite.Framework.Node
             var definitionByMainType = definitionMetaData.GroupBy(d => d.MainDefintionType)
                                                          .ToDictionary(k => k.Key, v => v.ToDictionary(k => k.Uid));
 
-            var repositories = GetRepositoryFromMainType(definitionByMainType.Keys.ToArray());
+            var repositories = await GetRepositoryFromMainTypeAsync(token, definitionByMainType.Keys.ToArray());
 
             var actionTasks = definitionByMainType.Select(kv =>
             {
@@ -241,7 +245,7 @@ namespace Democrite.Framework.Node
                 if (!repositories.TryGetValue(kv.Key, out repository))
                     throw new InvalidOperationException("Missing Repository for " + kv.Key);
 
-                return func(repository, kv.Value.Keys, token);
+                return func(repository, kv.Value.Keys.ToArray(), token);
             }).ToArray();
 
             await actionTasks.SafeWhenAllAsync();
@@ -252,7 +256,7 @@ namespace Democrite.Framework.Node
         /// <summary>
         /// Gets the type of the repository from <paramref name="mainType"/>
         /// </summary>
-        private IReadOnlyDictionary<ConcretType, IRepository<EtagDefinitionContainer, Guid>> GetRepositoryFromMainType(params ConcretType[] mainTypes)
+        private async ValueTask<IReadOnlyDictionary<ConcretType, IRepository<EtagDefinitionContainer, Guid>>> GetRepositoryFromMainTypeAsync(CancellationToken token, params ConcretType[] mainTypes)
         {
             if (mainTypes.Length == 0)
                 return DictionaryHelper<ConcretType, IRepository<EtagDefinitionContainer, Guid>>.ReadOnly;
@@ -287,9 +291,9 @@ namespace Democrite.Framework.Node
                 {
                     foreach (var type in missing)
                     {
-                        var repo = this._repositoryFactory.Get<IRepository<EtagDefinitionContainer, Guid>, EtagDefinitionContainer>(type.DisplayName.Replace(".", "").Trim().Replace(" ", "").Replace("-", "").Replace("_", ""),
-                                                                                                                                    DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey);
-
+                        var repo = await this._repositoryFactory.GetAsync<IRepository<EtagDefinitionContainer, Guid>, EtagDefinitionContainer>(type.DisplayName.Replace(".", "").Trim().Replace(" ", "").Replace("-", "").Replace("_", ""),
+                                                                                                                                               DemocriteConstants.DefaultDemocriteDynamicDefinitionsRepositoryConfigurationKey,
+                                                                                                                                               cancellationToken: token);
                         result.Add(type, repo);
                         if (!this._repositoryCache.ContainsKey(type))
                         {
@@ -317,19 +321,19 @@ namespace Democrite.Framework.Node
         /// <summary>
         /// Gets the safe repository from definition
         /// </summary>
-        private IReadOnlyDictionary<ConcretType, IRepository<EtagDefinitionContainer, Guid>> GetSafeRepository<TDefinition>(TDefinition definition, out ConcretType mainType)
+        private async ValueTask<(IReadOnlyDictionary<ConcretType, IRepository<EtagDefinitionContainer, Guid>> repositories, ConcretType mainType)> GetSafeRepositoryAsync<TDefinition>(TDefinition definition, CancellationToken token)
             where TDefinition : class, IDefinition
         {
-            mainType = (ConcretType)definition.GetType().GetAbstractType();
+            var mainType = (ConcretType)definition.GetType().GetAbstractType();
 
-            var repo = GetRepositoryFromMainType(mainType);
+            var repo = await GetRepositoryFromMainTypeAsync(token, mainType);
 
             if (!repo.Any())
             {
                 throw new InvalidOperationException("Repository not founded");
             }
 
-            return repo;
+            return (repo, mainType);
         }
 
         /// <summary>
@@ -339,7 +343,8 @@ namespace Democrite.Framework.Node
                                                                       bool @override,
                                                                       IIdentityCard identity,
                                                                       GrainCancellationToken token,
-                                                                      IRepository<EtagDefinitionContainer, Guid> repository) 
+                                                                      IRepository<EtagDefinitionContainer, Guid> repository,
+                                                                      bool preventNotification)
             where TDefinition : class, IDefinition
         {
             if (!@override)
@@ -360,10 +365,13 @@ namespace Democrite.Framework.Node
                 {
                     await PushStateAsync(default);
 
-                    await this._signalService.Fire(DemocriteSystemDefinitions.Signals.DynamicDefinitionChanged,
-                                                   new CollectionChangeSignalMessage<Guid>(CollectionChangeTypeEnum.Added, definition.Uid.AsEnumerable().ToArray()),
-                                                   token.CancellationToken,
-                                                   this);
+                    if (!preventNotification)
+                    {
+                        await this._signalService.Fire(DemocriteSystemDefinitions.Signals.DynamicDefinitionChanged,
+                                                       new CollectionChangeSignalMessage<Guid>(CollectionChangeTypeEnum.Added, definition.Uid.AsEnumerable().ToArray()),
+                                                       token.CancellationToken,
+                                                       this);
+                    }
                 }
             }
 

@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Node.Abstractions.Repositories;
+
     using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
@@ -26,10 +27,12 @@ namespace Democrite.Framework.Node.Storages
     {
         #region Fields
 
+        private readonly Dictionary<string, IMemoryStorageRepositoryRegistryGrain<TKey>> _registries;
+        
         private readonly Dictionary<TKey, byte[]> _store;
         private readonly IGrainFactory _grainFactory;
-
-        private IMemoryStorageRepositoryRegistryGrain<TKey>? _registry;
+        private long _primarykey;
+        private string _storageName;
 
         #endregion
 
@@ -41,6 +44,11 @@ namespace Democrite.Framework.Node.Storages
         public MemoryStorageRepositoryGrain(ILogger<IMemoryStorageRepositoryGrain<TKey>> logger,
                                             IGrainFactory grainFactory)
         {
+            // storage name will be set during the grain activation
+            // It will not be null during grain usage
+            this._storageName = null!;
+
+            this._registries = new Dictionary<string, IMemoryStorageRepositoryRegistryGrain<TKey>>();
             this._store = new Dictionary<TKey, byte[]>();
             this._grainFactory = grainFactory;
         }
@@ -53,7 +61,9 @@ namespace Democrite.Framework.Node.Storages
         public async Task<bool> DeleteDataAsync(string stateName, TKey key)
         {
             var delete = this._store.Remove(key);
-            await this._registry!.ReportActionAsync(StoreActionEnum.Clear, stateName, key!, null, null, null, this.GetGrainId());
+
+            var registry = GetRegistry(stateName);
+            await registry!.ReportActionAsync(StoreActionEnum.Clear, key!, null, null, null, this.GetGrainId());
             return delete;
         }
 
@@ -61,10 +71,8 @@ namespace Democrite.Framework.Node.Storages
         public Task<ReadOnlyMemory<byte>?> ReadDataAsync(TKey key)
         {
             if (this._store.TryGetValue(key, out var value))
-            {
-                //await this._registry!.ReportActionAsync(StoreActionEnum.Read, stateName, key!, null, null, null, this.GetGrainId());
                 return Task.FromResult((ReadOnlyMemory<byte>?)value);
-            }
+
             return Task.FromResult((ReadOnlyMemory<byte>?)null);
         }
 
@@ -76,21 +84,49 @@ namespace Democrite.Framework.Node.Storages
                                               AbstractType entityType,
                                               IReadOnlyCollection<AbstractType> parentTypes)
         {
-            if (!insertIfNew && !this._store.ContainsKey(key))
+            var containKey = this._store.ContainsKey(key);
+            if (!insertIfNew && !containKey)
                 return false;
 
             this._store[key] = data.ToArray();
-            await this._registry!.ReportActionAsync(StoreActionEnum.Write, stateName, key, entityType, parentTypes, null, this.GetGrainId());
+
+            if (containKey == false)
+            {
+                var registry = GetRegistry(stateName);
+                await registry!.ReportActionAsync(StoreActionEnum.Write, key, entityType, parentTypes, null, this.GetGrainId());
+            }
+
             return true;
         }
 
         /// <inheritdoc />
         public override Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            this.GetPrimaryKeyLong(out var storageName);
-            this._registry = this._grainFactory.GetGrain<IMemoryStorageRepositoryRegistryGrain<TKey>>(storageName);
+            this._primarykey = this.GetPrimaryKeyLong(out var storageName);
+            this._storageName = storageName;
+
             return base.OnActivateAsync(cancellationToken);
         }
+
+        #region Tools
+
+        /// <summary>
+        /// Get dedicated registry
+        /// </summary>
+        private IMemoryStorageRepositoryRegistryGrain<TKey> GetRegistry(string stateName)
+        {
+            if (this._registries.TryGetValue(stateName, out var cachedRegistry))
+                return cachedRegistry;
+
+            // Registry are distribute through memoryIndex % 10 + stateName ### storageName
+            // This will reduce the botle neck of all the memory grain reporting to same registry grain
+
+            var registry = this._grainFactory.GetGrain<IMemoryStorageRepositoryRegistryGrain<TKey>>(this._primarykey / 10, MemoryStorageRegistryHelper.ComputeRegistryExtName(stateName, this._storageName));
+            this._registries.Add(stateName, registry);
+            return registry;
+        }
+
+        #endregion
 
         #endregion
     }

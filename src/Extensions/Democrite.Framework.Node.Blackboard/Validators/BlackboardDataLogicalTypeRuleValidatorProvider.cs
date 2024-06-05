@@ -89,6 +89,8 @@ namespace Democrite.Framework.Node.Blackboard.Validators
                 return new DataTypeBlackboardLogicalTypeRuleValidator(typeCheck);
             else if (rule is BlackboardRegexLogicalTypeRule regexRule)
                 return new StringRegexBlackboardLogicalTypeRuleValidator(regexRule);
+            else if (rule is BlackboardLogicalTypeUniqueRule uniqueRule)
+                return new UniqueBlackboardLogicalTypeRuleValidator(uniqueRule);
             else if (rule.GetType().GetGenericTypeDefinition() == s_numberRangeRuleTraits)
                 return (IBlackboardDataLogicalTypeRuleValidator)Activator.CreateInstance(s_numberRangeValidatorTraits.MakeGenericType(rule.GetType().GetGenericArguments()), new object[] { rule })!;
 

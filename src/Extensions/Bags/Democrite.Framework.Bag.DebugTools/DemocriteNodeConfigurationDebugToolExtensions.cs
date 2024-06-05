@@ -41,7 +41,10 @@ namespace Democrite.Framework.Configurations
                  .Add<IDisplaySignalsInfoVGrain, DisplaySignalsInfoVGrain>();
             });
 
-            var signalSebugSec = Sequence.Build(nameof(Democrite.Framework.Bag) + ":" + nameof(Democrite.Framework.Bag.DebugTools) + ":" + nameof(DebugToolConstants.DisplaySignalSequence), DebugToolConstants.DisplaySignalSequence)
+            var signalSebugSec = Sequence.Build(nameof(Democrite.Framework.Bag) + ":" + nameof(Democrite.Framework.Bag.DebugTools) + ":" + nameof(DebugToolConstants.DisplaySignalSequence), DebugToolConstants.DisplaySignalSequence, o =>
+                                         {
+                                             o.PreventSequenceExecutorStateStorage();
+                                         })
                                          .RequiredInput<SignalMessage>()
                                          .Use<IDisplaySignalsInfoVGrain>().Call((g, s, ctx) => g.DisplaySignalInfoAsync(s, ctx)).Return
                                          .Build();

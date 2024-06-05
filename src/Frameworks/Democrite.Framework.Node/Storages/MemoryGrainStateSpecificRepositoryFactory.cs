@@ -31,8 +31,8 @@ namespace Democrite.Framework.Node.Storages
         /// </summary>
         static MemoryGrainStateSpecificRepositoryFactory()
         {
-            s_monoRepo = typeof(MemoryReadOnlyRepository<,>);
-            s_monoWithEntityIdRepo = typeof(MemoryReadOnlyRepository<,,>);
+            s_monoRepo = typeof(MemoryReadOnlyRepository<>);
+            s_monoWithEntityIdRepo = typeof(MemoryReadOnlyRepository<,>);
         }
 
         /// <summary>
@@ -48,7 +48,11 @@ namespace Democrite.Framework.Node.Storages
         #region Methods
 
         /// <inheritdoc />
-        protected override object InstanciateRepository(IServiceProvider serviceProvider, string stateName, Type serviceTargetTrait, Type repositoryType, Type repositoryWithEntityIdType)
+        protected override object InstanciateRepository(IServiceProvider serviceProvider,
+                                                        string stateName,
+                                                        Type serviceTargetTrait,
+                                                        Type repositoryType,
+                                                        Type repositoryWithEntityIdType)
         {
             var instType = repositoryType;
 
@@ -57,7 +61,7 @@ namespace Democrite.Framework.Node.Storages
             if (genericParams.Length == 2)
                 instType = repositoryWithEntityIdType;
 
-            instType = instType.MakeGenericType(genericParams.Append(typeof(IMemoryStorageStateRegistryGrain<string>)).ToArray());
+            instType = instType.MakeGenericType(genericParams);
 
             return ActivatorUtilities.CreateInstance(serviceProvider, instType, stateName, this.StorageName);
         }

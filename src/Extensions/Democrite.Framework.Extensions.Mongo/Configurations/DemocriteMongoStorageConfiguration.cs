@@ -98,6 +98,19 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations
                                                                      option);
             }
 
+            if ((storageType & StorageTypeEnum.DynamicDefinition) == StorageTypeEnum.DynamicDefinition)
+            {
+                var option = GenerateOptions<MongoDBOptions>(customDatabase, collectionPrefix);
+
+                AutoDemocriteDynamicDefinitionsMongoConfigurator.Default
+                                                                .ConfigureMongoStorage(this._nodeBuilder,
+                                                                                       this._configuration,
+                                                                                       this._serviceCollection,
+                                                                                       this._nodeBuilder.Logger,
+                                                                                       this._currentConnectionString,
+                                                                                       option);
+            }
+
             if ((storageType & StorageTypeEnum.DemocriteAdmin) == StorageTypeEnum.DemocriteAdmin)
             {
                 var option = GenerateOptions<MongoDBOptions>(customDatabase, collectionPrefix);

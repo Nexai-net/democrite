@@ -8,6 +8,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Exceptions;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions;
@@ -30,6 +31,24 @@ namespace Democrite.Framework.Node.ThreadExecutors
     /// <seealso cref="ISequenceExecutorThreadStageHandler" />
     internal sealed class SequenceExecutorThreadStageCall : SafeDisposable, ISequenceExecutorThreadStageHandler
     {
+        #region Fields
+
+        private readonly IDemocriteSerializer _democriteSerializer;
+        
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SequenceExecutorThreadStageCall"/> class.
+        /// </summary>
+        public SequenceExecutorThreadStageCall(IDemocriteSerializer democriteSerializer)
+        {
+            this._democriteSerializer = democriteSerializer;
+        }
+
+        #endregion
+
         #region Methods
 
         /// <inheritdoc />
@@ -57,7 +76,16 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
             if (step.Configuration is not null)
             {
-                configuration = step.Configuration.Resolve(input);
+                var cfgInput = input;
+
+                if (step.ConfigurationFromContextDataType is not null)
+                {
+                    cfgInput = sequenceContext.TryGetContextData(step.ConfigurationFromContextDataType, this._democriteSerializer);
+                    if (cfgInput is null)
+                        logger.OptiLog(LogLevel.Warning, "ConfigurationFromContextDataType is null or missing : {ConfigurationFromContextDataType}", step.ConfigurationFromContextDataType);
+                }
+
+                configuration = step.Configuration.Resolve(cfgInput);
 
                 var validators = mthd.GetCustomAttributes()
                                      .OfType<IExecutionContextConfigurationValidator>()

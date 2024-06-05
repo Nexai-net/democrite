@@ -594,7 +594,7 @@ namespace Democrite.Framework.Node.Models
 
             logger.OptiLog(LogLevel.Trace, "-- End step : '{stage}' for output '{output}'", stage, output);
 
-            this._locker.Wait();
+            await this._locker.WaitAsync();
 
             try
             {

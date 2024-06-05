@@ -50,6 +50,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                                                  def,
                                                                  typeof(string[]).GetAbstractType(),
                                                                  null,
+                                                                 null,
                                                                  null);
 
             var innerDef = new SequenceDefinition(Guid.NewGuid(), "test", SequenceOptionDefinition.Default, new[] { callDefinition });

@@ -144,7 +144,8 @@ namespace Democrite.Framework.Core.Executions
             {
                 this._executionCustomization = new ExecutionCustomizationDescriptions(this._executionCustomization?.VGrainRedirection ?? EnumerableHelper<StageVGrainRedirectionDescription>.ReadOnlyArray,
                                                                                       this._executionCustomization?.SignalFireDescriptions ?? EnumerableHelper<EndSignalFireDescription>.ReadOnlyArray,
-                                                                                      new DeferredId(this._deferredId.Value, ctx.FlowUID));
+                                                                                      new DeferredId(this._deferredId.Value, ctx.FlowUID),
+                                                                                      this._executionCustomization?.PreventSequenceExecutorStateStorage ?? false);
             }
 
             if (this._executionCustomization is not null)

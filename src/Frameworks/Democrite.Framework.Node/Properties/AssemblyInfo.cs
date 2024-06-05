@@ -13,12 +13,13 @@ using Democrite.Framework.Node.Configurations.AutoConfigurator;
 [assembly: AutoConfigurator<IMembershipsAutoConfigurator, AutoDefaultMembershipsNodeConfigurator>()]
 [assembly: AutoConfigurator<IClusterEndpointAutoConfigurator, AutoDefaultNodeEndpointAutoConfigurator>()]
 
-// Memory
+// Storage
+[assembly: AutoConfigurator<INodeDefaultMemoryAutoConfigurator, AutoDefaultMemoryConfigurator>()]
 [assembly: AutoConfigurator<INodeDemocriteMemoryAutoConfigurator, AutoDefaultDemocriteMemoryConfigurator>()]
+[assembly: AutoConfigurator<INodeCustomGrainMemoryAutoConfigurator, AutoDefaultCustomGrainMemoryConfigurator>()]
 [assembly: AutoConfigurator<INodeDemocriteAdminMemoryAutoConfigurator, AutoDefaultDemocriteAdminMemoryConfigurator>()]
 [assembly: AutoConfigurator<INodeReminderStateMemoryAutoConfigurator, AutoDefaultReminderStateMemoryAutoConfigurator>()]
-[assembly: AutoConfigurator<INodeCustomGrainMemoryAutoConfigurator, AutoDefaultCustomGrainMemoryConfigurator>()]
-[assembly: AutoConfigurator<INodeDefaultMemoryAutoConfigurator, AutoDefaultMemoryConfigurator>()]
+[assembly: AutoConfigurator<INodeDemocriteDynamicDefinitionsMemoryAutoConfigurator, AutoDefaultDemocriteDynamicDefinitionsMemoryConfigurator>()]
 
 // Repository
 [assembly: AutoConfigurator<INodeDefaultRepositoryMemoryAutoConfigurator, AutoDefaultRepositoryMemoryConfigurator>()]

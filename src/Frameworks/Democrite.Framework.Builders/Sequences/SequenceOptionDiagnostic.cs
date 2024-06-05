@@ -47,7 +47,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// </summary>
         public SequenceDiagnosticOptionDefinition ToDefinition()
         {
-            return new SequenceDiagnosticOptionDefinition(this.SaveAllStageInfo);
+            return new SequenceDiagnosticOptionDefinition(this.SaveAllStageInfo, Microsoft.Extensions.Logging.LogLevel.Information);
         }
 
         #endregion

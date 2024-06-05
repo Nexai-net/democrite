@@ -28,5 +28,10 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions
         /// The blackboard storage state key
         /// </summary>
         public const string BlackboardStorageStateKey = "Blackboards";
+
+        /// <summary>
+        /// The blackboard storage state key
+        /// </summary>
+        public const string BlackboardStorageRecordsKey = "BlackboardRecords";
     }
 }

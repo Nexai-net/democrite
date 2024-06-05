@@ -24,6 +24,78 @@ namespace Democrite.Framework.Node.Blackboard.UnitTests.VGrains
     /// </summary>
     public sealed class DefaultBlackboardControllerGrainUTest
     {
+        [Fact]
+        public async Task Storage_Conflict_Prepared_Slot()
+        {
+            var fixture = ObjectTestHelper.PrepareFixture();
+
+            var grain = await fixture.CreateAndInitVGrain<DefaultBlackboardControllerGrain>();
+
+            var logicalType = "Result";
+            var now = DateTime.UtcNow;
+            var pastNow = DateTime.UtcNow.AddDays(-1);
+
+            var newRecord = new DataRecordContainer<int>(logicalType,
+                                                         Guid.NewGuid(),
+                                                         logicalType + "new",
+                                                         42,
+                                                         RecordStatusEnum.Ready,
+                                                         now,
+                                                         fixture.Create<string>(),
+                                                         now,
+                                                         fixture.Create<string>(),
+                                                         null);
+
+            var preparedSolt = new BlackboardRecordMetadata(Guid.NewGuid(),
+                                                            logicalType,
+                                                            logicalType + "Conflict",
+                                                            null,
+                                                            RecordContainerTypeEnum.Direct,
+
+                                                            // Set preparation to test
+                                                            RecordStatusEnum.Preparation,
+                                                            pastNow,
+                                                            fixture.Create<string>(),
+                                                            pastNow,
+                                                            fixture.Create<string>(),
+                                                            null);
+
+            var issue = new MaxRecordBlackboardProcessingRuleIssue(1,
+                                                                   new [] { preparedSolt },
+                                                                   newRecord,
+                                                                   fixture.Create<BlackboardProcessingResolutionLimitTypeEnum>(),
+                                                                   fixture.Create<BlackboardProcessingResolutionRemoveTypeEnum>());
+
+            var resolutions = await grain.ResolvePushIssueAsync(issue, newRecord, new GrainCancellationTokenSource().Token);
+
+            Check.That(resolutions).IsNotNull().And.CountIs(1);
+
+            var action = resolutions!.First();
+
+            Check.That(action).IsInstanceOf<BlackboardCommandStorageAddRecord<int>>();
+
+            var cmd = (BlackboardCommandStorageAddRecord<int>)action;
+
+            Check.That(cmd.Override).IsTrue();
+            Check.That(cmd.InsertIfNew).IsTrue();
+            Check.That(cmd.Record).IsNotNull();
+
+            // Use most of the new record data
+            var record = cmd.Record;
+            Check.That(record.Data).IsEqualTo(newRecord.Data);
+            Check.That(record.Status).IsEqualTo(newRecord.Status);
+            Check.That(record.ContainsType).IsEqualTo(newRecord.ContainsType);
+            Check.That(record.CustomMetadata).IsEqualTo(newRecord.CustomMetadata);
+            Check.That(record.DisplayName).IsEqualTo(newRecord.DisplayName);
+            Check.That(record.UTCLastUpdateTime).IsEqualTo(newRecord.UTCLastUpdateTime);
+            Check.That(record.LastUpdaterIdentity).IsEqualTo(newRecord.LastUpdaterIdentity);
+
+            // But keep the prepared slot important information
+            Check.That(record.Uid).IsEqualTo(preparedSolt.Uid).And.IsNotEqualTo(newRecord.Uid);
+            Check.That(record.UTCCreationTime).IsEqualTo(preparedSolt.UTCCreationTime).And.IsNotEqualTo(newRecord.UTCCreationTime);
+            Check.That(record.CreatorIdentity).IsEqualTo(preparedSolt.CreatorIdentity).And.IsNotEqualTo(newRecord.CreatorIdentity);
+        }
+
         /// <summary>
         /// Test resolution storage issue type limit with <see cref="BlackboardProcessingResolutionLimitTypeEnum.Reject"/> strategy
         /// </summary>

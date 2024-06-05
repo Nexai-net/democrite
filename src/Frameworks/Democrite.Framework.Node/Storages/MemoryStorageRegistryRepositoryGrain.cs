@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Node.Abstractions.Repositories;
+
     using Elvex.Toolbox.Abstractions.Models;
 
     using Microsoft.Extensions.Logging;
@@ -12,7 +13,6 @@ namespace Democrite.Framework.Node.Storages
     using Orleans;
 
     using System;
-    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -30,8 +30,9 @@ namespace Democrite.Framework.Node.Storages
         /// Initializes a new instance of the <see cref="MemoryStorageRegistryBaseGrain"/> class.
         /// </summary>
         public MemoryStorageRegistryRepositoryGrain(IGrainFactory grainFactory,
-                                                    ILogger<IMemoryStorageRegistryGrain<TKey>> logger)
-            : base(grainFactory, logger)
+                                                    ILogger<IMemoryStorageRegistryGrain> logger,
+                                                    IDedicatedObjectConverter dedicatedObjectConverter)
+            : base(grainFactory, logger, dedicatedObjectConverter)
         {
         }
 

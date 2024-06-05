@@ -107,7 +107,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         /// <summary>
         /// Initializes a new instance of the <see cref="LogicalTypeConfiguration"/> class.
         /// </summary>
-        public LogicalTypeConfiguration(string logicalRecordTypePattern)
+        public LogicalTypeConfiguration(string logicalRecordTypePattern, string? storagestateName = null)
             : base(logicalRecordTypePattern)
         {
         }
@@ -160,7 +160,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         public ILogicalTypeConfiguration Storage(string storageKey, string? storageConfiguration = null)
         {
             EnqueueRule(new BlackboardStorageLogicalTypeRule(this.LogicalRecordTypePattern,
-                                                             new BlackboardStorageDefinition(storageKey,
+                                                             new BlackboardStorageDefinition(string.IsNullOrEmpty(storageKey) ? "BlackboardRecords" : storageKey,
                                                                                              string.IsNullOrEmpty(storageConfiguration) 
                                                                                                         ? BlackboardConstants.BlackboardStorageConfigurationKey 
                                                                                                         : storageConfiguration)));
@@ -187,6 +187,13 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         public ILogicalTypeConfiguration RemainOnSealed()
         {
             EnqueueRule(new BlackboardRemainOnSealedLogicalTypeRule(this.LogicalRecordTypePattern));
+            return this;
+        }
+
+        /// <inheritdoc />
+        public ILogicalTypeConfiguration Unique(bool replace = false)
+        {
+            EnqueueRule(new BlackboardLogicalTypeUniqueRule(this.LogicalRecordTypePattern, replace));
             return this;
         }
 

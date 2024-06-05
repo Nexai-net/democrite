@@ -8,9 +8,24 @@ namespace Democrite.Framework.Node.Configurations
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Node.Abstractions.Models;
     using Democrite.Framework.Node.Configurations.AutoConfigurator;
+    using Democrite.Framework.Node.Models;
+
+    using Microsoft.Extensions.DependencyInjection;
+
+    using Orleans.Configuration;
 
     public static class DemocriteMemoryInLocalConfiguration
     {
+        /// <summary>
+        /// Configures the memory storage options
+        /// </summary>
+        public static IDemocriteNodeMemoryBuilder ConfigureMemoryStorage(this IDemocriteNodeMemoryBuilder wizard, uint numStorageGrains = 10, uint initStage = MemoryGrainStorageOptions.DEFAULT_INIT_STAGE)
+        {
+            // MemoryGrainStorageOptions
+            wizard.GetServiceCollection().AddSingleton(new DefaultMemoryGrainStorageOptions(numStorageGrains, initStage));
+            return wizard;
+        }
+
         /// <summary>
         /// Configure system storage in memory
         /// </summary>
@@ -38,6 +53,14 @@ namespace Democrite.Framework.Node.Configurations
                                                                              wizard.GetConfiguration(),
                                                                              wizard.GetServiceCollection(),
                                                                              wizard.Logger);
+            }
+
+            if ((storageType & StorageTypeEnum.DynamicDefinition) == StorageTypeEnum.DynamicDefinition)
+            {
+                AutoDefaultDemocriteDynamicDefinitionsMemoryConfigurator.Default.AutoConfigure(wizard,
+                                                                                               wizard.GetConfiguration(),
+                                                                                               wizard.GetServiceCollection(),
+                                                                                               wizard.Logger);
             }
 
             if ((storageType & StorageTypeEnum.DemocriteAdmin) == StorageTypeEnum.DemocriteAdmin)

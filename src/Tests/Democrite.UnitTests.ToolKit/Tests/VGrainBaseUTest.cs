@@ -29,7 +29,7 @@ namespace Democrite.UnitTests.ToolKit.Tests
         /// </summary>
         static VGrainBaseUTest()
         {
-            var stateAccess = typeof(TGrainImpl).GetProperty("State", BindingFlags.Public | BindingFlags.Instance);
+            var stateAccess = typeof(TGrainImpl).GetProperty("State", BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (stateAccess != null)
                 s_stateAccess = stateAccess;

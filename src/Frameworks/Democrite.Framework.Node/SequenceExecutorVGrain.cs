@@ -118,14 +118,18 @@ namespace Democrite.Framework.Node
                 state = base.State;
             }
 
+            var needStateSaving = false;
             if (state == null || state.SequenceDefinitionId == Guid.Empty)
             {
                 var newState = new SequenceExecutorState(executionContext.Configuration,
+                                                         executionContext.Configuration.ToString(),
                                                          executionContext.FlowUID,
                                                          this._timeManager.UtcNow);
-                await base.PushStateAsync(newState, default);
 
-                state = base.State ?? newState;
+                needStateSaving = true;
+                //await base.PushStateAsync(newState, default);
+
+                state = newState;
             }
 
             var defaultResult = default(TOutput);
@@ -148,7 +152,7 @@ namespace Democrite.Framework.Node
                 if (sequenceDefintion is null)
                     throw new MissingDefinitionException(typeof(SequenceDefinition), state.SequenceDefinitionId.ToString());
 
-                execLogger.OptiLog(LogLevel.Information,
+                execLogger.OptiLog(sequenceDefintion.Options.Diagnostic.MinLogLevel,
                                    "Start sequence '{sequenceDefinitionDisplayName}' (Id: {sequenceDefinitionUID})",
                                    sequenceDefintion.DisplayName,
                                    sequenceDefintion.Uid);
@@ -160,6 +164,13 @@ namespace Democrite.Framework.Node
                 {
                     if (state.MainThread == null)
                         state.Initialize(executionContext, sequenceDefintion, input, this._democriteSerializer);
+
+                    // Disabled state save to reduce saving of specific sequence
+                    if (sequenceDefintion.Options.PreventSequenceExecutorStateStorage || (state.Customization?.PreventSequenceExecutorStateStorage ?? false))
+                        this.StateStorageEnabled = false;
+
+                    if (needStateSaving && this.StateStorageEnabled)
+                        await PushStateAsync(state, default);
 
                     Debug.Assert(state.MainThread != null);
 

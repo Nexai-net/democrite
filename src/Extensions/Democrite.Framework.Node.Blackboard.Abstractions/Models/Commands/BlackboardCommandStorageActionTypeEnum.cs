@@ -13,6 +13,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
         Add,
         Remove,
         Decommission,
-        ChangeStatus
+        ChangeStatus,
+        Prepare
     }
 }

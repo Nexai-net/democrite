@@ -73,7 +73,7 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
                                                               logger,
                                                               connectionString,
                                                               option,
-                                                              nameof(Democrite),
+                                                              DemocriteConstants.DefaultDemocriteStateConfigurationKey,
                                                               ConfigurationNodeSectionNames.NodeDemocriteMemory,
                                                               ConfigurationNodeSectionNames.NodeDemocriteMemoryConnectionString);
         }

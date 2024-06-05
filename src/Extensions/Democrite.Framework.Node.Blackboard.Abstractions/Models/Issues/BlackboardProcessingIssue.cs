@@ -23,6 +23,19 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues
         /// <inheritdoc />
         public abstract string ToDebugDisplayName();
     }
+    [Immutable]
+    [DataContract]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public sealed record class BlackboardAggregateProcessingIssue(IReadOnlyCollection<BlackboardProcessingIssue> Issues) : BlackboardProcessingIssue(BlackboardProcessingIssueTypeEnum.Aggregate)
+    {
+        /// <inheritdoc />
+        public override string ToDebugDisplayName()
+        {
+            return "Issues [Aggregate:{0}] :\n {1}".WithArguments(this.Issues.Count, string.Join("\n", this.Issues.Select(i => i.ToDebugDisplayName())));
+        }
+    }
 
     /// <summary>
     /// Not supported process issue

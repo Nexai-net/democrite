@@ -36,13 +36,15 @@ namespace Democrite.Framework.Node.Services
         /// <inheritdoc />
         public Task<SubscriptionId> Subscribe(SignalId signalId)
         {
-            return GetService().Subscribe(signalId);
+            return GetService()?.Subscribe(signalId) ?? throw new InvalidOperationException("CurrentGrainReference not initialized");
         }
 
         /// <inheritdoc />
         public Task Unsubscribe(SubscriptionId subscriptionId)
         {
-            return GetService().Unsubscribe(subscriptionId);
+            // Allow CurrentGrainReference to be missing due to server shutdown
+            // The shutdown set CurrentGrainReference to null we want to prevent not necessary exceptions
+            return GetService()?.Unsubscribe(subscriptionId) ?? Task.CompletedTask;
         }
 
         /// <inheritdoc />
@@ -55,8 +57,11 @@ namespace Democrite.Framework.Node.Services
 
         // For convenience when implementing methods, you can define a property which gets the IDataService
         // corresponding to the grain which is calling the DataServiceClient.
-        private ISignalLocalGrainServiceRelay GetService()
+        private ISignalLocalGrainServiceRelay? GetService()
         {
+            if (this.CurrentGrainReference is null)
+                return null;
+
             return GetGrainService(this.CurrentGrainReference.GrainId);
         }
 

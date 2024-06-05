@@ -15,8 +15,8 @@ namespace Democrite.Framework.Node.Signals.Models
     /// </summary>
     [Serializable]
     [Immutable]
-    [ImmutableObject(true)]
     [GenerateSerializer]
+    [ImmutableObject(true)]
     internal sealed class SignalSubscription
     {
         #region Ctor

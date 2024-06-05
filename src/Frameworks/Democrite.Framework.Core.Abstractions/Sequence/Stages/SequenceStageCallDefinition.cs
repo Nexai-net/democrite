@@ -33,6 +33,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
                                            AbstractMethod callMethodDefinition,
                                            AbstractType? output,
                                            AccessExpressionDefinition? configuration,
+                                           ConcretType? configurationFromContextDataType,
                                            IEnumerable<SequenceStageCallParameterDefinition>? parameterDefinitions,
                                            SequenceOptionStageDefinition? options = null,
                                            bool preventReturn = false,
@@ -47,9 +48,11 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
             this.VGrainType = vgrainType;
 
             this.Configuration = configuration;
+            this.ConfigurationFromContextDataType = configurationFromContextDataType;
             this.ParameterDefinitions = parameterDefinitions?.ToArray();
 
             this.IndexedParameterDefinitions = parameterDefinitions?.ToDictionary(k => k.Position);
+
         }
 
         #endregion
@@ -75,6 +78,12 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         public AccessExpressionDefinition? Configuration { get; }
 
         /// <summary>
+        /// Gets the type of the configuration to extract from context data.
+        /// </summary>
+        [DataMember]
+        public ConcretType? ConfigurationFromContextDataType { get; }
+
+        /// <summary>
         /// Gets the parameter definitions.
         /// </summary>
         [DataMember]
@@ -98,13 +107,15 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
             return other is SequenceStageCallDefinition callOther &&
                    callOther.CallMethodDefinition == this.CallMethodDefinition &&
                    callOther.VGrainType.Equals((AbstractType)this.VGrainType) &&
+                   callOther.Configuration == this.Configuration &&
+                   (callOther.ConfigurationFromContextDataType?.Equals((AbstractType?)this.ConfigurationFromContextDataType) ?? this.ConfigurationFromContextDataType is null) &&
                    (callOther.ParameterDefinitions?.SequenceEqual(this.ParameterDefinitions ?? EnumerableHelper<SequenceStageCallParameterDefinition>.ReadOnlyArray) ?? this.ParameterDefinitions is null);
         }
 
         /// <inheritdoc/>
         protected override int OnStageGetHashCode()
         {
-            return HashCode.Combine(this.CallMethodDefinition, this.VGrainType);
+            return HashCode.Combine(this.CallMethodDefinition, this.VGrainType, this.Configuration, this.ConfigurationFromContextDataType);
         }
 
         #endregion

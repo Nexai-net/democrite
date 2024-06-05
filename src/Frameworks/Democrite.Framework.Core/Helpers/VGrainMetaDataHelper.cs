@@ -8,7 +8,6 @@ namespace Democrite.Framework.Core.Helpers
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Models;
-    using Microsoft.VisualBasic;
 
     using Orleans.Concurrency;
 

@@ -140,15 +140,15 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Updates 
         /// </summary>
-        internal void Update(IRepositoryFactory repositoryFactory,
-                             IBlackboardDataLogicalTypeRuleValidatorProvider blackboardDataLogicalTypeRuleValidatorProvider,
-                             BlackboardOrderLogicalTypeRule? order,
-                             BlackboardStorageDefinition storage,
-                             BlackboardRemainOnSealedLogicalTypeRule? remain,
-                             IReadOnlyCollection<BlackboardLogicalTypeBaseRule>? rules)
+        internal async ValueTask UpdateAsync(IRepositoryFactory repositoryFactory,
+                                             IBlackboardDataLogicalTypeRuleValidatorProvider blackboardDataLogicalTypeRuleValidatorProvider,
+                                             BlackboardOrderLogicalTypeRule? order,
+                                             BlackboardStorageDefinition storage,
+                                             BlackboardRemainOnSealedLogicalTypeRule? remain,
+                                             IReadOnlyCollection<BlackboardLogicalTypeBaseRule>? rules)
         {
             this.Order = order?.Order ?? -1;
-            this._repository = repositoryFactory.Get<IRepository<DataRecordContainer, Guid>, DataRecordContainer>(storage.StorageKey, storage.StorageConfiguration);
+            this._repository = await repositoryFactory.GetAsync<IRepository<DataRecordContainer, Guid>, DataRecordContainer>(storage.StorageKey, storage.StorageConfiguration);
 
             this._storage = storage;
 

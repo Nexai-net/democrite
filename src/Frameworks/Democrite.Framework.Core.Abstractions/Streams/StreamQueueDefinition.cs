@@ -45,9 +45,9 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         {
             this.Uid = uid;
             this.DisplayName = displayName;
-            this.StreamKey = streamKey;
-            this.StreamCustomUid = streamCustomUid;
-            this.StreamCustomKey = streamCustomKey;
+            this.StreamNamespace = streamKey;
+            this.StreamUid = streamCustomUid;
+            this.StreamKey = streamCustomKey;
             this.StreamConfiguration = streamConfiguration;
         }
 
@@ -73,7 +73,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         [DataMember(EmitDefaultValue = false)]
         [Newtonsoft.Json.JsonProperty(DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
         [Id(2)]
-        public Guid? StreamCustomUid { get; }
+        public Guid? StreamUid { get; }
 
         /// <summary>
         /// Gets the custom stream uid to extend the key
@@ -81,7 +81,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         [DataMember(EmitDefaultValue = false)]
         [Newtonsoft.Json.JsonProperty(DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore)]
         [Id(3)]
-        public string? StreamCustomKey { get; }
+        public string? StreamKey { get; }
 
         /// <summary>
         /// Gets the stream namespace.
@@ -97,7 +97,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         [DataMember]
         [Newtonsoft.Json.JsonProperty]
         [Id(5)]
-        public string StreamKey { get; }
+        public string StreamNamespace { get; }
 
         #endregion
 
@@ -106,7 +106,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         /// <inheritdoc />
         public string ToDebugDisplayName()
         {
-            return $"[{this.StreamConfiguration}] - {this.StreamKey} - {this.StreamCustomKey}{(this.StreamCustomKey is null ? "" : "-")}{this.StreamCustomKey}";
+            return $"[{this.StreamConfiguration}] - {this.StreamNamespace} - {this.StreamKey}{(this.StreamKey is null ? "" : "-")}{this.StreamKey}";
         }
 
         /// <inheritdoc />
@@ -114,7 +114,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         {
             var isValid = true;
 
-            if (string.IsNullOrEmpty(this.StreamKey))
+            if (string.IsNullOrEmpty(this.StreamNamespace))
             {
                 logger.OptiLog(LogLevel.Error, "StreamKey nust not be null or empty");
                 isValid = false;
@@ -126,7 +126,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
                 isValid = false;
             }
 
-            if (string.IsNullOrEmpty(this.StreamCustomKey) && (this.StreamCustomUid is null || this.StreamCustomUid == Guid.Empty))
+            if (string.IsNullOrEmpty(this.StreamKey) && (this.StreamUid is null || this.StreamUid == Guid.Empty))
             {
                 logger.OptiLog(LogLevel.Error, "A stream queue MUST have a custom uid or/and custom key");
                 isValid = false;
@@ -138,19 +138,19 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         /// <inheritdoc />
         protected sealed override bool OnEquals([NotNull] StreamQueueDefinition other)
         {
-            return this.StreamKey == other.StreamKey &&
-                   this.StreamCustomKey == other.StreamCustomKey &&
+            return this.StreamNamespace == other.StreamNamespace &&
+                   this.StreamKey == other.StreamKey &&
                    this.StreamConfiguration == other.StreamConfiguration &&
-                   this.StreamCustomUid == other.StreamCustomUid;
+                   this.StreamUid == other.StreamUid;
         }
 
         /// <inheritdoc />
         protected sealed override int OnGetHashCode()
         {
-            return HashCode.Combine(this.StreamCustomKey,
+            return HashCode.Combine(this.StreamKey,
                                     this.StreamConfiguration,
-                                    this.StreamCustomUid, 
-                                    this.StreamKey);
+                                    this.StreamUid, 
+                                    this.StreamNamespace);
         }
 
         #endregion

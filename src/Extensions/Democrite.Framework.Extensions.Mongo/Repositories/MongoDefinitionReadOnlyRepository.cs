@@ -91,6 +91,12 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         }
 
         /// <inheritdoc />
+        public ValueTask<IReadOnlyCollection<TProjection>> GetByIdsValueAsync<TProjection>([NotNull] IReadOnlyCollection<Guid> entityIds, CancellationToken token)
+        {
+            return base.GetValuesAsync<TProjection>((TDocumentType d) => entityIds.Contains(d.Uid), token);
+        }
+
+        /// <inheritdoc />
         ValueTask<DefinitionContainer<TDocumentType>?> IReadOnlyRepository<DefinitionContainer<TDocumentType>, Guid>.GetByIdValueAsync([NotNull] Guid entityId, CancellationToken token)
         {
             return base.GetFirstContainerAsync((DefinitionContainer<TDocumentType> d) => d.Uid == entityId, token);

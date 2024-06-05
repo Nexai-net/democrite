@@ -27,7 +27,7 @@ namespace Democrite.Framework.Extensions.Mongo.Abstractions.Serializers
 
         private static readonly Regex s_extractGenericCount = new Regex(@"(?<Root>[a-zA-Z0-9_]+)`(?<ParameterCount>[0-9]+)<<(?<Arguments>.*)>>");
 
-        private static readonly string[] s_parameterSeparators = new[] { ">>", "<<", "," };
+        private static readonly StringIndexedContext s_parameterSeparators = StringIndexedContext.Create(new[] { ">>", "<<", "," }, EnumerableHelper<string>.ReadOnlyArray);
 
         private static readonly BsonClassMapSerializer<TType> s_default;
         private static readonly Type s_valueType;
@@ -265,7 +265,6 @@ namespace Democrite.Framework.Extensions.Mongo.Abstractions.Serializers
                 {
                     var arguments = match.Groups["Arguments"].Value;
                     var args = arguments.OptiSplit(StringIncludeSeparatorMode.Isolated,
-                                                   StringComparison.OrdinalIgnoreCase,
                                                    StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries,
                                                    s_parameterSeparators);
 

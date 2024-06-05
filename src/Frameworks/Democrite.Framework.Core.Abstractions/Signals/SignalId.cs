@@ -14,5 +14,5 @@ namespace Democrite.Framework.Core.Abstractions.Signals
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public readonly record struct SignalId(Guid Uid, string Name);
+    public readonly record struct SignalId(Guid Uid, string? Name);
 }

@@ -7,6 +7,8 @@ namespace Democrite.Framework.Core.Storages
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
 
+    using Elvex.Toolbox.Abstractions.Supports;
+
     using Microsoft.Extensions.DependencyInjection;
 
     using Orleans.Runtime;
@@ -40,7 +42,8 @@ namespace Democrite.Framework.Core.Storages
         #region Methods
 
         /// <inheritdoc />
-        public TTargetRepo Get<TTargetRepo, TEntity>(string stateName, string? storageName = null) where TTargetRepo : IReadOnlyRepository<TEntity>
+        public async ValueTask<TTargetRepo> GetAsync<TTargetRepo, TEntity>(string stateName, string? storageName = null, bool blockInitialization = false, CancellationToken token = default)
+            where TTargetRepo : IReadOnlyRepository<TEntity>
         {
             var storageConfig = string.IsNullOrEmpty(storageName)
                                             ? DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey
@@ -56,7 +59,20 @@ namespace Democrite.Framework.Core.Storages
                 throw new Exception();
             }
 
-            return specificFactory.Get<TTargetRepo, TEntity>(this._serviceProvider, stateName);
+            var repo = specificFactory.Get<TTargetRepo, TEntity>(this._serviceProvider, stateName);
+
+            if (repo is null)
+                throw new KeyNotFoundException($"Could build a dedicated repository with following pair stateName:'{stateName}' storageName:'{storageName}'");
+
+            if (repo is ISupportInitialization initialization && !initialization.IsInitialized)
+            {
+                if (repo is ISupportInitialization<string> initWithStateName)
+                    await initWithStateName.InitializationAsync(storageName, token);
+                else
+                    await initialization.InitializationAsync(token);
+            }
+
+            return repo;
         }
 
         #endregion

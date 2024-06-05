@@ -4,14 +4,13 @@
 
 namespace Democrite.Framework.Node.Blackboard.VGrains
 {
-    using Democrite.Framework.Core;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands;
-    using Democrite.Framework.Node.Blackboard.Abstractions.Models.Events;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Issues;
     using Democrite.Framework.Node.Blackboard.Abstractions.VGrains;
     using Democrite.Framework.Node.Blackboard.Models;
+
     using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
@@ -21,6 +20,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
     using System;
     using System.Collections.Generic;
+    using System.Security.Cryptography;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -28,7 +28,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     /// Default controller in charge to provide basic algorithme 
     /// </summary>
     /// <seealso cref="IDefaultBlackboardControllerGrain" />
-    public sealed class DefaultBlackboardControllerGrain : BlackboardBaseControllerGrain<DefaultBlackboardControllerState, IDefaultBlackboardControllerGrain>, IDefaultBlackboardControllerGrain
+    public class DefaultBlackboardControllerGrain : BlackboardBaseControllerGrain<DefaultBlackboardControllerState, IDefaultBlackboardControllerGrain>, IDefaultBlackboardControllerGrain
     {
         #region Ctor
 
@@ -101,6 +101,26 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             // In the worse scenario we have to create a command to remove each entry and add new one
             var resolutionActions = new List<BlackboardCommand>(issue!.MaxRecordAllow + 1);
+
+            // if a preparation slot is waiting then will this on instead of inserting a new one
+            if (issue.ConflictRecords.Any(c => c.Status == RecordStatusEnum.Preparation && c.LogicalType == sourceInjected.LogicalType))
+            {
+                var availableSlot = issue.ConflictRecords.First(c => c.Status == RecordStatusEnum.Preparation);
+                var cmds = new BlackboardCommand[]
+                {
+                    new BlackboardCommandStorageAddRecord<TData>(new DataRecordContainer<TData?>(sourceInjected.LogicalType,
+                                                                                                 availableSlot.Uid,
+                                                                                                 sourceInjected.DisplayName,
+                                                                                                 sourceInjected.Data,
+                                                                                                 sourceInjected.Status,
+                                                                                                 availableSlot.UTCCreationTime,
+                                                                                                 availableSlot.CreatorIdentity,
+                                                                                                 sourceInjected.UTCLastUpdateTime,
+                                                                                                 sourceInjected.LastUpdaterIdentity,
+                                                                                                 sourceInjected.CustomMetadata ?? availableSlot.CustomMetadata), true, true)
+                };
+                return ValueTask.FromResult<IReadOnlyCollection<BlackboardCommand>?>(cmds);
+            }
 
             IEnumerable<Guid>? toRemove = null;
             var allRecords = issue.ConflictRecords.Select(c => (Uid: c.Uid, UTCLastUpdateTime: c.UTCLastUpdateTime, UTCCreationTime: c.UTCCreationTime))

@@ -6,6 +6,7 @@
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Targets;
 
     using Elvex.Toolbox.Abstractions.Conditions;
+    using Elvex.Toolbox.Models;
 
     using Orleans.Concurrency;
 
@@ -79,6 +80,12 @@
         /// </summary>
         [AlwaysInterleave]
         Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(IReadOnlyCollection<Guid> dataUids, GrainCancellationToken token);
+
+        /// <summary>
+        /// Gets all stored's data metadata (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>) associate to specific <paramref name="dataUids"/>
+        /// </summary>
+        [AlwaysInterleave]
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(IReadOnlyCollection<Guid> dataUids, GrainCancellationToken token);
 
         /// <summary>
         /// Gets all stored's data metadata (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
@@ -198,6 +205,12 @@
         Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(IReadOnlyCollection<Guid> dataUids, CancellationToken token);
 
         /// <summary>
+        /// Gets all stored's data metadata (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>) associate to specific <paramref name="dataUids"/>
+        /// </summary>
+        [AlwaysInterleave]
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(IReadOnlyCollection<Guid> dataUids, CancellationToken token);
+
+        /// <summary>
         /// Gets all stored's data metadata (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
         /// </summary>
         [AlwaysInterleave]
@@ -288,6 +301,12 @@
         Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token);
 
         /// <summary>
+        /// Gets all stored's data metadata (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>) associate to specific <paramref name="dataUids"/>
+        /// </summary>
+        [AlwaysInterleave]
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(CancellationToken token, params Guid[] dataUids);
+
+        /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/> (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
@@ -303,6 +322,11 @@
         /// Gets the stored data associate to specific <paramref name="dataUids"/>
         /// </summary>
         Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(CancellationToken token, params Guid[] dataUids);
+
+        /// <summary>
+        /// Gets the stored data associate to specific <paramref name="dataUids"/>
+        /// </summary>
+        Task<IReadOnlyCollection<DataRecordContainer>> GetStoredDataAsync(ConcretBaseType dataProjectionType, CancellationToken token, params Guid[] dataUids);
 
         #endregion
     }

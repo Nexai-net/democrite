@@ -3,7 +3,7 @@
 	<Import Project="..\..\..\\SharedFrameworkAssmblyInfo.props" />
 
 	<PropertyGroup>
-		<IsPackable>false</IsPackable>
+		<IsPackable>true</IsPackable>
 		<IsTestProject>false</IsTestProject>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>

@@ -58,7 +58,7 @@ namespace Democrite.Framework.Builders.Steps
         public static CallStepBuilder FromExpression<TSequenceVGrain, TOutput>(Expression expression,
                                                                                Type? input,
                                                                                Type configurationType,
-                                                                               object? configuration = null)
+                                                                               AccessExpressionDefinition? configuration)
              where TSequenceVGrain : IVGrain
         {
             var vgrainTrait = typeof(TSequenceVGrain);
@@ -103,7 +103,7 @@ namespace Democrite.Framework.Builders.Steps
             if (!parameters.Any(p => p.ParameterType.IsAssignableTo(s_ctxTraitType)))
                 throw new InvalidCastException(mthd + " MUST take at least IExcutionContext in argument");
 
-            if (configurationType != null && configuration != null)
+            if (configurationType != null && configuration != null && configuration.DirectObject is not null)
             {
                 var validators = mthd.GetCustomAttributes()
                                      .OfType<IExecutionContextConfigurationValidator>()
@@ -111,8 +111,9 @@ namespace Democrite.Framework.Builders.Steps
 
                 if (validators.Length > 0)
                 {
+                    var cfg = configuration.DirectObject.GetValue();
                     foreach (var validator in validators)
-                        validator.Validate(configuration, mthd);
+                        validator.Validate(cfg, mthd);
                 }
             }
 
@@ -124,7 +125,8 @@ namespace Democrite.Framework.Builders.Steps
         /// </summary>
         public override SequenceStageBaseDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
                                                                            bool preventReturn,
-                                                                           AccessExpressionDefinition? configurationAccess)
+                                                                           AccessExpressionDefinition? configurationAccess,
+                                                                           ConcretType? configurationFromContextDataType)
             where TContext : default
         {
             var def = this._mthd.GetAbstractMethod();
@@ -134,6 +136,7 @@ namespace Democrite.Framework.Builders.Steps
                                                    def,
                                                    this.Output?.GetAbstractType(),
                                                    configurationAccess,
+                                                   configurationFromContextDataType,
                                                    this._parameterAccessExpressions,
                                                    options: option,
                                                    preventReturn,

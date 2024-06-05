@@ -37,8 +37,8 @@ namespace Democrite.Framework.Node.Storages
         {
             s_monoWithEntityIdRepo = typeof(MemoryRepository<,>);
 
-            s_monoRORepo = typeof(MemoryReadOnlyRepository<,>);
-            s_monoROWithEntityIdRepo = typeof(MemoryReadOnlyRepository<,,>);
+            s_monoRORepo = typeof(MemoryReadOnlyRepository<>);
+            s_monoROWithEntityIdRepo = typeof(MemoryReadOnlyRepository<,>);
         }
 
         /// <summary>
@@ -70,7 +70,6 @@ namespace Democrite.Framework.Node.Storages
             if (entityIdInterface is null)
                 throw new InvalidCastException($"To get a repository on {entityType} with write access the entity MUST inherite from IEntityWithId<>");
 
-            bool addRegistry = (genericParams.Length == 1 && repositoryType == s_monoRORepo) || (genericParams.Length == 2 && repositoryWithEntityIdType == s_monoROWithEntityIdRepo);
             if (genericParams.Length == 2 && repositoryWithEntityIdType == s_monoROWithEntityIdRepo)
             {
                 instType = repositoryWithEntityIdType;
@@ -80,9 +79,6 @@ namespace Democrite.Framework.Node.Storages
             {
                 genericParams = genericParams.Concat(entityIdInterface.GetGenericArguments()).ToArray();
             }
-
-            if (addRegistry)
-                genericParams = genericParams.Append(typeof(IMemoryStorageRepositoryRegistryGrain<>).MakeGenericType(entityIdInterface.GetGenericArguments())).ToArray();
 
             instType = instType.MakeGenericType(genericParams);
 

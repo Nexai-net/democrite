@@ -47,7 +47,7 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
                                   ILogger logger)
         {
             var siloBuilder = democriteBuilderWizard.GetSiloBuilder();
-            siloBuilder.AddMemoryGrainStorageAsDefault();
+            siloBuilder.AddMemoryGrainStorageAsDefault(MemoryConfiguratorHelper.OptionConfigurator);
         }
         #endregion
     }

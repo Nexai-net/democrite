@@ -20,7 +20,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Exceptions
         public BlackboardPushValidationException(DataRecordContainer input,
                                                  string reason,
                                                  Exception? innerException)
-            : this(BlackboardErrorSR.BlackboardPushValidationException.WithArguments(reason, input.ToDebugDisplayName()),
+            : this(BlackboardErrorSR.BlackboardPushValidationException.Replace("\\n", Environment.NewLine).WithArguments(reason, input.ToDebugDisplayName()),
                    JsonSerializer.Serialize(input),
                    reason,
                    DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Data,

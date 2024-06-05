@@ -24,15 +24,13 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Initializes a new instance of the <see cref="SequenceStageFireSignalDefinition"/> class.
         /// </summary>
         public SequenceStageFireSignalDefinition(AbstractType? input,
-                                                 string? signalName,
-                                                 Guid? signalId,
+                                                 AccessExpressionDefinition signalInfo,
                                                  bool multi,
                                                  AccessExpressionDefinition? messageAccess,
                                                  Guid? uid = null)
             : base(StageTypeEnum.FireSignal, input, input, null, false, uid)
         {
-            this.SignalName = signalName;
-            this.SignalId = signalId;
+            this.SignalInfo = signalInfo;
             this.MessageAccess = messageAccess;
             this.Multi = multi;
         }
@@ -45,13 +43,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Gets the signal message.
         /// </summary>
         [DataMember]
-        public string? SignalName { get; }
-
-        /// <summary>
-        /// Gets the signal identifier.
-        /// </summary>
-        [DataMember] 
-        public Guid? SignalId { get; }
+        public AccessExpressionDefinition SignalInfo { get; }
 
         /// <summary>
         /// Gets the message access.
@@ -73,8 +65,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         protected override bool OnStageEquals(ISequenceStageDefinition other)
         {
             return other is SequenceStageFireSignalDefinition otherFire &&
-                   otherFire.SignalId == this.SignalId &&
-                   otherFire.SignalName == this.SignalName &&
+                   otherFire.SignalInfo == this.SignalInfo &&
                    otherFire.MessageAccess == this.MessageAccess &&
                    otherFire.Multi == this.Multi;
         }
@@ -82,8 +73,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// <inheritdoc />
         protected override int OnStageGetHashCode()
         {
-            return HashCode.Combine(this.SignalName,
-                                    this.SignalId,
+            return HashCode.Combine(this.SignalInfo,
                                     this.MessageAccess,
                                     this.Multi);
         }

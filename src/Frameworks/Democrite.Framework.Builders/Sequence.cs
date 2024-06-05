@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Builders
 {
     using Democrite.Framework.Builders.Sequences;
+    using Democrite.Framework.Core.Abstractions.Sequence;
 
     using System;
 
@@ -16,13 +17,19 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Creates a new instance of <see cref="SequenceBuilder"/>
         /// </summary>
-        public static ISequenceTriggerBuilder Build(string displayName, Guid? fixUid = null, Action<SequenceOption>? optionBuilder = null)
+        public static ISequenceTriggerBuilder Build(string displayName, Guid? fixUid = null, Action<ISequenceOptionBuilder>? optionBuilder = null)
         {
-            var option = new SequenceOption(fixUid, null);
+            SequenceOptionDefinition? option = null;
 
-            optionBuilder?.Invoke(option);
+            if (optionBuilder is not null)
+            {
+                var optBuilder = new SequenceOptionBuilder();
+                optionBuilder(optBuilder);
 
-            var builder = new SequenceBuilder(fixUid ?? Guid.NewGuid(), "SEQ:" + displayName, option.ToDefinition());
+                option = optBuilder.Build();
+            }
+
+            var builder = new SequenceBuilder(fixUid ?? Guid.NewGuid(), "SEQ:" + displayName, option);
             return builder;
         }
     }

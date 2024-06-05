@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Extensions.Mongo.Repositories
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
+
     using Elvex.Toolbox.Abstractions.Supports;
     using Elvex.Toolbox.Supports;
 
@@ -17,7 +18,6 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
 
     using Orleans.Providers.MongoDB.Configuration;
     using Orleans.Providers.MongoDB.Utils;
-    using Orleans.Runtime;
 
     using System;
     using System.Collections.Generic;
@@ -137,8 +137,11 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         {
             var entityPipeline = PrepareAggregatePipeline();
 
-            var results = await AppendMatchFromExpressionFilter(entityPipeline, filterExpression)
-                                              .ToListAsync(token);
+            var query = AppendMatchFromExpressionFilter(entityPipeline, filterExpression);
+
+            var str = query.ToString();
+
+            var results = await query.ToListAsync(token);
 
             return results;
         }

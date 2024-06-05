@@ -27,7 +27,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         /// Initializes a new instance of the <see cref="InvalidDecmocriteDefinitionException"/> class.
         /// </summary>
         public InvalidDecmocriteDefinitionException(IDefinition definition, IEnumerable<SimpleLog> errors, Exception? innerException = null)
-            : this(DemocriteExceptionSR.InvalidDefinitionErrorMessages.WithArguments(definition?.Uid, definition?.ToDebugDisplayName(), string.Join(Environment.NewLine, errors)),
+            : this(DemocriteExceptionSR.InvalidDefinitionErrorMessages.WithArguments(definition?.Uid, definition?.ToDebugDisplayName(), string.Join(Environment.NewLine, errors.Select(e => e.Message))),
                    definition?.Uid ?? Guid.Empty,
                    definition?.ToDebugDisplayName() ?? string.Empty,
                    DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Build, DemocriteErrorCodes.PartType.Definition, DemocriteErrorCodes.ErrorType.Invalid),

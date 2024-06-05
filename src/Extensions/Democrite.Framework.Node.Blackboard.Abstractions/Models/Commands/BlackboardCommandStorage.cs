@@ -36,6 +36,22 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     }
 
     /// <summary>
+    /// Command in charge to prepare a slot element element
+    /// </summary>
+    [Immutable]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public record class BlackboardCommandStoragePrepareRecord(Guid Uid, string LogicType, string DisplayName) : BlackboardCommandStorage(BlackboardCommandStorageActionTypeEnum.Prepare)
+    {
+        /// <inheritdoc />
+        public override string ToDebugDisplayName()
+        {
+            return $"[{this.StorageAction}] (Uid: {this.Uid}, LogicType : {this.LogicType}) {this.DisplayName}";
+        }
+    }
+
+    /// <summary>
     /// Command in charge to change status an element by his uid
     /// </summary>
     [Immutable]

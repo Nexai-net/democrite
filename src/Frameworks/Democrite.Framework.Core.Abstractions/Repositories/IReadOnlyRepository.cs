@@ -51,5 +51,10 @@ namespace Democrite.Framework.Core.Abstractions.Repositories
         /// Gets the first <see cref="TEntity"/> that match the condition <paramref name="filterExpression"/>
         /// </summary>
         ValueTask<IReadOnlyCollection<TEntity>> GetByIdsValueAsync([NotNull] IReadOnlyCollection<TEntityId> entityIds, CancellationToken token);
+
+        /// <summary>
+        /// Gets the first <see cref="TEntity"/> that match the condition <paramref name="filterExpression"/>
+        /// </summary>
+        ValueTask<IReadOnlyCollection<TProjection>> GetByIdsValueAsync<TProjection>([NotNull] IReadOnlyCollection<TEntityId> entityIds, CancellationToken token);
     }
 }

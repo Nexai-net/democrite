@@ -2,7 +2,7 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-namespace Democrite.Framework.Extensions.Mongo.Models
+namespace Democrite.Framework.Core.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Repositories;
@@ -19,6 +19,7 @@ namespace Democrite.Framework.Extensions.Mongo.Models
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public class EtagDefinitionContainer : IEntityWithId<Guid>
     {
@@ -44,18 +45,21 @@ namespace Democrite.Framework.Extensions.Mongo.Models
         /// Gets or sets the uid.
         /// </summary>
         [DataMember]
+        [Id(0)]
         public Guid Uid { get; }
 
         /// <summary>
         /// Gets or sets the etag.
         /// </summary>
         [DataMember]
+        [Id(1)]
         public string Etag { get; }
 
         /// <summary>
         /// Gets or sets the discriminator.
         /// </summary>
         [DataMember]
+        [Id(2)]
         public string Discriminator { get; }
 
         #endregion
@@ -97,6 +101,7 @@ namespace Democrite.Framework.Extensions.Mongo.Models
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class EtagDefinitionContainer<TDefinition> : EtagDefinitionContainer
         where TDefinition : class, IDefinition
@@ -151,6 +156,7 @@ namespace Democrite.Framework.Extensions.Mongo.Models
         /// Gets the definition.
         /// </summary>
         [DataMember]
+        [Id(0)]
         public TDefinition Definition { get; }
 
         #endregion

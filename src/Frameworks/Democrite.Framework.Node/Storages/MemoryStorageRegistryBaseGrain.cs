@@ -5,6 +5,8 @@
 namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+
+    using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Helpers;
     using Elvex.Toolbox.Models;
@@ -12,12 +14,15 @@ namespace Democrite.Framework.Node.Storages
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
 
+    using Orleans.Concurrency;
     using Orleans.Runtime;
     using Orleans.Storage;
 
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Runtime.CompilerServices;
+    using System.Threading;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -31,28 +36,49 @@ namespace Democrite.Framework.Node.Storages
     /// </summary>
     /// <seealso cref="Grain" />
     /// <seealso cref="IMemoryStorageRegistryGrain" />
-    internal abstract class MemoryStorageRegistryBaseGrain<TKey, TDataStored> : Grain, IMemoryStorageRegistryGrain<TKey>
+    internal abstract class MemoryStorageRegistryBaseGrain<TKey, TDataStored> : Grain, IMemoryStorageRegistryGrain
         where TKey : notnull, IEquatable<TKey>
     {
         #region Fields
 
-        private readonly Dictionary<string, Dictionary<TKey, MemoryStorageInfo>> _memoryStorageInfo;
+        private static readonly Type s_keyTraits;
+        private static readonly bool s_isKeyString;
 
-        private readonly ILogger<IMemoryStorageRegistryGrain<TKey>> _logger;
+        private readonly Dictionary<TKey, MemoryStorageInfo> _memoryStorageInfo;
+        private readonly IDedicatedObjectConverter _dedicatedObjectConverter;
+        private readonly ReaderWriterLockSlim _registryLocker;
+        private readonly ILogger<IMemoryStorageRegistryGrain> _logger;
 
         #endregion
 
         #region Ctor
 
         /// <summary>
+        /// Initializes the <see cref="MemoryStorageRegistryBaseGrain{TKey, TDataStored}"/> class.
+        /// </summary>
+        static MemoryStorageRegistryBaseGrain()
+        {
+            s_keyTraits = typeof(TKey);
+            s_isKeyString = s_keyTraits == typeof(string);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MemoryStorageRegistryBaseGrain"/> class.
         /// </summary>
         public MemoryStorageRegistryBaseGrain(IGrainFactory grainFactory,
-                                              ILogger<IMemoryStorageRegistryGrain<TKey>> logger)
+                                              ILogger<IMemoryStorageRegistryGrain> logger,
+                                              IDedicatedObjectConverter dedicatedObjectConverter)
         {
-            this._memoryStorageInfo = new Dictionary<string, Dictionary<TKey, MemoryStorageInfo>>();
+            this._dedicatedObjectConverter = dedicatedObjectConverter;
+
+            // Locker to access registry in thread safe mode due to ReadOnly And OneWay attribute on the grain method
+            // Those attribute are used to optimize the process and prevent deadlock
+
+            this._registryLocker = new ReaderWriterLockSlim();
+
+            this._memoryStorageInfo = new Dictionary<TKey, MemoryStorageInfo>();
             this.RegisterGrainFactory = grainFactory;
-            this._logger = logger ?? NullLogger<IMemoryStorageRegistryGrain<TKey>>.Instance;
+            this._logger = logger ?? NullLogger<IMemoryStorageRegistryGrain>.Instance;
         }
 
         #endregion
@@ -93,88 +119,126 @@ namespace Democrite.Framework.Node.Storages
         #region Methods
 
         /// <inheritdoc />
-        public Task ReportActionAsync(StoreActionEnum storeAction,
-                                      string stateName,
-                                      TKey fullkey,
-                                      AbstractType? type,
-                                      IReadOnlyCollection<AbstractType>? parentTypes,
-                                      GrainId? source,
-                                      GrainId? storageGrain)
+        [OneWay]
+        public Task ReportActionAsync<TReportKey>(StoreActionEnum storeAction,
+                                                  TReportKey fullkey,
+                                                  AbstractType? type,
+                                                  IReadOnlyCollection<AbstractType>? parentTypes,
+                                                  GrainId? source,
+                                                  GrainId? storageGrain)
+            where TReportKey : notnull, IEquatable<TReportKey>
         {
-            switch (storeAction)
+            var key = ConvertKey(fullkey);
+
+            if (key is null)
+                return Task.CompletedTask;
+
+            this._registryLocker.EnterWriteLock();
+            try
             {
-                case StoreActionEnum.Clear:
+                switch (storeAction)
+                {
+                    case StoreActionEnum.Clear:
 
-                    if (this._memoryStorageInfo.TryGetValue(stateName, out var kvDictionary))
-                        kvDictionary.Remove(fullkey);
+                        this._memoryStorageInfo.Remove(key);
+                        break;
 
-                    break;
+                    case StoreActionEnum.Read:
+                    case StoreActionEnum.Write:
+                    default:
+                        MemoryStorageInfo? memoryStorageInfo;
 
-                case StoreActionEnum.Read:
-                case StoreActionEnum.Write:
-                default:
-                    MemoryStorageInfo? memoryStorageInfo = null;
-                    Dictionary<TKey, MemoryStorageInfo>? dataStored = null;
-
-                    if (!this._memoryStorageInfo.TryGetValue(stateName, out dataStored))
-                    {
-                        dataStored = new Dictionary<TKey, MemoryStorageInfo>();
-                        this._memoryStorageInfo.Add(stateName, dataStored);
-                    }
-
-                    if (dataStored.TryGetValue(fullkey, out memoryStorageInfo) == false)
-                    {
-                        memoryStorageInfo = new MemoryStorageInfo()
+                        if (this._memoryStorageInfo.TryGetValue(key, out memoryStorageInfo) == false)
                         {
-                            Source = source,
-                            FullKey = fullkey
-                        };
-                        dataStored.Add(fullkey, memoryStorageInfo);
-                    }
+                            memoryStorageInfo = new MemoryStorageInfo()
+                            {
+                                Source = source,
+                                FullKey = key
+                            };
+                            this._memoryStorageInfo.Add(key, memoryStorageInfo);
+                        }
 
-                    memoryStorageInfo.Storage = storageGrain ?? throw new InvalidOperationException("Storage Grain must be reported for future request");
-                    memoryStorageInfo.StoredType = type ?? throw new InvalidOperationException("Stored object type must be reported for future request");
-                    memoryStorageInfo.ParentType = parentTypes?.ToHashSet() ?? throw new InvalidOperationException("Stored object parent Types must be reported for future request");
-                    break;
+                        memoryStorageInfo.Storage = storageGrain ?? throw new InvalidOperationException("Storage Grain must be reported for future request");
+                        memoryStorageInfo.StoredType = type ?? throw new InvalidOperationException("Stored object type must be reported for future request");
+                        memoryStorageInfo.ParentType = parentTypes?.ToHashSet() ?? throw new InvalidOperationException("Stored object parent Types must be reported for future request");
+                        break;
+                }
+            }
+            finally
+            {
+                this._registryLocker.ExitWriteLock();
             }
 
             return Task.CompletedTask;
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreDataAsync(string? stateName, [NotNull] AbstractType entityAbstract, GrainCancellationToken token)
+        [ReadOnly]
+        public Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreDataAsync([NotNull] AbstractType entityAbstract, GrainCancellationToken token)
         {
-            return GetAllStoreByFilderDataAsync(stateName, kv => kv.StoredType == entityAbstract || (kv.ParentType?.Contains(entityAbstract) ?? false), token);
+            return GetAllStoreByFilderDataAsync(kv => kv.StoredType == entityAbstract || (kv.ParentType?.Contains(entityAbstract) ?? false), token);
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreByKeysDataAsync([AllowNull] string? stateName, IReadOnlyCollection<TKey> fullkeys, GrainCancellationToken token)
+        [ReadOnly]
+        public Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreByKeysDataAsync<TReportKey>(IReadOnlyCollection<TReportKey> fullkeys, GrainCancellationToken token)
+            where TReportKey : notnull, IEquatable<TReportKey>
         {
-            return GetAllStoreByFilderDataAsync(stateName, kv => fullkeys.Contains(kv.FullKey), token);
+            IReadOnlyCollection<TKey>? sourceKeys;
+
+            if (fullkeys is IReadOnlyCollection<TKey> castKeys)
+            {
+                sourceKeys = castKeys;
+            }
+            else
+            {
+                sourceKeys = fullkeys.Select(k => ConvertKey(k))
+                                     .NotNull()
+                                     .ToArray();
+            }
+                
+
+            return GetAllStoreByFilderDataAsync(kv => sourceKeys.Contains(kv.FullKey), token);
         }
 
         #region Tools
 
+        /// <inheritdoc />
+        public override async Task OnActivateAsync(CancellationToken cancellationToken)
+        {
+            this.GetPrimaryKeyLong(out var stateNameAndStorageConfig);
+
+            MemoryStorageRegistryHelper.ExplodeRegistryExtKey(stateNameAndStorageConfig, out var stateName, out var storageConfig);
+
+            // One master by storage config
+            var masterGrain = this.GrainFactory.GetGrain<IMemoryStorageRegistryGrainMaster>(storageConfig);
+
+            await masterGrain.RegisterRegistryAsync(this.GetDedicatedGrainId<IMemoryStorageRegistryGrain>(), stateName);
+            await base.OnActivateAsync(cancellationToken);
+        }
+
         /// <summary>
         /// Gets all store by filder data.
         /// </summary>
-        private async Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreByFilderDataAsync([AllowNull] string? stateName,
-                                                                                                   Func<MemoryStorageInfo, bool> filter,
+        private async Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreByFilderDataAsync(Func<MemoryStorageInfo, bool> filter,
                                                                                                    GrainCancellationToken token)
         {
-            var data = this._memoryStorageInfo.Values.SelectMany(v => v.Values);
+            IReadOnlyCollection<MemoryStorageInfo> storageInfos;
 
-            if (!string.IsNullOrEmpty(stateName))
+            this._registryLocker.EnterReadLock();
+            try
             {
-                if (this._memoryStorageInfo.TryGetValue(stateName, out var specializedValues))
-                    data = specializedValues.Values;
-                else // If state filter is not founded then no result
-                    return EnumerableHelper<ReadOnlyMemory<byte>>.ReadOnly;
+                // OPTIM : Use immutable array to store data and prevent allocation if read is more often than write
+                storageInfos = this._memoryStorageInfo.Values.ToArray();
+            }
+            finally
+            {
+                this._registryLocker.ExitReadLock();
             }
 
-            var correspondingStoredDataTask = data.Where(filter)
-                                                  .Select(kv => RequestStoredDataAsync(kv.FullKey, kv))
-                                                  .ToArray();
+            var correspondingStoredDataTask = storageInfos.Where(filter)
+                                                          .Select(kv => RequestStoredDataAsync(kv.FullKey, kv))
+                                                          .ToArray();
 
             try
             {
@@ -221,6 +285,24 @@ namespace Democrite.Framework.Node.Storages
         /// Gets the entity bytes from <paramref name="dataStored"/>
         /// </summary>
         protected abstract ReadOnlyMemory<byte> GetEntityBytes(TDataStored dataStored);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private TKey? ConvertKey<TReportKey>(TReportKey k) where TReportKey : notnull, IEquatable<TReportKey>
+        {
+            if (EqualityComparer<TReportKey>.Default.Equals(k, default))
+                return default;
+
+            if (k is TKey kkey)
+                return kkey;
+
+            if (s_isKeyString)
+                return (TKey)(object)k.ToString()!;
+
+            if (this._dedicatedObjectConverter.TryConvert(k, s_keyTraits, out var convertItem))
+                return (TKey?)convertItem;
+
+            throw new InvalidCastException("Invalid Key in memory storage : " + k + " instead of " + s_keyTraits);
+        }
 
         #endregion
 

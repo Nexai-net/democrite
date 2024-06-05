@@ -27,7 +27,7 @@
         /// <remarks>
         ///   If the push is reject for security reason the result will be false. To identify the real reason look at the logs.
         /// </remarks>
-        Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, GrainCancellationToken token) where TDefinition : class, IDefinition;
+        Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, GrainCancellationToken token, bool preventNotification) where TDefinition : class, IDefinition;
 
         /// <summary>
         /// Push a definition in the dynamic system if doesn't exists
@@ -38,7 +38,7 @@
         /// <remarks>
         ///   If the push is reject for security reason the result will be false. To identify the real reason look at the logs.
         /// </remarks>
-        Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, GrainCancellationToken token) where TDefinition : class, IDefinition;
+        Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, GrainCancellationToken token, bool preventNotification) where TDefinition : class, IDefinition;
 
         /// <summary>
         /// Gets the etag version of the definition registry
@@ -82,7 +82,7 @@
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(GrainCancellationToken token, IReadOnlyCollection<Guid> uid) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(GrainCancellationToken token, IReadOnlyCollection<Guid> uid) where TDefinition : class, IDefinition;
 
         /// <summary>
         /// Get dynamic definition based filter
@@ -90,7 +90,7 @@
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(ConditionExpressionDefinition filter, GrainCancellationToken token) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(ConditionExpressionDefinition filter, GrainCancellationToken token) where TDefinition : class, IDefinition;
 
         #endregion
     }
@@ -111,7 +111,7 @@
         /// <remarks>
         ///   If the push is reject for security reason the result will be false. To identify the real reason look at the logs.
         /// </remarks>
-        Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, CancellationToken token) where TDefinition : class, IDefinition;
+        Task<bool> PushDefinitionAsync<TDefinition>(TDefinition definition, bool @override, IIdentityCard identity, CancellationToken token, bool preventNotification = false) where TDefinition : class, IDefinition;
 
         /// <summary>
         /// Push a definition in the dynamic system if doesn't exists
@@ -122,7 +122,7 @@
         /// <remarks>
         ///   If the push is reject for security reason the result will be false. To identify the real reason look at the logs.
         /// </remarks>
-        Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, CancellationToken token) where TDefinition : class, IDefinition;
+        Task<Guid> PushDefinitionAsync<TDefinition>(ConditionExpressionDefinition existFilter, TDefinition definition, IIdentityCard identity, CancellationToken token, bool preventNotification = false) where TDefinition : class, IDefinition;
 
         /// <summary>
         /// Gets the etag version of the definition registry
@@ -166,7 +166,7 @@
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(CancellationToken token, params Guid[] uid) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(CancellationToken token, params Guid[] uid) where TDefinition : class, IDefinition;
 
         /// <summary>
         /// Get dynamic definition based filter
@@ -174,16 +174,16 @@
         /// <returns>
         ///   <c>null<c> if the definition couldn't be founded
         /// </returns>
-        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, CancellationToken token) where TDefinition : IDefinition;
+        Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, CancellationToken token) where TDefinition : class, IDefinition;
 
         /// <inheritdoc cref="GetDefinitionAsync{TDefinition}(CancellationToken, Guid[])" />
-        Task<TDefinition?> GetDefinitionAsync<TDefinition>(Guid uid, CancellationToken token) where TDefinition : IDefinition;
+        Task<TDefinition?> GetDefinitionAsync<TDefinition>(Guid uid, CancellationToken token) where TDefinition : class, IDefinition;
 
         /// <inheritdoc cref="RemoveDefinitionAsync(IIdentityCard, CancellationToken, Guid[])" />
         Task<bool> RemoveDefinitionAsync(Guid definitionId, IIdentityCard identity, CancellationToken token);
 
         /// <inheritdoc cref="PushDefinitionAsync{TDefinition}(ConditionExpressionDefinition, TDefinition, IIdentityCard, CancellationToken)" />
-        Task<Guid> PushDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, TDefinition definition, IIdentityCard identity, CancellationToken token) where TDefinition : class, IDefinition;
+        Task<Guid> PushDefinitionAsync<TDefinition>(Expression<Func<TDefinition, bool>> filter, TDefinition definition, IIdentityCard identity, CancellationToken token, bool preventNotification = false) where TDefinition : class, IDefinition;
 
         #endregion
 

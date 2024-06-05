@@ -19,7 +19,8 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
     [ImmutableObject(true)]
     public record struct ExecutionCustomizationDescriptions(IReadOnlyCollection<StageVGrainRedirectionDescription> VGrainRedirection, 
                                                             IReadOnlyCollection<EndSignalFireDescription> SignalFireDescriptions,
-                                                            DeferredId? DeferredId);
+                                                            DeferredId? DeferredId,
+                                                            bool PreventSequenceExecutorStateStorage);
 
     /// <summary>
     /// Define a grain redirection dedicated to a specific stage and children

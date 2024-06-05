@@ -8,6 +8,8 @@ namespace Democrite.Framework.Core.Abstractions
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Models;
 
+    using Elvex.Toolbox.Models;
+
     using Microsoft.Extensions.Logging;
 
     /// <summary>
@@ -83,6 +85,11 @@ namespace Democrite.Framework.Core.Abstractions
         /// Try to the pusll data stored in the context carried throught flow execution
         /// </summary>
         TContextData? TryGetContextData<TContextData>(IDemocriteSerializer serializer) where TContextData : struct;
+
+        /// <summary>
+        /// Try to the pusll data stored in the context carried throught flow execution
+        /// </summary>
+        object? TryGetContextData(ConcretType type, IDemocriteSerializer serializer);
 
         /// <summary>
         /// Try to the push data stored in the context carried throught flow execution

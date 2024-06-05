@@ -6,7 +6,12 @@ namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Node.Abstractions.Repositories;
+    using Democrite.Framework.Node.Models;
+
+    using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Models;
+    using Microsoft.Extensions.Options;
+    using Orleans.Configuration;
 
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -18,7 +23,7 @@ namespace Democrite.Framework.Node.Storages
     /// <typeparam name="TEntityId">The type of the entity identifier.</typeparam>
     /// <seealso cref="IReadOnlyRepository{TEntity}" />
     [DebuggerDisplay("Memory (AllowWrite) Repository {s_entityTraits}[{s_entityIdTraits}] : {_storageName}")]
-    internal class MemoryRepository<TEntity, TEntityId> : MemoryReadOnlyRepository<TEntity, TEntityId, IMemoryStorageRepositoryRegistryGrain<TEntityId>>, IReadOnlyRepository<TEntity, TEntityId>, IRepository<TEntity, TEntityId>
+    internal class MemoryRepository<TEntity, TEntityId> : MemoryReadOnlyRepository<TEntity, TEntityId>, IReadOnlyRepository<TEntity, TEntityId>, IRepository<TEntity, TEntityId>
         where TEntity : IEntityWithId<TEntityId>
         where TEntityId : notnull, IEquatable<TEntityId>
 
@@ -28,6 +33,7 @@ namespace Democrite.Framework.Node.Storages
         private static readonly AbstractType s_entityType;
 
         private readonly IMemoryStorageRepositoryGrain<TEntityId>[] _dataBalancer;
+        private readonly IOptionsMonitor<MemoryGrainStorageOptions> _grainStorageOptions;
         private readonly IGrainFactory _grainFactory;
 
         #endregion
@@ -48,11 +54,14 @@ namespace Democrite.Framework.Node.Storages
         public MemoryRepository(string stateName,
                                 string storageName,
                                 IGrainFactory grainFactory,
-                                IDemocriteSerializer democriteSerializer)
-            : base(stateName, storageName, grainFactory, democriteSerializer)
+                                IOptionsMonitor<MemoryGrainStorageOptions> grainStorageOptions,
+                                IDemocriteSerializer democriteSerializer,
+                                IDedicatedObjectConverter dedicatedObjectConverter)
+            : base(stateName, storageName, grainFactory, democriteSerializer, dedicatedObjectConverter)
         {
+            this._grainStorageOptions = grainStorageOptions;
             this._grainFactory = grainFactory;
-            this._dataBalancer = new IMemoryStorageRepositoryGrain<TEntityId>[42];
+            this._dataBalancer = new IMemoryStorageRepositoryGrain<TEntityId>[this._grainStorageOptions.CurrentValue?.NumStorageGrains ?? 10];
         }
 
         #endregion

@@ -26,10 +26,12 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// Initializes a new instance of the <see cref="SequenceExecutorState"/> class.
         /// </summary>
         public SequenceExecutorState(Guid sequenceDefinitionId,
+                                     string sequenceDefinitionDisplayName,
                                      Guid flowUid,
                                      DateTime startAt,
                                      Guid? instanceId = null)
             : this(sequenceDefinitionId,
+                   sequenceDefinitionDisplayName,
                    flowUid,
                    instanceId ?? Guid.NewGuid(),
                    null,
@@ -45,6 +47,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
         [Newtonsoft.Json.JsonConstructor]
         [System.Text.Json.Serialization.JsonConstructor]
         internal SequenceExecutorState(Guid sequenceDefinitionId,
+                                       string sequenceDefinitionDisplayName,
                                        Guid flowUid,
                                        Guid instanceId,
                                        SequenceExecutorExecThreadState? mainThread,
@@ -52,6 +55,7 @@ namespace Democrite.Framework.Node.Abstractions.Models
                                        ExecutionCustomizationDescriptions? customization)
         {
             this.SequenceDefinitionId = sequenceDefinitionId;
+            this.SequenceDefinitionDisplayName = sequenceDefinitionDisplayName;
             this.InstanceId = instanceId;
             this.MainThread = mainThread;
             this.FlowUid = flowUid;
@@ -68,6 +72,12 @@ namespace Democrite.Framework.Node.Abstractions.Models
         /// </summary>
         [DataMember]
         public Guid SequenceDefinitionId { get; }
+
+        /// <summary>
+        /// Gets the sequence definition display name.
+        /// </summary>
+        [DataMember]
+        public string SequenceDefinitionDisplayName { get; private set; }
 
         /// <summary>
         /// Gets the flow identifier.
@@ -118,6 +128,8 @@ namespace Democrite.Framework.Node.Abstractions.Models
 
             if (this.Customization is null)
                 this.Customization = customization;
+
+            this.SequenceDefinitionDisplayName = sequenceDefinition.DisplayName;
 
             this.MainThread = new SequenceExecutorExecThreadState(executionContext.FlowUID,
                                                                   this.SequenceDefinitionId,

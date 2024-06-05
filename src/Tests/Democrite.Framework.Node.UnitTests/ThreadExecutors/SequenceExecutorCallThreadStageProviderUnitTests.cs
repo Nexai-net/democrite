@@ -6,12 +6,13 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
+    using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.ThreadExecutors;
-    using Elvex.Toolbox.Extensions;
-    using Elvex.Toolbox.Models;
     using Democrite.UnitTests.ToolKit;
     using Democrite.UnitTests.ToolKit.VGrains.Transformers;
+
+    using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
 
@@ -35,7 +36,9 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
         [Fact]
         public async Task SequenceExecutorCallThreadStageProvider_ExecAsync()
         {
-            using (var handler = new SequenceExecutorThreadStageCall())
+            var serializerMock = Substitute.For<IDemocriteSerializer>();
+
+            using (var handler = new SequenceExecutorThreadStageCall(serializerMock))
             {
                 var def = typeof(ITestExtractEmailTransformer).GetMethod(nameof(ITestExtractEmailTransformer.ExtractEmailsAsync))!.GetAbstractMethod();
 
@@ -43,6 +46,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                                                      (ConcretType)typeof(ITestExtractEmailTransformer).GetAbstractType(),
                                                                      def,
                                                                      typeof(string[]).GetAbstractType(),
+                                                                     null,
                                                                      null,
                                                                      null);
 

@@ -7,7 +7,7 @@ namespace Democrite.UnitTests.ToolKit.Extensions
     using AutoFixture;
 
     using Democrite.Framework.Core.Abstractions;
-    using Elvex.Toolbox.Helpers;
+    using Democrite.Framework.Core.Services;
     using Democrite.UnitTests.ToolKit.Helpers;
 
     using Microsoft.Extensions.DependencyInjection;
@@ -21,9 +21,6 @@ namespace Democrite.UnitTests.ToolKit.Extensions
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-    using Democrite.Framework.Node.Abstractions.Services;
-    using Democrite.Framework.Node.Services;
-    using Democrite.Framework.Core.Services;
 
     /// <summary>
     /// Extesions method that help auto fixture to generate grain

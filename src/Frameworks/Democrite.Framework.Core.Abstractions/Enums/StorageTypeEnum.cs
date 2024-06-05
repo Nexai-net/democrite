@@ -33,6 +33,11 @@ namespace Democrite.Framework.Core.Abstractions.Enums
         Repositories = 0x0008,
 
         /// <summary>
+        /// The dynamic definition storage
+        /// </summary>
+        DynamicDefinition = 0x0010,
+
+        /// <summary>
         /// Define a storage used to store democrite high system information.
         /// </summary>
         DemocriteAdmin = 0x8000,
@@ -40,7 +45,8 @@ namespace Democrite.Framework.Core.Abstractions.Enums
         All = StorageTypeEnum.Democrite | 
               StorageTypeEnum.Reminders | 
               StorageTypeEnum.Default |
-              StorageTypeEnum.Repositories | 
+              StorageTypeEnum.Repositories |
+              StorageTypeEnum.DynamicDefinition |
               StorageTypeEnum.DemocriteAdmin
     }
 }

@@ -5,7 +5,10 @@
 namespace Democrite.Framework.Node.Blackboard.Models
 {
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Events;
+
     using Elvex.Toolbox.Disposables;
+
+    using Orleans.Runtime;
 
     /// <summary>
     /// Execution context used as followup in the command execution
@@ -18,6 +21,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
         private readonly CancellationToken _cancellationToken;
         private readonly CommandExecutionContext? _parent;
         private readonly Queue<BlackboardEvent> _eventQueue = null!;
+        private readonly Queue<BlackboardEvent> _eventConsumed = null!;
 
         #endregion
 
@@ -39,6 +43,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
             : this(cancellationToken, depth: 0)
         {
             this._eventQueue = new Queue<BlackboardEvent>();
+            this._eventConsumed = new Queue<BlackboardEvent>();
         }
 
         /// <summary>
@@ -64,14 +69,6 @@ namespace Democrite.Framework.Node.Blackboard.Models
         }
 
         /// <summary>
-        /// Gets the events.
-        /// </summary>
-        public IReadOnlyCollection<BlackboardEvent> Events
-        {
-            get { return this._parent?.Events ?? this._eventQueue; }
-        }
-
-        /// <summary>
         /// Gets the depth.
         /// </summary>
         public int Depth { get; }
@@ -79,6 +76,26 @@ namespace Democrite.Framework.Node.Blackboard.Models
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Gets the events.
+        /// </summary>
+        public IReadOnlyCollection<BlackboardEvent> ConsumeEvents()
+        {
+            if (this._parent is not null)
+                return this._parent.ConsumeEvents();
+
+            lock (this._eventQueue)
+            {
+                var evts = this._eventQueue.ToArray();
+                this._eventQueue.Clear();
+
+                foreach (var evt in evts)
+                    this._eventConsumed.Enqueue(evt);
+
+                return evts;
+            }
+        }
 
         /// <summary>
         /// Push an event occured during the command execution
@@ -91,7 +108,10 @@ namespace Democrite.Framework.Node.Blackboard.Models
                 return;
             }
 
-            this._eventQueue.Enqueue(@event);
+            lock (this._eventQueue)
+            {
+                this._eventQueue.Enqueue(@event);
+            }
         }
 
         /// <summary>
@@ -99,8 +119,13 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// </summary>
         protected override void DisposeBegin()
         {
-            if (this._parent == null)
-                this._eventQueue.Clear();
+            if (this._parent is null)
+            {
+                lock (this._eventQueue)
+                {
+                    this._eventQueue.Clear();
+                }
+            }
 
             base.DisposeBegin();
         }

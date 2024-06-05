@@ -564,6 +564,12 @@ namespace Democrite.Framework.Configurations
                                                                                                             logger,
                                                                                                             defaultAutoKey: defaultMemoryAutoKey);
 
+            AutoConfigImpl<INodeDemocriteDynamicDefinitionsMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                                                indexedAssemblies,
+                                                                                                                (s) => s.GetServiceByKey<string, IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteDynamicDefinitionsConfigurationKey) != null,
+                                                                                                                ConfigurationNodeSectionNames.NodeDemocriteDynamicDefinitionsMemoryAutoConfigKey,
+                                                                                                                logger);
+
             AutoConfigImpl<INodeDefaultRepositoryMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
                                                                                                       indexedAssemblies,
                                                                                                       (s) => s.GetServiceByKey<string, IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey) != null,

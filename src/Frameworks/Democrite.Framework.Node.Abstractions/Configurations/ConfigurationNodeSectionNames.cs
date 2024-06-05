@@ -114,5 +114,20 @@ namespace Democrite.Framework.Configurations
         /// The root section in change to configured the definitions provider
         /// </summary>
         public const string NodeDefinitionProvider = ConfigurationSectionNames.Root + ConfigurationSectionNames.SectionSeparator + "Definitions";
+
+        /// <summary>
+        /// The section configuring the vgrain state memory
+        /// </summary>
+        public const string NodeDemocriteDynamicDefinitionsMemory = NodeStorages + ConfigurationSectionNames.SectionSeparator + "DynamicDefinitions";
+
+        /// <summary>
+        /// The section configuring the vgrain state memory
+        /// </summary>
+        public const string NodeDemocriteDynamicDefinitionsMemoryAutoConfigKey = NodeDemocriteDynamicDefinitionsMemory + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.AutoConfigKey;
+
+        /// <summary>
+        /// The node democrite system memory connection string
+        /// </summary>
+        public const string NodeDemocriteDynamicDefinitionsMemoryConnectionString = NodeDemocriteDynamicDefinitionsMemory + ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.ConnectionString;
     }
 }

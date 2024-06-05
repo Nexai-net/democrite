@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Surrogates;
 
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Models;
@@ -47,5 +48,76 @@ namespace Democrite.Framework.Core.Abstractions.Models
                                                  enable ?? this.IsEnabled,
                                                  this.Lost);
         }
+    }
+
+    [GenerateSerializer]
+    public record struct DynamicDefinitionMetaDataSurrogate(Guid Uid,
+                                                            string DisplayName,
+                                                            IConcretTypeSurrogate MainDefintionType,
+                                                            IReadOnlyCollection<IConcretTypeSurrogate> RelatedTypes,
+                                                            DateTime UTCCreate,
+                                                            string? CreatedBy,
+                                                            DateTime UTCLastUpdate,
+                                                            string? LastUpdateBy,
+                                                            bool IsEnabled,
+                                                            bool Lost);
+
+    [RegisterConverter]
+    public sealed class DynamicDefinitionMetaDataConverter : IConverter<DynamicDefinitionMetaData, DynamicDefinitionMetaDataSurrogate>
+    {
+        #region Ctor
+
+        /// <summary>
+        /// .cctors this instance.
+        /// </summary>
+        static DynamicDefinitionMetaDataConverter()
+        {
+            Instance = new DynamicDefinitionMetaDataConverter();
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the instance.
+        /// </summary>
+        public static DynamicDefinitionMetaDataConverter Instance { get; }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        public DynamicDefinitionMetaData ConvertFromSurrogate(in DynamicDefinitionMetaDataSurrogate surrogate)
+        {
+            return new DynamicDefinitionMetaData(surrogate.Uid,
+                                                 surrogate.DisplayName,
+                                                 (ConcretType)ConcretBaseTypeConverter.ConvertFromSurrogate(surrogate.MainDefintionType),
+                                                 surrogate.RelatedTypes?.Select(r => (ConcretType)ConcretBaseTypeConverter.ConvertFromSurrogate(r)).ToArray() ?? EnumerableHelper<ConcretType>.ReadOnlyArray,
+                                                 surrogate.UTCCreate,
+                                                 surrogate.CreatedBy,
+                                                 surrogate.UTCLastUpdate,
+                                                 surrogate.LastUpdateBy,
+                                                 surrogate.IsEnabled,
+                                                 surrogate.Lost);
+        }
+
+        /// <inheritdoc />
+        public DynamicDefinitionMetaDataSurrogate ConvertToSurrogate(in DynamicDefinitionMetaData value)
+        {
+            return new DynamicDefinitionMetaDataSurrogate(value.Uid,
+                                                          value.DisplayName,
+                                                          ConcretBaseTypeConverter.ConvertToSurrogate(value.MainDefintionType),
+                                                          value.RelatedTypes?.Select(r => ConcretBaseTypeConverter.ConvertToSurrogate(r)).ToArray() ?? EnumerableHelper<IConcretTypeSurrogate>.ReadOnlyArray,
+                                                          value.UTCCreate,
+                                                          value.CreatedBy,
+                                                          value.UTCLastUpdate,
+                                                          value.LastUpdateBy,
+                                                          value.IsEnabled,
+                                                          value.Lost);
+        }
+
+        #endregion
     }
 }

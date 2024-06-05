@@ -50,54 +50,53 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        TBuilderOutput FireSignal(string signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput> FireSignal(string signalName);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        TBuilderOutput FireSignal(Guid signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput> FireSignal(Guid signalName);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        TBuilderOutput FireSignal(SignalId signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput> FireSignal(SignalId signalName);
+    }
+
+    /// <summary>
+    /// Builder dedicated to signal setup in the sequence
+    /// </summary>
+    public interface ISequencePipelineSignalBuilder<TBuilderOutput, TPreviousMessage>
+    {
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(string signalName);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        TBuilderOutput FireSignal<TMessage>(string signalName, TMessage message)
-            where TMessage : struct;
-
-        /// <summary>
-        /// Fire a designated signal one by message
-        /// </summary>
-        TBuilderOutput FireSignals<TMessage>(string signalName, IEnumerable<TMessage> messages)
-            where TMessage : struct;
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Guid signalName);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        TBuilderOutput FireSignal<TMessage>(Guid signalName, TMessage message)
-            where TMessage : struct;
-
-        /// <summary>
-        /// Fire a designated signal one by message
-        /// </summary>
-        TBuilderOutput FireSignals<TMessage>(Guid signalName, IEnumerable<TMessage> messages)
-            where TMessage : struct;
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(SignalId signalName);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        TBuilderOutput FireSignal<TMessage>(SignalId signalName, TMessage message)
-            where TMessage : struct;
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Expression<Func<TPreviousMessage, string>> signalName);
 
         /// <summary>
-        /// Fire a designated signal one by message
+        /// Fire a designated signal
         /// </summary>
-        TBuilderOutput FireSignals<TMessage>(SignalId signalName, IEnumerable<TMessage> messages)
-            where TMessage : struct;
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Expression<Func<TPreviousMessage, Guid>> signalName);
 
+        /// <summary>
+        /// Fire a designated signal
+        /// </summary>
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Expression<Func<TPreviousMessage, SignalId>> signalName);
     }
 
     /// <summary>
@@ -154,9 +153,8 @@ namespace Democrite.Framework.Builders.Sequences
     /// </summary>
     /// <typeparam name="TPreviousMessage">The type of the previous message.</typeparam>
     public interface ISequencePipelineBuilder<TPreviousMessage> : ISequencePipelineBaseBuilder,
-                                                                  ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TPreviousMessage>>,
-                                                                  ISequencePipelineDataContextlBuilder<ISequencePipelineBuilder<TPreviousMessage>>
-
+                                                                  ISequencePipelineDataContextlBuilder<ISequencePipelineBuilder<TPreviousMessage>>,
+                                                                  ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TPreviousMessage>, TPreviousMessage>
     {
         /// <summary>
         /// Selects the specified data as input
@@ -173,42 +171,6 @@ namespace Democrite.Framework.Builders.Sequences
         /// Add a new stage that inject in content to <see cref="IExecutionContext"/>
         /// </summary>
         ISequencePipelineBuilder<TPreviousMessage> PushToContext<TInfo>(Expression<Func<TPreviousMessage, TInfo>> data, bool @override = true);
-
-        /// <summary>
-        /// Fire a designated signal
-        /// </summary>
-        ISequencePipelineBuilder<TPreviousMessage> FireSignal<TMessage>(string signalName, Expression<Func<TPreviousMessage, TMessage>> message)
-            where TMessage : struct;
-
-        /// <summary>
-        /// Fire a designated signal one by message
-        /// </summary>
-        ISequencePipelineBuilder<TPreviousMessage> FireSignals<TMessage>(string signalName, Expression<Func<TPreviousMessage, IEnumerable<TMessage>>> messages)
-            where TMessage : struct;
-
-        /// <summary>
-        /// Fire a designated signal
-        /// </summary>
-        ISequencePipelineBuilder<TPreviousMessage> FireSignal<TMessage>(Guid signalName, Expression<Func<TPreviousMessage, TMessage>> message)
-            where TMessage : struct;
-
-        /// <summary>
-        /// Fire a designated signal one by message
-        /// </summary>
-        ISequencePipelineBuilder<TPreviousMessage> FireSignals<TMessage>(Guid signalId, Expression<Func<TPreviousMessage, IEnumerable<TMessage>>> messages)
-            where TMessage : struct;
-
-        /// <summary>
-        /// Fire a designated signal
-        /// </summary>
-        ISequencePipelineBuilder<TPreviousMessage> FireSignal<TMessage>(SignalId signalName, Expression<Func<TPreviousMessage, TMessage>> message)
-            where TMessage : struct;
-
-        /// <summary>
-        /// Fire a designated signal one by message
-        /// </summary>
-        ISequencePipelineBuilder<TPreviousMessage> FireSignals<TMessage>(SignalId signalId, Expression<Func<TPreviousMessage, IEnumerable<TMessage>>> messages)
-            where TMessage : struct;
 
         /// <summary>
         /// Add a new converter <see cref="ITransformerConvertVGrain{TInput}"/> in the pipeline to transform input into output

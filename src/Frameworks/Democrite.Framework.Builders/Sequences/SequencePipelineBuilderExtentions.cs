@@ -84,82 +84,20 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Fire a designated signal and relay through this signal the current message (Attention this one must be a structure)
         /// </summary>
-        public static ISequencePipelineBuilder<TInputMessage> FireSignalRelayMessage<TInputMessage>(this ISequencePipelineBuilder<TInputMessage> stageBuilder, string signalName)
-            where TInputMessage : struct
+        public static TSequenceStageBuilder RelayMessage<TPreviousMessage, TSequenceStageBuilder>(this ISequencePipelineStageFireSignalBuilder<TSequenceStageBuilder, TPreviousMessage> stageBuilder)
+            where TPreviousMessage : struct
         {
-            return stageBuilder.FireSignal(signalName, i => i);
+            return stageBuilder.Message<TPreviousMessage>(m => m);
         }
 
         /// <summary>
         /// Fire a designated signal and relay through this signal the current message (Attention this one must be a structure)
         /// </summary>
-        public static ISequencePipelineBuilder<IEnumerable<TInputMessage>> FireSignalRelayMessages<TInputMessage>(this ISequencePipelineBuilder<IEnumerable<TInputMessage>> stageBuilder, string signalName)
-            where TInputMessage : struct
+        public static TSequenceStageBuilder RelayMessages<TPreviousMessage, TSequenceStageBuilder, TMessage>(this ISequencePipelineStageFireSignalBuilder<TSequenceStageBuilder, TPreviousMessage> stageBuilder, TMessage _)
+            where TPreviousMessage : IEnumerable<TMessage>
+            where TMessage : struct
         {
-            return stageBuilder.FireSignals(signalName, i => i);
-        }
-
-        /// <summary>
-        /// Fire a designated signal and relay through this signal the current message (Attention this one must be a structure)
-        /// </summary>
-        public static ISequencePipelineBuilder<IReadOnlyCollection<TInputMessage>> FireSignalRelayMessages<TInputMessage>(this ISequencePipelineBuilder<IReadOnlyCollection<TInputMessage>> stageBuilder, string signalName)
-            where TInputMessage : struct
-        {
-            return stageBuilder.FireSignals(signalName, i => i);
-        }
-
-        /// <summary>
-        /// Fire a designated signal and relay through this signal the current message (Attention this one must be a structure)
-        /// </summary>
-        public static ISequencePipelineBuilder<TInputMessage> FireSignalRelayMessage<TInputMessage>(this ISequencePipelineBuilder<TInputMessage> stageBuilder, Guid signalId)
-            where TInputMessage : struct
-        {
-            return stageBuilder.FireSignal(signalId, i => i);
-        }
-
-        /// <summary>
-        /// Fire a designated signal and relay through this signal the current message (Attention this one must be a structure)
-        /// </summary>
-        public static ISequencePipelineBuilder<IEnumerable<TInputMessage>> FireSignalRelayMessages<TInputMessage>(this ISequencePipelineBuilder<IEnumerable<TInputMessage>> stageBuilder, Guid signalId)
-            where TInputMessage : struct
-        {
-            return stageBuilder.FireSignals(signalId, i => i);
-        }
-
-        /// <summary>
-        /// Fire a designated signal and relay through this signal the current message (Attention this one must be a structure)
-        /// </summary>
-        public static ISequencePipelineBuilder<IReadOnlyCollection<TInputMessage>> FireSignalRelayMessages<TInputMessage>(this ISequencePipelineBuilder<IReadOnlyCollection<TInputMessage>> stageBuilder, Guid signalId)
-            where TInputMessage : struct
-        {
-            return stageBuilder.FireSignals(signalId, i => i);
-        }
-
-        /// <summary>
-        /// Fire a designated signal and relay through this signal the current message (Attention this one must be a structure)
-        /// </summary>
-        public static ISequencePipelineBuilder<TInputMessage> FireSignalRelayMessage<TInputMessage>(this ISequencePipelineBuilder<TInputMessage> stageBuilder, SignalId signalId)
-            where TInputMessage : struct
-        {
-            return stageBuilder.FireSignal(signalId, i => i);
-        }
-
-        /// <summary>
-        /// Fire a designated signal and relay through this signal the current message (Attention this one must be a structure)
-        /// </summary>
-        public static ISequencePipelineBuilder<IEnumerable<TInputMessage>> FireSignalRelayMessages<TInputMessage>(this ISequencePipelineBuilder<IEnumerable<TInputMessage>> stageBuilder, SignalId signalId)
-            where TInputMessage : struct
-        {
-            return stageBuilder.FireSignals(signalId, i => i);
-        }
-
-        /// <summary>
-        /// Fire a designated signal and relay through this signal the current message (Attention this one must be a structure)
-        /// </summary>
-        public static ISequencePipelineBuilder<IReadOnlyCollection<TInputMessage>> FireSignalRelayMessages<TInputMessage>(this ISequencePipelineBuilder<IReadOnlyCollection<TInputMessage>> stageBuilder, SignalId signalId)
-            where TInputMessage : struct
-        {
-            return stageBuilder.FireSignals(signalId, i => i);
+            return stageBuilder.Messages<TMessage, TPreviousMessage>(m => m);
         }
     }
 }

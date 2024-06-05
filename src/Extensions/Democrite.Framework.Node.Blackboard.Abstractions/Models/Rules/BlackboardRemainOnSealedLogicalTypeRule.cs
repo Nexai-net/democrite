@@ -30,7 +30,6 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules
         protected override bool OnEquals(BlackboardLogicalTypeBaseRule other)
         {
             return other is BlackboardRemainOnSealedLogicalTypeRule;
-            ;
         }
 
         /// <inheritdoc />

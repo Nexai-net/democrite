@@ -462,7 +462,7 @@ namespace Democrite.Framework.Node.Signals.Doors
 
             return SignalSource.Create(fireId,
                                        doordDef.DoorId.Uid,
-                                       doordDef.DoorId.Name,
+                                       doordDef.DoorId.Name ?? doordDef.DoorId.Uid.ToString(),
                                        true,
                                        this.TimeHandler.UtcNow,
                                        GetGrainId(),
@@ -531,12 +531,12 @@ namespace Democrite.Framework.Node.Signals.Doors
         }
 
         /// <inheritdoc />
-        protected sealed override async Task PullStateAsync(CancellationToken ct)
+        protected sealed override async ValueTask<DoorHandlerState> OnPullStateAsync(CancellationToken ct)
         {
-            await this._concurrencyStateLock.WaitAsync();
+            await this._concurrencyStateLock.WaitAsync(ct);
             try
             {
-                await base.PullStateAsync(ct);
+                return await base.OnPullStateAsync(ct);
             }
             finally
             {
@@ -545,12 +545,12 @@ namespace Democrite.Framework.Node.Signals.Doors
         }
 
         /// <inheritdoc />
-        protected sealed override async Task PushStateAsync(DoorHandlerState newState, CancellationToken ct)
+        protected sealed override async ValueTask OnPushStateAsync(DoorHandlerState newState, CancellationToken ct)
         {
-            await this._concurrencyStateLock.WaitAsync();
+            await this._concurrencyStateLock.WaitAsync(ct);
             try
             {
-                await base.PushStateAsync(newState, ct);
+                await base.OnPushStateAsync(newState, ct);
             }
             finally
             {

@@ -9,6 +9,8 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions.Sequence;
 
     using Elvex.Toolbox;
+    using Elvex.Toolbox.Abstractions.Expressions;
+    using Elvex.Toolbox.Models;
 
     using System;
     using System.Linq.Expressions;
@@ -27,8 +29,8 @@ namespace Democrite.Framework.Builders.Sequences
         private readonly Action<ISequencePipelineStageConfigurator>? _configAction;
         private readonly ISequencePipelineBaseBuilder _sequenceBuilder;
 
-        private readonly Expression<Func<TInput, TConfiguration>>? _configurationProvider;
-        private readonly TConfiguration? _configuration;
+        private readonly AccessExpressionDefinition? _configuration;
+        private readonly ConcretType? _configurationFromContextDataType;
 
         private CallStepBuilder? _callDefinition;
 
@@ -41,14 +43,14 @@ namespace Democrite.Framework.Builders.Sequences
         /// </summary>
         public SequencePipelineVGrainStageCallBuilder(ISequencePipelineBaseBuilder sequenceBuilder,
                                                       Action<ISequencePipelineStageConfigurator>? configAction,
-                                                      TConfiguration? configuration = default,
-                                                      Expression<Func<TInput, TConfiguration>>? configurationProvider = null)
+                                                      AccessExpressionDefinition? configuration = null,
+                                                      ConcretType? configurationFromContextDataType = null)
             : base(sequenceBuilder, configAction)
         {
             this._sequenceBuilder = sequenceBuilder;
             this._configAction = configAction;
             this._configuration = configuration;
-            this._configurationProvider = configurationProvider;
+            this._configurationFromContextDataType = configurationFromContextDataType;
         }
 
         #endregion
@@ -82,13 +84,13 @@ namespace Democrite.Framework.Builders.Sequences
         /// <inheritdoc />
         ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx> ISequencePipelineStageCallBuilder<TVGrain>.Configure<TCtx>(TCtx context)
         {
-            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, context);
+            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, context.CreateAccess());
         }
 
         /// <inheritdoc />
         ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx, TInput> ISequencePipelineStageCallBuilder<TInput, TVGrain>.Configure<TCtx>(TCtx context)
         {
-            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, context);
+            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, context.CreateAccess());
         }
 
         /// <summary>
@@ -96,7 +98,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// </summary>
         public ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx, TInput> ConfigureFromInput<TCtx>(Expression<Func<TInput, TCtx>> executionConfiguration)
         {
-            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, default, executionConfiguration);
+            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, executionConfiguration.CreateAccess());
         }
 
         /// <summary>
@@ -108,6 +110,24 @@ namespace Democrite.Framework.Builders.Sequences
         public ISequencePipelineStageConfiguredCallBuilder<TVGrain, TInput, TInput> UseInputAsConfiguration()
         {
             return ConfigureFromInput(i => i);
+        }
+
+        /// <inheritdoc />
+        public ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx, TInput>  ConfigureFromContext<TContextData, TCtx>(Expression<Func<TContextData, TCtx>> executionConfiguration)
+        {
+            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder,
+                                                                                     this._configAction,
+                                                                                     executionConfiguration.CreateAccess(),
+                                                                                     (ConcretType)typeof(TContextData).GetAbstractType());
+        }
+
+        /// <inheritdoc />
+        ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx> ISequencePipelineStageCallBuilder<TVGrain>.ConfigureFromContext<TContextData, TCtx>(Expression<Func<TContextData, TCtx>> executionConfiguration)
+        {
+            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder,
+                                                                                     this._configAction,
+                                                                                     executionConfiguration.CreateAccess(),
+                                                                                     (ConcretType)typeof(TContextData).GetAbstractType());
         }
 
         /// <inheritdoc />
@@ -142,12 +162,11 @@ namespace Democrite.Framework.Builders.Sequences
         {
             ArgumentNullException.ThrowIfNull(this._callDefinition);
 
-            var access = this._configurationProvider?.CreateAccess() ?? this._configuration?.CreateAccess();
-
             var option = BuildConfigDefinition();
             return this._callDefinition.ToDefinition<TConfiguration>(option,
                                                                      this.ConfigPreventOutput,
-                                                                     access);
+                                                                     this._configuration,
+                                                                     this._configurationFromContextDataType);
         }
 
         #region Tools
@@ -159,8 +178,8 @@ namespace Democrite.Framework.Builders.Sequences
         {
             this._callDefinition = CallStepBuilder.FromExpression<TVGrain, TOutputMessage>(expr,
                                                                                            input,
-                                                                                           this._configuration != null ? typeof(TConfiguration) : NoneType.Trait,
-                                                                                           this._configurationProvider is null ? this._configuration : null);
+                                                                                           this._configuration?.TargetType?.ToType() ?? NoneType.Trait,
+                                                                                           this._configuration);
 
             return new SequencePipelineVGrainStageBaseBuilder<TVGrain, TOutputMessage>(this);
         }

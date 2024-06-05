@@ -17,16 +17,16 @@ namespace Democrite.Framework.Builders
         /// Start building stream definition
         /// </summary>
         /// <returns></returns>
-        public static StreamQueueDefinition Create(string streamConfiguration, string streamKey, string? streamCustomKey, Guid? fixUid = null)
+        public static StreamQueueDefinition Create(string streamConfiguration, string streamNamespace, string streamKey, Guid? fixUid = null)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(streamConfiguration);
-            ArgumentNullException.ThrowIfNullOrEmpty(streamCustomKey);
+            ArgumentNullException.ThrowIfNullOrEmpty(streamKey);
 
             return new StreamQueueDefinition(fixUid ?? Guid.NewGuid(),
-                                             $"{streamConfiguration}/{streamKey}" + (string.IsNullOrEmpty(streamCustomKey) ? "" : "+" + streamCustomKey),
+                                             $"{streamConfiguration}/{streamNamespace}" + "+" + streamKey,
                                              streamConfiguration,
+                                             streamNamespace,
                                              streamKey,
-                                             streamCustomKey,
                                              null);
         }
 
@@ -34,16 +34,16 @@ namespace Democrite.Framework.Builders
         /// Start building stream definition
         /// </summary>
         /// <returns></returns>
-        public static StreamQueueDefinition Create(string streamConfiguration, string streamKey, Guid? streamCustomUid, Guid? fixUid = null)
+        public static StreamQueueDefinition Create(string streamConfiguration, string streamNamespace, Guid streamKey, Guid? fixUid = null)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(streamConfiguration);
 
             return new StreamQueueDefinition(fixUid ?? Guid.NewGuid(),
-                                             $"{streamConfiguration}/{streamKey}" + (streamCustomUid is null ? "" : "+" + streamCustomUid),
+                                             $"{streamConfiguration}/{streamNamespace}" + "+" + streamKey,
                                              streamConfiguration,
-                                             streamKey,
+                                             streamNamespace,
                                              null,
-                                             streamCustomUid);   
+                                             streamKey);
         }
 
         /// <summary>
@@ -52,9 +52,9 @@ namespace Democrite.Framework.Builders
         /// <remarks>
         ///     Record from default stream <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
         /// </remarks>
-        public static StreamQueueDefinition CreateFromDefaultStream(string streamKey, string? streamCustomKey = null, Guid? fixUid = null)
+        public static StreamQueueDefinition CreateFromDefaultStream(string streamKey, Guid? fixUid = null)
         {
-            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, streamKey, streamCustomKey, fixUid);
+            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, "global", streamKey, fixUid);
         }
 
         /// <summary>
@@ -63,9 +63,31 @@ namespace Democrite.Framework.Builders
         /// <remarks>
         ///     Record from default stream <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
         /// </remarks>
-        public static StreamQueueDefinition CreateFromDefaultStream(string streamKey, Guid? streamCustomUid = null, Guid? fixUid = null)
+        public static StreamQueueDefinition CreateFromDefaultStream(string streamNamespace, string streamKey, Guid? fixUid = null)
         {
-            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, streamKey, streamCustomUid, fixUid);
+            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, streamNamespace, streamKey, fixUid);
+        }
+
+        /// <summary>
+        /// Get a new <see cref="StreamQueueDefinition"/> on default streamConfiguration <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
+        /// </summary>
+        /// <remarks>
+        ///     Record from default stream <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
+        /// </remarks>
+        public static StreamQueueDefinition CreateFromDefaultStream(Guid streamKey, Guid? fixUid = null)
+        {
+            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, "global", streamKey, fixUid);
+        }
+
+        /// <summary>
+        /// Get a new <see cref="StreamQueueDefinition"/> on default streamConfiguration <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
+        /// </summary>
+        /// <remarks>
+        ///     Record from default stream <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
+        /// </remarks>
+        public static StreamQueueDefinition CreateFromDefaultStream(string streamNamespace, Guid streamKey, Guid? fixUid = null)
+        {
+            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, streamNamespace, streamKey, fixUid);
         }
     }
 }

@@ -18,6 +18,7 @@ using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
 [assembly: AutoConfigurator<INodeReminderStateMemoryAutoConfigurator, AutoReminderMongoConfigurator>()]
 [assembly: AutoConfigurator<INodeCustomGrainMemoryAutoConfigurator, AutoCustomGrainMemoryMongoConfigurator>()]
 [assembly: AutoConfigurator<INodeCustomDefinitionProviderAutoConfigurator, AutoCustomDefinitionProviderMongoConfigurator>()]
+[assembly: AutoConfigurator<INodeDemocriteDynamicDefinitionsMemoryAutoConfigurator, AutoDemocriteDynamicDefinitionsMongoConfigurator>()]
 
 // Repository
 [assembly: AutoConfigurator<INodeCustomRepositoryMemoryAutoConfigurator, AutoCustomRepositoryMongoConfigurator>()]

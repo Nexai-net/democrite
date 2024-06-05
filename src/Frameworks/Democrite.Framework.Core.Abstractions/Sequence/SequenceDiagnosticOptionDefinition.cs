@@ -6,12 +6,21 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
 {
     using Elvex.Toolbox;
 
+    using Microsoft.Extensions.Logging;
+
+    using System.ComponentModel;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.Runtime.Serialization;
 
     /// <summary>
     /// Sequence option realted to diagnostic
     /// </summary>
+    [Immutable]
+    [DataContract]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
     public sealed class SequenceDiagnosticOptionDefinition : Equatable<SequenceDiagnosticOptionDefinition>
     {
         #region Ctor
@@ -21,15 +30,16 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// </summary>
         static SequenceDiagnosticOptionDefinition()
         {
-            Default = new SequenceDiagnosticOptionDefinition(Debugger.IsAttached);
+            Default = new SequenceDiagnosticOptionDefinition(Debugger.IsAttached, LogLevel.Information);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceDiagnosticOptionDefinition"/> class.
         /// </summary>
-        public SequenceDiagnosticOptionDefinition(bool saveAllStageInfo)
+        public SequenceDiagnosticOptionDefinition(bool saveAllStageInfo, LogLevel minLogLevel)
         {
             this.SaveAllStageInfo = saveAllStageInfo;
+            this.MinLogLevel = minLogLevel;
         }
 
         #endregion
@@ -47,7 +57,16 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// <value>
         ///   <c>true</c> if [save all stage information]; otherwise, <c>false</c>.
         /// </value>
+        [Id(0)]
+        [DataMember]
         public bool SaveAllStageInfo { get; }
+
+        /// <summary>
+        /// Gets the minimum log level.
+        /// </summary>
+        [Id(1)]
+        [DataMember]
+        public LogLevel MinLogLevel { get; }
 
         #endregion
 
@@ -56,13 +75,14 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// <inheritdoc />
         protected override bool OnEquals([NotNull] SequenceDiagnosticOptionDefinition other)
         {
-            return this.SaveAllStageInfo == other.SaveAllStageInfo;
+            return this.SaveAllStageInfo == other.SaveAllStageInfo &&
+                   this.MinLogLevel == other.MinLogLevel;
         }
 
         /// <inheritdoc />
         protected override int OnGetHashCode()
         {
-            return this.SaveAllStageInfo.GetHashCode();
+            return HashCode.Combine(this.SaveAllStageInfo, this.MinLogLevel);
         }
 
         #endregion
