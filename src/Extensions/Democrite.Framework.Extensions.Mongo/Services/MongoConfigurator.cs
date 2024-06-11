@@ -10,13 +10,13 @@ namespace Democrite.Framework.Extensions.Mongo.Services
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection.Extensions;
 
     using MongoDB.Driver;
 
     using Orleans.Providers.MongoDB.Configuration;
     using Orleans.Providers.MongoDB.StorageProviders.Serializers;
     using Orleans.Providers.MongoDB.Utils;
-    using Orleans.Runtime;
 
     using System;
 
@@ -27,25 +27,15 @@ namespace Democrite.Framework.Extensions.Mongo.Services
     {
         #region Fields
 
-        private static readonly Dictionary<IServiceCollection, MongoConfigurator> s_instances;
-
         private const string URI_TYPE = "mongodb://";
 
-        private static MongoDBOptions? s_lastOptionSetups;
-        private static int s_connectionInfoOrder;
-        private static long s_defaultMongoServices;
+        private MongoDBOptions? _lastOptionSetups;
+        private int _connectionInfoOrder;
+        private long _defaultMongoServices;
 
         #endregion
 
         #region Ctor
-
-        /// <summary>
-        /// Initializes the <see cref="MongoConfigurator"/> class.
-        /// </summary>
-        static MongoConfigurator()
-        {
-            s_instances = new Dictionary<IServiceCollection, MongoConfigurator>();
-        }
 
         /// <summary>
         /// Prevents a default instance of the <see cref="MongoConfigurator"/> class from being created.
@@ -66,11 +56,13 @@ namespace Democrite.Framework.Extensions.Mongo.Services
         /// </remarks>
         public static MongoConfigurator GetInstance(IServiceCollection serviceCollection)
         {
-            if (s_instances.TryGetValue(serviceCollection, out var cfg))
+            var mongoCfg = serviceCollection.GetServiceByKey<string, MongoConfigurator>(nameof(MongoConfigurator));
+
+            if (mongoCfg is not null && mongoCfg.KeyedImplementationInstance is MongoConfigurator cfg)
                 return cfg;
 
             var newCfg = new MongoConfigurator();
-            s_instances.Add(serviceCollection, newCfg);
+            serviceCollection.TryAddKeyedSingleton<MongoConfigurator>(nameof(MongoConfigurator), newCfg);
             return newCfg;
         }
 
@@ -88,14 +80,14 @@ namespace Democrite.Framework.Extensions.Mongo.Services
             connectionOption.Key = key;
 
             if (string.IsNullOrEmpty(option.DatabaseName))
-                option.DatabaseName = s_lastOptionSetups?.DatabaseName ?? nameof(Democrite).ToLower();
+                option.DatabaseName = _lastOptionSetups?.DatabaseName ?? nameof(Democrite).ToLower();
 
             if (string.IsNullOrEmpty(connectionString))
                 connectionOption.ConnectionString = configuration.GetSection(connectionStringSectionPath).Get<string>();
             else
                 connectionOption.ConnectionString = connectionString;
 
-            s_lastOptionSetups = MongoConfigurator.MapOption<MongoDBOptions>(option);
+            _lastOptionSetups = MongoConfigurator.MapOption<MongoDBOptions>(option);
 
             var defaultOpt = serviceCollection.FirstOrDefault(s => s.IsKeyedService == false &&
                                                                    s.ServiceType == typeof(MongoDBConnectionOptions) &&
@@ -105,7 +97,7 @@ namespace Democrite.Framework.Extensions.Mongo.Services
             if (defaultOpt != null && defaultOpt.ImplementationInstance is MongoDBConnectionOptions saveMongoDBConnectionOptions)
                 connectionOption.Order = saveMongoDBConnectionOptions.Order;
             else
-                connectionOption.Order = s_connectionInfoOrder++;
+                connectionOption.Order = _connectionInfoOrder++;
 
             if (defaultOpt != null)
                 serviceCollection.Remove(defaultOpt);
@@ -155,9 +147,9 @@ namespace Democrite.Framework.Extensions.Mongo.Services
         /// <summary>
         /// Setups the default mongo services.
         /// </summary>
-        private static void SetupDefaultMongoServices(IServiceCollection serviceCollection)
+        private void SetupDefaultMongoServices(IServiceCollection serviceCollection)
         {
-            if (Interlocked.Increment(ref s_defaultMongoServices) > 1)
+            if (Interlocked.Increment(ref _defaultMongoServices) > 1)
                 return;
 
             serviceCollection.AddSingleton<IMongoClientFactory, MultipleMongoClientFactory>();

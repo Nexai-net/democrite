@@ -15,12 +15,15 @@ namespace Democrite.Framework
     using Microsoft.Extensions.Hosting;
 
     using System;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Democrite cluster's client root
     /// </summary>
     public sealed class DemocriteClient : DemocriteBasePart<DemocriteClientConfigurationDefinition>
     {
+        private bool _clientDeco;
         #region Ctor
 
         /// <summary>
@@ -37,6 +40,42 @@ namespace Democrite.Framework
         #endregion
 
         #region Methods
+
+        /// <inheritdoc />
+        /// <remarks>
+        ///     Override to managed connect/deconnect
+        /// </remarks>
+        protected override async Task TryStartHostAsync(CancellationToken token)
+        {
+            if (this._clientDeco)
+            {
+                var connectionService = this.Services.GetServices<IClusterClient>() as IHostedService;
+
+                await (connectionService?.StartAsync(token) ?? Task.CompletedTask);
+                return;
+            }
+
+            await base.TryStartHostAsync(token);
+        }
+
+        /// <summary>
+        /// Prevent HOST to be cleanup to allow multiple restart
+        /// </summary>
+        protected override async Task TryStopHostAsync(CancellationToken token)
+        {
+            var connectionService = this.Services.GetRequiredService<IClusterClient>() as IHostedService;
+
+            await (connectionService?.StopAsync(token) ?? Task.CompletedTask);
+            this._clientDeco = true;
+        }
+
+        /// <inheritdoc />
+        protected override async ValueTask DisposeBeginAsync()
+        {
+            await base.DisposeBeginAsync();
+            // Force host to stop on dispose
+            await base.TryStopHostAsync(default);
+        }
 
         /// <summary>
         /// Get and setup a new democrite cluster client

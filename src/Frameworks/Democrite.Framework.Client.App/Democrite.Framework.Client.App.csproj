@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
+
+	<PropertyGroup>
+
+		<IsPackable>true</IsPackable>
+		<Description>Democrite client (Desktop App) library used to consume democrite cluster nodes. Outside of AspNet.core environement some default dependence are missing. Use this librarairy to add them.</Description>
+
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Client;WPF</PackageTags>
+
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Data.Odbc" />
+		<PackageReference Include="System.Data.OleDb" />
+		<PackageReference Include="System.Data.SqlClient" />
+		<PackageReference Include="System.IO.Ports" />
+		<PackageReference Include="System.Runtime.Serialization.Schema" />
+		<PackageReference Include="System.ServiceModel.Syndication" />
+		<PackageReference Include="System.ServiceProcess.ServiceController" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Democrite.Framework.Client\Democrite.Framework.Client.csproj" />
+	</ItemGroup>
+
+</Project>

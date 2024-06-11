@@ -17,7 +17,6 @@ namespace Democrite.Framework.Configurations
     using Microsoft.Extensions.Logging.Abstractions;
 
     using System;
-    using System.Net;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -38,6 +37,8 @@ namespace Democrite.Framework.Configurations
 
         private CancellationTokenSource? _runningTaskCancellationTokenSource;
         private Task? _runningTask;
+        private bool _hostStopped;
+        private bool _isRunning;
 
         #endregion
 
@@ -84,6 +85,15 @@ namespace Democrite.Framework.Configurations
             get { return this._host.Services; }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether this instance is running.
+        /// </summary>
+        public bool IsRunning
+        {
+            get { return this._isRunning; }
+        }
+
+
         #endregion
 
         #region Methods
@@ -119,8 +129,11 @@ namespace Democrite.Framework.Configurations
         /// <summary>
         /// Start the <see cref="ClusterNode"/>, execute <paramref name="runningFunction"/> and give back the hand while server run in background
         /// </summary>
-        public async Task StartAsync(Func<IServiceProvider, IDemocriteExecutionHandler, CancellationToken, Task>? runningFunction = null, CancellationToken token = default)
+        public async Task StartAsync(Func<IServiceProvider, IDemocriteExecutionHandler, CancellationToken, Task>? runningFunction, CancellationToken token = default)
         {
+            if (this._hostStopped)
+                throw new InvalidOperationException("Could not start on application host stop, it could not be restarted plz create a new democrite element");
+
             IReadOnlyCollection<IInitService>? nodeInitServiceAfter = null;
             Task? runningTask = null;
             try
@@ -145,10 +158,7 @@ namespace Democrite.Framework.Configurations
                     if (initServices.TryGetValue(false, out var beforeStartServices))
                         await InitializeServicesAsync(beforeStartServices, token);
 
-                    if (this._hostOwned)
-                        this._runningTask = this._host.StartAsync(token);
-                    else
-                        this._runningTask = Task.CompletedTask;
+                    await TryStartHostAsync(token);
                 }
 
                 runningTask = this._runningTask;
@@ -170,10 +180,12 @@ namespace Democrite.Framework.Configurations
                 if (runningFunction != null)
                     await runningFunction(this._host.Services, this._democriteExecutionHandler, token);
             }
+
+            this._isRunning = true;
         }
 
         /// <summary>
-        /// Stop the <see cref="ClusterNode"/>
+        /// Stop the <see cref="DemocriteBasePart{TConfig}"/>
         /// </summary>
         public async Task StopAsync(CancellationToken token = default)
         {
@@ -211,8 +223,8 @@ namespace Democrite.Framework.Configurations
                     this._runningTask = null;
                 }
 
-                if (this._hostOwned)
-                    await this._host.StopAsync(token);
+                await OnStopAsync(token);
+                await TryStopHostAsync(token);
             }
             catch (Exception ex)
             {
@@ -232,6 +244,42 @@ namespace Democrite.Framework.Configurations
             {
                 // It's normal if the only error is a cancellation : OperationCanceledException
             }
+
+            this._isRunning = false;
+        }
+
+        /// <summary>
+        /// Try start the host if needed
+        /// </summary>
+        protected virtual Task TryStartHostAsync(CancellationToken token)
+        {
+            if (this._hostOwned)
+                this._runningTask = this._host.StartAsync(token);
+            else
+                this._runningTask = Task.CompletedTask;
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Called clean up and stop the host
+        /// </summary>
+        protected virtual async Task TryStopHostAsync(CancellationToken token)
+        {
+            if (this._hostOwned)
+            {
+                await this._host.StopAsync(token);
+                this._hostStopped = true;
+            }
+        }
+
+        /// <summary>
+        /// Called when part stop
+        /// </summary>
+        [ThreadSafe]
+        protected virtual Task OnStopAsync(CancellationToken token)
+        {
+            return Task.CompletedTask;
         }
 
         /// <summary>

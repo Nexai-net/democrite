@@ -13,6 +13,9 @@ namespace Democrite.Framework
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
 
+    using System.Threading;
+    using System.Threading.Tasks;
+
     /// <summary>
     /// Democrite cluster's node root
     /// </summary>
@@ -34,6 +37,15 @@ namespace Democrite.Framework
         #endregion
 
         #region Methods
+
+        /// <inheritdoc />
+        /// <remarks>
+        /// ATTENTION COULD NOT BE Restart, dispose the node and create new
+        /// </remarks>
+        protected override Task OnStopAsync(CancellationToken token)
+        {
+            return base.OnStopAsync(token);
+        }
 
         /// <summary>
         /// Get and setup a new democrite cluster node

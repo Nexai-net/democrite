@@ -6,7 +6,7 @@
 	<PropertyGroup>
 
 		<IsPackable>true</IsPackable>
-		<Description>Democrite client library use to consume democrite cluster nodes.</Description>
+		<Description>Democrite client library used to consume democrite cluster nodes.</Description>
 
 		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Client</PackageTags>
 
