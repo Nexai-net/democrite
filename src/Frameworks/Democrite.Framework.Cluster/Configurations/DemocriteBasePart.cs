@@ -178,9 +178,10 @@ namespace Democrite.Framework.Configurations
         public async Task StopAsync(CancellationToken token = default)
         {
             Task? runningTask = null;
+            var locker = this._locker;
             try
             {
-                await this._locker.WaitAsync(token);
+                await locker.WaitAsync(token);
 
                 runningTask = this._runningTask;
                 if (this._runningTask != null)
@@ -208,8 +209,6 @@ namespace Democrite.Framework.Configurations
 
                     this._runningTaskCancellationTokenSource = null;
                     this._runningTask = null;
-
-                    return;
                 }
 
                 if (this._hostOwned)
@@ -221,7 +220,7 @@ namespace Democrite.Framework.Configurations
             }
             finally
             {
-                this._locker.Release();
+                locker.Release();
             }
 
             try

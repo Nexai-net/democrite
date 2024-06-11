@@ -16,7 +16,6 @@ namespace Democrite.Framework.Node.Artifacts
 
     using System;
     using System.Collections.Generic;
-    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -67,7 +66,7 @@ namespace Democrite.Framework.Node.Artifacts
                                                              input);
 
             var cmdJson = this.JsonSerializer.Serialize(command);
-            var base64Cmd = Convert.ToBase64String(Encoding.UTF8.GetBytes(cmdJson));
+            var base64Cmd = Convert.ToBase64String(cmdJson);
 
             ExtractCommandLineExec(out var executor, out var args);
             args.Add("--cmd:'" + base64Cmd + "'");

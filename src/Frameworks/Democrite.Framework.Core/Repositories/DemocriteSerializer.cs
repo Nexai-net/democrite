@@ -18,7 +18,10 @@ namespace Democrite.Framework.Core.Repositories
     using System.Buffers;
     using System.Collections.Frozen;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
+    using System.Linq.Expressions;
+    using System.Reflection;
     using System.Text;
 
     public sealed class DemocriteSerializer : IDemocriteSerializer
@@ -26,19 +29,26 @@ namespace Democrite.Framework.Core.Repositories
         #region Fields
 
         private static readonly Type s_genericConverterGenTraits;
+        private static readonly MethodInfo s_genericDeserializer;
 
         private readonly IReadOnlyDictionary<Type, GenericConverter> _converterLinks;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly JsonSerializerSettings _jsonSettings;
         private readonly Dictionary<Type, IGenericConverter?> _converterCached;
         private readonly ReaderWriterLockSlim _converterCacheLocker;
+        private readonly JsonSerializerSettings _jsonSettings;
+        private readonly IServiceProvider _serviceProvider;
 
         #endregion
 
         #region Ctor
 
+        /// <summary>
+        /// Initializes the <see cref="DemocriteSerializer"/> class.
+        /// </summary>
         static DemocriteSerializer()
         {
+            Expression<Func<DemocriteSerializer, string, int>> deserialize = (s, json) => s.Deserialize<int>(json);
+            s_genericDeserializer = ((MethodCallExpression)deserialize.Body).Method.GetGenericMethodDefinition();
+
             s_genericConverterGenTraits = typeof(GenericConverter<,,>);
         }
 
@@ -212,10 +222,46 @@ namespace Democrite.Framework.Core.Repositories
         }
 
         /// <inheritdoc />
-        public TObj Deserialize<TObj>(in ReadOnlyMemory<byte> serializeobj)
+        public byte[] Serialize<TObject>(TObject obj)
         {
-            //var obj = this._orleansJsonSerializer.Deserialize(typeof(TObj), Encoding.UTF8.GetString(new ReadOnlySequence<byte>(serializeobj)));
-            var obj = JsonConvert.DeserializeObject(Encoding.UTF8.GetString(new ReadOnlySequence<byte>(serializeobj)), this._jsonSettings)!;
+            var memoryBytes = SerializeToBinary(obj);
+            return memoryBytes.ToArray();
+        }
+
+        /// <inheritdoc />
+        public object? Deserialize(string str, Type returnType)
+        {
+            return s_genericDeserializer.MakeGenericMethodWithCache(returnType).Invoke(this, new object[] { str });
+        }
+
+        /// <inheritdoc />
+        public object? Deserialize(in ReadOnlySpan<byte> str, Type returnType)
+        {
+            return s_genericDeserializer.MakeGenericMethodWithCache(returnType).Invoke(this, new object[] { Encoding.UTF8.GetString(str) });
+        }
+
+        /// <inheritdoc />
+        public object? Deserialize(Stream stream, Type returnType)
+        {
+            using (var reader = new StreamReader(stream))
+            {
+                return s_genericDeserializer.MakeGenericMethodWithCache(returnType).Invoke(this, new object[] { reader.ReadToEnd() });
+            }
+        }
+
+        /// <inheritdoc />
+        public TResult? Deserialize<TResult>(Stream stream)
+        {
+            using (var reader = new StreamReader(stream))
+            {
+                return Deserialize<TResult>(reader.ReadToEnd());
+            }
+        }
+
+        /// <inheritdoc />
+        public TObj? Deserialize<TObj>(string json)
+        {
+            var obj = JsonConvert.DeserializeObject(json, this._jsonSettings)!;
 
             if (obj is TObj correctCastObj)
                 return correctCastObj;
@@ -225,6 +271,18 @@ namespace Democrite.Framework.Core.Repositories
                 return (TObj)converter.Convert(obj);
 
             throw new InvalidCastException("Could not convert data type " + obj.GetType() + " to " + typeof(TObj));
+        }
+
+        /// <inheritdoc />
+        public TResult? Deserialize<TResult>(in ReadOnlySpan<byte> bytes)
+        {
+            return Deserialize<TResult>(Encoding.UTF8.GetString(bytes));
+        }
+
+        /// <inheritdoc />
+        public TObj Deserialize<TObj>(in ReadOnlyMemory<byte> serializeobj)
+        {
+            return Deserialize<TObj>(Encoding.UTF8.GetString(serializeobj.ToArray()))!;
         }
 
         #region Tools

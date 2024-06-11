@@ -4,12 +4,12 @@
 
 namespace Democrite.Framework.Core.Abstractions.Repositories
 {
-    using Microsoft.Extensions.ObjectPool;
+    using Elvex.Toolbox.Abstractions.Services;
 
     /// <summary>
     /// Serializer that used the surrogate converters possible
     /// </summary>
-    public interface IDemocriteSerializer
+    public interface IDemocriteSerializer : ISerializer
     {
         /// <summary>
         /// Based on system configuration return the serializable instance

@@ -190,16 +190,16 @@ namespace Democrite.Framework.Node.Artifacts
                                                                      input);
 
                     var cmdJson = this.JsonSerializer.Serialize(command);
-                    var cmdBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(cmdJson));
+                    var cmdBase64 = Convert.ToBase64String(cmdJson);
 
-                    var responseBase64 = await this._remoteClient!.AskAsync(cmdBase64, localAskCancelTokenSource.Token);
+                    var responseBase64 = await this._remoteClient!.AskAsync(Encoding.UTF8.GetBytes(cmdBase64), localAskCancelTokenSource.Token);
 
                     if (responseBase64 == null)
                         return default;
 
                     localAskCancelTokenSource.Token.ThrowIfCancellationRequested();
 
-                    return ManagedClientResult<TOutput>(responseBase64,
+                    return ManagedClientResult<TOutput>(Encoding.UTF8.GetString(responseBase64),
                                                         executionContext,
                                                         null,
                                                         null,
