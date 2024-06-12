@@ -27,7 +27,9 @@ namespace Democrite.Framework.Configurations
         /// Setup Mongo db cluster synchronication
         /// </summary>
         public static TWizard UseMongoCluster<TWizard, TWizardConfig>(this IDemocriteWizardStart<TWizard, TWizardConfig> wizard,
-                                                                      Action<IDemocriteClusterExternalBuilder<MongoDBMembershipTableOptions>>? buildOption = null)
+                                                                      Action<IDemocriteClusterExternalBuilder<MongoDBMembershipTableOptions>>? buildOption = null,
+                                                                      string? serviceId = null, 
+                                                                      string? clusterId = null)
             where TWizard : IDemocriteWizard<TWizard, TWizardConfig>
             where TWizardConfig : IDemocriteCoreConfigurationWizard<TWizardConfig>
         {
@@ -44,6 +46,8 @@ namespace Democrite.Framework.Configurations
                                                                                cfg,
                                                                                buildResult.ConnectionString,
                                                                                buildResult.Option);
+
+                cl.CustomizeClusterId(serviceId, clusterId);
             });
         }
 

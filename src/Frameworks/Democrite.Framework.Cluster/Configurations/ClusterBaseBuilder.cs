@@ -35,6 +35,7 @@ namespace Democrite.Framework.Cluster.Configurations
     using Microsoft.Extensions.Options;
 
     using Orleans;
+    using Orleans.Configuration;
     using Orleans.Messaging;
     using Orleans.Serialization;
     using Orleans.Serialization.Cloning;
@@ -186,7 +187,7 @@ namespace Democrite.Framework.Cluster.Configurations
         }
 
         /// <inheritdoc />
-        public abstract TWizard NoCluster(bool useLoopback = true);
+        public abstract TWizard NoCluster(string serviceId = "dev", string clusterId = "dev", bool useLoopback = true);
 
         /// <inheritdoc />
         public TWizard SetupCluster(Action<IDemocriteClusterBuilder> clusterWizard)
@@ -219,6 +220,30 @@ namespace Democrite.Framework.Cluster.Configurations
             }
 
             return GetWizard();
+        }
+
+        /// <inheritdoc />
+        public IDemocriteClusterBuilder CustomizeClusterId(string serviceId, string clusterId)
+        {
+            ConfigureServices(s =>
+            { 
+                s.Configure<ClusterOptions>(options =>
+                {
+                    options.ServiceId = serviceId;
+                    options.ClusterId = clusterId;
+                });
+
+                s.PostConfigure<ClusterOptions>(options =>
+                {
+                    if (string.IsNullOrWhiteSpace(options.ClusterId))
+                        options.ClusterId = ClusterOptions.DefaultClusterId;
+
+                    if (string.IsNullOrWhiteSpace(options.ServiceId))
+                        options.ServiceId = ClusterOptions.DefaultServiceId;
+                });
+            });
+
+            return this;
         }
 
         #region IClusterBuilderDemocriteConfigurationWizard

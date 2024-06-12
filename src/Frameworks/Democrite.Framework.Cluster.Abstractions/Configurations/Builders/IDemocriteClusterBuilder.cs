@@ -14,6 +14,13 @@ namespace Democrite.Framework.Configurations
         #region Methods
 
         /// <summary>
+        /// Customizes the cluster identifier.
+        /// </summary>
+        /// <param name="clusterId">The cluster identity. This used to be called DeploymentId before Orleans 2.0 name.</param>
+        /// <param name="serviceId">Unique identifier for this service, which should survive deployment and redeployment, where as <see cref="ClusterId"/> might not.</param>
+        IDemocriteClusterBuilder CustomizeClusterId(string serviceId, string clusterId);
+
+        /// <summary>
         /// [CLIENT] Adds the gateway list provider, used for the client to get vgrain list from cluster.
         /// </summary>
         IDemocriteClusterBuilder AddGatewayListProvider<TListProvider>() where TListProvider : class, IGatewayListProvider;

@@ -232,14 +232,15 @@ namespace Democrite.Framework.Configurations
         }
 
         /// <inheritdoc />
-        public sealed override IDemocriteNodeWizard NoCluster(bool useLoopback = true)
+        public sealed override IDemocriteNodeWizard NoCluster(string? serviceId = null, string? clusterId = null, bool useLoopback = true)
         {
             this._orleanSiloBuilder.Services.AddOptionFromInstOrConfig(this.Configuration,
                                                                        ConfigurationSectionNames.Endpoints,
                                                                        new ClusterNodeEndPointOptions(useLoopback,
                                                                                                       siloPort: EndpointOptions.DEFAULT_SILO_PORT,
                                                                                                       gatewayPort: EndpointOptions.DEFAULT_GATEWAY_PORT));
-            this._orleanSiloBuilder.UseLocalhostClustering();
+
+            this._orleanSiloBuilder.UseLocalhostClustering(serviceId: serviceId ?? "dev", clusterId: clusterId ?? "dev");
             return this;
         }
 

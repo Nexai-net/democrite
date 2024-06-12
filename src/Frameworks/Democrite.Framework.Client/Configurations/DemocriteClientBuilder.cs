@@ -75,9 +75,9 @@ namespace Democrite.Framework.Client.Configurations
         }
 
         /// <inheritdoc />
-        public sealed override IDemocriteClientBuilderWizard NoCluster(bool _)
+        public override IDemocriteClientBuilderWizard NoCluster(string? serviceId = null, string? clusterId = null, bool useLoopback = true)
         {
-            this._orleanClientBuilder.UseLocalhostClustering();
+            this._orleanClientBuilder.UseLocalhostClustering(serviceId: serviceId ?? "dev", clusterId: clusterId ?? "dev");
             return this;
         }
 
