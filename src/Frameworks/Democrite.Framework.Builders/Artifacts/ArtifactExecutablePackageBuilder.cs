@@ -5,6 +5,8 @@
 namespace Democrite.Framework.Builders.Artifacts
 {
     using Democrite.Framework.Core.Abstractions.Artifacts;
+    using Democrite.Framework.Core.Abstractions.Configurations;
+
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Helpers;
     using Elvex.Toolbox.Services;
@@ -24,8 +26,9 @@ namespace Democrite.Framework.Builders.Artifacts
     {
         #region Fields
 
+        private readonly Dictionary<string, ConfigurationBaseDefinition> _configs;
         private readonly HashSet<string> _packageFiles;
-        
+
         private readonly HashSet<string> _packageRecurciveTemplateFiles;
         private readonly HashSet<string> _packageTemplateFiles;
         
@@ -46,6 +49,7 @@ namespace Democrite.Framework.Builders.Artifacts
         private string? _executor;
         private Uri? _packageSource;
         private Version? _packageVersion;
+        private ArtifactExecVerboseEnum _verbose;
 
         #endregion
 
@@ -56,6 +60,8 @@ namespace Democrite.Framework.Builders.Artifacts
         /// </summary>
         internal ArtifactExecutablePackageBuilder(string displayName, string? description, Guid? uid = null)
         {
+            this._configs = new Dictionary<string, ConfigurationBaseDefinition>();
+
             this._packageFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             this._packageRecurciveTemplateFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             this._packageTemplateFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -277,7 +283,9 @@ namespace Democrite.Framework.Builders.Artifacts
                                                     this._packageSource,
                                                     this._packageFiles.OrderBy(p => p).ToArray(),
                                                     this._packageType.GetValueOrDefault(),
-                                                    this._environmentBuilder?.Build());
+                                                    this._environmentBuilder?.Build(),
+                                                    this._verbose,
+                                                    this._configs?.Values);
         }
 
         /// <inheritdoc />
@@ -292,6 +300,41 @@ namespace Democrite.Framework.Builders.Artifacts
         public void Builder(IDefinitionBaseBuilder<ArtifactExecutableEnvironmentDefinition> environmentBuilder)
         {
             this._environmentBuilder = environmentBuilder;
+        }
+
+        /// <inheritdoc />
+        public IArtifactCodePackageResourceBuilderFinalizer Verbose(ArtifactExecVerboseEnum verbose)
+        {
+            this._verbose = verbose;
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IArtifactCodePackageResourceBuilderFinalizer AddConfiguration<TConfigType>(string configName,
+                                                                                          TConfigType configType,
+                                                                                          bool secureDataTansfer = false)
+        {
+            this._configs[configName] = new ConfigurationDirectDefinition<TConfigType>(Guid.NewGuid(),
+                                                                                       configName,
+                                                                                       configName,
+                                                                                       configType,
+                                                                                       secureDataTansfer);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IArtifactCodePackageResourceBuilderFinalizer RequiredConfiguration<TConfigType>(string configName,
+                                                                                               string configSectionKey,
+                                                                                               TConfigType? defaultValue = default,
+                                                                                               bool secureDataTansfer = false)
+        {
+            this._configs[configName] = new ConfigurationFromSectionPathDefinition<TConfigType>(Guid.NewGuid(),
+                                                                                                configName,
+                                                                                                configName,
+                                                                                                configSectionKey,
+                                                                                                defaultValue,
+                                                                                                secureDataTansfer);
+            return this;
         }
 
         #region Tools

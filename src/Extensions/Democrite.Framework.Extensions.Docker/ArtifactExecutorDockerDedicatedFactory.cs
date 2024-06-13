@@ -14,6 +14,7 @@
     using global::Docker.DotNet;
     using global::Docker.DotNet.Models;
 
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
 
     using System;
@@ -31,7 +32,7 @@
         #region Fields
 
         private static readonly string s_template;
-
+        private readonly IConfiguration _configuration;
         private readonly IProcessSystemService _processSystemService;
         private readonly IJsonSerializer _jsonSerializer;
         private readonly INetworkInspector _networkInspector;
@@ -66,9 +67,11 @@
                                                       IJsonSerializer jsonSerializer,
                                                       INetworkInspector networkInspector,
                                                       IFileSystemHandler fileSystemHandler,
+                                                      IConfiguration configuration,
                                                       IDockerProcessorFactory dockerProcessorFactory)
             : base(fileSystemHandler)
         {
+            this._configuration = configuration;
             this._processSystemService = processSystemService;
             this._jsonSerializer = jsonSerializer;
             this._networkInspector = networkInspector;
@@ -106,13 +109,15 @@
                                                                 this._processSystemService,
                                                                 this._jsonSerializer,
                                                                 this._networkInspector,
-                                                                this._dockerProcessorFactory);
+                                                                this._dockerProcessorFactory,
+                                                                this._configuration);
             }
             else
             {
                 executor = new ExternalDockerCodeCLIExecutor(definition,
                                                              this._processSystemService,
                                                              this._jsonSerializer,
+                                                             this._configuration,
                                                              this._dockerProcessorFactory);
             }
 

@@ -6,19 +6,26 @@ namespace Democrite.Framework.Node.Artifacts
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
+    using Democrite.Framework.Core.Abstractions.Configurations;
     using Democrite.Framework.Core.Abstractions.Exceptions;
+    using Democrite.Framework.Core.Models;
     using Democrite.Framework.Node.Abstractions.Artifacts;
     using Democrite.Framework.Node.Models;
+
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Disposables;
     using Elvex.Toolbox.Extensions;
 
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
 
     using Newtonsoft.Json.Linq;
 
     using System;
+    using System.Linq.Expressions;
+    using System.Reflection;
+    using System.Runtime.CompilerServices;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -30,16 +37,35 @@ namespace Democrite.Framework.Node.Artifacts
     /// <seealso cref="IArtifactExternalCodeExecutor" />
     public abstract class ExternalCodeBaseExecutor : SafeAsyncDisposable, IArtifactExternalCodeExecutor
     {
+        #region Fields
+
+        private static readonly MethodInfo s_solveConfigurationValue;
+        private readonly IConfiguration _configuration;
+
+        #endregion
+
         #region Ctor
+
+        /// <summary>
+        /// Initializes the <see cref="ExternalCodeBaseExecutor"/> class.
+        /// </summary>
+        static ExternalCodeBaseExecutor()
+        {
+            //private static (string StrValue, bool UseBase64) SolveConfigurationValue<TData>(ConfigurationBaseDefinition cfg)
+            Expression<Func<ExternalCodeBaseExecutor, ConfigurationBaseDefinition, Tuple<string, bool>>> solveConfigurationValue = (t, c) => t.SolveConfigurationValue<int>(c);
+            s_solveConfigurationValue = ((MethodCallExpression)solveConfigurationValue.Body).Method.GetGenericMethodDefinition();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExternalCodeCLIExecutor"/> class.
         /// </summary>
         public ExternalCodeBaseExecutor(ArtifactExecutableDefinition artifactExecutableDefinition,
                                         IJsonSerializer jsonSerializer,
+                                        IConfiguration configuration,
                                         Uri? workingDirectory)
         {
             this.ArtifactExecutableDefinition = artifactExecutableDefinition;
+            this._configuration = configuration;
             this.WorkingDir = workingDirectory;
             this.JsonSerializer = jsonSerializer;
         }
@@ -91,6 +117,38 @@ namespace Democrite.Framework.Node.Artifacts
         #region Tools
 
         /// <summary>
+        /// Formats the input.
+        /// </summary>
+        protected string FormatInput<TInput>(TInput? input)
+        {
+            byte[] inputSerialized;
+
+            var typeInfo = typeof(TInput).GetTypeInfoExtension();
+            if (typeInfo.IsCSharpScalarType)
+                inputSerialized = Encoding.UTF8.GetBytes(input?.ToString() ?? string.Empty);
+            else
+                inputSerialized = this.JsonSerializer.Serialize(input);
+            var inputBase64 = Convert.ToBase64String(inputSerialized);
+            return inputBase64;
+        }
+
+        /// <summary>
+        /// Formats the input.
+        /// </summary>
+        protected string FormatCommand<TInput>(TInput? input, IExecutionContext executionContext)
+        {
+            var inputJsonBase64 = FormatInput(input);
+
+            var command = new RemoteExecutionCommand(executionContext.FlowUID,
+                                                     executionContext.CurrentExecutionId,
+                                                     inputJsonBase64);
+
+            var cmdJson = this.JsonSerializer.Serialize(command);
+            var base64Cmd = Convert.ToBase64String(cmdJson);
+            return base64Cmd;
+        }
+
+        /// <summary>
         /// Manageds the client result.
         /// </summary>
         protected TOutput? ManagedClientResult<TOutput>(string? resultBase64,
@@ -121,13 +179,13 @@ namespace Democrite.Framework.Node.Artifacts
                 if (NoneType.IsEqualTo<TOutput>())
                 {
                     var jobj = JObject.Parse(resultJson);
-                    if (jobj.Remove(nameof(RemoteExecutionResponse<NoneType>.Content)))
+                    if (jobj.Remove(nameof(RemoteExecutionResponse.Content)))
                     {
                         resultJson = jobj.ToString();
                     }
                 }
 
-                var response = this.JsonSerializer.Deserialize<RemoteExecutionResponse<TOutput>>(resultJson);
+                var response = this.JsonSerializer.Deserialize<RemoteExecutionResponse>(resultJson);
 
                 if (response != null)
                 {
@@ -138,7 +196,15 @@ namespace Democrite.Framework.Node.Artifacts
                     {
                         if (NoneType.IsEqualTo<TOutput>())
                             return (TOutput)(object)NoneType.Instance;
-                        return response.Content;
+
+                        if (!string.IsNullOrEmpty(response.Content))
+                        {
+                            var resultContentBytes = Convert.FromBase64String(response.Content);
+                            var resultContentJson = Encoding.UTF8.GetString(resultContentBytes);
+
+                            return this.JsonSerializer.Deserialize<TOutput>(resultContentJson);
+                        }
+                        return default;
                     }
 
                     throw new ArtifactExecutionException(this.ArtifactExecutableDefinition.Uid, response.Message, executionContext);
@@ -171,6 +237,44 @@ namespace Democrite.Framework.Node.Artifacts
                 foreach (var arg in this.ArtifactExecutableDefinition.Arguments)
                     arguments.Add(arg);
             }
+
+            if (this.ArtifactExecutableDefinition.Verbose != ArtifactExecVerboseEnum.Minimal)
+                arguments.Add("--verbose:" + this.ArtifactExecutableDefinition.Verbose);
+
+            if (this.ArtifactExecutableDefinition.Configurations is not null)
+            {
+                foreach (var cfg in this.ArtifactExecutableDefinition.Configurations)
+                {
+                    var cfgKvValue = (Tuple<string, bool>)(s_solveConfigurationValue.MakeGenericMethodWithCache(cfg.ExpectedConfigurationType.ToType())
+                                                               .Invoke(this, new object[] { cfg }))!;
+
+                    arguments.Add("--config" + ((cfgKvValue.Item2) ? "_b64" : "") + ":" + cfg.ConfigName + "='" + cfgKvValue.Item1 + "'");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Solves the configuration value.
+        /// </summary>
+        private Tuple<string, bool> SolveConfigurationValue<TData>(ConfigurationBaseDefinition cfg)
+        {
+            TData? data = default;
+            if (cfg is ConfigurationDirectDefinition<TData> direct)
+            {
+                data = direct.Data;
+            }
+            else if (cfg is ConfigurationFromSectionPathDefinition<TData> fromCfg)
+            {
+                data = this._configuration.GetSection(fromCfg.SectionPath).Get<TData>() ?? fromCfg.DefaultData;
+            }
+
+            var type = typeof(TData).GetTypeInfoExtension();
+
+            if (data is null || type.IsCSharpScalarType)
+                return Tuple.Create(data?.ToString() ?? string.Empty, false);
+
+            var jsonData = this.JsonSerializer.Serialize<TData>(data);
+            return Tuple.Create(Convert.ToBase64String(jsonData), true);
         }
 
         /// <summary>

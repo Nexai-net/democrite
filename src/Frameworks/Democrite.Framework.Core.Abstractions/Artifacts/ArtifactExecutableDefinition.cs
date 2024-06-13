@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Core.Abstractions.Artifacts
 {
+    using Democrite.Framework.Core.Abstractions.Configurations;
+
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -38,14 +40,18 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                             Uri packageSource,
                                             IEnumerable<string> packageFiles,
                                             ArtifactPackageTypeEnum packageType,
-                                            ArtifactExecutableEnvironmentDefinition? environment)
+                                            ArtifactExecutableEnvironmentDefinition? environment,
+                                            ArtifactExecVerboseEnum verbose = ArtifactExecVerboseEnum.Minimal,
+                                            IEnumerable<ConfigurationBaseDefinition>? configurations = null)
             : base(uid, displayName, description, version, hash, creationOn, ArtifactTypeEnum.Executable, packageSource, packageFiles, packageType)
         {
             this.ExecutablePath = executablePath;
             this.AllowPersistence = allowPersistence;
             this.Executor = executor;
             this.Arguments = arguments?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;
+            this.Configurations = configurations?.ToArray() ?? EnumerableHelper<ConfigurationBaseDefinition>.ReadOnlyArray;
             this.Environment = environment;
+            this.Verbose = verbose;
         }
 
         #endregion
@@ -71,10 +77,22 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         public IReadOnlyCollection<string> Arguments { get; }
 
         /// <summary>
+        /// Gets the configurations.
+        /// </summary>
+        [DataMember]
+        public IReadOnlyCollection<ConfigurationBaseDefinition> Configurations { get; }
+
+        /// <summary>
         /// Gets the execution environment.
         /// </summary>
         [DataMember]
         public ArtifactExecutableEnvironmentDefinition? Environment { get; }
+
+        /// <summary>
+        /// Gets the verbose.
+        /// </summary>
+        [DataMember]
+        public ArtifactExecVerboseEnum Verbose { get; }
 
         /// <summary>
         /// Gets the executor needed to execute the <see cref="ExecutablePath"/>.

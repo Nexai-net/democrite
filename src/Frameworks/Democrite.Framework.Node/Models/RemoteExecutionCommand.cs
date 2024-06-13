@@ -10,14 +10,14 @@ namespace Democrite.Framework.Node.Models
     /// Command used to pass argument to remote execution
     /// </summary>
     /// <typeparam name="TContent">The type of the content.</typeparam>
-    internal sealed class RemoteExecutionCommand<TContent>
+    internal sealed class RemoteExecutionCommand
     {
         #region ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RemoteExecutionCommand{TContent}"/> class.
         /// </summary>
-        public RemoteExecutionCommand(Guid flowUid, Guid executionId, TContent? content)
+        public RemoteExecutionCommand(Guid flowUid, Guid executionId, string content)
         {
             this.FlowUid = flowUid;
             this.ExecutionId = executionId;
@@ -36,7 +36,7 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Gets the content.
         /// </summary>
-        public TContent? Content { get; }
+        public string Content { get; }
 
         /// <summary>
         /// Gets the flow uid.

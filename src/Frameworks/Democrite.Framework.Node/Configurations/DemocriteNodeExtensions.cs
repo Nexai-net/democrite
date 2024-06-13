@@ -38,7 +38,7 @@ namespace Microsoft.Extensions.Hosting
         public static THostBuilder UseDemocriteNode<THostBuilder>(this THostBuilder hostBuilder,
                                                                   Action<HostBuilderContext, IConfigurationBuilder>? setupConfig,
                                                                   Action<IDemocriteNodeBuilder>? builder,
-                                                                  ClusterBuilderTools? clusterBuilderTools)
+                                                                  ClusterBuilderTools? clusterBuilderTools = null)
             where THostBuilder : IHostBuilder
         {
             DemocriteNode.Create(hostBuilder, setupConfig, builder, clusterBuilderTools);

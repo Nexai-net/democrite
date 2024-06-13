@@ -10,6 +10,7 @@ namespace Democrite.Framework.Extensions.Docker
     using Democrite.Framework.Node.Artifacts;
 
     using Elvex.Toolbox.Abstractions.Services;
+    using Microsoft.Extensions.Configuration;
 
     using System.Collections.Generic;
     using System.Threading;
@@ -35,8 +36,9 @@ namespace Democrite.Framework.Extensions.Docker
                                                 IProcessSystemService processSystemService,
                                                 IJsonSerializer jsonSerializer,
                                                 INetworkInspector networkInspector,
-                                                IDockerProcessorFactory dockerProcessorFactory)
-            : base(artifactExecutableDefinition, processSystemService, jsonSerializer, networkInspector, null)
+                                                IDockerProcessorFactory dockerProcessorFactory,
+                                                IConfiguration configuration)
+            : base(artifactExecutableDefinition, processSystemService, jsonSerializer, networkInspector, configuration, null)
         {
             this._dockerProcessorFactory = dockerProcessorFactory;
         }
@@ -73,8 +75,9 @@ namespace Democrite.Framework.Extensions.Docker
         public ExternalDockerCodeCLIExecutor(ArtifactExecutableDefinition artifactExecutableDefinition,
                                              IProcessSystemService processSystemService,
                                              IJsonSerializer jsonSerializer,
+                                             IConfiguration configuration,
                                              IDockerProcessorFactory dockerProcessorFactory) 
-            : base(artifactExecutableDefinition, processSystemService, jsonSerializer, null)
+            : base(artifactExecutableDefinition, processSystemService, jsonSerializer, configuration, null)
         {
             this._dockerProcessorFactory = dockerProcessorFactory;
         }

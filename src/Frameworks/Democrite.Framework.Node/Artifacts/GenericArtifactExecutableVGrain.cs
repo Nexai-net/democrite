@@ -12,6 +12,8 @@ namespace Democrite.Framework.Node.Artifacts
 
     using Microsoft.Extensions.Logging;
 
+    using Orleans.Concurrency;
+
     using System;
     using System.Diagnostics;
     using System.Threading.Tasks;
@@ -78,6 +80,34 @@ namespace Democrite.Framework.Node.Artifacts
         public Task RunWithInputAsync<TInput>(TInput? input, IExecutionContext<Guid> executionContext)
         {
             return RunAsync<NoneType, TInput>(input, executionContext);
+        }
+
+        /// <inheritdoc />
+        [ReadOnly]
+        public Task<TOutput?> ConcurrentRunAsync<TOutput>(IExecutionContext<Guid> executionContext)
+        {
+            return RunAsync<TOutput>(executionContext);
+        }
+
+        /// <inheritdoc />
+        [ReadOnly]
+        public Task<TOutput?> ConcurrentRunAsync<TOutput, TInput>(TInput? input, IExecutionContext<Guid> executionContext)
+        {
+            return RunAsync<TOutput, TInput>(input, executionContext);
+        }
+
+        /// <inheritdoc />
+        [ReadOnly]
+        public Task ConcurrentRunAsync(IExecutionContext<Guid> executionContext)
+        {
+            return RunAsync(executionContext);
+        }
+
+        /// <inheritdoc />
+        [ReadOnly]
+        public Task ConcurrentRunWithInputAsync<TInput>(TInput? input, IExecutionContext<Guid> executionContext)
+        {
+            return ConcurrentRunWithInputAsync<TInput>(input, executionContext);
         }
 
         /// <inheritdoc />

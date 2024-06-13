@@ -15,6 +15,7 @@ namespace Democrite.Framework.Node.Artifacts
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Services;
 
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
 
     using Newtonsoft.Json.Linq;
@@ -35,8 +36,9 @@ namespace Democrite.Framework.Node.Artifacts
 
         private readonly Dictionary<Guid, string> _cacheNewHashRuntime;
         private readonly ReaderWriterLockSlim _execCacheLocker;
-
+        
         private readonly IProcessSystemService _processSystemService;
+        private readonly IConfiguration _configuration;
 
         private readonly IFileSystemHandler _fileSystemHandler;
         private readonly INetworkInspector _networkInspector;
@@ -54,12 +56,14 @@ namespace Democrite.Framework.Node.Artifacts
                                                    IHashService hashService,
                                                    IProcessSystemService processSystemService,
                                                    IJsonSerializer jsonSerializer,
-                                                   INetworkInspector networkInspector)
+                                                   INetworkInspector networkInspector,
+                                                   IConfiguration configuration)
             : base(fileSystemHandler)
         {
             this._cacheNewHashRuntime = new Dictionary<Guid, string>();
             this._execCacheLocker = new ReaderWriterLockSlim();
 
+            this._configuration = configuration;
             this._processSystemService = processSystemService;
             this._fileSystemHandler = fileSystemHandler;
             this._networkInspector = networkInspector;
@@ -101,6 +105,7 @@ namespace Democrite.Framework.Node.Artifacts
                 newExecutor = new ExternalCodeCLIExecutor(artifactExecutableDefinition,
                                                           this._processSystemService,
                                                           this._jsonSerializer,
+                                                          this._configuration,
                                                           rootPath);
             }
             else
@@ -109,6 +114,7 @@ namespace Democrite.Framework.Node.Artifacts
                                                              this._processSystemService,
                                                              this._jsonSerializer,
                                                              this._networkInspector,
+                                                             this._configuration,
                                                              rootPath);
             }
 

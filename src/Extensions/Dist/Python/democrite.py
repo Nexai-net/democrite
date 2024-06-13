@@ -1,4 +1,5 @@
 ﻿import uuid
+import sys
 import json
 import base64
 import socket
@@ -54,12 +55,31 @@ class _messageType:
     SYSTEM = 1
     PING = 2
     PONG = 3
+    ERROR = 255 # Max byte value
+
+class VerboseLevel:
+    SILENCE = 0
+    MINIMAL = 1
+    FULL = 2
+
+def democrite_verbose_print(message:str, level:VerboseLevel, expectedLevel:VerboseLevel):
+    if (level <= expectedLevel):
+        print(message)
+
+def democrite_any_to_base_64_string(data:any):
+    data_str = data
+    if (data is object):
+        data_str = json.dumps(data)
+    else:
+        data_str = str(data)
+    return base64.b64encode(data_str.encode("utf-8")).decode('utf-8')
 
 class _remoteCommandServer:
-    def __init__(self, port:int, serverIp:str, callback):
+    def __init__(self, port:int, serverIp:str, verboseLevel:VerboseLevel, callback):
         self._port = port
         self._serverIP = serverIp
         self._callback = callback
+        self._verboseLevel = verboseLevel
         self._executor = concurrent.futures.ThreadPoolExecutor()
 
     def __private__sendResponse_with_message_type(self, id:str, result: str, messageType: _messageType):
@@ -73,7 +93,14 @@ class _remoteCommandServer:
         self._socket.send(fullFinalData)
 
     def __private__executeCommand_async(self, msgid:str, compressedCmd:str):
-        result = self._callback(compressedCmd)
+        try:
+            result = self._callback(compressedCmd)
+        except Exception as ex:
+            democrite_verbose_print("[" + msgid + "] Error " + str(ex), VerboseLevel.MINIMAL, self._verboseLevel);
+            self.__private__sendResponse_with_message_type(msgid, str(ex) + "\n" + str(sys.exc_info()), _messageType.ERROR)
+            return
+        
+        democrite_verbose_print("[" + msgid + "] Message Processed", VerboseLevel.FULL, self._verboseLevel);
         self.__private__sendResponse_with_message_type(msgid, result, _messageType.USER)
 
     def send_direct_message_type(self, id:str, result: str, messageType: _messageType):
@@ -89,34 +116,57 @@ class _remoteCommandServer:
         pkgSize = [] 
         while (True):
             
-            pkgSizeArrayBytes = self._socket.recv(2)
+            try:
 
-            if (len(pkgSizeArrayBytes) < 2):
-                break;
+                pkgSizeArrayBytes = self._socket.recv(2)
 
-            pkgSize = int(struct.unpack("H", pkgSizeArrayBytes)[0]);
+                if (len(pkgSizeArrayBytes) < 2):
+                    break;
 
-            containerData = self._socket.recv(pkgSize)
-            if (len(containerData) < pkgSize):
-                break;
+                pkgSize = int(struct.unpack("H", pkgSizeArrayBytes)[0]);
+
+                containerData = self._socket.recv(pkgSize)
+                if (len(containerData) < pkgSize):
+                    break;
+            
+                msgType = containerData[0]
+                msgId = codecs.utf_8_decode(containerData[1:37])[0]
+
+                msg = str()
+                if (len(containerData) > 37):
+                    msg = codecs.utf_8_decode(containerData[37:])[0]
+                    # msg = base64.b64encode(msgDataStr)
+
+                if (msgType == _messageType.PING):
+                    democrite_verbose_print("[" + msgId + "] Ping Received", VerboseLevel.FULL, self._verboseLevel)
+                    self.__private__sendResponse_with_message_type(msgId, None, _messageType.PONG)
+                    continue
+
+                if (msgType == _messageType.USER):
+                    democrite_verbose_print("[" + msgId + "] Message Received", VerboseLevel.FULL, self._verboseLevel)
+                    self._executor.submit(self.__private__executeCommand_async, msgId, msg)
+                    continue
         
-            msgType = containerData[0]
-            msgId = codecs.utf_8_decode(containerData[1:37])[0]
+            except ConnectionResetError as ex:
+                democrite_verbose_print("Server socket error " + str(ex) + "\n" + str(sys.exc_info()), VerboseLevel.MINIMAL, self._verboseLevel);
+                break
 
-            msg = str()
-            if (len(containerData) > 37):
-                msg = codecs.utf_8_decode(containerData[37:])[0]
-                # msg = base64.b64encode(msgDataStr)
+            except ConnectionAbortedError as ex:
+                democrite_verbose_print("Server socket error " + str(ex) + "\n" + str(sys.exc_info()), VerboseLevel.MINIMAL, self._verboseLevel);
+                break
 
-            if (msgType == _messageType.PING):
-                self.__private__sendResponse_with_message_type(msgId, None, _messageType.PONG)
-                continue
+            except ConnectionRefusedError as ex:
+                democrite_verbose_print("Server socket error " + str(ex) + "\n" + str(sys.exc_info()), VerboseLevel.MINIMAL, self._verboseLevel);
+                break
 
-            if (msgType == _messageType.USER):
-                self._executor.submit(self.__private__executeCommand_async, msgId, msg)
-                continue
+            except ConnectionError as ex:
+                democrite_verbose_print("Server socket error " + str(ex) + "\n" + str(sys.exc_info()), VerboseLevel.MINIMAL, self._verboseLevel);
+                break
 
-        print("Server Stopped")
+            except Exception as ex:
+                democrite_verbose_print("Server socket error " + str(ex) + "\n" + str(sys.exc_info()), VerboseLevel.MINIMAL, self._verboseLevel);
+
+        democrite_verbose_print("Server Stopped", VerboseLevel.MINIMAL, self._verboseLevel);
 
 class vgrainCommand:
     def __init__(self, flow_uid, executionUid, inputData):
@@ -140,7 +190,7 @@ class vgrainCommand:
         commandContainer = { 
             'FlowUid' : self.get_flow_uid(), 
             'ExecutionId' : self.get_execution_uid() ,
-            'Content' : self.get_content()
+            'Content' : base64.b64encode(self.get_content())
         }
         
         jsonValue = json.dumps(commandContainer);
@@ -186,11 +236,18 @@ class _remoteLogger(loggerBase):
         self._executor = concurrent.futures.ThreadPoolExecutor()
 
     def log(self, level:LogLevel, message):
+
+        message_str = message
+        if (message is object):
+            message_str = json.dumps(message)
+
+        message_str = base64.b64encode(message_str.encode("utf-8")).decode('utf-8')
+
         msg = {
             "Type" : "Log",
             "Level": level[0],
             "ExecutionId": self._executionId,
-            "Message": message
+            "Message": message_str
         }
 
         msgId = str(uuid.uuid4())
@@ -198,14 +255,19 @@ class _remoteLogger(loggerBase):
         self._executor.submit(self._comProxy.send_direct_message_type, msgId, msgStr, _messageType.SYSTEM)
 
 class vgrainTools:
-    def __init__(self, args: list[str], logger: loggerBase) -> None:
+    def __init__(self, args: list[str], logger: loggerBase, configs:dict) -> None:
         self._args = args
         self._logger = logger
+        self._configs = configs
         pass
 
     @property
     def get_logger(self):
         return self._logger
+    
+    @property
+    def get_config(self) -> dict:
+        return self._configs;
 
     @property
     def get_args(self) -> list[str]:
@@ -220,6 +282,8 @@ class vgrain:
 
         self._serverIP = "127.0.0.1"
         self._remotePort = -1
+        self._globalVerbose = VerboseLevel.MINIMAL
+        self._configs = dict()
 
         # Search in arguments the command information "--cmd:'CMD_JSON_BASE64'"
         argCopy = args.copy();
@@ -240,6 +304,51 @@ class vgrain:
                 self._serverIP = arg[9:remainLen]
                 args.remove(arg)
 
+            if (arg.startswith("--verbose:")):
+                remainLen = len(arg)
+                verboseValue = arg[10:remainLen].strip().lower()
+                if (verboseValue == "silence" or verboseValue == "0"):
+                    self._globalVerbose = VerboseLevel.SILENCE
+                elif (verboseValue == "minimal" or verboseValue == "1"):
+                    self._globalVerbose = VerboseLevel.MINIMAL
+                elif (verboseValue == "full" or verboseValue == "2"):
+                    self._globalVerbose = VerboseLevel.FULL
+                
+                args.remove(arg)
+
+            if (arg.startswith("--config")):
+                remainLen = len(arg)
+                remainConfig = arg[8:remainLen]
+                encodeInBase64 = remainConfig.startswith("_b64:")
+                if (encodeInBase64):
+                    remainLen = remainLen - 5
+                    remainConfig = remainConfig[5:remainLen]
+                elif (remainConfig.startswith(":")):
+                    remainLen = remainLen - 1
+                    remainConfig = remainConfig[1:remainLen]
+                else:
+                    # don't process this arg
+                    continue;
+
+                splitArgCfg = remainConfig.index("=")
+                if (splitArgCfg < 0):
+                    continue;
+                
+                remainLen = len(remainConfig)
+                configKey = remainConfig[0:splitArgCfg]
+                
+                splitArgCfg = splitArgCfg + 1
+                configValue = remainConfig[splitArgCfg:remainLen]
+
+                configValue = configValue.strip("'")
+
+                if (encodeInBase64):
+                    configValue = base64.b64decode(configValue)
+
+                self._configs[configKey] = configValue
+
+                args.remove(arg)
+
         self._arguments = args
         if (self._remotePort > -1):
             print("ServerIp: " + self._serverIP + ":" + str(self._remotePort))
@@ -250,7 +359,7 @@ class vgrain:
         testCommandContainer = { 
             'FlowUid' : uuid.uuid4().hex, 
             'ExecutionId' : uuid.uuid4().hex, 
-            'Content' : data 
+            'Content' : democrite_any_to_base_64_string(data)
         }
         
         formatCommand = self.__private_format_command(testCommandContainer)
@@ -274,17 +383,27 @@ class vgrain:
     def run(self, func: execFunc):
         """ Run in background and process all command send """
         callback = lambda compressedMsg=str : self.__private_execute_command_and_format(compressedMsg, func)
-        self._remoteServer = _remoteCommandServer(self._remotePort, self._serverIP, callback)
+        self._remoteServer = _remoteCommandServer(self._remotePort, self._serverIP, self._globalVerbose, callback)
         self._remoteServer.run()
 
     def __private_execute_command(self, compressCommand: str, func: execFunc) -> dict[str, any]:
         """ Execute  compressCommand (UTF-8 Json in base64 ) """
 
-        bytes = base64.b64decode(compressCommand)
-        cmd = json.loads(bytes)
+        democrite_verbose_print("New command arrived - try process", VerboseLevel.FULL, self._globalVerbose);
 
-        vgrainCmd = vgrainCommand(cmd["FlowUid"], cmd["ExecutionId"], cmd["Content"])
+        try:
+            bytes = base64.b64decode(compressCommand)
+            cmd = json.loads(bytes)
 
+            democrite_verbose_print("[" + cmd["ExecutionId"] + "] Start Command execution Verbose = " + str(self._globalVerbose), VerboseLevel.MINIMAL, self._globalVerbose);
+            cmd_base_64_str = cmd["Content"];
+
+            vgrainCmd = vgrainCommand(cmd["FlowUid"], cmd["ExecutionId"], base64.b64decode(cmd_base_64_str.encode("utf-8")).decode("utf-8"))
+            
+        except Exception as ex:
+            democrite_verbose_print("Command json loading failed " + str(ex) + "\n" + str(sys.exc_info()), VerboseLevel.MINIMAL, self._globalVerbose);
+            raise ex
+        
         result = ""
         exceptionMessage = ""
         errorCode = "-1"
@@ -295,21 +414,25 @@ class vgrain:
                 logger = _remoteLogger(self._remoteServer, vgrainCmd.get_execution_uid())
             else:
                 logger = _printLogger()
-            result = func(vgrainCmd, vgrainTools(self._arguments, logger))
+            result = func(vgrainCmd, vgrainTools(self._arguments, logger, self._configs))
             success = True
             errorCode = "0"
         except Exception as ex:
-            exceptionMessage = str(ex)
+            exceptionMessage = str(ex) + "\n" + str(sys.exc_info())
+            democrite_verbose_print("[" + cmd["ExecutionId"] + "] Failed execution : " + exceptionMessage, VerboseLevel.FULL, self._globalVerbose);
 
         response = {
-            'ExecutionId' : cmd["FlowUid"],
+            'ExecutionId' : cmd["ExecutionId"],
             'Success' : success,
             'Message' : exceptionMessage,
             'ErrorCode' : errorCode
         }
         
         if (len(str(result)) > 0):
-            response['Content'] = result
+            result_str = democrite_any_to_base_64_string(result)
+            response['Content'] = result_str
+
+        democrite_verbose_print("[" + cmd["ExecutionId"] + "] Command execution end", VerboseLevel.FULL, self._globalVerbose);
 
         return response, vgrainCmd
     

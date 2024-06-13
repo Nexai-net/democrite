@@ -99,6 +99,25 @@ namespace Democrite.Framework.Builders.Artifacts
         IArtifactCodePackageResourceBuilderFinalizer Arguments(params string[] args);
 
         /// <summary>
+        /// Adds a configuration to pass
+        /// </summary>
+        /// <param name="configSectionKey">[NOT Implemented YET] will be used to ensure configuration value is pass securly to artifact</param>
+        IArtifactCodePackageResourceBuilderFinalizer AddConfiguration<TConfigType>(string configName, TConfigType configType, bool secureDataTansfer = false);
+
+        /// <summary>
+        /// Define a requireds configuration.
+        /// </summary>
+        /// <param name="secureDataTansfer">Define configuration section path; will be searched in the configuration system, file, service ...</param>
+        /// <param name="defaultValue">Define a default value if runtime value is not founded</param>
+        /// <param name="configSectionKey">[NOT Implemented YET] will be used to ensure configuration value is pass securly to artifact</param>
+        IArtifactCodePackageResourceBuilderFinalizer RequiredConfiguration<TConfigType>(string configName, string configSectionKey, TConfigType? defaultValue = default, bool secureDataTansfer = false);
+
+        /// <summary>
+        /// Define if the executable managed to stay alive after usage.
+        /// </summary>
+        IArtifactCodePackageResourceBuilderFinalizer Verbose(ArtifactExecVerboseEnum verbose);
+
+        /// <summary>
         /// Define if the executable managed to stay alive after usage.
         /// </summary>
         IArtifactCodePackageResourceBuilderFinalizer Persistent();

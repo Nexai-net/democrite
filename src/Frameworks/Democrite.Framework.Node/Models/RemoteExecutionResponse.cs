@@ -10,7 +10,7 @@ namespace Democrite.Framework.Node.Models
     /// Response container used to pass argument to remote execution
     /// </summary>
     /// <typeparam name="TContent">The type of the content.</typeparam>
-    internal sealed class RemoteExecutionResponse<TContent>
+    internal sealed class RemoteExecutionResponse
     {
         #region ctor
 
@@ -20,7 +20,7 @@ namespace Democrite.Framework.Node.Models
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public RemoteExecutionResponse(Guid executionId,
-                                       TContent? content,
+                                       string? content,
                                        string errorCode,
                                        string message,
                                        bool success = true)
@@ -44,7 +44,7 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Gets the content.
         /// </summary>
-        public TContent? Content { get; }
+        public string? Content { get; }
 
         /// <summary>
         /// Gets a value indicating whether this <see cref="RemoteExecutionResponse{TContent}"/> is sucess.

@@ -7,11 +7,11 @@ namespace Democrite.Framework.Node.Artifacts
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Node.Abstractions.Artifacts;
-    using Democrite.Framework.Node.Models;
 
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Disposables;
 
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
 
     using System;
@@ -43,8 +43,9 @@ namespace Democrite.Framework.Node.Artifacts
         public ExternalCodeCLIExecutor(ArtifactExecutableDefinition artifactExecutableDefinition,
                                        IProcessSystemService processSystemService,
                                        IJsonSerializer jsonSerializer,
+                                       IConfiguration configuration,
                                        Uri? workingDirectory)
-            : base(artifactExecutableDefinition, jsonSerializer, workingDirectory)
+            : base(artifactExecutableDefinition, jsonSerializer, configuration, workingDirectory)
         {
             this._processSystemService = processSystemService;
         }
@@ -61,12 +62,7 @@ namespace Democrite.Framework.Node.Artifacts
             where TOutput : default
             where TInput : default
         {
-            var command = new RemoteExecutionCommand<TInput>(executionContext.FlowUID,
-                                                             executionContext.CurrentExecutionId,
-                                                             input);
-
-            var cmdJson = this.JsonSerializer.Serialize(command);
-            var base64Cmd = Convert.ToBase64String(cmdJson);
+            var base64Cmd = FormatCommand(input, executionContext);
 
             ExtractCommandLineExec(out var executor, out var args);
             args.Add("--cmd:'" + base64Cmd + "'");

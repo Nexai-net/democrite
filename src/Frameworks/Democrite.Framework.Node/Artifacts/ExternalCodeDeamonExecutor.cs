@@ -17,6 +17,7 @@ namespace Democrite.Framework.Node.Artifacts
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Services;
 
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
 
     using Newtonsoft.Json.Linq;
@@ -57,8 +58,9 @@ namespace Democrite.Framework.Node.Artifacts
                                           IProcessSystemService processSystemService,
                                           IJsonSerializer jsonSerializer,
                                           INetworkInspector networkInspector,
+                                          IConfiguration configuration,
                                           Uri? workingDirectory)
-            : base(artifactExecutableDefinition, jsonSerializer, workingDirectory)
+            : base(artifactExecutableDefinition, jsonSerializer, configuration, workingDirectory)
         {
             this._processSystemService = processSystemService;
             this._networkInspector = networkInspector;
@@ -185,12 +187,7 @@ namespace Democrite.Framework.Node.Artifacts
 
                 using (var logToken = this._remoteClient!.Subscribe(msg => ManagedSystemMessage(msg, executionContext, logger)))
                 {
-                    var command = new RemoteExecutionCommand<TInput>(executionContext.FlowUID,
-                                                                     executionContext.CurrentExecutionId,
-                                                                     input);
-
-                    var cmdJson = this.JsonSerializer.Serialize(command);
-                    var cmdBase64 = Convert.ToBase64String(cmdJson);
+                    var cmdBase64 = FormatCommand(input, executionContext);
 
                     var responseBase64 = await this._remoteClient!.AskAsync(Encoding.UTF8.GetBytes(cmdBase64), localAskCancelTokenSource.Token);
 
@@ -257,9 +254,18 @@ namespace Democrite.Framework.Node.Artifacts
                     logLevel = (LogLevel)lvlValue.Value<int>();
             }
 
+            string? msgStr = string.Empty;
+
+            if (msg is JValue msgValue)
+            {
+                msgStr = msgValue.Value<string>();
+                if (!string.IsNullOrEmpty(msgStr))
+                    msgStr = Encoding.UTF8.GetString(Convert.FromBase64String(msgStr));
+            }
+
             base.ManagedExecutionMessage((type as JValue)?.Value<string>(),
                                          logLevel,
-                                         (msg as JValue)?.Value<string>(),
+                                         msgStr,
                                          logger);
 
         }

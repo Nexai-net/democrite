@@ -14,6 +14,7 @@ namespace Democrite.Framework.Core.Extensions
     using Democrite.Framework.Core.Services;
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Core.Storages;
+
     using Elvex.Toolbox.Abstractions.Patterns.Workers;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Patterns.Workers;
@@ -37,7 +38,8 @@ namespace Democrite.Framework.Core.Extensions
             AddDefaultCoreService<IDiagnosticLogger, DiagnosticLogger>(serviceCollection);
 
             AddDefaultCoreService<IProcessSystemService, ProcessSystemService>(serviceCollection);
-            AddDefaultCoreService<IJsonSerializer, SystemJsonSerializer>(serviceCollection);
+            
+            serviceCollection.TryAddSingleton<IJsonSerializer>(NewtownJsonSerializer.Instance);
             AddDefaultCoreService<ITimeManager, TimeManager>(serviceCollection);
 
             serviceCollection.AddSingleton<IVGrainIdDedicatedFactory, VGrainIdFactoryDedicatedTemplates>();
