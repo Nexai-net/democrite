@@ -17,25 +17,25 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Start building a new signal
         /// </summary>
-        public static ISignalBuilder StartBuilding(string signalName, Guid? uid = null)
+        public static ISignalBuilder StartBuilding(string signalName, Guid? fixUid = null, Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
-            return new SignalBuilder(signalName, uid);
+            return new SignalBuilder(signalName, fixUid).MetaData(metadataBuilder);
         }
 
         /// <summary>
         /// Creates the new signal.
         /// </summary>
-        public static SignalDefinition Create(string signalName, Guid? uid = null)
+        public static SignalDefinition Create(string signalName, Guid? fixUid = null, Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
-            return new SignalBuilder(signalName, uid).Build();
+            return new SignalBuilder(signalName, fixUid).MetaData(metadataBuilder).Build();
         }
 
         /// <summary>
         /// Creates the new signal.
         /// </summary>
-        public static SignalDefinition Create(in SignalId signalId)
+        public static SignalDefinition Create(in SignalId signalId, Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
-            return new SignalBuilder(signalId.Name, signalId.Uid).Build();
+            return new SignalBuilder(signalId.Name, signalId.Uid).MetaData(metadataBuilder).Build();
         }
     }
 }

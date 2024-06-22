@@ -23,6 +23,8 @@ namespace Democrite.Framework.Extensions.Docker.Builders.Configurations
         private string? _imageName;
         private string? _useGpu;
         private string? _tag;
+        private string? _repository;
+        private bool _onlyLocal;
 
         #endregion
 
@@ -57,14 +59,31 @@ namespace Democrite.Framework.Extensions.Docker.Builders.Configurations
         }
 
         /// <inheritdoc />
+        public IArtifactCodePackageResourceDockerEnvironmentBuilder SourceRepository(string repository)
+        {
+            this._repository = repository;
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IArtifactCodePackageResourceDockerEnvironmentBuilder OnlyFromLocal()
+        {
+            this._onlyLocal = true;
+            return this;
+        }
+
+        /// <inheritdoc />
         public ArtifactExecutableEnvironmentDefinition Build()
         {
             ArgumentNullException.ThrowIfNullOrEmpty(this._imageName);
             return new ArtifactExecutableDockerEnvironmentDefinition(this._minimalRequiredDockerVersion?.ToString(),
                                                                      this._imageName,
                                                                      this._tag,
-                                                                     this._useGpu);
+                                                                     this._useGpu,
+                                                                     onlyLocal: this._onlyLocal,
+                                                                     repository: this._repository);
         }
+
         #endregion
     }
 }

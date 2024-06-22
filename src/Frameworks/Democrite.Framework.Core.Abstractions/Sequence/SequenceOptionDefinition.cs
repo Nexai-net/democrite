@@ -4,8 +4,6 @@
 
 namespace Democrite.Framework.Core.Abstractions.Sequence
 {
-    using Elvex.Toolbox;
-
     using System.ComponentModel;
     using System.Diagnostics.CodeAnalysis;
     using System.Runtime.Serialization;
@@ -16,8 +14,9 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
     [Immutable]
     [DataContract]
     [Serializable]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceOptionDefinition : Equatable<SequenceOptionDefinition>
+    public sealed class SequenceOptionDefinition : IEquatable<SequenceOptionDefinition>
     {
         #region Ctor
 
@@ -45,18 +44,21 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// <summary>
         /// Gets the default option.
         /// </summary>
+        [IgnoreDataMember]
         public static SequenceOptionDefinition Default { get; }
 
         /// <summary>
         /// Gets the diagnostic options
         /// </summary>
         [NotNull]
+        [Id(0)]
         [DataMember]
         public SequenceDiagnosticOptionDefinition Diagnostic { get; }
 
         /// <summary>
         /// Gets a value indicating whether [prevent state storage].
         /// </summary>
+        [Id(1)]
         [DataMember]
         public bool PreventSequenceExecutorStateStorage { get; }
 
@@ -65,14 +67,28 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         #region Methods
 
         /// <inheritdoc />
-        protected sealed override bool OnEquals([NotNull] SequenceOptionDefinition other)
+        public bool Equals(SequenceOptionDefinition? other)
         {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(this, other))
+                return true;
+
             return other.Diagnostic.Equals(this.Diagnostic) &&
                    this.PreventSequenceExecutorStateStorage == other.PreventSequenceExecutorStateStorage;
         }
 
         /// <inheritdoc />
-        protected sealed override int OnGetHashCode()
+        public override bool Equals(object? obj)
+        {
+            if (obj is SequenceOptionDefinition option)
+                return Equals(option);
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
         {
             return HashCode.Combine(this.Diagnostic, this.PreventSequenceExecutorStateStorage);
         }

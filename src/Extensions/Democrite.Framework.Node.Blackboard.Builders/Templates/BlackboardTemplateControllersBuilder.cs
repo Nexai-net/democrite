@@ -78,7 +78,8 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
             return new BlackboardTemplateControllerDefinition(Guid.NewGuid(),
                                                               this._type,
                                                               this._controller,
-                                                              this._option ?? BuildDefaultOption());
+                                                              this._option ?? BuildDefaultOption(),
+                                                              null);
         }
 
         #region Tools

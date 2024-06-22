@@ -22,7 +22,7 @@ namespace Democrite.Framework.Node.Abstractions
         /// <summary>
         /// Stage execution
         /// </summary>
-        ValueTask<StageStepResult> ExecAsync(ISequenceStageDefinition step,
+        ValueTask<StageStepResult> ExecAsync(SequenceStageDefinition step,
                                              object? input,
                                              IExecutionContext sequenceContext,
                                              ILogger logger,

@@ -32,9 +32,9 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// </summary>
         public SignalDefinition(Guid uid,
                                 string name,
-                                string? group = null,
+                                DefinitionMetaData? metaData,
                                 SignalId? parentSignalId = null)
-            : base(uid, name, name, group: group)
+            : base(uid, name, name, metaData)
         {
             this.SignalId = new SignalId(uid, name);
             this.ParentSignalId = parentSignalId;

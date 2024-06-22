@@ -5,6 +5,8 @@
 namespace Democrite.Framework.Bag.Toolbox.Abstractions
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Attributes.MetaData;
+
     using Elvex.Toolbox.Abstractions.Models;
 
     using System;
@@ -13,6 +15,10 @@ namespace Democrite.Framework.Bag.Toolbox.Abstractions
     /// Simple grain used to create a Task.Delay in the process
     /// </summary>
     /// <seealso cref="IVGrain" />
+    [VGrainMetaData("40157B9A-27A5-402C-9650-4EFDD921DCDC", 
+                    displayName: "Delay", 
+                    description: "Used to introduce delay in sequence.", 
+                    categoryPath: "tools")]
     public interface IDelayVGrain : IVGrain
     {
         /// <summary>

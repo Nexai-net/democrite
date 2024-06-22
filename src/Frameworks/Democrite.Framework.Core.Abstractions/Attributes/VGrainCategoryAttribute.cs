@@ -7,7 +7,7 @@ namespace Democrite.Framework.Core.Abstractions.Attributes
     using System;
 
     /// <summary>
-    /// Category value used to enhanced the grain meta-data
+    /// CategoryPath value used to enhanced the grain meta-data
     /// </summary>
     /// <seealso cref="Attribute" />
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]

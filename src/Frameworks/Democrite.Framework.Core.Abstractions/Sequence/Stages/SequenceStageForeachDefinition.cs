@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+
     using Elvex.Toolbox.Abstractions.Expressions;
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Models;
@@ -17,26 +18,29 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     /// Stage related to VGrain Foreach information
     /// </summary>
     /// <seealso cref="ISequenceStageDefinition" />
+    [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceStageForeachDefinition : SequenceStageBaseDefinition, IFlowHostStageDefinition
+    public sealed class SequenceStageForeachDefinition : SequenceStageDefinition, IFlowHostStageDefinition
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStageForeachDefinition"/> class.
         /// </summary>
-        public SequenceStageForeachDefinition(AbstractType? input,
+        public SequenceStageForeachDefinition(Guid uid,
+                                              string displayName,
+                                              AbstractType? input,
                                               SequenceDefinition innerFlow,
                                               AbstractType? output,
                                               AbstractType? outputForeach,
                                               AccessExpressionDefinition? memberAccess,
                                               AbstractMethod? setMethod,
-                                              SequenceOptionStageDefinition? options = null,
-                                              bool preventReturn = false,
-                                              Guid? uid = null)
-            : base(StageTypeEnum.Foreach, input, output, options, preventReturn, uid)
+                                              DefinitionMetaData? metaData,
+                                              bool preventReturn = false)
+            : base(uid, displayName, StageTypeEnum.Foreach, input, output, metaData, preventReturn)
         {
             ArgumentNullException.ThrowIfNull(innerFlow);
 
@@ -54,24 +58,28 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Gets the flow to apply on each element
         /// </summary>
         [DataMember(IsRequired = true)]
+        [Id(0)]
         public SequenceDefinition InnerFlow { get; }
 
         /// <summary>
         /// Gets the member access.
         /// </summary>
         [DataMember]
+        [Id(1)]
         public AccessExpressionDefinition? MemberAccess { get; }
 
         /// <summary>
         /// Gets the set method.
         /// </summary>
         [DataMember]
+        [Id(2)]
         public AbstractMethod? SetMethod { get; }
 
         /// <summary>
         /// Gets the output foreach.
         /// </summary>
         [DataMember]
+        [Id(3)]
         public AbstractType? OutputForeach { get; }
 
         #endregion
@@ -79,7 +87,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnStageEquals(ISequenceStageDefinition other)
+        protected override bool OnStageEquals(SequenceStageDefinition other)
         {
             return other is SequenceStageForeachDefinition otherStepDef &&
                    otherStepDef.InnerFlow == this.InnerFlow &&
@@ -93,7 +101,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         {
             return HashCode.Combine(this.InnerFlow,
                                     this.MemberAccess,
-                                    this.SetMethod, 
+                                    this.SetMethod,
                                     this.OutputForeach);
         }
 

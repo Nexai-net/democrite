@@ -78,12 +78,13 @@ namespace Democrite.Framework.Node.Abstraction.UnitTests.Models
                 return new SequenceDefinition(Guid.NewGuid(),
                                               fixture.Create<string>(),
                                               SequenceOptionDefinition.Default,
-                                              new SequenceStageBaseDefinition[]
+                                              new SequenceStageDefinition[]
                                               {
-                                                  new SequenceStageFilterDefinition((CollectionType)typeof(List<string>).GetAbstractType(), ((Expression<Func<string, bool>>)(s => s != null)).Serialize()),
-                                                  new SequenceStageFilterDefinition((CollectionType)typeof(List<string>).GetAbstractType(), ((Expression<Func<string, bool>>)(s => s != null)).Serialize()),
-                                                  new SequenceStageFilterDefinition((CollectionType)typeof(List<string>).GetAbstractType(), ((Expression<Func<string, bool>>)(s => s != null)).Serialize()),
-                                              });
+                                                  new SequenceStageFilterDefinition(Guid.NewGuid(), (CollectionType)typeof(List<string>).GetAbstractType() ,"", ((Expression<Func<string, bool>>)(s => s != null)).Serialize(), null),
+                                                  new SequenceStageFilterDefinition(Guid.NewGuid(), (CollectionType)typeof(List<string>).GetAbstractType() ,"", ((Expression<Func<string, bool>>)(s => s != null)).Serialize(), null),
+                                                  new SequenceStageFilterDefinition(Guid.NewGuid(), (CollectionType)typeof(List<string>).GetAbstractType() ,"", ((Expression<Func<string, bool>>)(s => s != null)).Serialize(), null),
+                                              },
+                                              null);
             });
 
             return new SequenceExecutorState(Guid.NewGuid(),

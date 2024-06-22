@@ -16,6 +16,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     [Immutable]
     [DataContract]
     [Serializable]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class SignalTriggerDefinition : TriggerDefinition
     {
@@ -32,9 +33,10 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
                                        bool enabled,
                                        SignalId? listenSignal,
                                        DoorId? listenDoor,
+                                       DefinitionMetaData? metaData,
                                        DataSourceDefinition? triggerGlobalOutputDefinition = null)
 
-            : base(uid, displayName, TriggerTypeEnum.Signal, targets, enabled, triggerGlobalOutputDefinition)
+            : base(uid, displayName, TriggerTypeEnum.Signal, targets, enabled, metaData, triggerGlobalOutputDefinition)
         {
             this.ListenSignal = listenSignal;
             this.ListenDoor = listenDoor;

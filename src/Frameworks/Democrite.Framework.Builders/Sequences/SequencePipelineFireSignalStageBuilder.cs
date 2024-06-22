@@ -34,9 +34,10 @@ namespace Democrite.Framework.Builders.Sequences
         public SequencePipelineFireSignalStageBuilder(AccessExpressionDefinition signalInfo,
                                                       TMessage? directMessage,
                                                       LambdaExpression? fetchMessage,
-                                                      bool multi,
-                                                      Action<ISequencePipelineStageConfigurator>? configAction)
-            : base(configAction)
+                                                      bool multi, 
+                                                      Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilderAction, 
+                                                      Guid? fixUid)
+            : base(metaDataBuilderAction, fixUid)
         {
             this._signalInfo = signalInfo;
             this._multi = multi;
@@ -49,14 +50,19 @@ namespace Democrite.Framework.Builders.Sequences
         #region Methods
 
         /// <inheritdoc />
-        public SequenceStageBaseDefinition ToDefinition()
+        public SequenceStageDefinition ToDefinition()
         {
             var messageAccess = this._fetchMessage?.CreateAccess() ?? this._directMessage?.CreateAccess();
 
-            return new SequenceStageFireSignalDefinition(NoneType.IsEqualTo<TInput>() ? null : typeof(TInput).GetAbstractType(),
+            var metaData = base.BuildDefinitionMetaData(out var displayName);
+
+            return new SequenceStageFireSignalDefinition(this.FixUid,
+                                                         displayName ?? "Fire Signal",
+                                                         NoneType.IsEqualTo<TInput>() ? null : typeof(TInput).GetAbstractType(),
                                                          this._signalInfo,
                                                          this._multi,
-                                                         messageAccess);
+                                                         messageAccess,
+                                                         metaData);
         }
 
         #endregion

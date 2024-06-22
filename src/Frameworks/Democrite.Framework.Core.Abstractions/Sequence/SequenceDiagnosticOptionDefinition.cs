@@ -21,7 +21,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceDiagnosticOptionDefinition : Equatable<SequenceDiagnosticOptionDefinition>
+    public sealed class SequenceDiagnosticOptionDefinition : IEquatable<SequenceDiagnosticOptionDefinition>
     {
         #region Ctor
 
@@ -73,14 +73,28 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnEquals([NotNull] SequenceDiagnosticOptionDefinition other)
+        public bool Equals(SequenceDiagnosticOptionDefinition? other)
         {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(other, this))
+                return true;
+
             return this.SaveAllStageInfo == other.SaveAllStageInfo &&
                    this.MinLogLevel == other.MinLogLevel;
         }
 
         /// <inheritdoc />
-        protected override int OnGetHashCode()
+        public override bool Equals(object? obj)
+        {
+            if (obj is SequenceDiagnosticOptionDefinition def)
+                return Equals(def);
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
         {
             return HashCode.Combine(this.SaveAllStageInfo, this.MinLogLevel);
         }

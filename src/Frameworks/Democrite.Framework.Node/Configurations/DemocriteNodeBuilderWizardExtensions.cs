@@ -6,6 +6,8 @@ namespace Democrite.Framework.Configurations
 {
     using Democrite.Framework.Node.Abstractions.Models;
 
+    using Microsoft.Extensions.DependencyInjection;
+
     /// <summary>
     /// Extensions method about node configuration
     /// </summary>
@@ -52,6 +54,33 @@ namespace Democrite.Framework.Configurations
         public static IDemocriteNodeWizard AddEndpointOptions(this IDemocriteNodeWizard wizard, string configuratioSection)
         {
             wizard.AddNodeOption<ClusterNodeEndPointOptions>(configuratioSection);
+            return wizard;
+        }
+
+        /// <summary>
+        /// Adds the runtime options.
+        /// </summary>
+        public static IDemocriteNodeWizard AddRuntimeOptions(this IDemocriteNodeWizard wizard, ClusterNodeRuntimeOptions options)
+        {
+            wizard.AddNodeOption(options);
+            return wizard;
+        }
+
+        /// <summary>
+        /// Adds the runtime options from configuration file/sources
+        /// </summary>
+        public static IDemocriteNodeWizard AddRuntimeOptions(this IDemocriteNodeWizard wizard, string configuratioSection)
+        {
+            wizard.AddNodeOption<ClusterNodeRuntimeOptions>(configuratioSection);
+            return wizard;
+        }
+
+        /// <summary>
+        /// Adds the runtime options final customization
+        /// </summary>
+        public static IDemocriteNodeWizard AddRuntimeOptions(this IDemocriteNodeWizard wizard, Action<ClusterNodeRuntimeOptions> optionAction)
+        {
+            wizard.GetServiceCollection().PostConfigure<ClusterNodeRuntimeOptions>(optionAction);
             return wizard;
         }
     }

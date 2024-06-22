@@ -14,6 +14,6 @@ namespace Democrite.Framework.Builders.Signals
         /// <summary>
         /// Define a signals meta group
         /// </summary>
-        TWizard Group(string groupName);
+        TWizard MetaData(Action<IDefinitionMetaDataBuilder>? action);
     }
 }

@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Doors
 {
     using Democrite.Framework.Core.Abstractions.Signals;
+
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Helpers;
 
@@ -33,18 +34,18 @@ namespace Democrite.Framework.Core.Abstractions.Doors
         /// </summary>
         public BooleanLogicalDoorDefinition(Guid uid,
                                             string name,
-                                            string? group,
                                             string logicalFormula,
                                             string vgrainInterfaceFullName,
                                             IEnumerable<SignalId>? signalSourceIds,
                                             IEnumerable<DoorId>? doorSourceIds,
                                             Dictionary<string, Guid> variableNames,
                                             bool useCurrentDoorStatus,
+                                            DefinitionMetaData? metaData,
                                             TimeSpan? activeWindowInterval = null,
                                             TimeSpan? retentionMaxDelay = null,
                                             uint? historyMaxRetention = null,
                                             uint? notConsumedMaxRetiention = null)
-            : base(uid, name, group, vgrainInterfaceFullName, signalSourceIds, doorSourceIds, activeWindowInterval, retentionMaxDelay, historyMaxRetention, notConsumedMaxRetiention)
+            : base(uid, name, vgrainInterfaceFullName, signalSourceIds, doorSourceIds, metaData, activeWindowInterval, retentionMaxDelay, historyMaxRetention, notConsumedMaxRetiention)
         {
             ArgumentException.ThrowIfNullOrEmpty(logicalFormula);
 

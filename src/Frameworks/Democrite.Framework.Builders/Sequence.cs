@@ -17,7 +17,7 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Creates a new instance of <see cref="SequenceBuilder"/>
         /// </summary>
-        public static ISequenceTriggerBuilder Build(string displayName, Guid? fixUid = null, Action<ISequenceOptionBuilder>? optionBuilder = null)
+        public static ISequenceTriggerBuilder Build(string displayName, Guid? fixUid = null, Action<ISequenceOptionBuilder>? optionBuilder = null, Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
             SequenceOptionDefinition? option = null;
 
@@ -29,7 +29,7 @@ namespace Democrite.Framework.Builders
                 option = optBuilder.Build();
             }
 
-            var builder = new SequenceBuilder(fixUid ?? Guid.NewGuid(), "SEQ:" + displayName, option);
+            var builder = new SequenceBuilder(fixUid ?? Guid.NewGuid(), "SEQ:" + displayName, option, DefinitionMetaDataBuilder.Execute(metadataBuilder));
             return builder;
         }
     }

@@ -39,8 +39,9 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
                                                     string displayName,
                                                     ConcretType source,
                                                     string redirectClassName,
+                                                    DefinitionMetaData? metaData,
                                                     ConditionExpressionDefinition? redirectionCondition = null)
-            : base(uid, displayName, source, Enums.VGrainRedirectionTypeEnum.ClassPrefixName, redirectionCondition)
+            : base(uid, displayName, source, Enums.VGrainRedirectionTypeEnum.ClassPrefixName, metaData, redirectionCondition)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(redirectClassName);
 
@@ -71,15 +72,15 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         /// <summary>
         /// Get a new redirection from <see cref="TSource"/> to <see cref="TRedirect"/>
         /// </summary>
-        public static VGrainClassNameRedirectionDefinition Create<TSource>(Type redirectClassName, Expression<Func<IdSpan, string?, bool>>? cond = null, string? displayName = null)
+        public static VGrainClassNameRedirectionDefinition Create<TSource>(Type redirectClassName, Expression<Func<IdSpan, string?, bool>>? cond = null, string? displayName = null, DefinitionMetaData? metaData = null)
         {
-            return Create<TSource>(redirectClassName.Namespace + "." + redirectClassName.Name, cond, displayName);
+            return Create<TSource>(redirectClassName.Namespace + "." + redirectClassName.Name, cond, displayName, metaData);
         }
 
         /// <summary>
         /// Get a new redirection from <see cref="TSource"/> to <see cref="TRedirect"/>
         /// </summary>
-        public static VGrainClassNameRedirectionDefinition Create<TSource>(string redirectClassName, Expression<Func<IdSpan, string?, bool>>? cond = null, string? displayName = null)
+        public static VGrainClassNameRedirectionDefinition Create<TSource>(string redirectClassName, Expression<Func<IdSpan, string?, bool>>? cond = null, string? displayName = null, DefinitionMetaData? metaData = null)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(redirectClassName);
 
@@ -87,6 +88,7 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
                                                                !string.IsNullOrEmpty(displayName) ? displayName : $"{typeof(TSource)} impl {redirectClassName}",
                                                                (ConcretType)typeof(TSource).GetAbstractType(),
                                                                redirectClassName,
+                                                               metaData,
                                                                cond?.Serialize());
             def.ValidateWithException();
             return def;

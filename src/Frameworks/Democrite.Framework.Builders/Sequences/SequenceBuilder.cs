@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Builders.Sequences
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Elvex.Toolbox;
 
@@ -25,6 +26,7 @@ namespace Democrite.Framework.Builders.Sequences
 
         private readonly string? _displayName;
         private readonly Guid _uid;
+        private readonly DefinitionMetaData? _definitionMetaData;
 
         #endregion
 
@@ -38,13 +40,15 @@ namespace Democrite.Framework.Builders.Sequences
         /// <param name="triggerDefinition">All information about the worflow trigger; if null the sequence will need manual trigger</param>
         internal SequenceBuilder(Guid uid,
                                  string displayName,
-                                 SequenceOptionDefinition? options)
+                                 SequenceOptionDefinition? options,
+                                 DefinitionMetaData? definitionMetaData)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(displayName);
 
             this._options = options ?? SequenceOptionDefinition.Default;
             this._displayName = displayName;
             this._uid = uid;
+            this._definitionMetaData = definitionMetaData;
 
             this._stages = new Queue<ISequencePipelineStageDefinitionProvider>();
         }
@@ -53,7 +57,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// Initializes a new instance of the <see cref="SequenceBuilder"/> class link to a parent one
         /// </summary>
         internal SequenceBuilder(SequenceBuilder parent, string displayName)
-            : this(Guid.NewGuid(), displayName, parent._options)
+            : this(Guid.NewGuid(), displayName, parent._options, parent._definitionMetaData)
         {
             this._parent = parent;
         }
@@ -112,7 +116,8 @@ namespace Democrite.Framework.Builders.Sequences
             return new SequenceDefinition(this._uid,
                                           this._displayName,
                                           this._options,
-                                          this._stages.Select(s => s.ToDefinition()).ToArray());
+                                          this._stages.Select(s => s.ToDefinition()).ToArray(),
+                                          this._definitionMetaData);
         }
 
         #endregion

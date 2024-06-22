@@ -17,6 +17,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class DataSourceConvertValueDefinition<TData> : DataSourceDefinition
     {
@@ -25,8 +26,8 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         /// <summary>
         /// Initializes a new instance of the <see cref="DataSourceConvertValueDefinition{TData}"/> class.
         /// </summary>
-        public DataSourceConvertValueDefinition(Guid uid, AccessExpressionDefinition access)
-            : base(uid, DataSourceTypeEnum.Convert, typeof(TData).GetAbstractType())
+        public DataSourceConvertValueDefinition(Guid uid, AccessExpressionDefinition access, DefinitionMetaData? metaData = null)
+            : base(uid, DataSourceTypeEnum.Convert, typeof(TData).GetAbstractType(), metaData)
         {
             ArgumentNullException.ThrowIfNull(access);
             this.Access = access;
@@ -38,6 +39,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
 
         /// <inheritdoc />
         [DataMember]
+        [Id(0)]
         public AccessExpressionDefinition Access { get; }
 
         #endregion

@@ -18,6 +18,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
 
     [KnownType(typeof(DataSourceStaticCollectionDefinition<>))]
@@ -34,9 +35,11 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         /// </summary>
         protected DataSourceDefinition(Guid uid,
                                        DataSourceTypeEnum InputSourceType,
-                                       AbstractType dataType)
+                                       AbstractType dataType,
+                                       DefinitionMetaData? metaData)
         {
             this.Uid = uid;
+            this.MetaData = metaData;
             this.InputSourceType = InputSourceType;
             this.DataType = dataType;
         }
@@ -54,18 +57,26 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
 
         /// <inheritdoc />
         [DataMember]
+        [Id(0)]
         public Guid Uid { get; }
+
+        /// <inheritdoc />
+        [DataMember]
+        [Id(1)]
+        public DefinitionMetaData? MetaData { get; }
 
         /// <summary>
         /// Gets the type of the input source.
         /// </summary>
         [IgnoreDataMember]
+        [Id(2)]
         public DataSourceTypeEnum InputSourceType { get; }
 
         /// <summary>
         /// Gets the type of the input.
         /// </summary>
         [IgnoreDataMember]
+        [Id(3)]
         public AbstractType DataType { get; }
 
         #endregion
@@ -89,6 +100,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
 
             return this.InputSourceType == other.InputSourceType &&
                    this.DataType == other.DataType &&
+                   this.MetaData == other.MetaData &&
                    OnEquals(other);
         }
 
@@ -104,9 +116,10 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         /// <inheritdoc />
         public sealed override int GetHashCode()
         {
-            return this.InputSourceType.GetHashCode() ^
-                   this.DataType.GetHashCode() ^
-                   OnGetHashCode();
+            return HashCode.Combine(this.InputSourceType, 
+                                    this.DataType,
+                                    this.MetaData,
+                                    OnGetHashCode());
         }
 
         /// <inheritdoc cref="object.GetHashCode" />

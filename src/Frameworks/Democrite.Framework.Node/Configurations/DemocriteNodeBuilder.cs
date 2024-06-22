@@ -53,6 +53,7 @@ namespace Democrite.Framework.Configurations
     using Microsoft.Extensions.DependencyInjection.Extensions;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     using Orleans.Configuration;
     using Orleans.Hosting;
@@ -501,7 +502,9 @@ namespace Democrite.Framework.Configurations
         #region Tools
 
         /// <inheritdoc />
-        protected override void OnAutoConfigure(IConfiguration configuration, IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies, ILogger logger)
+        protected override void OnAutoConfigure(IConfiguration configuration,
+                                                IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
+                                                ILogger logger)
         {
             var defaultMemoryAutoKey = configuration.GetSection(ConfigurationNodeSectionNames.NodeMemoryDefaultAutoConfigKey).Get<string>();
 
@@ -576,6 +579,24 @@ namespace Democrite.Framework.Configurations
                                                                                                       (s) => s.GetServiceByKey<string, IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey) != null,
                                                                                                       ConfigurationNodeSectionNames.NodeRepositoryStoragesAutoConfigKey,
                                                                                                       logger);
+
+            ConfigDefaultOptions(this.GetServiceCollection(), configuration);
+        }
+
+        /// <summary>
+        /// Configurations the default options.
+        /// </summary>
+        private void ConfigDefaultOptions(IServiceCollection serviceDescriptors, IConfiguration configuration)
+        {
+            var existRuntimeOption = serviceDescriptors.FirstOrDefault(s => s.IsKeyedService == false &&
+                                                                            (s.ServiceType == typeof(ClusterNodeRuntimeOptions) ||
+                                                                             s.ServiceType == typeof(IOptions<ClusterNodeRuntimeOptions>) ||
+                                                                             s.ServiceType == typeof(IOptionsMonitor<ClusterNodeRuntimeOptions>)));
+
+            if (existRuntimeOption != null)
+                return;
+
+            serviceDescriptors.Configure<ClusterNodeRuntimeOptions>(configuration);
         }
 
         /// <summary>
@@ -621,7 +642,7 @@ namespace Democrite.Framework.Configurations
         protected override void OnManualBuildConfigure()
         {
             this._orleanSiloBuilder.AddGrainService<ClusterNodeComponentIdentitCardProvider>();
-            
+
             this._orleanSiloBuilder.AddGrainService<SignalLocalGrainServiceRelay>();
             this._orleanSiloBuilder.Services.AddSingleton<SignalLocalGrainServiceRelayClient>()
                                             .AddSingleton<ISignalLocalGrainServiceRelayClient>(p => p.GetRequiredService<SignalLocalGrainServiceRelayClient>())
@@ -658,7 +679,7 @@ namespace Democrite.Framework.Configurations
 
             if (!CheckIsExistSetupInServices<IArtifactExecutorFactory>(serviceCollection))
                 AddService<IArtifactExecutorFactory, ArtifactExecutorFactory>();
-            
+
             AddService<IArtifactExecutorDedicatedFactory, ArtifactExecutorCLIDedicatedFactory>();
 
             if (!CheckIsExistSetupInServices<ITriggerDefinitionProvider>(serviceCollection))
@@ -711,7 +732,7 @@ namespace Democrite.Framework.Configurations
             foreach (var definition in DemocriteSystemDefinitions.GetAllSystemDefinitions())
             {
                 var defType = definition.GetType();
-                
+
                 if (preferences.TryGetValue(defType, out var preferedStoreDef) && preferedStoreDef.CanStore(definition))
                 {
                     preferedStoreDef.TryStore(definition);

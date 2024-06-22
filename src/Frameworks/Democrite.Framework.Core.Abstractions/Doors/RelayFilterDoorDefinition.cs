@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Doors
 {
     using Democrite.Framework.Core.Abstractions.Signals;
+
     using Elvex.Toolbox.Abstractions.Conditions;
     using Elvex.Toolbox.Extensions;
 
@@ -33,22 +34,22 @@ namespace Democrite.Framework.Core.Abstractions.Doors
         /// </summary>
         public RelayFilterDoorDefinition(Guid uid,
                                          string name,
-                                         string? group,
                                          string vgrainInterfaceFullName,
                                          IEnumerable<SignalId>? signalSourceIds,
                                          IEnumerable<DoorId>? doorSourceIds,
                                          ConditionExpressionDefinition filterCondition,
                                          bool dontRelaySignalContent,
+                                         DefinitionMetaData? metaData,
                                          TimeSpan? activeWindowInterval = null,
                                          TimeSpan? retentionMaxDelay = null,
                                          uint? historyMaxRetention = null,
                                          uint? notConsumedMaxRetiention = null)
             : base(uid,
                    name,
-                   group,
                    vgrainInterfaceFullName,
                    signalSourceIds,
                    doorSourceIds,
+                   metaData,
                    activeWindowInterval,
                    retentionMaxDelay,
                    historyMaxRetention,

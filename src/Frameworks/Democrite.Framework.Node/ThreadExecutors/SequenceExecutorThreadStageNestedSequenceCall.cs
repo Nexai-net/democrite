@@ -58,7 +58,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
         #region Methods
 
         /// <inheritdoc />
-        public ValueTask<StageStepResult> ExecAsync(ISequenceStageDefinition step,
+        public ValueTask<StageStepResult> ExecAsync(SequenceStageDefinition step,
                                                     object? input,
                                                     IExecutionContext sequenceContext,
                                                     ILogger logger,
@@ -96,7 +96,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 
         #region Tools
 
-        private Task<StageStepResult> SequenceStageNestedPostProcess(ISequenceStageDefinition sequenceStageDefinition,
+        private Task<StageStepResult> SequenceStageNestedPostProcess(SequenceStageDefinition sequenceStageDefinition,
                                                                      Func<ISecureContextToken<ISequenceExecutorThreadHandler>> securityThreadHandlerAccessor)
         {
             using (var handlerSafeToken = securityThreadHandlerAccessor())

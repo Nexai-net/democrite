@@ -4,10 +4,17 @@
 
 namespace Democrite.Framework.Builders.Signals
 {
+    using Democrite.Framework.Core.Abstractions;
+
     /// <inheritdoc />
     internal abstract class SignalNetworkBasePartBuilder<TWizard> : ISignalNetworkBasePartBuilder<TWizard>
         where TWizard : ISignalNetworkBasePartBuilder<TWizard>
     {
+        #region Fields
+        
+        
+        #endregion
+
         #region Ctor
 
         /// <summary>
@@ -36,14 +43,24 @@ namespace Democrite.Framework.Builders.Signals
         /// </summary>
         public Guid Uid { get; }
 
+        /// <summary>
+        /// Gets the meta data.
+        /// </summary>
+        public DefinitionMetaData? DefinitionMetaData { get; private set; }
+
         #endregion
 
         #region Methods
 
         /// <inheritdoc />
-        public TWizard Group(string groupName)
+        public TWizard MetaData(Action<IDefinitionMetaDataBuilder>? action)
         {
-            this.GroupName = groupName;
+            if (action is not null)
+            {
+                var builder = new DefinitionMetaDataBuilder();
+                action.Invoke(builder);
+                this.DefinitionMetaData = builder.Build(out var _);
+            }
             return GetWiazrd();
         }
 

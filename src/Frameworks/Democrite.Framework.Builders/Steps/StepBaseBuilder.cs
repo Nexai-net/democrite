@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Builders.Steps
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Elvex.Toolbox.Abstractions.Expressions;
     using Elvex.Toolbox.Models;
@@ -46,10 +47,12 @@ namespace Democrite.Framework.Builders.Steps
         #region Methods
 
         /// <inheritdoc/>
-        public abstract ISequenceStageDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
-                                                                        bool preventReturn,
-                                                                        AccessExpressionDefinition? configurationAccess,
-                                                                        ConcretType? configurationFromContextDataType = null);
+        public abstract SequenceStageDefinition ToDefinition<TContext>(DefinitionMetaData? metaData,
+                                                                       Guid uid,
+                                                                       string displayName,
+                                                                       bool preventReturn,
+                                                                       AccessExpressionDefinition? configurationAccess,
+                                                                       ConcretType? configurationFromContextDataType = null);
 
         #endregion
     }

@@ -4,11 +4,11 @@
 
 namespace Democrite.Framework.Builders.Artifacts
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Core.Abstractions.Configurations;
 
     using Elvex.Toolbox.Abstractions.Services;
-    using Elvex.Toolbox.Helpers;
     using Elvex.Toolbox.Services;
 
     using System;
@@ -36,7 +36,6 @@ namespace Democrite.Framework.Builders.Artifacts
         private readonly HashSet<string> _packageExcludeDir;
         private readonly HashSet<Regex> _packageExcludeReg;
 
-        private readonly string? _description;
         private readonly string _displayName;
         private readonly Guid _uid;
 
@@ -50,6 +49,7 @@ namespace Democrite.Framework.Builders.Artifacts
         private Uri? _packageSource;
         private Version? _packageVersion;
         private ArtifactExecVerboseEnum _verbose;
+        private DefinitionMetaData? _definitionMetaData;
 
         #endregion
 
@@ -58,7 +58,7 @@ namespace Democrite.Framework.Builders.Artifacts
         /// <summary>
         /// Initializes a new instance of the <see cref="ArtifactExecutablePackageBuilder"/> class.
         /// </summary>
-        internal ArtifactExecutablePackageBuilder(string displayName, string? description, Guid? uid = null)
+        internal ArtifactExecutablePackageBuilder(string displayName, Guid? uid = null)
         {
             this._configs = new Dictionary<string, ConfigurationBaseDefinition>();
 
@@ -72,7 +72,6 @@ namespace Democrite.Framework.Builders.Artifacts
             this._packageExcludeReg = new HashSet<Regex>();
 
             this._displayName = displayName;
-            this._description = description;
             this._uid = uid ?? Guid.NewGuid();
         }
 
@@ -270,7 +269,6 @@ namespace Democrite.Framework.Builders.Artifacts
 
             return new ArtifactExecutableDefinition(this._uid,
                                                     this._displayName,
-                                                    this._description,
                                                     this._packageVersion,
                                                     hash,
                                                     timeManager.UtcNow,
@@ -284,6 +282,7 @@ namespace Democrite.Framework.Builders.Artifacts
                                                     this._packageFiles.OrderBy(p => p).ToArray(),
                                                     this._packageType.GetValueOrDefault(),
                                                     this._environmentBuilder?.Build(),
+                                                    this._definitionMetaData,
                                                     this._verbose,
                                                     this._configs?.Values);
         }
@@ -318,7 +317,8 @@ namespace Democrite.Framework.Builders.Artifacts
                                                                                        configName,
                                                                                        configName,
                                                                                        configType,
-                                                                                       secureDataTansfer);
+                                                                                       secureDataTansfer,
+                                                                                       null);
             return this;
         }
 
@@ -334,6 +334,13 @@ namespace Democrite.Framework.Builders.Artifacts
                                                                                                 configSectionKey,
                                                                                                 defaultValue,
                                                                                                 secureDataTansfer);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IArtifactExecutablePackageResourceBuilder MetaData(Action<IDefinitionMetaDataBuilder> action)
+        {
+            this._definitionMetaData = DefinitionMetaDataBuilder.Execute(action);
             return this;
         }
 

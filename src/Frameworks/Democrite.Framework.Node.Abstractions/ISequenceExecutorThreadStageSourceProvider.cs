@@ -18,11 +18,11 @@ namespace Democrite.Framework.Node.Abstractions
         /// <returns>
         ///   <c>true</c> if this instance can handler the specified stage; otherwise, <c>false</c>.
         /// </returns>
-        bool CanHandler(ISequenceStageDefinition stage);
+        bool CanHandler(SequenceStageDefinition stage);
 
         /// <summary>
         /// Provides a specified stage dedicated <see cref="ISequenceExecutorThreadStageHandler"/>
         /// </summary>
-        ISequenceExecutorThreadStageHandler Provide(ISequenceStageDefinition stage);
+        ISequenceExecutorThreadStageHandler Provide(SequenceStageDefinition stage);
     }
 }

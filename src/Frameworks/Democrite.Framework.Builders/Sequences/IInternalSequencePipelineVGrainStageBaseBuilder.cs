@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Builders.Sequences
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence;
 
     /// <summary>
@@ -24,11 +25,11 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Converts to definition.
         /// </summary>
-        SequenceStageBaseDefinition? ToDefinition();
+        SequenceStageDefinition? ToDefinition();
 
         /// <summary>
-        /// Configurations the option.
+        /// Builds the definition meta data.
         /// </summary>
-        SequenceOptionStageDefinition? ConfigOption();
+        DefinitionMetaData? BuildDefinitionMetaData(out string? displayName);
     }
 }

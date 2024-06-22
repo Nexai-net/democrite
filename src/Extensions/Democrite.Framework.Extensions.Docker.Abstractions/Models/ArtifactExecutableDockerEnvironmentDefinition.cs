@@ -15,6 +15,7 @@
     {
         #region Fields
 
+        private readonly string _fullImageName;
         public const string ENVIRONMENT_KEY = "docker";
 
         #endregion
@@ -27,12 +28,19 @@
         public ArtifactExecutableDockerEnvironmentDefinition(string? minimalRequiredVersion,
                                                              string image,
                                                              string? tag,
-                                                             string? gpuRequirement)
-            : base(ENVIRONMENT_KEY, minimalRequiredVersion)
+                                                             string? gpuRequirement,
+                                                             bool onlyLocal = false,
+                                                             string? repository = null,
+                                                             string? configurationName = null)
+            : base(ENVIRONMENT_KEY, configurationName, minimalRequiredVersion)
         {
+            this.Repository = repository;
+            this.OnlyLocal = onlyLocal;
             this.GPURequirement = gpuRequirement;
             this.Image = image;
             this.Tag = tag;
+
+            this._fullImageName = GetFullImageFormatedName(repository);
         }
 
         #endregion
@@ -42,27 +50,60 @@
         /// <summary>
         /// Gets the image.
         /// </summary>
+        [DataMember]
         public string Image { get; }
 
         /// <summary>
         /// Gets the tag.
         /// </summary>
+        [DataMember]
         public string? Tag { get; }
+
+        /// <summary>
+        /// Gets the repository.
+        /// </summary>
+        [DataMember]
+        public string? Repository { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether image MUST not be pull, only local value as to be used.
+        /// </summary>
+        [DataMember]
+        public bool OnlyLocal { get; }
 
         /// <summary>
         /// Gets the gpu requirement.
         /// </summary>
+        [DataMember]
         public string? GPURequirement { get; }
 
         #endregion
 
         #region Methods
 
+        /// <summary>
+        /// Gets the full name of the image formated.
+        /// </summary>
+        /// <param name="defaultConfigureRepo">The default configure repository.</param>
+        public string GetFullImageFormatedName(string? defaultConfigureRepo = null)
+        {
+            return (this.OnlyLocal == false
+                        ? ((string.IsNullOrEmpty(this.Repository)
+                                 ? string.IsNullOrEmpty(defaultConfigureRepo) ? "" : defaultConfigureRepo + "/"
+                                 : this.Repository + "/"))
+                        : "")
+                    + this.Image
+                    + (string.IsNullOrEmpty(this.Tag) ? ":latest" : ":" + this.Tag);
+        }
+
         /// <inheritdoc />
         protected override bool OnEquals([NotNull] ArtifactExecutableEnvironmentDefinition other)
         {
             return other is ArtifactExecutableDockerEnvironmentDefinition docker &&
                    string.Equals(this.Image, docker.Image, StringComparison.OrdinalIgnoreCase) &&
+                   this.OnlyLocal == docker.OnlyLocal &&
+                   string.Equals(this.Repository, docker.Repository, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(this.ConfigurationName, docker.ConfigurationName, StringComparison.OrdinalIgnoreCase) &&
                    string.Equals(this.Tag, docker.Tag, StringComparison.OrdinalIgnoreCase) &&
                    string.Equals(this.GPURequirement, docker.GPURequirement, StringComparison.OrdinalIgnoreCase);
         }
@@ -70,7 +111,12 @@
         /// <inheritdoc />
         protected override object OnGetHashCode()
         {
-            return HashCode.Combine(this.Image, this.Tag, this.GPURequirement);
+            return HashCode.Combine(this.Image,
+                                    this.Tag,
+                                    this.GPURequirement,
+                                    this.Repository,
+                                    this.ConfigurationName,
+                                    this.OnlyLocal);
         }
 
         #endregion

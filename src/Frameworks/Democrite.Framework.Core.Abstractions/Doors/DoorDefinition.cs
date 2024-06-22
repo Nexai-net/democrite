@@ -5,8 +5,8 @@
 namespace Democrite.Framework.Core.Abstractions.Doors
 {
     using Democrite.Framework.Core.Abstractions.Signals;
+
     using Elvex.Toolbox.Extensions;
-    using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
 
@@ -43,15 +43,15 @@ namespace Democrite.Framework.Core.Abstractions.Doors
         [Newtonsoft.Json.JsonConstructor]
         public DoorDefinition(Guid uid,
                               string name,
-                              string? group,
                               string vgrainInterfaceFullName,
                               IEnumerable<SignalId>? signalSourceIds,
                               IEnumerable<DoorId>? doorSourceIds,
+                              DefinitionMetaData? metaData,
                               TimeSpan? activeWindowInterval = null,
                               TimeSpan? retentionMaxDelay = null,
                               uint? historyMaxRetention = null,
                               uint? notConsumedMaxRetiention = null)
-            : base(uid, name, name, group: group)
+            : base(uid, name, name, metaData)
         {
             ArgumentException.ThrowIfNullOrEmpty(name);
 

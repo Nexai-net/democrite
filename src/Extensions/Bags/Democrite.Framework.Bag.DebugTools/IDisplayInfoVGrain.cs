@@ -5,11 +5,16 @@
 namespace Democrite.Framework.Bag.DebugTools
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Attributes.MetaData;
 
     /// <summary>
     /// VGrain used to write on the logger the information about an input and execution context
     /// </summary>
     /// <seealso cref="IVGrain" />
+    [VGrainMetaData("44F7E66A-CC76-4E60-91C4-15FB63CBF192", 
+                    displayName: "Display", 
+                    description: "Used to show in logs the input and/or context information.", 
+                    categoryPath: "tools")]
     public interface IDisplayInfoVGrain : IVGrain
     {
         /// <summary>

@@ -4,7 +4,7 @@
 
 namespace Democrite.Framework.Builders.Sequences
 {
-    using Democrite.Framework.Core.Abstractions.Sequence;
+    using Democrite.Framework.Core.Abstractions;
 
     using System;
 
@@ -16,37 +16,42 @@ namespace Democrite.Framework.Builders.Sequences
         #region Ctor
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SequencePipelineStageBaseBuilder{TInput}"/> class.
+        /// Initializes a new instance of the <see cref="SequencePipelineStageBaseBuilder"/> class.
         /// </summary>
-        public SequencePipelineStageBaseBuilder(Action<ISequencePipelineStageConfigurator>? configAction)
+        public SequencePipelineStageBaseBuilder(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilderAction, Guid? fixUid)
         {
-            this.ConfigAction = configAction;
+            this.FixUid = fixUid ?? Guid.NewGuid();
+            this.MetaDataBuilderAction = metaDataBuilderAction;
         }
 
         #endregion
 
         #region Properties
 
+        /// <inheritdoc />
+        public Guid FixUid { get; }
+
         /// <summary>
         /// Gets the configuration action.
         /// </summary>
-        protected Action<ISequencePipelineStageConfigurator>? ConfigAction { get; }
+        protected Action<IDefinitionMetaDataWithDisplayNameBuilder>? MetaDataBuilderAction { get; }
 
         #endregion
 
         #region Methods
 
         /// <summary>
-        /// Configurations the option.
+        /// Build stage definition metadata
         /// </summary>
-        protected virtual SequenceOptionStageDefinition? BuildConfigDefinition()
+        protected virtual DefinitionMetaData? BuildDefinitionMetaData(out string? displayName)
         {
-            if (this.ConfigAction != null)
+            if (this.MetaDataBuilderAction != null)
             {
-                var builder = new SequencePipelineConfiguratorStageBuilder();
-                this.ConfigAction?.Invoke(builder);
-                return builder.ToDefinition();
+                var builder = new DefinitionMetaDataBuilder();
+                this.MetaDataBuilderAction?.Invoke(builder);
+                return builder.Build(out displayName);
             }
+            displayName = null; 
             return null;
         }
 

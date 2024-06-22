@@ -578,7 +578,9 @@ namespace Democrite.Framework.Cluster.Configurations
         /// <summary>
         /// Extend auto configuration <see cref="IAutoConfigurator"/>
         /// </summary>>
-        protected virtual void OnAutoConfigure(IConfiguration configuration, IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies, ILogger logger)
+        protected virtual void OnAutoConfigure(IConfiguration configuration,
+                                               IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
+                                               ILogger logger)
         {
         }
 

@@ -37,8 +37,9 @@ namespace Democrite.Framework.Builders.Sequences
                                                    AccessExpressionDefinition? memberAccess = null,
                                                    AbstractMethod? setMethod = null,
                                                    bool relayInput = false,
-                                                   Action<ISequencePipelineStageConfigurator>? configAction = null)
-            : base(configAction)
+                                                   Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilderAction = null,
+                                                   Guid? fixUid = null)
+            : base(metaDataBuilderAction, fixUid)
         {
             this._sequenceBuilder = sequenceBuilder;
             this._memberAccess = memberAccess;
@@ -51,20 +52,22 @@ namespace Democrite.Framework.Builders.Sequences
         #region Methods
 
         /// <inheritdoc />
-        public SequenceStageBaseDefinition ToDefinition()
+        public SequenceStageDefinition ToDefinition()
         {
             var innerDefinition = this._sequenceBuilder.Build();
-            var cfg = BuildConfigDefinition();
+            var metadata = BuildDefinitionMetaData(out var displayName);
 
             var input = typeof(TInput).GetAbstractType();
 
-            return new SequenceStageForeachDefinition(input,
+            return new SequenceStageForeachDefinition(this.FixUid,
+                                                      displayName ?? "Foreach",
+                                                      input,
                                                       innerDefinition,
                                                       output: this._relayInput ? input : innerDefinition.Output,
                                                       innerDefinition.Output,
                                                       memberAccess: this._memberAccess,
                                                       setMethod: this._setMethod,
-                                                      options: cfg);
+                                                      metadata);
         }
 
         #endregion

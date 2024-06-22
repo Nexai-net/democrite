@@ -29,6 +29,8 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
     using System.Linq;
     using System.Linq.Expressions;
     using System.Threading.Tasks;
+    using Democrite.Framework.Node.UnitTests.Tools;
+    using Elvex.Toolbox.UnitTests.ToolKit.Helpers;
 
     /// <summary>
     /// Test <see cref="SequenceExecutorFilterThreadStageProvider"/> responsable to call vgrain method during flow resolution
@@ -57,14 +59,17 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             {
                 Check.ThatCode(() => provider.CanHandler(null)).DoesNotThrow().And.WhichResult().IsFalse();
 
-                var mockBaseSequenceStage = new Mock<ISequenceStageDefinition>();
-                Check.ThatCode(() => provider.CanHandler(mockBaseSequenceStage.Object)).DoesNotThrow().And.WhichResult().IsFalse();
+                var mockBaseSequenceStage = TestSequenceStageDefinition.Create();
+                Check.ThatCode(() => provider.CanHandler(mockBaseSequenceStage)).DoesNotThrow().And.WhichResult().IsFalse();
 
                 var def = typeof(SequenceExecutorFilterThreadStageProviderUnitTests).GetMethod(nameof(SequenceExecutorFilterThreadStageProvider_CanHandler))!.GetAbstractMethod();
 
-                Check.ThatCode(() => provider.CanHandler(new SequenceStageCallDefinition(null,
+                Check.ThatCode(() => provider.CanHandler(new SequenceStageCallDefinition(Guid.NewGuid(),
+                                                                                         null,
+                                                                                         null,
                                                                                          (ConcretType)(typeof(string).GetAbstractType()),
                                                                                          def,
+                                                                                         null,
                                                                                          null,
                                                                                          null,
                                                                                          null,

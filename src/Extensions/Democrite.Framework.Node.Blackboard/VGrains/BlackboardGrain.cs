@@ -317,7 +317,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                     BlackboardTemplateControllerDefinition? controllerDefinition = null;
 
                     if (!indexedCfgController.TryGetValue(controllerType, out controllerDefinition))
-                        controllerDefinition = new BlackboardTemplateControllerDefinition(Guid.NewGuid(), controllerType, s_defaultControllerConcretType, DefaultControllerOptions.Default);
+                        controllerDefinition = new BlackboardTemplateControllerDefinition(Guid.NewGuid(), controllerType, s_defaultControllerConcretType, DefaultControllerOptions.Default, null);
 
                     var grainDefType = controllerDefinition.AgentInterfaceType.ToType();
 
@@ -422,17 +422,20 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         {
             CheckInitializationRequired();
 
-            await this._metaDataLocker.WaitAsync(token.CancellationToken);
+            var metaDatas = EnumerableHelper<BlackboardRecordMetadata>.Enumerable;
 
+            await this._metaDataLocker.WaitAsync(token.CancellationToken);
             try
             {
                 var metaData = GetAllStoredMetaDatByFilters(logicTypeFilter, displayNameFilter, recordStatusFilter);
-                return await GetAllStoredDataByMetaDataAsync<TDataProjection>(metaData.Select(m => m.Value), token.CancellationToken);
+                metaDatas = metaData.Select(m => m.Value);
             }
             finally
             {
                 this._metaDataLocker.Release();
             }
+
+            return await GetAllStoredDataByMetaDataAsync<TDataProjection>(metaDatas, token.CancellationToken);
         }
 
         /// <inheritdoc />
@@ -441,10 +444,10 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             CheckInitializationRequired();
 
             await this._metaDataLocker.WaitAsync(token.CancellationToken);
-            var metaData = GetMetadataByIds(dataUids);
-
             try
             {
+                var metaData = GetMetadataByIds(dataUids);
+
                 return metaData.Select(kv => new MetaDataRecordContainer(kv.LogicalType,
                                                                          kv.Uid,
                                                                          kv.DisplayName,
@@ -475,10 +478,10 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             CheckInitializationRequired();
 
             await this._metaDataLocker.WaitAsync(token.CancellationToken);
-            var metaData = GetAllStoredMetaDatByFilters(logicTypeFilter, displayNameFilter, recordStatusFilter);
-
             try
             {
+                var metaData = GetAllStoredMetaDatByFilters(logicTypeFilter, displayNameFilter, recordStatusFilter);
+
                 return metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
                                                                          kv.Value.Uid,
                                                                          kv.Value.DisplayName,
@@ -497,24 +500,25 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, GrainCancellationToken token)
+        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, GrainCancellationToken token)
         {
             CheckInitializationRequired();
 
+            await this._metaDataLocker.WaitAsync(token.CancellationToken);
             try
             {
                 var metaData = GetAllStoredMetaDatByFilters(filter);
 
-                return Task.FromResult(metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
-                                                                                         kv.Value.Uid,
-                                                                                         kv.Value.DisplayName,
-                                                                                         kv.Value.ContainsType is not null ? ConcretBaseTypeConverter.ConvertFromSurrogate(kv.Value.ContainsType!) : (ConcretType?)null,
-                                                                                         kv.Value.Status,
-                                                                                         kv.Value.UTCCreationTime,
-                                                                                         kv.Value.CreatorIdentity,
-                                                                                         kv.Value.UTCLastUpdateTime,
-                                                                                         kv.Value.LastUpdaterIdentity,
-                                                                                         kv.Value.CustomMetadata)).ToReadOnly());
+                return metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
+                                                                         kv.Value.Uid,
+                                                                         kv.Value.DisplayName,
+                                                                         kv.Value.ContainsType is not null ? ConcretBaseTypeConverter.ConvertFromSurrogate(kv.Value.ContainsType!) : (ConcretType?)null,
+                                                                         kv.Value.Status,
+                                                                         kv.Value.UTCCreationTime,
+                                                                         kv.Value.CreatorIdentity,
+                                                                         kv.Value.UTCLastUpdateTime,
+                                                                         kv.Value.LastUpdaterIdentity,
+                                                                         kv.Value.CustomMetadata)).ToReadOnly();
             }
             finally
             {
@@ -523,19 +527,24 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, GrainCancellationToken token)
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, GrainCancellationToken token)
         {
             CheckInitializationRequired();
 
+            var metaDatas = EnumerableHelper<BlackboardRecordMetadata>.Enumerable;
+
+            await this._metaDataLocker.WaitAsync(token.CancellationToken);
             try
             {
                 var metaData = GetAllStoredMetaDatByFilters(filter);
-                return GetAllStoredDataByMetaDataAsync<TDataProjection>(metaData.Select(m => m.Value).ToArray(), token.CancellationToken);
+                metaDatas = metaData.Select(m => m.Value);
             }
             finally
             {
                 this._metaDataLocker.Release();
             }
+
+            return await GetAllStoredDataByMetaDataAsync<TDataProjection>(metaDatas, token.CancellationToken);
         }
 
         /// <inheritdoc />
@@ -866,6 +875,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         {
             CheckInitializationRequired();
 
+            await this._metaDataLocker.WaitAsync(token);
+
             BlackboardRecordMetadata[] metaDatas;
             try
             {
@@ -878,6 +889,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             {
                 this._metaDataLocker.Release();
             }
+
             return await GetAllStoredDataByMetaDataAsync<TData>(metaDatas, token);
         }
 
@@ -909,7 +921,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             foreach (var metadata in metaDatas)
             {
                 DataRecordContainer? container = null;
-                
+
                 // If no data have been record in the repository storage then send at lead the metadata information
                 if (!indexedResults.TryGetValue(metadata.Uid, out container))
                 {

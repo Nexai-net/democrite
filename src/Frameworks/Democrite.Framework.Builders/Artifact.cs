@@ -14,9 +14,9 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Get a VGrain code artifact 
         /// </summary>
-        public static IArtifactExecutablePackageResourceBuilder VGrain(string displayName, string? description = null, Guid? uid = null)
+        public static IArtifactExecutablePackageResourceBuilder VGrain(string displayName, Guid? uid = null)
         {
-            return new ArtifactExecutablePackageBuilder(displayName, description, uid);
+            return new ArtifactExecutablePackageBuilder(displayName, uid);
         }
     }
 }

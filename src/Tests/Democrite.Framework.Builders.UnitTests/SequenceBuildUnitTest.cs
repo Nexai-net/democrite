@@ -61,6 +61,8 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             //var func = (IBasicTestVGrain act) => act.ExecuteStringAsync;
 
+            var fixStageId = Guid.NewGuid();
+
             var definition = Sequence.Build("Full")
                                      .NoInput()
 
@@ -68,11 +70,14 @@ namespace Democrite.Framework.Builders.UnitTests
 
                                      .Foreach(IType.From<char>(), each => each.Use<IBasicTestVGrain>().Call((a, input, ctx) => a.ExecuteIpAddressAsync(input, ctx)).Return)
 
-                                     .Use<IBasicTestVGrain>(cfg => cfg.Options<StringBuilder>(cfg => cfg.AppendLine("Test config"))
-                                                                           .ContextParameter("UID", Guid.NewGuid())
-                                                                           .ContextParameter("displayName", "DebugInfo"))
-                                                                 .Call((a, input, ctx) => a.ExecuteStringAsync(ctx))
-                                                                 .Return
+                                     .Use<IBasicTestVGrain>(cfg => cfg.Description("description")
+                                                                      .CategoryChain("root", "partA", "leaf")
+                                                                      .AddTags("poney")
+                                                                      .AddTags("rose"),
+
+                                                            fixUid: fixStageId)
+                                                            .Call((a, input, ctx) => a.ExecuteStringAsync(ctx))
+                                                            .Return
 
                                      // Convert string -> Guid
                                      .Convert<ISequenceTestConverter>().Call((a, input, ctx) => a.Convert(input)).Return
@@ -287,14 +292,25 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Complexe_Sequence_Serializer()
         {
-            var definition = Sequence.Build("Complexe_Sequence_Serializer")
+            var definition = Sequence.Build("Complexe_Sequence_Serializer", metadataBuilder: m =>
+                                     {
+                                         m.CategoryPath("root/path/leaft")
+                                          .Description("description")
+                                          .AddTags("poney")
+                                          .AddTags("rose");
+                                     })
                                      .NoInput()
-                                     .Use<IBasicTestVGrain>().Call((a, ctx) => a.GetUrisAsync(ctx)).Return
+                                     .Use<IBasicTestVGrain>(m =>
+                                     {
+                                         m.AddTags("debug")
+                                          .Description("Test serialization");
+
+                                     }).Call((a, ctx) => a.GetUrisAsync(ctx)).Return
                                      .Foreach(IType.From<Uri>(), each =>
                                      {
                                          return each.Use<IBasicTestVGrain>().Call((a, uri, ctx) => a.GetHtmlFromUriAsync(uri!, ctx)).Return
                                                     .Use<IBasicTestOtherVGrain>().Call((a, html, ctx) => a.OtherReturnIpAddressFromStringAsync(html, ctx)).Return;
-                                     })
+                                     }, m => m.Description("Even in foreach extension methods"))
                                      .Use<ITestStoreVGrain>().Call((a, input, ctx) => a.Storage(input, ctx)).Return
                                      .Build();
 

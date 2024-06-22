@@ -8,8 +8,11 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
 
     using Microsoft.Extensions.Logging;
 
+    using OrleansCodeGen.Orleans.Serialization;
+
     using System;
     using System.ComponentModel;
+    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.Serialization;
 
     /// <summary>
@@ -19,8 +22,9 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public abstract class ArtifactDefinition : ISupportDebugDisplayName, IDefinition
+    public abstract class ArtifactDefinition : IEquatable<ArtifactDefinition>, ISupportDebugDisplayName, IDefinition
     {
         #region Ctor
 
@@ -29,11 +33,11 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         /// </summary>
         protected ArtifactDefinition(Guid uid,
                                      string displayName,
-                                     string? description,
                                      Version? version,
                                      string hash,
                                      DateTime creationOn,
-                                     ArtifactTypeEnum artifactType)
+                                     ArtifactTypeEnum artifactType,
+                                     DefinitionMetaData? metaData)
         {
             ArgumentNullException.ThrowIfNull(uid);
             ArgumentNullException.ThrowIfNull(displayName);
@@ -42,11 +46,11 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
 
             this.Uid = uid;
             this.DisplayName = displayName;
-            this.Description = description;
             this.Version = version;
             this.Hash = hash;
             this.CreationOn = creationOn;
             this.ArtifactType = artifactType;
+            this.MetaData = metaData;
         }
 
         #endregion
@@ -55,40 +59,93 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
 
         /// <inheritdoc />
         [DataMember]
+        [Id(0)]
         public Guid Uid { get; }
 
         /// <inheritdoc />
         [DataMember]
+        [Id(1)]
         public virtual string DisplayName { get; }
 
         /// <inheritdoc />
         [DataMember]
-        public string? Description { get; }
-
-        /// <inheritdoc />
-        [DataMember]
+        [Id(2)]
         public Version? Version { get; }
 
         /// <inheritdoc />
         [DataMember]
+        [Id(3)]
         public string Hash { get; }
 
         /// <inheritdoc />
         [DataMember]
+        [Id(4)]
         public DateTime CreationOn { get; }
 
         /// <inheritdoc />
         [DataMember]
+        [Id(5)]
         public ArtifactTypeEnum ArtifactType { get; }
+
+        /// <inheritdoc />
+        [DataMember]
+        [Id(6)]
+        public DefinitionMetaData? MetaData { get; }
 
         #endregion
 
         #region Methods
 
         /// <inheritdoc />
+        public bool Equals(ArtifactDefinition? other)
+        {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(other, this))
+                return true;
+
+            return this.Uid == other.Uid &&
+                   this.DisplayName == other.DisplayName &&
+                   this.Version == other.Version &&
+                   this.Hash == other.Hash &&
+                   this.CreationOn == other.CreationOn &&
+                   this.ArtifactType == other.ArtifactType &&
+                   this.MetaData == other.MetaData &&
+                   OnEquals(other);
+        }
+
+        /// <inheritdoc cref="IEquatable{ArtifactDefinition}.Equals(ArtifactDefinition?)" />
+        protected abstract bool OnEquals([NotNull] ArtifactDefinition other);
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            if (obj is ArtifactDefinition artifact)
+                return Equals(artifact);
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.Uid,
+                                    this.DisplayName,
+                                    this.Version,
+                                    this.Hash,
+                                    this.CreationOn,
+                                    this.ArtifactType,
+                                    this.MetaData,
+                                    OnGetHashCode());
+        }
+
+        /// <inheritdoc cref="object.GetHashCode" />
+        protected abstract int OnGetHashCode();
+
+        /// <inheritdoc />
         public virtual string ToDebugDisplayName()
         {
-            return $"{this.Uid}-{this.DisplayName}-{this.Version}-{this.Description?.Take(21)}";
+            return $"{this.Uid}-{this.DisplayName}-{this.Version}-{this.MetaData?.Description?.Take(21)}";
         }
 
         /// <inheritdoc />

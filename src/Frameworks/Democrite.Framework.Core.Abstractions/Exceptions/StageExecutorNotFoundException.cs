@@ -19,7 +19,7 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         /// <summary>
         /// Initializes a new instance of the <see cref="StageExecutorNotFoundException"/> class.
         /// </summary>
-        public StageExecutorNotFoundException(ISequenceStageDefinition stageDefinition, Exception? innerException = null)
+        public StageExecutorNotFoundException(SequenceStageDefinition stageDefinition, Exception? innerException = null)
             : this(DemocriteExceptionSR.StageExecutorNotFoundException.WithArguments(stageDefinition.Type),
                    stageDefinition.Type,
                    DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Door, DemocriteErrorCodes.PartType.Definition, DemocriteErrorCodes.ErrorType.NotFounded),

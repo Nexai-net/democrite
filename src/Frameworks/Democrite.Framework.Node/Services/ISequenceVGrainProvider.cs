@@ -15,6 +15,6 @@ namespace Democrite.Framework.Node.Services
         /// <summary>
         /// Gets the grain provider dedicated based on
         /// </summary>
-        IVGrainProvider GetGrainProvider(ref readonly ISequenceStageDefinition step);
+        IVGrainProvider GetGrainProvider(ref readonly SequenceStageDefinition step);
     }
 }

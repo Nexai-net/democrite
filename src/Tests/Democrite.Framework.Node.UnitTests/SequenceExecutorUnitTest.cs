@@ -35,6 +35,7 @@ namespace Democrite.Framework.Node.UnitTests
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     using Moq;
 
@@ -143,19 +144,19 @@ namespace Democrite.Framework.Node.UnitTests
             sequenceVGrainProviderFactoryMock.GetProvider(Arg.Any<ExecutionCustomizationDescriptions?>())
                                              .Returns(new DisposableStructContainer<ISequenceVGrainProvider>(sequenceVGrainProviderMock));
 
-            sequenceVGrainProviderMock.GetGrainProvider(ref Arg.Any<ISequenceStageDefinition>())
+            sequenceVGrainProviderMock.GetGrainProvider(ref Arg.Any<SequenceStageDefinition>())
                                       .Returns(vgrainProvider);
 
             vgrainProvider.GetVGrainAsync(Arg.Any<Type>(), Arg.Any<object?>(), Arg.Any<IExecutionContext>(), Arg.Any<ILogger>())
                           //.Returns((Type type, object? input, IExecutionContext ctxVGrain, ILogger logger) =>
-                          .Returns((CallInfo info) => 
+                          .Returns((CallInfo info) =>
                           {
                               var type = info.Arg<Type>();
                               var ctxVGrain = info.Arg<IExecutionContext>();
 
                               Check.That(type).IsEqualTo(typeof(ITestExtractEmailTransformer));
                               Check.That(ctxVGrain).IsNotNull();
-                          
+
                               var transformer = new TestExtractEmailTransformer(rootLogger.CreateChild<TestExtractEmailTransformer>());
                               return ValueTask.FromResult<IVGrain>(transformer);
                           });
@@ -171,6 +172,7 @@ namespace Democrite.Framework.Node.UnitTests
                                                       threadStageExecutorProviderMock,
                                                       sequenceVGrainProviderFactoryMock,
                                                       Substitute.For<ISignalService>(),
+                                                      Substitute.For<IOptionsMonitor<ClusterNodeRuntimeOptions>>(),
                                                       Substitute.For<IVGrainDemocriteSystemProvider>());
 
             var result = await executor.RunAsync<string[], string>(EMAIL_SAMPLE_TEST, execCtx);
@@ -272,19 +274,19 @@ namespace Democrite.Framework.Node.UnitTests
 
             var def = Sequence.Build("Foreach")
                               .NoInput()
-                              .Use<IHtmlProviderTestTransformer>(cfg => cfg.Uid(getHtmlStageUid))
-                                                                       .Call((a, ctx) => a.GetHtmlAsync(ctx))
-                                                                       .Return
+                              .Use<IHtmlProviderTestTransformer>(fixUid: getHtmlStageUid)
+                                                                 .Call((a, ctx) => a.GetHtmlAsync(ctx))
+                                                                 .Return
 
-                              .Use<ITagExtractorTestTransformer>(cfg => cfg.Uid(extractTagStageUid))
-                                                                        .Call((a, html, ctx) => a.ExtractTagFromHtmlAsync(html, ctx))
-                                                                        .Return
+                              .Use<ITagExtractorTestTransformer>(fixUid: extractTagStageUid)
+                                                                 .Call((a, html, ctx) => a.ExtractTagFromHtmlAsync(html, ctx))
+                                                                 .Return
 
                               .Foreach(IType.From<Tag>(), each =>
                               {
-                                  return each.Use<ITagQualifierTestTransformer>(cfg => cfg.Uid(tagQualiferStageUid))
-                                             .Call((a, tag, ctx) => a.QualifyTagAsync(tag!, ctx))
-                                             .Return;
+                                  return each.Use<ITagQualifierTestTransformer>(fixUid: tagQualiferStageUid)
+                                                                                .Call((a, tag, ctx) => a.QualifyTagAsync(tag!, ctx))
+                                                                                .Return;
                               })
                               .Build();
 

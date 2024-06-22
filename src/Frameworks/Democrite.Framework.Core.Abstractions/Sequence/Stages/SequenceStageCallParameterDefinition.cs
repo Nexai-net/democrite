@@ -16,6 +16,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class SequenceStageCallParameterDefinition : Equatable<SequenceStageCallParameterDefinition>, ISupportDebugDisplayName
     {

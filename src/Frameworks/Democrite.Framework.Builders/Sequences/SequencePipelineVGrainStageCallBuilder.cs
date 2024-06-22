@@ -26,9 +26,8 @@ namespace Democrite.Framework.Builders.Sequences
     {
         #region Fields
 
-        private readonly Action<ISequencePipelineStageConfigurator>? _configAction;
         private readonly ISequencePipelineBaseBuilder _sequenceBuilder;
-
+        private readonly Action<IDefinitionMetaDataWithDisplayNameBuilder>? _metaDataBuilderAction;
         private readonly AccessExpressionDefinition? _configuration;
         private readonly ConcretType? _configurationFromContextDataType;
 
@@ -42,13 +41,14 @@ namespace Democrite.Framework.Builders.Sequences
         /// Initializes a new instance of the <see cref="SequencePipelineVGrainStageCallBuilder{TWorflowStage, TInput}"/> class.
         /// </summary>
         public SequencePipelineVGrainStageCallBuilder(ISequencePipelineBaseBuilder sequenceBuilder,
-                                                      Action<ISequencePipelineStageConfigurator>? configAction,
+                                                      Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilderAction,
+                                                      Guid? fixUid,
                                                       AccessExpressionDefinition? configuration = null,
                                                       ConcretType? configurationFromContextDataType = null)
-            : base(sequenceBuilder, configAction)
+            : base(sequenceBuilder, metaDataBuilderAction, fixUid)
         {
             this._sequenceBuilder = sequenceBuilder;
-            this._configAction = configAction;
+            this._metaDataBuilderAction = metaDataBuilderAction;
             this._configuration = configuration;
             this._configurationFromContextDataType = configurationFromContextDataType;
         }
@@ -84,13 +84,13 @@ namespace Democrite.Framework.Builders.Sequences
         /// <inheritdoc />
         ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx> ISequencePipelineStageCallBuilder<TVGrain>.Configure<TCtx>(TCtx context)
         {
-            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, context.CreateAccess());
+            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._metaDataBuilderAction, this.FixUid, context.CreateAccess());
         }
 
         /// <inheritdoc />
         ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx, TInput> ISequencePipelineStageCallBuilder<TInput, TVGrain>.Configure<TCtx>(TCtx context)
         {
-            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, context.CreateAccess());
+            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._metaDataBuilderAction, this.FixUid, context.CreateAccess());
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// </summary>
         public ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx, TInput> ConfigureFromInput<TCtx>(Expression<Func<TInput, TCtx>> executionConfiguration)
         {
-            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._configAction, executionConfiguration.CreateAccess());
+            return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder, this._metaDataBuilderAction, this.FixUid, executionConfiguration.CreateAccess());
         }
 
         /// <summary>
@@ -113,10 +113,11 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        public ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx, TInput>  ConfigureFromContext<TContextData, TCtx>(Expression<Func<TContextData, TCtx>> executionConfiguration)
+        public ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx, TInput> ConfigureFromContext<TContextData, TCtx>(Expression<Func<TContextData, TCtx>> executionConfiguration)
         {
             return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder,
-                                                                                     this._configAction,
+                                                                                     this._metaDataBuilderAction, 
+                                                                                     this.FixUid,
                                                                                      executionConfiguration.CreateAccess(),
                                                                                      (ConcretType)typeof(TContextData).GetAbstractType());
         }
@@ -125,7 +126,8 @@ namespace Democrite.Framework.Builders.Sequences
         ISequencePipelineStageConfiguredCallBuilder<TVGrain, TCtx> ISequencePipelineStageCallBuilder<TVGrain>.ConfigureFromContext<TContextData, TCtx>(Expression<Func<TContextData, TCtx>> executionConfiguration)
         {
             return new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, TCtx>(this._sequenceBuilder,
-                                                                                     this._configAction,
+                                                                                     this._metaDataBuilderAction, 
+                                                                                     this.FixUid,
                                                                                      executionConfiguration.CreateAccess(),
                                                                                      (ConcretType)typeof(TContextData).GetAbstractType());
         }
@@ -155,15 +157,17 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <summary>
-        /// Save in <see cref="T:Democrite.Framework.Core.Abstractions.Sequence.SequenceStageBaseDefinition" /> if element is root
+        /// Save in <see cref="T:Democrite.Framework.Core.Abstractions.Sequence.SequenceStageDefinition" /> if element is root
         /// </summary>
         /// <returns></returns>
-        protected override SequenceStageBaseDefinition InternalToDefinition()
+        protected override SequenceStageDefinition InternalToDefinition()
         {
             ArgumentNullException.ThrowIfNull(this._callDefinition);
 
-            var option = BuildConfigDefinition();
-            return this._callDefinition.ToDefinition<TConfiguration>(option,
+            var metadata = BuildDefinitionMetaData(out var displayName);
+            return this._callDefinition.ToDefinition<TConfiguration>(metadata,
+                                                                     this.FixUid,
+                                                                     displayName ?? "Call",
                                                                      this.ConfigPreventOutput,
                                                                      this._configuration,
                                                                      this._configurationFromContextDataType);

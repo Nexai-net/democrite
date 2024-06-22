@@ -54,14 +54,15 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
 
             var id = Guid.NewGuid();
             var def = Door.Create("DoorTest", id)
-                          .Group("GrpA")
+                          .MetaData(m => m.CategoryPath("GrpA"))
                           .Listen(signalA)
                           .UseRelayFilter(r => r.Condition(s => s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false))
                           .Build();
 
             Check.That(def).IsNotNull().And.IsInstanceOf<RelayFilterDoorDefinition>();
             Check.That(def.Uid).IsEqualTo(id);
-            Check.That(def.Group).IsEqualTo("GrpA");
+            Check.That(def.MetaData).IsNotNull();
+            Check.That(def.MetaData!.CategoryPath).IsNotNull().And.IsEqualTo("GrpA");
             Check.That(def.Name).IsEqualTo("DoorTest");
             Check.That(def.VGrainInterfaceFullName).IsNotNull().And.IsEqualTo(typeof(IRelayFilterVGrain).AssemblyQualifiedName);
             Check.That(def.SignalSourceIds).IsNotNull().And.ContainsExactly(signalA.SignalId);
@@ -133,14 +134,15 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             var tecthId = Guid.NewGuid();
 
             var def = Door.Create("DoorTest", id)
-                          .Group("GrpA")
+                          .MetaData(m => m.CategoryPath("GrpA"))
                           .Listen(signalA)
                           .UseRelayFilter<Guid>((id, s) => s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false)
                           .Build();
 
             Check.That(def).IsNotNull().And.IsInstanceOf<RelayFilterDoorDefinition>();
             Check.That(def.Uid).IsEqualTo(id);
-            Check.That(def.Group).IsEqualTo("GrpA");
+            Check.That(def.MetaData).IsNotNull();
+            Check.That(def.MetaData!.CategoryPath).IsNotNull().And.IsEqualTo("GrpA");
             Check.That(def.Name).IsEqualTo("DoorTest");
             Check.That(def.VGrainInterfaceFullName).IsNotNull().And.IsEqualTo(typeof(IRelayFilterVGrain).AssemblyQualifiedName);
             Check.That(def.SignalSourceIds).IsNotNull().And.ContainsExactly(signalA.SignalId);
@@ -192,14 +194,15 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             var tecthId = Guid.NewGuid();
 
             var def = Door.Create("DoorTest", id)
-                          .Group("GrpA")
+                          .MetaData(m => m.CategoryPath("GrpA"))
                           .Listen(signalA)
                           .UseRelayFilter<Guid>((id, s) => id == tecthId && s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false)
                           .Build();
 
             Check.That(def).IsNotNull().And.IsInstanceOf<RelayFilterDoorDefinition>();
             Check.That(def.Uid).IsEqualTo(id);
-            Check.That(def.Group).IsEqualTo("GrpA");
+            Check.That(def.MetaData).IsNotNull();
+            Check.That(def.MetaData!.CategoryPath).IsNotNull().And.IsEqualTo("GrpA");
             Check.That(def.Name).IsEqualTo("DoorTest");
             Check.That(def.VGrainInterfaceFullName).IsNotNull().And.IsEqualTo(typeof(IRelayFilterVGrain).AssemblyQualifiedName);
             Check.That(def.SignalSourceIds).IsNotNull().And.ContainsExactly(signalA.SignalId);
@@ -238,7 +241,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
 
             var id = Guid.NewGuid();
             var def = Door.Create("DoorTest", id)
-                          .Group("GrpA")
+                          .MetaData(m => m.CategoryPath("GrpA"))
                           .Listen(signalA)
                           .UseRelayFilter(r => r.DontRelaySignalContent()
                                                 .Condition(s => s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false))
@@ -246,7 +249,8 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
 
             Check.That(def).IsNotNull().And.IsInstanceOf<RelayFilterDoorDefinition>();
             Check.That(def.Uid).IsEqualTo(id);
-            Check.That(def.Group).IsEqualTo("GrpA");
+            Check.That(def.MetaData).IsNotNull();
+            Check.That(def.MetaData!.CategoryPath).IsNotNull().And.IsEqualTo("GrpA");
             Check.That(def.Name).IsEqualTo("DoorTest");
             Check.That(def.VGrainInterfaceFullName).IsNotNull().And.IsEqualTo(typeof(IRelayFilterVGrain).AssemblyQualifiedName);
             Check.That(def.SignalSourceIds).IsNotNull().And.ContainsExactly(signalA.SignalId);
@@ -270,7 +274,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             try
             {
                 var def = Door.Create("DoorTest", id)
-                              .Group("GrpA")
+                              .MetaData(m => m.CategoryPath("GrpA"))
                               .Listen(signalA)
                               .UseRelayFilter(s => ExternalMethod() && s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false)
                               .Build();
@@ -300,7 +304,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             try
             {
                 var def = Door.Create("DoorTest", id)
-                              .Group("GrpA")
+                              .MetaData(m => m.CategoryPath("GrpA"))
                               .Listen(signalA)
                               .UseRelayFilter<Guid>((id, s) => id == Guid.NewGuid() && ExternalMethod() && s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false)
                               .Build();

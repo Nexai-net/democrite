@@ -12,7 +12,7 @@ namespace Democrite.Framework.Configurations
     /// <summary>
     ///  Cluster node configuration wizard tools
     /// </summary>
-    public interface IDemocriteNodeWizard : IDemocriteWizard<IDemocriteNodeWizard, IDemocriteNodeConfigurationWizard>
+    public interface IDemocriteNodeWizard : IDemocriteWizard<IDemocriteNodeWizard, IDemocriteNodeConfigurationWizard>, IBuilderDemocriteBaseWizard
     {
         #region Properties
 

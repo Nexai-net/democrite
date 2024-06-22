@@ -35,13 +35,13 @@ namespace Democrite.Framework.Node.ThreadExecutors
         #region Methods
 
         /// <inheritdoc />
-        public bool CanHandler(ISequenceStageDefinition stage)
+        public bool CanHandler(SequenceStageDefinition stage)
         {
             return this._sourceProviders.Any(s => s.CanHandler(stage));
         }
 
         /// <inheritdoc />
-        public ISequenceExecutorThreadStageHandler Provide(ISequenceStageDefinition stage)
+        public ISequenceExecutorThreadStageHandler Provide(SequenceStageDefinition stage)
         {
             var sourceProvider = this._sourceProviders.FirstOrDefault(s => s.CanHandler(stage));
 

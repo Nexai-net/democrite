@@ -55,6 +55,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
                                                true,
                                                this._signalId,
                                                this._doorId,
+                                               this.DefinitionMetaData,
                                                this.TriggerGlobalOutputDefinition);
         }
 

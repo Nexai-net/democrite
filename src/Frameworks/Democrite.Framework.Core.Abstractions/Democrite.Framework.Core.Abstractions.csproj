@@ -11,6 +11,12 @@
 		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Core;Abstract</PackageTags>
 
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Models\MetaData\**" />
+	  <EmbeddedResource Remove="Models\MetaData\**" />
+	  <None Remove="Models\MetaData\**" />
+	</ItemGroup>
 	
 	<ItemGroup>
 	  <PackageReference Include="Elvex.Toolbox" />

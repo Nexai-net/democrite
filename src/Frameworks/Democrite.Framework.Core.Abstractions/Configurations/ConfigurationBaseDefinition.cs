@@ -16,6 +16,7 @@ namespace Democrite.Framework.Core.Abstractions.Configurations
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public abstract class ConfigurationBaseDefinition : ISupportDebugDisplayName, IDefinition
     {
@@ -30,9 +31,11 @@ namespace Democrite.Framework.Core.Abstractions.Configurations
                                               string displayName,
                                               string configName,
                                               ConcretBaseType expectedConfigurationType,
-                                              bool secureDataTansfert)
+                                              bool secureDataTansfert,
+                                              DefinitionMetaData? metadata)
         {
             this.Uid = uid;
+            this.MetaData = metadata;
             this.DisplayName = displayName;
             this.ConfigName = configName;
             this.ExpectedConfigurationType = expectedConfigurationType;
@@ -45,29 +48,39 @@ namespace Democrite.Framework.Core.Abstractions.Configurations
 
         /// <inheritdoc />
         [DataMember]
+        [Id(0)]
         public string DisplayName { get; }
 
         /// <summary>
         /// Gets the name of the configuration.
         /// </summary>
         [DataMember]
+        [Id(1)]
         public string ConfigName { get; }
 
         /// <summary>
         /// Gets the expected type of the configuration.
         /// </summary>
         [DataMember]
+        [Id(2)]
         public ConcretBaseType ExpectedConfigurationType { get; }
 
         /// <summary>
         /// Gets a value indicating whether [secure data tansfer].
         /// </summary>
         [DataMember]
+        [Id(3)]
         public bool SecureDataTansfert { get; }
 
         /// <inheritdoc />
         [DataMember]
+        [Id(4)]
         public Guid Uid { get; }
+
+        /// <inheritdoc />
+        [DataMember]
+        [Id(5)]
+        public DefinitionMetaData? MetaData { get; }
 
         #endregion
 

@@ -18,7 +18,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
     /// <typeparam name="IHandler">The type of the handler.</typeparam>
     /// <seealso cref="ISequenceExecutorThreadStageSourceProvider" />
     internal class SequenceExecutorGenericThreadStageSourceProvider<TStageDefinition, IHandler> : ISequenceExecutorThreadStageSourceProvider
-        where TStageDefinition : ISequenceStageDefinition
+        where TStageDefinition : SequenceStageDefinition
         where IHandler : ISequenceExecutorThreadStageHandler
     {
         #region Fields
@@ -42,13 +42,13 @@ namespace Democrite.Framework.Node.ThreadExecutors
         #region Methods
 
         /// <inheritdoc />
-        public bool CanHandler(ISequenceStageDefinition stage)
+        public bool CanHandler(SequenceStageDefinition stage)
         {
             return stage is TStageDefinition;
         }
 
         /// <inheritdoc />
-        public ISequenceExecutorThreadStageHandler Provide(ISequenceStageDefinition stage)
+        public ISequenceExecutorThreadStageHandler Provide(SequenceStageDefinition stage)
         {
             return this._serviceProvider.GetRequiredService<IHandler>();
         }

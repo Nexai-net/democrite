@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Blackboard.Builders.Templates
 {
     using Democrite.Framework.Builders;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Rules;
@@ -36,6 +37,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
 
         private bool _allLogicalTypeUnique;
         private bool _allLogicalTypeUniqueAllowReplace;
+        private DefinitionMetaData? _definitionMetaData;
 
         #endregion
 
@@ -204,6 +206,13 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         }
 
         /// <inheritdoc />
+        public IBlackboardTemplateBuilder MetaData(Action<IDefinitionMetaDataBuilder> action)
+        {
+            this._definitionMetaData = DefinitionMetaDataBuilder.Execute(action);
+            return this;
+        }
+
+        /// <inheritdoc />
         public BlackboardTemplateDefinition Build()
         {
             var controllers = this._storageControllers.GroupBy(k => k.Value)
@@ -220,7 +229,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
                                                               return def;
 
                                                           if (def.GetType() == typeof(BlackboardTemplateControllerDefinition))
-                                                              return new BlackboardTemplateControllerDefinition(def.Uid, targetControllerType, def.AgentInterfaceType, def.Options);
+                                                              return new BlackboardTemplateControllerDefinition(def.Uid, targetControllerType, def.AgentInterfaceType, def.Options, null);
 
                                                           throw new InvalidDataException($"Multiple controller option for the same type that use more complex definition type than BlackboardTemplateControllerDefinition. Duplicate Keys {def.ControllerType ^ targetControllerType:G}");
                                                       })
@@ -262,6 +271,9 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
                                                     this._nameIdentifier,
                                                     controllers,
                                                     rules,
+
+                                                    this._definitionMetaData,
+
                                                     new BlackboardTemplateConfigurationDefinition(this._initializationRequired),
                                                     this._defaultBlackboardStorageDefinitions);
         }

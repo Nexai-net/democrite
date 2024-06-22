@@ -16,6 +16,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     [Immutable]
     [DataContract]
     [Serializable]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class CronTriggerDefinition : TriggerDefinition
     {
@@ -32,12 +33,14 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
                                      bool enabled,
                                      string cronExpression,
                                      bool useSecond,
+                                     DefinitionMetaData? metaData,
                                      DataSourceDefinition? triggerGlobalOutputDefinition = null)
             : base(uid,
                    displayName,
                    TriggerTypeEnum.Cron,
                    targets,
                    enabled,
+                   metaData,
                    triggerGlobalOutputDefinition)
         {
             this.CronExpression = cronExpression;

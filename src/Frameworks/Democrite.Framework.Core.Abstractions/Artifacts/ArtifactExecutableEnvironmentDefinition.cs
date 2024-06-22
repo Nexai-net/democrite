@@ -20,9 +20,10 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         /// <summary>
         /// Initializes a new instance of the <see cref="ArtifactExecutableEnvironmentDefinition"/> class.
         /// </summary>
-        protected ArtifactExecutableEnvironmentDefinition(string environmentName, string? minimalRequiredVersion)
+        protected ArtifactExecutableEnvironmentDefinition(string environmentName, string? configurationName, string? minimalRequiredVersion)
         {
             this.EnvironmentName = environmentName;
+            this.ConfigurationName = configurationName; 
             this.MinimalRequiredVersion = minimalRequiredVersion;
         }
 
@@ -35,6 +36,12 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         /// </summary>
         [DataMember]
         public string EnvironmentName { get; }
+
+        /// <summary>
+        /// Gets the name of the specific configuration.
+        /// </summary>
+        [DataMember]
+        public string? ConfigurationName { get; }
 
         /// <summary>
         /// Gets the minimal required version.
@@ -56,6 +63,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                 return true;
 
             return this.EnvironmentName == other.EnvironmentName &&
+                   this.ConfigurationName == other.ConfigurationName &&
                    this.MinimalRequiredVersion == other.MinimalRequiredVersion &&
                    OnEquals(other);
         }
@@ -74,6 +82,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         {
             return HashCode.Combine(this.EnvironmentName, 
                                     this.MinimalRequiredVersion,
+                                    this.ConfigurationName,
                                     OnGetHashCode());
         }
 

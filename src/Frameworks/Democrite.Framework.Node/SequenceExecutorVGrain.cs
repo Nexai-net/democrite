@@ -26,6 +26,7 @@ namespace Democrite.Framework.Node
     using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     using Orleans.Concurrency;
     using Orleans.Runtime;
@@ -49,6 +50,7 @@ namespace Democrite.Framework.Node
 
         private readonly ISequenceVGrainProviderFactory _sequenceVGrainProviderFactory;
         private readonly IVGrainDemocriteSystemProvider _grainDemocriteSystemProvider;
+        private readonly IOptionsMonitor<ClusterNodeRuntimeOptions> _runtimeOptions;
         private readonly ISequenceDefinitionProvider _sequenceDefinitionManager;
         private readonly ISequenceExecutorThreadStageProvider _stageProvider;
         private readonly IDemocriteSerializer _democriteSerializer;
@@ -85,6 +87,7 @@ namespace Democrite.Framework.Node
                                       ISequenceExecutorThreadStageProvider stageProvider,
                                       ISequenceVGrainProviderFactory sequenceVGrainProviderFactory,
                                       ISignalService signalService,
+                                      IOptionsMonitor<ClusterNodeRuntimeOptions> runtimeOptions,
                                       IVGrainDemocriteSystemProvider grainDemocriteSystemProvider)
             : base(logger, sequenceExecutorState)
         {
@@ -94,6 +97,7 @@ namespace Democrite.Framework.Node
             this._democriteSerializer = democriteSerializer;
             this._diagnosticLogger = diagnosticLogger;
             this._objectConverter = objectConverter;
+            this._runtimeOptions = runtimeOptions;
             this._loggerFactory = loggerFactory;
             this._stageProvider = stageProvider;
             this._signalService = signalService;
@@ -166,8 +170,12 @@ namespace Democrite.Framework.Node
                         state.Initialize(executionContext, sequenceDefintion, input, this._democriteSerializer);
 
                     // Disabled state save to reduce saving of specific sequence
-                    if (sequenceDefintion.Options.PreventSequenceExecutorStateStorage || (state.Customization?.PreventSequenceExecutorStateStorage ?? false))
+                    if (sequenceDefintion.Options.PreventSequenceExecutorStateStorage || 
+                        (state.Customization?.PreventSequenceExecutorStateStorage ?? false) ||
+                        (this._runtimeOptions.CurrentValue?.BlockSequenceExecutorStateStorageByDefault ?? false))
+                    {
                         this.StateStorageEnabled = false;
+                    }
 
                     if (needStateSaving && this.StateStorageEnabled)
                         await PushStateAsync(state, default);

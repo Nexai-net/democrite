@@ -8,10 +8,9 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Core.Diagnostics;
-    using Elvex.Toolbox;
-    using Elvex.Toolbox.Extensions;
-    using Elvex.Toolbox.Helpers;
     using Democrite.UnitTests.ToolKit.Sequences;
+
+    using Elvex.Toolbox;
 
     using NFluent;
 
@@ -25,7 +24,7 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
     /// <param name="stageExecutionInfo">The stage execution information.</param>
     /// <param name="stageDefintion">The stage defintion.</param>
     /// <returns></returns>
-    public delegate void StageValidator(Version stepIndx, FlowStage stageExecutionInfo, ISequenceStageDefinition stageDefintion);
+    public delegate void StageValidator(Version stepIndx, FlowStage stageExecutionInfo, SequenceStageDefinition stageDefintion);
 
     /// <summary>
     /// Stage validator
@@ -36,7 +35,7 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
     /// <returns></returns>
     internal delegate void AutoStageValidator(Version stepIndx,
                                               FlowStage stageExecutionInfo,
-                                              ISequenceStageDefinition stageDefintion,
+                                              SequenceStageDefinition stageDefintion,
                                               int?[] level,
                                               int currentLevelIndex,
                                               IReadOnlyDictionary<Guid, StageValidator>? stageValidator,
@@ -194,7 +193,7 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
         /// </summary>
         private static void AutoStageValidation(Version currentVersion,
                                                 FlowStage? currentFlow,
-                                                ISequenceStageDefinition stageDef,
+                                                SequenceStageDefinition stageDef,
                                                 int?[] level,
                                                 int currentLevelIndex,
                                                 IReadOnlyDictionary<Guid, StageValidator>? stageValidator,
@@ -220,7 +219,7 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
         /// </summary>
         private static void AutoCallSequenceStageStepDefinition(Version stepIndx,
                                                                 FlowStage stageExecutionInfo,
-                                                                ISequenceStageDefinition stageDefintion,
+                                                                SequenceStageDefinition stageDefintion,
                                                                 int?[] level,
                                                                 int currentLevelIndex,
                                                                 IReadOnlyDictionary<Guid, StageValidator>? stageValidator,
@@ -264,7 +263,7 @@ namespace Democrite.Framework.Node.UnitTests.Extensions
         /// </summary>
         private static void AutoForeachSequenceStageStepDefinition(Version stepIndx,
                                               FlowStage stageExecutionInfo,
-                                              ISequenceStageDefinition stageDefintion,
+                                              SequenceStageDefinition stageDefintion,
                                               int?[] level,
                                               int currentLevelIndex,
                                               IReadOnlyDictionary<Guid, StageValidator>? stageValidator,

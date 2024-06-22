@@ -14,6 +14,7 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
                                                                string UniqueTemplateName,
                                                                IReadOnlyCollection<BlackboardTemplateControllerDefinition>? Controllers,
                                                                IReadOnlyCollection<IBlackboardLogicalTypeBaseRuleSurrogate> Rules,
+                                                               DefinitionMetaData? DefinitionMeta,
                                                                BlackboardTemplateConfigurationDefinition? ConfigurationDefinition = null,
                                                                BlackboardStorageDefinition? DefaultStorageConfig = null);
 
@@ -51,6 +52,7 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
                                                     surrogate.UniqueTemplateName,
                                                     surrogate.Controllers,
                                                     BlackboardLogicalTypeBaseRuleSurrogateConverter.ConvertFromSurrogate(surrogate.Rules),
+                                                    surrogate.DefinitionMeta,
                                                     surrogate.ConfigurationDefinition,
                                                     surrogate.DefaultStorageConfig);
         }
@@ -65,7 +67,8 @@ namespace Democrite.Framework.Core.Abstractions.Surrogates
                 Controllers = value.Controllers,
                 Rules = BlackboardLogicalTypeBaseRuleSurrogateConverter.ConvertToSurrogate(value.LogicalTypes).ToReadOnly(),
                 DefaultStorageConfig = value.DefaultStorageConfig,
-                ConfigurationDefinition = value.ConfigurationDefinition
+                ConfigurationDefinition = value.ConfigurationDefinition,
+                DefinitionMeta = value.MetaData
             };
         }
 

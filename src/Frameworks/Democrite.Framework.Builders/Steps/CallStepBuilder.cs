@@ -123,24 +123,27 @@ namespace Democrite.Framework.Builders.Steps
         /// <summary>
         /// Converts to definition.
         /// </summary>
-        public override SequenceStageBaseDefinition ToDefinition<TContext>(SequenceOptionStageDefinition? option,
-                                                                           bool preventReturn,
-                                                                           AccessExpressionDefinition? configurationAccess,
-                                                                           ConcretType? configurationFromContextDataType)
+        public override SequenceStageDefinition ToDefinition<TContext>(DefinitionMetaData? metaData,
+                                                                       Guid uid,
+                                                                       string displayName,
+                                                                       bool preventReturn,
+                                                                       AccessExpressionDefinition? configurationAccess,
+                                                                       ConcretType? configurationFromContextDataType)
             where TContext : default
         {
             var def = this._mthd.GetAbstractMethod();
 
-            return new SequenceStageCallDefinition(this.Input?.GetAbstractType(),
+            return new SequenceStageCallDefinition(uid,
+                                                   displayName,
+                                                   this.Input?.GetAbstractType(),
                                                    this._vgrainType?.GetAbstractType() as ConcretType ?? throw new InvalidDataException("VGrain interface must not be null"),
                                                    def,
                                                    this.Output?.GetAbstractType(),
                                                    configurationAccess,
                                                    configurationFromContextDataType,
                                                    this._parameterAccessExpressions,
-                                                   options: option,
-                                                   preventReturn,
-                                                   option?.StageId);
+                                                   metaData,
+                                                   preventReturn);
         }
 
         #endregion

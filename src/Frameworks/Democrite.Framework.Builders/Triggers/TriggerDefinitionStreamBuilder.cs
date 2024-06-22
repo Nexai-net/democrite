@@ -47,7 +47,8 @@ namespace Democrite.Framework.Builders.Triggers
                                                this.Targets,
                                                true,
                                                this._maxConcurrentProcess,
-                                               this._streamSourceDefinitionUid);
+                                               this._streamSourceDefinitionUid,
+                                               base.DefinitionMetaData);
         }
 
         /// <inheritdoc />

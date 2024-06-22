@@ -28,8 +28,10 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Initializes a new instance of the <see cref="SequencePipelineForeachBuilder"/> class.
         /// </summary>
-        public SequencePipelineFilterStageBuilder(ConditionExpressionDefinition condition, Action<ISequencePipelineStageConfigurator>? configAction)
-            : base(configAction)
+        public SequencePipelineFilterStageBuilder(ConditionExpressionDefinition condition,
+                                                  Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilderAction,
+                                                  Guid? fixUid)
+            : base(metaDataBuilderAction, fixUid)
         {
             this._condition = condition;
         }
@@ -39,12 +41,15 @@ namespace Democrite.Framework.Builders.Sequences
         #region Methods
 
         /// <inheritdoc />
-        public SequenceStageBaseDefinition ToDefinition()
+        public SequenceStageDefinition ToDefinition()
         {
-            var config = BuildConfigDefinition();
-            return new SequenceStageFilterDefinition((CollectionType)typeof(TInput).GetAbstractType(),
+            var metadata = BuildDefinitionMetaData(out var displayName);
+
+            return new SequenceStageFilterDefinition(this.FixUid,
+                                                     (CollectionType)typeof(TInput).GetAbstractType(),
+                                                     displayName ?? "Filter",
                                                      this._condition,
-                                                     config);
+                                                     metadata);
         }
 
         #endregion

@@ -12,10 +12,11 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     /// <summary>
     /// Definition about a trigger based on stream reading
     /// </summary>
-    /// <seealso cref="Democrite.Framework.Core.Abstractions.Triggers.TriggerDefinition" />
+    /// <seealso cref="TriggerDefinition" />
     [Immutable]
     [DataContract]
     [Serializable]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class StreamTriggerDefinition : TriggerDefinition
     {
@@ -31,8 +32,9 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
                                        IEnumerable<TriggerTargetDefinition> targets,
                                        bool enabled,
                                        uint maxConcurrentProcess,
-                                       Guid streamSourceDefinitionUid) 
-            : base(uid, displayName, TriggerTypeEnum.Stream, targets, enabled, null)
+                                       Guid streamSourceDefinitionUid,
+                                       DefinitionMetaData? metaData) 
+            : base(uid, displayName, TriggerTypeEnum.Stream, targets, enabled, metaData)
         {
             this.MaxConcurrentProcess = maxConcurrentProcess;
             this.StreamSourceDefinitionUid = streamSourceDefinitionUid;

@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+
     using Elvex.Toolbox.Abstractions.Expressions;
     using Elvex.Toolbox.Models;
 
@@ -15,24 +16,26 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     /// <summary>
     /// Stage used to push a meta data in the <see cref="IExecutionContext"/>
     /// </summary>
-    /// <seealso cref="SequenceStageBaseDefinition" />
+    /// <seealso cref="SequenceStageDefinition" />
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceStagePushToContextDefinition : SequenceStageBaseDefinition
+    public sealed class SequenceStagePushToContextDefinition : SequenceStageDefinition
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStagePushToContextDefinition"/> class.
         /// </summary>
-        public SequenceStagePushToContextDefinition(AbstractType? input,
+        public SequenceStagePushToContextDefinition(Guid uid,
+                                                    AbstractType? input,
+                                                    string displayName,
                                                     AccessExpressionDefinition? accessExpression,
-                                                    bool @override,
-                                                    SequenceOptionStageDefinition? options = null,
-                                                    Guid? uid = null) 
-            : base(StageTypeEnum.PushToContext, input, input, options, false, uid)
+                                                    DefinitionMetaData? metaData,
+                                                    bool @override)
+            : base(uid, displayName, StageTypeEnum.PushToContext, input, input, metaData, false)
         {
             this.AccessExpression = accessExpression;
             this.Override = @override;
@@ -46,12 +49,14 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Gets the access data to push
         /// </summary>
         [DataMember]
+        [Id(0)]
         public AccessExpressionDefinition? AccessExpression { get; }
 
         /// <summary>
         /// Gets a value indicating whether this <see cref="SequenceStagePushToContextDefinition"/> is override.
         /// </summary>
         [DataMember]
+        [Id(1)]
         public bool Override { get; }
 
         #endregion
@@ -59,7 +64,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnStageEquals(ISequenceStageDefinition other)
+        protected override bool OnStageEquals(SequenceStageDefinition other)
         {
             return other is SequenceStagePushToContextDefinition otherPush &&
                    this.Override == otherPush.Override &&

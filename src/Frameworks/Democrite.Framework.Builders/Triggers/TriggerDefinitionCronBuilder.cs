@@ -84,6 +84,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
                                              true,
                                              this._cronExpression,
                                              nbRefPart == 6,
+                                             this.DefinitionMetaData,
                                              base.TriggerGlobalOutputDefinition);
         }
 

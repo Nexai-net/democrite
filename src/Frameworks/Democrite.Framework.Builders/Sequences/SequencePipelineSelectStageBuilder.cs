@@ -29,8 +29,9 @@ namespace Democrite.Framework.Builders.Sequences
         /// Initializes a new instance of the <see cref="SequencePipelineSelectStageBuilder{TInput, TSelect}"/> class.
         /// </summary>
         public SequencePipelineSelectStageBuilder(AccessExpressionDefinition expressionDefinition,
-                                                  Action<ISequencePipelineStageConfigurator>? configAction) 
-            : base(configAction)
+                                                  Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilderAction,
+                                                  Guid? fixUid)
+            : base(metaDataBuilderAction, fixUid)
         {
             this._expressionDefinition = expressionDefinition;
         }
@@ -40,13 +41,15 @@ namespace Democrite.Framework.Builders.Sequences
         #region Methods
 
         /// <inheritdoc />
-        public SequenceStageBaseDefinition ToDefinition()
+        public SequenceStageDefinition ToDefinition()
         {
-            var option = BuildConfigDefinition();
-            return new SequenceStageSelectDefinition(NoneType.IsEqualTo<TInput>() ? null : typeof(TInput).GetAbstractType(),
+            var metaData = BuildDefinitionMetaData(out var displayName);
+            return new SequenceStageSelectDefinition(this.FixUid,
+                                                     displayName ?? "Select",
+                                                     NoneType.IsEqualTo<TInput>() ? null : typeof(TInput).GetAbstractType(),
                                                      typeof(TSelect).GetAbstractType(),
                                                      this._expressionDefinition,
-                                                     option?.StageId ?? Guid.NewGuid());
+                                                     metaData);
         }
 
         #endregion

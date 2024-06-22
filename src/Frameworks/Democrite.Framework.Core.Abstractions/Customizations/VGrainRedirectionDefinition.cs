@@ -61,11 +61,13 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
                                            string displayName,
                                            ConcretType source,
                                            VGrainRedirectionTypeEnum type,
+                                           DefinitionMetaData? metaData,
                                            ConditionExpressionDefinition? redirectionCondition = null)
         {
             ArgumentNullException.ThrowIfNull(source);
 
             this.Uid = uid;
+            this.MetaData = metaData;
             this.DisplayName = displayName;
             this.Source = source;
             this.Type = type;
@@ -115,6 +117,14 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
         [Newtonsoft.Json.JsonProperty]
         [Id(4)]
         public VGrainRedirectionTypeEnum Type { get; }
+
+        /// <summary>
+        /// Gets the meta data.
+        /// </summary>
+        [DataMember]
+        [Newtonsoft.Json.JsonProperty]
+        [Id(5)]
+        public DefinitionMetaData? MetaData { get; }
 
         #endregion
 

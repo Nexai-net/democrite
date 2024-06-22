@@ -7,8 +7,8 @@ namespace Democrite.Framework.Builders.Signals
     using Democrite.Framework.Builders.Doors;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
+
     using Elvex.Toolbox.Abstractions.Conditions;
-    using Elvex.Toolbox.Extensions;
 
     using System;
     using System.Linq.Expressions;
@@ -71,12 +71,12 @@ namespace Democrite.Framework.Builders.Signals
 
             return new RelayFilterDoorDefinition(this._rootDoorBuilder.Uid,
                                                  this._rootDoorBuilder.Name,
-                                                 this._rootDoorBuilder.GroupName,
                                                  typeof(IRelayFilterVGrain).AssemblyQualifiedName!,
                                                  this._rootDoorBuilder.SignalIds,
                                                  this._rootDoorBuilder.DoorIds,
                                                  this._serializedExpression,
                                                  this._dontRelaySignalContent,
+                                                 this._rootDoorBuilder.DefinitionMetaData,
                                                  null,
                                                  this._rootDoorBuilder.RetentionMaxPeriod,
                                                  this._rootDoorBuilder.HistoryMaxRetention,

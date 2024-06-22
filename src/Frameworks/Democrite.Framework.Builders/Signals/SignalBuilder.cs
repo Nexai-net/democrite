@@ -43,8 +43,7 @@ namespace Democrite.Framework.Builders.Signals
         {
             return new SignalDefinition(this.Uid,
                                         this.Name,
-                                        this.GroupName,
-                                        this._parent?.SignalId);
+                                        this.DefinitionMetaData);
         }
 
         #endregion

@@ -28,9 +28,10 @@ namespace Democrite.Framework.Builders.Sequences
         /// Initializes a new instance of the <see cref="SequencePipelinePushToContextStageBuilder"/> class.
         /// </summary>
         public SequencePipelinePushToContextStageBuilder(LambdaExpression inputExpression,
-                                                         bool @override, 
-                                                         Action<ISequencePipelineStageConfigurator>? configAction)
-            : base(configAction)
+                                                         bool @override,
+                                                         Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilderAction,
+                                                         Guid? fixUid)
+            : base(metaDataBuilderAction, fixUid)
         {
             this._inputExpression = inputExpression;
             this._override = @override;
@@ -41,12 +42,17 @@ namespace Democrite.Framework.Builders.Sequences
         #region Methods
 
         /// <inheritdoc />
-        public SequenceStageBaseDefinition ToDefinition()
+        public SequenceStageDefinition ToDefinition()
         {
             var access = this._inputExpression.CreateAccess();
 
-            return new SequenceStagePushToContextDefinition(typeof(TInput).GetAbstractType(),
+            var metaData = BuildDefinitionMetaData(out var displayName);
+
+            return new SequenceStagePushToContextDefinition(this.FixUid,
+                                                            typeof(TInput).GetAbstractType(),
+                                                            displayName ?? "Push To Context",
                                                             access,
+                                                            metaData,
                                                             this._override);
         }
 

@@ -59,26 +59,23 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageCallBuilder<TVGrain> ISequencePipelineBuilder.Use<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg)
+        ISequencePipelineStageCallBuilder<TVGrain> ISequencePipelineBuilder.Use<TVGrain>(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var stageBuilder = new SequencePipelineVGrainStageCallBuilder<TVGrain, NoneType, NoneType>(this,
-                                                                                                       cfg == null
-                                                                                                            ? null
-                                                                                                            : (i) => cfg.Invoke((ISequencePipelineStageConfigurator)(object)i));
+            var stageBuilder = new SequencePipelineVGrainStageCallBuilder<TVGrain, NoneType, NoneType>(this, metaDataBuilder, fixUid);
             return stageBuilder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageCallBuilder<TInput, TVGrain> ISequencePipelineBuilder<TInput>.Use<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg)
+        ISequencePipelineStageCallBuilder<TInput, TVGrain> ISequencePipelineBuilder<TInput>.Use<TVGrain>(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var stageBuilder = new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, NoneType>(this, cfg);
+            var stageBuilder = new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, NoneType>(this, metaDataBuilder, fixUid);
             return stageBuilder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageCallBuilder<TInput, TVGrain> ISequencePipelineBuilder<TInput>.Convert<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg)
+        ISequencePipelineStageCallBuilder<TInput, TVGrain> ISequencePipelineBuilder<TInput>.Convert<TVGrain>(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var stageBuilder = new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, NoneType>(this, cfg);
+            var stageBuilder = new SequencePipelineVGrainStageCallBuilder<TVGrain, TInput, NoneType>(this, metaDataBuilder, fixUid);
             return stageBuilder;
         }
 
@@ -96,129 +93,129 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder PushToContext<TInfo>(Expression<Func<TInfo>> data, bool @override)
+        public ISequencePipelineBuilder PushToContext<TInfo>(Expression<Func<TInfo>> data, bool @override, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var pushToContextStage = new SequencePipelinePushToContextStageBuilder<NoneType>(data, @override, null);
+            var pushToContextStage = new SequencePipelinePushToContextStageBuilder<NoneType>(data, @override, metaDataBuilder, fixUid);
             return EnqueueStage(pushToContextStage);
         }
 
         /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineBuilder<TInput>.PushToContext<TInfo>(Expression<Func<TInput, TInfo>> data, bool @override)
+        ISequencePipelineBuilder<TInput> ISequencePipelineBuilder<TInput>.PushToContext<TInfo>(Expression<Func<TInput, TInfo>> data, bool @override, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var pushToContextStage = new SequencePipelinePushToContextStageBuilder<TInput>(data, @override, null);
+            var pushToContextStage = new SequencePipelinePushToContextStageBuilder<TInput>(data, @override, metaDataBuilder, fixUid);
             return EnqueueStage<TInput>(pushToContextStage);
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder ClearContextMetadata<TInfo>()
+        public ISequencePipelineBuilder ClearContextMetadata<TInfo>(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null)
         {
             throw new NotImplementedException("Yet");
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder ClearAllContextMetadata()
+        public ISequencePipelineBuilder ClearAllContextMetadata(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null)
         {
             throw new NotImplementedException("Yet");
         }
 
         /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineDataContextlBuilder<ISequencePipelineBuilder<TInput>>.ClearContextMetadata<TInfo>()
+        ISequencePipelineBuilder<TInput> ISequencePipelineDataContextlBuilder<ISequencePipelineBuilder<TInput>>.ClearContextMetadata<TInfo>(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
             throw new NotImplementedException("Yet");
         }
         /// <inheritdoc />
-        ISequencePipelineBuilder<TInput> ISequencePipelineDataContextlBuilder<ISequencePipelineBuilder<TInput>>.ClearAllContextMetadata()
+        ISequencePipelineBuilder<TInput> ISequencePipelineDataContextlBuilder<ISequencePipelineBuilder<TInput>>.ClearAllContextMetadata(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
             throw new NotImplementedException("Yet");
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder> ISequencePipelineSignalBuilder<ISequencePipelineBuilder>.FireSignal(string signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder> ISequencePipelineSignalBuilder<ISequencePipelineBuilder>.FireSignal(string signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this, metaDataBuilder, fixUid);
             return builder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder> ISequencePipelineSignalBuilder<ISequencePipelineBuilder>.FireSignal(Guid signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder> ISequencePipelineSignalBuilder<ISequencePipelineBuilder>.FireSignal(Guid signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this, metaDataBuilder, fixUid);
             return builder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder> ISequencePipelineSignalBuilder<ISequencePipelineBuilder>.FireSignal(SignalId signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder> ISequencePipelineSignalBuilder<ISequencePipelineBuilder>.FireSignal(SignalId signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this, metaDataBuilder, fixUid);
             return builder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(string signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(string signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this, metaDataBuilder, fixUid);
             return builder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Guid signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Guid signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this, metaDataBuilder, fixUid);
             return builder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(SignalId signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(SignalId signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this, metaDataBuilder, fixUid);
             return builder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Expression<Func<TInput, string>> signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Expression<Func<TInput, string>> signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this, metaDataBuilder, fixUid);
             return builder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Expression<Func<TInput, Guid>> signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Expression<Func<TInput, Guid>> signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this, metaDataBuilder, fixUid);
             return builder;
         }
 
         /// <inheritdoc />
-        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Expression<Func<TInput, SignalId>> signalName)
+        ISequencePipelineStageFireSignalBuilder<ISequencePipelineBuilder<TInput>, TInput> ISequencePipelineSignalBuilder<ISequencePipelineBuilder<TInput>, TInput>.FireSignal(Expression<Func<TInput, SignalId>> signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this);
+            var builder = new SequencePipelineStageFireSignalBuilder<TInput>(signalName.CreateAccess(), this, metaDataBuilder, fixUid);
             return builder;
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TSelected>> select, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        public ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TSelected>> select, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null)
         {
-            return SelectImpl<NoneType, TSelected>(select.CreateAccess(), cfg);
+            return SelectImpl<NoneType, TSelected>(select.CreateAccess(), metaDataBuilder, fixUid);
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder<TSelected> Select<TSelected>(TSelected item, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        public ISequencePipelineBuilder<TSelected> Select<TSelected>(TSelected item, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null)
         {
-            return SelectImpl<NoneType, TSelected>(item.CreateAccess(), cfg);
+            return SelectImpl<NoneType, TSelected>(item.CreateAccess(), metaDataBuilder, fixUid);
         }
 
         /// <inheritdoc />
-        public ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TInput, TSelected>> select, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        public ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TInput, TSelected>> select, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null)
         {
-            return SelectImpl<TInput, TSelected>(select.CreateAccess(), cfg);
+            return SelectImpl<TInput, TSelected>(select.CreateAccess(), metaDataBuilder, fixUid);
         }
 
         #region Tools
 
         /// <inheritdoc />
-        private ISequencePipelineBuilder<TSelected> SelectImpl<TForceInput, TSelected>(AccessExpressionDefinition access, Action<ISequencePipelineStageConfigurator>? cfg)
+        private ISequencePipelineBuilder<TSelected> SelectImpl<TForceInput, TSelected>(AccessExpressionDefinition access, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            var selectStage = new SequencePipelineSelectStageBuilder<TForceInput, TSelected>(access, cfg);
+            var selectStage = new SequencePipelineSelectStageBuilder<TForceInput, TSelected>(access, metaDataBuilder, fixUid);
             return EnqueueStage<TSelected>(selectStage);
         }
 
@@ -298,15 +295,15 @@ namespace Democrite.Framework.Builders.Sequences
         //}
 
         /// <inheritdoc />
-        public ISequencePipelineNestedSequenceCallBuilder CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<ISequencePipelineStageConfigurator>? cfg = null)
+        public ISequencePipelineNestedSequenceCallBuilder CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null)
         {
-            return new SequencePipelineNestedSequenceCallBuilder<NoneType>(this, sequenceId, cfgBuilder, cfg);
+            return new SequencePipelineNestedSequenceCallBuilder<NoneType>(this, sequenceId, cfgBuilder, metaDataBuilder, fixUid);
         }
 
         /// <inheritdoc />
-        ISequencePipelineNestedSequenceCallBuilder<TInput> ISequencePipelineBuilder<TInput>.CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder, Action<ISequencePipelineStageConfigurator>? cfg)
+        ISequencePipelineNestedSequenceCallBuilder<TInput> ISequencePipelineBuilder<TInput>.CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder, Guid? fixUid)
         {
-            return new SequencePipelineNestedSequenceCallBuilder<TInput>(this, sequenceId, cfgBuilder, cfg);
+            return new SequencePipelineNestedSequenceCallBuilder<TInput>(this, sequenceId, cfgBuilder, metaDataBuilder, fixUid);
         }
 
         #endregion

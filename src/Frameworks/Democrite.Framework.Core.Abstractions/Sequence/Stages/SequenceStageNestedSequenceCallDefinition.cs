@@ -18,31 +18,31 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     /// <summary>
     /// Stage that call another sequence
     /// </summary>
-    /// <seealso cref="SequenceStageBaseDefinition" />
+    /// <seealso cref="SequenceStageDefinition" />
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceStageNestedSequenceCallDefinition : SequenceStageBaseDefinition 
+    public sealed class SequenceStageNestedSequenceCallDefinition : SequenceStageDefinition 
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStageNestedSequenceCallDefinition"/> class.
         /// </summary>
-        public SequenceStageNestedSequenceCallDefinition(AbstractType? input,
+        public SequenceStageNestedSequenceCallDefinition(Guid uid,
+                                                         string displayName,
+                                                         AbstractType? input,
                                                          AbstractType? output,
-
                                                          Guid sequenceId,
                                                          bool relayInput,
                                                          AccessExpressionDefinition? sequenceInput,
                                                          AbstractMethod? setMethod,
                                                          ExecutionCustomizationDescriptions? customizationDescriptions,
-
-                                                         SequenceOptionStageDefinition? options = null,
-                                                         bool preventReturn = false,
-                                                         Guid? uid = null)
-            : base(StageTypeEnum.NestedSequenceCall, input, output, options, preventReturn, uid)
+                                                         DefinitionMetaData? metaData,
+                                                         bool preventReturn = false)
+            : base(uid, displayName, StageTypeEnum.NestedSequenceCall, input, output, metaData, preventReturn)
         {
             this.SequenceId = sequenceId;
             this.RelayInput = relayInput;
@@ -59,30 +59,35 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Gets the sequence identifier.
         /// </summary>
         [DataMember]
+        [Id(0)]
         public Guid SequenceId { get; }
 
         /// <summary>
         /// Gets a value indicating whether [relay input].
         /// </summary>
         [DataMember]
+        [Id(1)]
         public bool RelayInput { get; }
 
         /// <summary>
         /// Gets the sequence input.
         /// </summary>
         [DataMember]
+        [Id(2)]
         public AccessExpressionDefinition? SequenceInput { get; }
 
         /// <summary>
         /// Gets the customization descriptions.
         /// </summary>
         [DataMember]
+        [Id(3)]
         public ExecutionCustomizationDescriptions? CustomizationDescriptions { get; }
 
         /// <summary>
         /// Gets the set method.
         /// </summary>
         [DataMember]
+        [Id(4)]
         public AbstractMethod? SetMethod { get; }
 
         #endregion
@@ -90,7 +95,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnStageEquals(ISequenceStageDefinition other)
+        protected override bool OnStageEquals(SequenceStageDefinition other)
         {
             return other is SequenceStageNestedSequenceCallDefinition otherNested &&
                    this.SequenceId == otherNested.SequenceId &&

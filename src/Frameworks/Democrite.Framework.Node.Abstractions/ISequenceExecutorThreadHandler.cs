@@ -46,7 +46,7 @@ namespace Democrite.Framework.Node.Abstractions
         /// <summary>
         /// Registers the post process callback.
         /// </summary>
-        void RegisterPostProcess(Func<ISequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>> foreachSequenceStagePostProcess);
+        void RegisterPostProcess(Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>> foreachSequenceStagePostProcess);
 
         /// <summary>
         /// Sets the inner threads.

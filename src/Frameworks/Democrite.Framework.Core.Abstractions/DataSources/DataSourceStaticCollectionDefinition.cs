@@ -18,6 +18,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class DataSourceStaticCollectionDefinition<TData> : DataSourceDefinition
     {
@@ -28,8 +29,9 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         /// </summary>
         public DataSourceStaticCollectionDefinition(Guid uid,
                                                     IEnumerable<TData?> collection,
-                                                    PullModeEnum pullMode)
-            : base(uid, DataSourceTypeEnum.StaticCollection, typeof(TData).GetAbstractType())
+                                                    PullModeEnum pullMode,
+                                                    DefinitionMetaData? definitionMeta = null)
+            : base(uid, DataSourceTypeEnum.StaticCollection, typeof(TData).GetAbstractType(), definitionMeta)
         {
             this.Collection = collection.ToReadOnlyList();
             this.PullMode = pullMode;
@@ -41,10 +43,12 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
 
         /// <inheritdoc />
         [DataMember]
+        [Id(0)]
         public IReadOnlyList<TData?> Collection { get; }
 
         /// <inheritdoc />
         [DataMember]
+        [Id(1)]
         public PullModeEnum PullMode { get; }
 
         #endregion

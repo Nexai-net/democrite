@@ -13,6 +13,7 @@ namespace Democrite.Framework.Core.Abstractions.Configurations
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class ConfigurationFromSectionPathDefinition<TData> : ConfigurationBaseDefinition
     {
@@ -26,8 +27,9 @@ namespace Democrite.Framework.Core.Abstractions.Configurations
                                                       string configName,
                                                       string sectionPath,
                                                       TData? defaultData,
-                                                      bool secureDataTansfert) 
-            : base(uid, displayName, configName, (ConcretBaseType)typeof(TData).GetAbstractType(), secureDataTansfert)
+                                                      bool secureDataTansfert,
+                                                      DefinitionMetaData? definitionMeta = null) 
+            : base(uid, displayName, configName, (ConcretBaseType)typeof(TData).GetAbstractType(), secureDataTansfert, definitionMeta)
         {
             this.SectionPath = sectionPath;
             this.DefaultData = defaultData;
@@ -41,12 +43,14 @@ namespace Democrite.Framework.Core.Abstractions.Configurations
         /// Gets the data.
         /// </summary>
         [DataMember]
+        [Id(0)]
         public TData? DefaultData { get; }
 
         /// <summary>
         /// Gets the section path.
         /// </summary>
         [DataMember]
+        [Id(1)]
         public string SectionPath { get; }
 
         #endregion

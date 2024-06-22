@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+
     using Elvex.Toolbox.Abstractions.Expressions;
     using Elvex.Toolbox.Models;
 
@@ -15,19 +16,22 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     [Immutable]
     [DataContract]
     [Serializable]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceStageSelectDefinition : SequenceStageBaseDefinition
+    public sealed class SequenceStageSelectDefinition : SequenceStageDefinition
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStageFireSignalDefinition"/> class.
         /// </summary>
-        public SequenceStageSelectDefinition(AbstractType? input,
+        public SequenceStageSelectDefinition(Guid uid,
+                                             string displayName,
+                                             AbstractType? input,
                                              AbstractType? output,
                                              AccessExpressionDefinition selectAccess,
-                                             Guid? uid = null)
-            : base(StageTypeEnum.Select, input, output, null, false, uid)
+                                             DefinitionMetaData? metaData)
+            : base(uid, displayName, StageTypeEnum.Select, input, output, metaData, false)
         {
             ArgumentNullException.ThrowIfNull(selectAccess);
 
@@ -42,6 +46,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Gets the message access.
         /// </summary>
         [DataMember]
+        [Id(0)]
         public AccessExpressionDefinition SelectAccess { get; }
 
         #endregion
@@ -49,7 +54,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnStageEquals(ISequenceStageDefinition other)
+        protected override bool OnStageEquals(SequenceStageDefinition other)
         {
             return other is SequenceStageSelectDefinition otherSelect &&
                    otherSelect.SelectAccess == this.SelectAccess;

@@ -45,8 +45,12 @@ namespace Democrite.Framework.Builders.Sequences
         /// Initializes a new instance of the <see cref="SequencePipelineNestedSequenceCallBuilder{TInput}"/> class.
         /// </summary>
         /// <param name="configAction"></param>
-        public SequencePipelineNestedSequenceCallBuilder(ISequencePipelineBaseBuilder origin, Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder, Action<ISequencePipelineStageConfigurator>? configAction)
-            : base(configAction)
+        public SequencePipelineNestedSequenceCallBuilder(ISequencePipelineBaseBuilder origin,
+                                                         Guid sequenceId,
+                                                         Action<IExecutionConfigurationBuilder>? cfgBuilder,
+                                                         Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilderAction,
+                                                         Guid? fixUid)
+            : base(metaDataBuilderAction, fixUid)
         {
             this._sequenceId = sequenceId;
             this._cfgBuilder = cfgBuilder;
@@ -111,9 +115,9 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        public SequenceStageBaseDefinition ToDefinition()
+        public SequenceStageDefinition ToDefinition()
         {
-            var options = BuildConfigDefinition();
+            var metaData = BuildDefinitionMetaData(out var displayName);
 
             ExecutionCustomizationDescriptions? customization = null;
 
@@ -126,18 +130,17 @@ namespace Democrite.Framework.Builders.Sequences
                 customization = builder.Build();
             }
 
-            return new SequenceStageNestedSequenceCallDefinition(NoneType.IsEqualTo<TInput>() ? null : typeof(TInput).GetAbstractType(),
+            return new SequenceStageNestedSequenceCallDefinition(this.FixUid,
+                                                                 displayName ?? "Nested",
+                                                                 NoneType.IsEqualTo<TInput>() ? null : typeof(TInput).GetAbstractType(),
                                                                  this._output,
-
                                                                  this._sequenceId,
                                                                  this._relayInput,
                                                                  this._input,
                                                                  this._setMethodCall,
                                                                  customization,
-
-                                                                 options,
-                                                                 this._output is null,
-                                                                 options?.StageId ?? Guid.NewGuid());
+                                                                 metaData,
+                                                                 this._output is null);
         }
 
         #region Tools

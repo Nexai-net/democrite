@@ -17,7 +17,7 @@ namespace Democrite.Framework.Builders
         /// Start building stream definition
         /// </summary>
         /// <returns></returns>
-        public static StreamQueueDefinition Create(string streamConfiguration, string streamNamespace, string streamKey, Guid? fixUid = null)
+        public static StreamQueueDefinition Create(string streamConfiguration, string streamNamespace, string streamKey, Guid? fixUid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(streamConfiguration);
             ArgumentNullException.ThrowIfNullOrEmpty(streamKey);
@@ -27,14 +27,15 @@ namespace Democrite.Framework.Builders
                                              streamConfiguration,
                                              streamNamespace,
                                              streamKey,
-                                             null);
+                                             null,
+                                             DefinitionMetaDataBuilder.Execute(metaDataBuilder));
         }
 
         /// <summary>
         /// Start building stream definition
         /// </summary>
         /// <returns></returns>
-        public static StreamQueueDefinition Create(string streamConfiguration, string streamNamespace, Guid streamKey, Guid? fixUid = null)
+        public static StreamQueueDefinition Create(string streamConfiguration, string streamNamespace, Guid streamKey, Guid? fixUid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(streamConfiguration);
 
@@ -43,7 +44,8 @@ namespace Democrite.Framework.Builders
                                              streamConfiguration,
                                              streamNamespace,
                                              null,
-                                             streamKey);
+                                             streamKey,
+                                             DefinitionMetaDataBuilder.Execute(metaDataBuilder));
         }
 
         /// <summary>
@@ -52,9 +54,9 @@ namespace Democrite.Framework.Builders
         /// <remarks>
         ///     Record from default stream <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
         /// </remarks>
-        public static StreamQueueDefinition CreateFromDefaultStream(string streamKey, Guid? fixUid = null)
+        public static StreamQueueDefinition CreateFromDefaultStream(string streamKey, Guid? fixUid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
         {
-            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, "global", streamKey, fixUid);
+            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, "global", streamKey, fixUid, metaDataBuilder);
         }
 
         /// <summary>
@@ -63,9 +65,9 @@ namespace Democrite.Framework.Builders
         /// <remarks>
         ///     Record from default stream <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
         /// </remarks>
-        public static StreamQueueDefinition CreateFromDefaultStream(string streamNamespace, string streamKey, Guid? fixUid = null)
+        public static StreamQueueDefinition CreateFromDefaultStream(string streamNamespace, string streamKey, Guid? fixUid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
         {
-            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, streamNamespace, streamKey, fixUid);
+            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, streamNamespace, streamKey, fixUid, metaDataBuilder);
         }
 
         /// <summary>
@@ -74,9 +76,9 @@ namespace Democrite.Framework.Builders
         /// <remarks>
         ///     Record from default stream <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
         /// </remarks>
-        public static StreamQueueDefinition CreateFromDefaultStream(Guid streamKey, Guid? fixUid = null)
+        public static StreamQueueDefinition CreateFromDefaultStream(Guid streamKey, Guid? fixUid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
         {
-            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, "global", streamKey, fixUid);
+            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, "global", streamKey, fixUid, metaDataBuilder);
         }
 
         /// <summary>
@@ -85,9 +87,9 @@ namespace Democrite.Framework.Builders
         /// <remarks>
         ///     Record from default stream <see cref="StreamQueueDefinition.DEFAULT_STREAM_KEY"/>
         /// </remarks>
-        public static StreamQueueDefinition CreateFromDefaultStream(string streamNamespace, Guid streamKey, Guid? fixUid = null)
+        public static StreamQueueDefinition CreateFromDefaultStream(string streamNamespace, Guid streamKey, Guid? fixUid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
         {
-            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, streamNamespace, streamKey, fixUid);
+            return Create(StreamQueueDefinition.DEFAULT_STREAM_KEY, streamNamespace, streamKey, fixUid, metaDataBuilder);
         }
     }
 }

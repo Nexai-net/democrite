@@ -22,6 +22,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
     [Immutable]
     [DataContract]
     [Serializable]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class BlackboardTemplateDefinition : IDefinition
     {
@@ -34,6 +35,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
                                             string uniqueTemplateName,
                                             IEnumerable<BlackboardTemplateControllerDefinition>? controllers,
                                             IEnumerable<BlackboardLogicalTypeBaseRule> logicalTypes,
+                                            DefinitionMetaData? metaData,
                                             BlackboardTemplateConfigurationDefinition? configurationDefinition = null,
                                             BlackboardStorageDefinition? defaultStorageConfig = null)
         {
@@ -41,6 +43,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
             ArgumentNullException.ThrowIfNull(nameof(uniqueTemplateName));
 
             this.Uid = uid;
+            this.MetaData = metaData;
             this.UniqueTemplateName = uniqueTemplateName;
             this.DefaultStorageConfig = defaultStorageConfig ?? new BlackboardStorageDefinition(BlackboardConstants.BlackboardStorageRecordsKey, BlackboardConstants.BlackboardStorageConfigurationKey);
             this.DisplayName = "Blackboard Tpl: " + uniqueTemplateName;
@@ -56,6 +59,10 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
         /// <inheritdoc />
         [DataMember]
         public Guid Uid { get; }
+
+        /// <inheritdoc />
+        [DataMember]
+        public DefinitionMetaData? MetaData { get; }
 
         /// <summary>
         /// Gets the unique template name

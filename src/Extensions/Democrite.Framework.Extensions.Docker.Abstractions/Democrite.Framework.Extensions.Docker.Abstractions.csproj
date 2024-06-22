@@ -13,6 +13,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Docker.DotNet" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
+	  <ProjectReference Include="..\..\Frameworks\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
 	</ItemGroup>
 </Project>

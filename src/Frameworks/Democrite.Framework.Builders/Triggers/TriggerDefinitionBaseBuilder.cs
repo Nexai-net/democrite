@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Builders.Implementations.Triggers
 {
     using Democrite.Framework.Builders.Triggers;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Core.Abstractions.Sequence;
@@ -73,9 +74,28 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
             get { return this._targets; }
         }
 
+        /// <summary>
+        /// Gets the definition meta data.
+        /// </summary>
+        public DefinitionMetaData? DefinitionMetaData { get; private set; }
+
         #endregion
 
         #region Methods
+
+        /// <inheritdoc />
+        public TDefWithExtention MetaData(Action<IDefinitionMetaDataBuilder> action)
+        {
+            if (action is not null)
+            {
+                var inst = new DefinitionMetaDataBuilder();
+                action?.Invoke(inst);
+
+                this.DefinitionMetaData = inst.Build(out _);
+            }
+
+            return GetBuilderFinalizer();
+        }
 
         /// <inheritdoc />
         public TDefWithExtention AddTargetSequence(Guid targetSequenceId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
@@ -220,7 +240,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// </summary>
         private TDefWithExtention AddTarget(Guid uid, TargetTypeEnum type, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
         {
-            this._targets.Add(new TriggerTargetDefinition(uid, type, dedicatedOutputBuilders?.Invoke(new TriggerOutputBuilder())?.Build()));
+            this._targets.Add(new TriggerTargetDefinition(uid, type, dedicatedOutputBuilders?.Invoke(new TriggerOutputBuilder())?.Build(), null));
             return GetBuilderFinalizer();
         }
 

@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
 {
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Node.Abstractions;
+
     using Elvex.Toolbox.Disposables;
 
     /// <summary>
@@ -14,7 +15,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
     /// <seealso cref="ISequenceExecutorThreadStageSourceProvider" />
     /// <seealso cref="ISequenceExecutorThreadStageHandler" />
     internal abstract class SequenceExecutorBaseThreadStageProvider<TStageDefinition> : SafeDisposable, ISequenceExecutorThreadStageSourceProvider
-        where TStageDefinition : ISequenceStageDefinition
+        where TStageDefinition : SequenceStageDefinition
     {
         #region Ctor
 
@@ -30,18 +31,18 @@ namespace Democrite.Framework.Node.ThreadExecutors
         #region Methods
 
         /// <inheritdoc />
-        public virtual bool CanHandler(ISequenceStageDefinition? stage)
+        public virtual bool CanHandler(SequenceStageDefinition? stage)
         {
             return stage is TStageDefinition;
         }
 
         /// <inheritdoc />
-        public ISequenceExecutorThreadStageHandler Provide(ISequenceStageDefinition? stageBase)
+        public ISequenceExecutorThreadStageHandler Provide(SequenceStageDefinition? stageBase)
         {
             return OnProvide((TStageDefinition?)stageBase);
         }
 
-        /// <inheritdoc cref="ISequenceExecutorThreadStageSourceProvider.Provide(ISequenceStageDefinition)" />
+        /// <inheritdoc cref="ISequenceExecutorThreadStageSourceProvider.Provide(SequenceStageDefinition)" />
         protected abstract ISequenceExecutorThreadStageHandler OnProvide(TStageDefinition? stageBase);
 
         #endregion

@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Blackboard.Builders.Templates
 {
+    using Democrite.Framework.Builders;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
 
     /// <summary>
@@ -12,6 +13,11 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
     /// </summary>
     public interface IBlackboardTemplateBuilder
     {
+        /// <summary>
+        /// Set definition meta data
+        /// </summary>
+        IBlackboardTemplateBuilder MetaData(Action<IDefinitionMetaDataBuilder> action);
+
         /// <summary>
         /// Configure blackboard options
         /// </summary>

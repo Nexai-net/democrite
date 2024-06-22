@@ -42,7 +42,7 @@ namespace Democrite.Framework.Node.Models
         //private static readonly IReadOnlyCollection<ISequenceExecutorThreadStageSourceProvider> s_democriteStageProviders;
         private readonly ISequenceExecutorThreadStageProvider _stageProvider;
 
-        private Func<ISequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>? _postProcessHook;
+        private Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>? _postProcessHook;
 
         private readonly IDemocriteSerializer _democriteSerializer;
         private readonly IObjectConverter _objectConverter;
@@ -55,7 +55,7 @@ namespace Democrite.Framework.Node.Models
         private ISecureContextToken<ISequenceExecutorThreadHandler>? _secureContext;
 
         private IReadOnlyCollection<SequenceExecutorExecThread> _innerThreads;
-        private ISequenceStageDefinition? _currentStage;
+        private SequenceStageDefinition? _currentStage;
         private IExecutionContext _executionContext;
         private Task? _currentTaskExecution;
         private object? _nextStageInput;
@@ -240,7 +240,7 @@ namespace Democrite.Framework.Node.Models
             }
 
             /// <inheritdoc />
-            public void RegisterPostProcess(Func<ISequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>> postProcessCallback)
+            public void RegisterPostProcess(Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>> postProcessCallback)
             {
                 this._sequenceExecutorExecThread._postProcessHook = postProcessCallback;
             }
@@ -570,7 +570,7 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Execute all steps of a stage
         /// </summary>
-        private async Task ExecuteStageAsync(ISequenceStageDefinition stage,
+        private async Task ExecuteStageAsync(SequenceStageDefinition stage,
                                              object? input,
                                              IExecutionContext sequenceContext,
                                              ILogger logger,
@@ -609,7 +609,7 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Generic step execution
         /// </summary>
-        private ValueTask<StageStepResult> HandleStageAsync(ISequenceStageDefinition step,
+        private ValueTask<StageStepResult> HandleStageAsync(SequenceStageDefinition step,
                                                             object? input,
                                                             IExecutionContext sequenceContext,
                                                             ILogger logger,

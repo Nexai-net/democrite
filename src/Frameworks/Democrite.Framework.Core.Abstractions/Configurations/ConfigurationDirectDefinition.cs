@@ -13,6 +13,7 @@ namespace Democrite.Framework.Core.Abstractions.Configurations
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class ConfigurationDirectDefinition<TData> : ConfigurationBaseDefinition
     {
@@ -25,8 +26,9 @@ namespace Democrite.Framework.Core.Abstractions.Configurations
                                              string displayName,
                                              string configName,
                                              TData data,
-                                             bool secureDataTansfert) 
-            : base(uid, displayName, configName, (ConcretBaseType)typeof(TData).GetAbstractType(), secureDataTansfert)
+                                             bool secureDataTansfert,
+                                             DefinitionMetaData? definitionMeta) 
+            : base(uid, displayName, configName, (ConcretBaseType)typeof(TData).GetAbstractType(), secureDataTansfert, definitionMeta)
         {
             this.Data = data;
         }
@@ -39,6 +41,7 @@ namespace Democrite.Framework.Core.Abstractions.Configurations
         /// Gets the data.
         /// </summary>
         [DataMember]
+        [Id(0)]
         public TData? Data { get; }
 
         #endregion

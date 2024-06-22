@@ -5,17 +5,17 @@
 namespace Democrite.Framework.Extensions.Docker
 {
     using Democrite.Framework.Core.Abstractions.Artifacts;
+    using Democrite.Framework.Extensions.Docker.Abstractions;
     using Democrite.Framework.Extensions.Docker.Abstractions.Models;
 
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Services;
 
-    using global::Docker.DotNet;
     using global::Docker.DotNet.Models;
 
     using System;
     using System.Collections.Generic;
-    using System.Runtime.InteropServices;
+    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -23,12 +23,16 @@ namespace Democrite.Framework.Extensions.Docker
     {
         #region Fields
 
+        private readonly ArtifactExecutableDockerEnvironmentDefinition _env;
+        private readonly IDockerClientFactory _dockerClientFactory;
         private readonly ArtifactExecutableDefinition _definition;
-        private readonly DockerClient _client;
+
         private readonly string _executor;
         private readonly Config _config;
         private readonly bool _deamonMode;
         private string? _containerId;
+
+        private Abstractions.IDockerClientProxy? _client;
 
         #endregion
 
@@ -41,11 +45,14 @@ namespace Democrite.Framework.Extensions.Docker
                                      IReadOnlyCollection<string> arguments,
                                      ArtifactExecutableDefinition definition,
                                      ArtifactExecutableDockerEnvironmentDefinition env,
+                                     IDockerClientFactory dockerClientFactory,
                                      CancellationToken cancellationToken)
             : base(arguments, cancellationToken)
         {
             this._definition = definition;
             this._executor = executor.ToLowerInvariant();
+
+            this._dockerClientFactory = dockerClientFactory;
 
             this.Executable = $"{definition.DisplayName}:{definition.Uid}:{env.Image}:{env.Tag}->{executor}";
 
@@ -62,12 +69,13 @@ namespace Democrite.Framework.Extensions.Docker
                 Tty = true
             };
 
+            this._env = env;
             this._deamonMode = arguments.FirstOrDefault(a => a.StartsWith("--port:")) is not null;
 
-            this._client = new DockerClientConfiguration()
-                                    .CreateClient(string.IsNullOrEmpty(env.MinimalRequiredVersion)
-                                                            ? null
-                                                            : System.Version.Parse(env.MinimalRequiredVersion));
+            //this._client = new DockerClientConfiguration()
+            //                        .CreateClient(string.IsNullOrEmpty(env.MinimalRequiredVersion)
+            //                                                ? null
+            //                                                : System.Version.Parse(env.MinimalRequiredVersion));
         }
 
         #endregion
@@ -91,12 +99,14 @@ namespace Democrite.Framework.Extensions.Docker
         protected override void OnDisposeThreadSafeBegin()
         {
             Task.Run(async () => await KillAsync(default)).Wait();
-            this._client.Dispose();
+            this._client?.Dispose();
         }
 
         /// <inheritdoc />
         protected override async Task OnRunAsync(CancellationToken cancellationToken)
         {
+            var client = GetDockerClient();
+
             var createParam = new CreateContainerParameters(this._config)
             {
                 Name = this._definition.DisplayName.ToLowerInvariant().Replace(":", "-") + "-" + this._definition.Uid,
@@ -118,14 +128,14 @@ namespace Democrite.Framework.Extensions.Docker
 
             await ClearExistingContainerAsync(createParam.Name);
 
-            var createResponse = await this._client.Containers.CreateContainerAsync(createParam, this.CancellationToken);
+            var createResponse = await client.Containers.CreateContainerAsync(createParam, this.CancellationToken);
 
             if (createResponse is null)
                 throw new InvalidOperationException("Docker container creation failed : " + string.Join(Environment.NewLine, createResponse!.Warnings));
 
             this._containerId = createResponse.ID;
 
-            var start = await this._client.Containers.StartContainerAsync(createResponse.ID, new ContainerStartParameters(), this.CancellationToken);
+            var start = await client.Containers.StartContainerAsync(createResponse.ID, new ContainerStartParameters(), this.CancellationToken);
 
             if (!start)
                 throw new InvalidOperationException("Docker container start failed : " + this.Executable);
@@ -141,14 +151,14 @@ namespace Democrite.Framework.Extensions.Docker
 
                 // Implementation using GetContainerLogsAsync with multiplex stream failed (deadlock)
 
-                using (var stream = await this._client.Containers.GetContainerLogsAsync(createResponse.ID,
-                                                                                        new ContainerLogsParameters()
-                                                                                        {
-                                                                                            Follow = true,
-                                                                                            ShowStdout = true,
-                                                                                            ShowStderr = true,
-                                                                                        },
-                                                                                        this.CancellationToken))
+                using (var stream = await client.Containers.GetContainerLogsAsync(createResponse.ID,
+                                                                                  new ContainerLogsParameters()
+                                                                                  {
+                                                                                      Follow = true,
+                                                                                      ShowStdout = true,
+                                                                                      ShowStderr = true,
+                                                                                  },
+                                                                                  this.CancellationToken))
 
                 using (var reader = new StreamReader(stream))
                 {
@@ -197,7 +207,7 @@ namespace Democrite.Framework.Extensions.Docker
                 //    await errTask;
                 //}
 
-                await this._client.Containers.WaitContainerAsync(createResponse.ID, this.CancellationToken);
+                await client.Containers.WaitContainerAsync(createResponse.ID, this.CancellationToken);
 
                 return;
             });
@@ -215,9 +225,11 @@ namespace Democrite.Framework.Extensions.Docker
             if (string.IsNullOrEmpty(this._containerId))
                 return false;
 
+            var client = GetDockerClient();
+
             try
             {
-                var containerStatus = await this._client.Containers.InspectContainerAsync(this._containerId, cancellationToken);
+                var containerStatus = await client.Containers.InspectContainerAsync(this._containerId, cancellationToken);
                 return containerStatus.State.Dead == false;
             }
             catch { }
@@ -228,10 +240,12 @@ namespace Democrite.Framework.Extensions.Docker
         /// <inheritdoc />
         public override async Task KillAsync(CancellationToken cancellationToken)
         {
+            var client = GetDockerClient();
+
             try
             {
                 if (!string.IsNullOrEmpty(this._containerId))
-                    await this._client.Containers.KillContainerAsync(this._containerId, new ContainerKillParameters());
+                    await client.Containers.KillContainerAsync(this._containerId, new ContainerKillParameters());
             }
             catch
             {
@@ -241,7 +255,7 @@ namespace Democrite.Framework.Extensions.Docker
             {
                 if (!string.IsNullOrEmpty(this._containerId))
                 {
-                    await this._client.Containers.RemoveContainerAsync(this._containerId, new ContainerRemoveParameters()
+                    await client.Containers.RemoveContainerAsync(this._containerId, new ContainerRemoveParameters()
                     {
                         Force = true,
                     });
@@ -259,7 +273,9 @@ namespace Democrite.Framework.Extensions.Docker
         /// </summary>
         private async Task ClearExistingContainerAsync(string containerName)
         {
-            var existingContainer = await this._client.Containers.ListContainersAsync(new ContainersListParameters()
+            var client = GetDockerClient();
+
+            var existingContainer = await client.Containers.ListContainersAsync(new ContainersListParameters()
             {
                 Limit = 1,
                 Filters = new Dictionary<string, IDictionary<string, bool>>()
@@ -277,7 +293,7 @@ namespace Democrite.Framework.Extensions.Docker
                 {
                     try
                     {
-                        await this._client.Containers.RemoveContainerAsync(existing.ID, new ContainerRemoveParameters() { Force = true }, this.CancellationToken);
+                        await client.Containers.RemoveContainerAsync(existing.ID, new ContainerRemoveParameters() { Force = true }, this.CancellationToken);
                     }
                     catch
                     {
@@ -285,6 +301,13 @@ namespace Democrite.Framework.Extensions.Docker
                     }
                 }
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private IDockerClientProxy GetDockerClient()
+        {
+            this._client ??= this._dockerClientFactory.GetLocal(this._env.EnvironmentName, this._env.MinimalRequiredVersion);
+            return this._client;
         }
 
         #endregion

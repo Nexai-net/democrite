@@ -45,20 +45,26 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
 
             var def = typeof(ITestExtractEmailTransformer).GetMethod(nameof(ITestExtractEmailTransformer.ExtractEmailsAsync))!.GetAbstractMethod();
 
-            var callDefinition = new SequenceStageCallDefinition(typeof(string).GetAbstractType(),
+            var callDefinition = new SequenceStageCallDefinition(Guid.NewGuid(),
+                                                                 "Root",
+                                                                 typeof(string).GetAbstractType(),
                                                                  (ConcretType)typeof(ITestExtractEmailTransformer).GetAbstractType(),
                                                                  def,
                                                                  typeof(string[]).GetAbstractType(),
                                                                  null,
                                                                  null,
+                                                                 null,
                                                                  null);
 
-            var innerDef = new SequenceDefinition(Guid.NewGuid(), "test", SequenceOptionDefinition.Default, new[] { callDefinition });
+            var innerDef = new SequenceDefinition(Guid.NewGuid(), "test", SequenceOptionDefinition.Default, new[] { callDefinition }, null);
 
-            var foreachDefinition = new SequenceStageForeachDefinition(typeof(string[]).GetAbstractType(),
+            var foreachDefinition = new SequenceStageForeachDefinition(Guid.NewGuid(),
+                                                                       "Foreach Test",
+                                                                       typeof(string[]).GetAbstractType(),
                                                                        innerDef,
                                                                        typeof(string).GetAbstractType(),
                                                                        typeof(string[]).GetAbstractType(),
+                                                                       null,
                                                                        null,
                                                                        null);
 
@@ -88,7 +94,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             mockSecureToken.SetupGet(e => e.Token).Returns(mockThreadHandler.Object);
             mockSecureToken.Setup(m => m.Dispose());
 
-            Func<ISequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>? postCallback = null;
+            Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>? postCallback = null;
 
             // Diagnositic Logger
 
@@ -96,8 +102,8 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                  .Callback<IExecutionContextChangeDiagnosticLog>((log) => diagnosticLogs.Add(log));
 
             // Secure mockInnerThread Tken Mock
-            mockThreadHandler.Setup(m => m.RegisterPostProcess(It.IsAny<Func<ISequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>>()))
-                             .Callback<Func<ISequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>>(postAction => postCallback = postAction);
+            mockThreadHandler.Setup(m => m.RegisterPostProcess(It.IsAny<Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>>()))
+                             .Callback<Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>>(postAction => postCallback = postAction);
 
             mockThreadHandler.Setup(m => m.CreateInnerThread(It.IsAny<SequenceExecutorExecThreadState>(), innerDef))
                              .Returns<SequenceExecutorExecThreadState, SequenceDefinition>((state, def) =>
@@ -150,7 +156,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
 
             // Check
 
-            mockThreadHandler.Verify(m => m.RegisterPostProcess(It.IsAny<Func<ISequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>>()), Times.Once);
+            mockThreadHandler.Verify(m => m.RegisterPostProcess(It.IsAny<Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>>()), Times.Once);
             mockThreadHandler.Verify(m => m.CreateInnerThread(It.IsAny<SequenceExecutorExecThreadState>(), innerDef), Times.Exactly(inputs.Length));
             mockThreadHandler.Verify(m => m.SetInnerThreads(It.IsAny<IReadOnlyCollection<ISequenceExecutorExecThread>>()), Times.Once);
 

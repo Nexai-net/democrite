@@ -18,6 +18,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
     public sealed class DataSourceFixValueDefinition<TData> : DataSourceDefinition
     {
@@ -27,8 +28,8 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
         /// Initializes a new instance of the <see cref="DataSourceFixValueDefinition{TData}"/> class.
         /// </summary>
         public DataSourceFixValueDefinition(Guid uid,
-                                            TData? value)
-            : base(uid, DataSourceTypeEnum.FixValue, typeof(TData).GetAbstractType())
+                                            TData? value, DefinitionMetaData? metaData = null)
+            : base(uid, DataSourceTypeEnum.FixValue, typeof(TData).GetAbstractType(), metaData)
         {
             this.Value = value;
         }
@@ -39,6 +40,7 @@ namespace Democrite.Framework.Core.Abstractions.Inputs
 
         /// <inheritdoc />
         [DataMember]
+        [Id(0)]
         public TData? Value { get; }
 
         #endregion

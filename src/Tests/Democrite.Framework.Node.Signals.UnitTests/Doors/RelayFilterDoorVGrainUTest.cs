@@ -66,11 +66,11 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             return new RelayFilterDoorDefinition(Guid.NewGuid(),
                                                 fixture.Create<string>(),
                                                 null,
-                                                fixture.Create<string>(),
                                                 fixture.Create<IEnumerable<SignalId>>(),
                                                 fixture.Create<IEnumerable<DoorId>>(),
                                                 ExpressionExtensions.Serialize((int arg, SignalMessage sm) => arg == SUCESS_MSG),
-                                                false);
+                                                false,
+                                                null);
         }
 
         #endregion

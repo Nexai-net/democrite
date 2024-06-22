@@ -14,8 +14,31 @@ namespace Democrite.Framework.Extensions.Docker
     using System.Threading;
     using System.Threading.Tasks;
 
+    /// <summary>
+    /// Factory used to create and configured all the "Processor" that will handled docker execution
+    /// </summary>
     internal sealed class DockerProcessorFactory : IDockerProcessorFactory
     {
+        #region Fields
+        
+        private readonly IDockerClientFactory _dockerClientFactory;
+        
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DockerProcessorFactory"/> class.
+        /// </summary>
+        public DockerProcessorFactory(IDockerClientFactory dockerClientFactory)
+        {
+            this._dockerClientFactory = dockerClientFactory;
+        }
+
+        #endregion
+
+        #region Methods
+
         /// <inheritdoc />
         public async Task<IExternalProcess> BuildProcessHandler(string executor,
                                                                 List<string> args,
@@ -26,11 +49,14 @@ namespace Democrite.Framework.Extensions.Docker
                                                  args,
                                                  definition,
                                                  (ArtifactExecutableDockerEnvironmentDefinition)definition.Environment!,
+                                                 this._dockerClientFactory,
                                                  token);
 
             await inst.RunAsync();
 
             return inst;
         }
+
+        #endregion
     }
 }

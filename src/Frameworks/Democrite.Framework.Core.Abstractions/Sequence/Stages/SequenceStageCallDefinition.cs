@@ -20,25 +20,27 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceStageCallDefinition : SequenceStageBaseDefinition
+    public sealed class SequenceStageCallDefinition : SequenceStageDefinition
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStageCallDefinition"/> class.
         /// </summary>
-        public SequenceStageCallDefinition(AbstractType? input,
+        public SequenceStageCallDefinition(Guid uid,
+                                           string displayName,
+                                           AbstractType? input,
                                            ConcretType vgrainType,
                                            AbstractMethod callMethodDefinition,
                                            AbstractType? output,
                                            AccessExpressionDefinition? configuration,
                                            ConcretType? configurationFromContextDataType,
                                            IEnumerable<SequenceStageCallParameterDefinition>? parameterDefinitions,
-                                           SequenceOptionStageDefinition? options = null,
-                                           bool preventReturn = false,
-                                           Guid? uid = null)
-            : base(StageTypeEnum.Call, input, output, options, preventReturn, uid)
+                                           DefinitionMetaData? metadata,
+                                           bool preventReturn = false)
+            : base(uid, displayName, StageTypeEnum.Call, input, output, metadata, preventReturn)
         {
             ArgumentNullException.ThrowIfNull(callMethodDefinition);
             ArgumentNullException.ThrowIfNull(vgrainType);
@@ -63,30 +65,35 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Gets the method information.
         /// </summary>
         [DataMember]
+        [Id(0)]
         public AbstractMethod CallMethodDefinition { get; }
 
         /// <summary>
         /// Gets the type of the vgrain.
         /// </summary>
         [DataMember]
+        [Id(1)]
         public ConcretType VGrainType { get; }
 
         /// <summary>
         /// Gets the context information.
         /// </summary>
         [DataMember]
+        [Id(2)]
         public AccessExpressionDefinition? Configuration { get; }
 
         /// <summary>
         /// Gets the type of the configuration to extract from context data.
         /// </summary>
         [DataMember]
+        [Id(3)]
         public ConcretType? ConfigurationFromContextDataType { get; }
 
         /// <summary>
         /// Gets the parameter definitions.
         /// </summary>
         [DataMember]
+        [Id(4)]
         public IReadOnlyCollection<SequenceStageCallParameterDefinition>? ParameterDefinitions { get; }
 
         /// <summary>
@@ -95,6 +102,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         [IgnoreDataMember]
         [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        [Id(5)]
         public IReadOnlyDictionary<int, SequenceStageCallParameterDefinition>? IndexedParameterDefinitions { get; }
 
         #endregion
@@ -102,7 +110,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         #region Methods
 
         /// <inheritdoc/>
-        protected override bool OnStageEquals(ISequenceStageDefinition other)
+        protected override bool OnStageEquals(SequenceStageDefinition other)
         {
             return other is SequenceStageCallDefinition callOther &&
                    callOther.CallMethodDefinition == this.CallMethodDefinition &&

@@ -5,8 +5,8 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+
     using Elvex.Toolbox.Abstractions.Conditions;
-    using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Models;
 
     using System;
@@ -18,22 +18,25 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     /// Stage related to filter some input
     /// </summary>
     /// <seealso cref="ISequenceStageDefinition" />
+    [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceStageFilterDefinition : SequenceStageBaseDefinition
+    public sealed class SequenceStageFilterDefinition : SequenceStageDefinition
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStageFilterDefinition"/> class.
         /// </summary>
-        public SequenceStageFilterDefinition(CollectionType? input,
+        public SequenceStageFilterDefinition(Guid uid,
+                                             CollectionType? input,
+                                             string displayName,
                                              ConditionExpressionDefinition condition,
-                                             SequenceOptionStageDefinition? options = null,
-                                             bool preventReturn = false,
-                                             Guid? uid = null)
-            : base(StageTypeEnum.Filter, input, input, options, preventReturn, uid)
+                                             DefinitionMetaData? metaData,
+                                             bool preventReturn = false)
+            : base(uid, displayName, StageTypeEnum.Filter, input, input, metaData, preventReturn)
         {
             ArgumentNullException.ThrowIfNull(condition);
 
@@ -52,12 +55,14 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Gets the condition to filter
         /// </summary>
         [DataMember]
+        [Id(0)]
         public ConditionExpressionDefinition Condition { get; }
 
         /// <summary>
         /// Gets the type of the collection item.
         /// </summary>
         [DataMember]
+        [Id(1)]
         public AbstractType CollectionItemType { get; }
 
         #endregion
@@ -74,7 +79,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         }
 
         /// <inheritdoc />
-        protected override bool OnStageEquals(ISequenceStageDefinition other)
+        protected override bool OnStageEquals(SequenceStageDefinition other)
         {
             return other is SequenceStageFilterDefinition otherStepDef &&
                    otherStepDef.Condition == this.Condition;
@@ -90,16 +95,17 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Get from specific expression
         /// </summary>
         public static SequenceStageFilterDefinition From<TInputCollection, TInput>(Expression<Func<TInput, bool>> filter,
-                                                                                   SequenceOptionStageDefinition? options = null,
+                                                                                   DefinitionMetaData? metaData = null,
                                                                                    bool preventReturn = false,
                                                                                    Guid? uid = null)
             where TInputCollection : IEnumerable<TInput>
         {
-            return new SequenceStageFilterDefinition((CollectionType)typeof(TInputCollection).GetAbstractType(),
+            return new SequenceStageFilterDefinition(uid ?? Guid.NewGuid(),
+                                                     (CollectionType)typeof(TInputCollection).GetAbstractType(),
+                                                     "Filter",
                                                      filter.Serialize(),
-                                                     options,
-                                                     preventReturn,
-                                                     uid);
+                                                     metaData,
+                                                     preventReturn);
         }
 
         #endregion

@@ -4,24 +4,25 @@
 
 namespace Democrite.Framework.Node.UnitTests.Services
 {
+    using AutoFixture;
+
     using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Core.Abstractions.Diagnostics;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Services;
+    using Democrite.Framework.Node.UnitTests.Tools;
     using Democrite.UnitTests.ToolKit.Services;
 
     using Elvex.Toolbox.Models;
-
-    using Microsoft.Extensions.Logging.Abstractions;
+    using Elvex.Toolbox.UnitTests.ToolKit.Helpers;
 
     using NFluent;
 
     using NSubstitute;
-
-    using Orleans.Runtime;
 
     using System;
     using System.Collections.Generic;
@@ -33,6 +34,11 @@ namespace Democrite.Framework.Node.UnitTests.Services
     /// </summary>
     public sealed class SequenceVGrainProviderUnitTests
     {
+        #region Fields
+        
+        private readonly Fixture _fixture;
+        
+        #endregion
 
         #region ReflectionAccess
 
@@ -47,6 +53,18 @@ namespace Democrite.Framework.Node.UnitTests.Services
         //  private readonly IGrainFactory _grainFactory;
         [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_grainFactory")]
         private static extern ref IGrainFactory GetGrainFactory(VGrainProvider grainProvder);
+
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SequenceVGrainProviderUnitTests"/> class.
+        /// </summary>
+        public SequenceVGrainProviderUnitTests()
+        {
+            this._fixture = ObjectTestHelper.PrepareFixture();
+        }
 
         #endregion
 
@@ -110,10 +128,7 @@ namespace Democrite.Framework.Node.UnitTests.Services
 
             using (var prov = new SequenceVGrainProvider(defaultGrainProviderMock, defaultGrainFactory, defaultVGrainIdFactory, grainRouteService))
             {
-                var stepDefinition = Substitute.For<ISequenceStageDefinition>();
-
-                var stepUid = Guid.NewGuid();
-                stepDefinition.Uid.Returns(stepUid);
+                SequenceStageDefinition stepDefinition = this._fixture.Create<TestSequenceStageDefinition>();
 
                 // Exec
                 var grainProvider = prov.GetGrainProvider(ref stepDefinition);
@@ -274,10 +289,8 @@ namespace Democrite.Framework.Node.UnitTests.Services
 
                 foreach (var stage in uniqueStageRedirectionToTest)
                 {
-                    var toRedirectStepDefinition = Substitute.For<ISequenceStageDefinition>();
-
                     var stageId = (stage.Key == Guid.Empty) ? Guid.NewGuid() : stage.Key;
-                    toRedirectStepDefinition.Uid.Returns(stageId);
+                    SequenceStageDefinition toRedirectStepDefinition = TestSequenceStageDefinition.Create(this._fixture, stageId);
 
                     var grainProvider = prov.GetGrainProvider(ref toRedirectStepDefinition);
 

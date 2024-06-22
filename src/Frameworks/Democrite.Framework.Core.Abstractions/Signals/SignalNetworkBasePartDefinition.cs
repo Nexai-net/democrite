@@ -32,11 +32,11 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         protected SignalNetworkBasePartDefinition(Guid uid,
                                                   string name,
                                                   string displayName,
-                                                  string? group = null)
+                                                  DefinitionMetaData? metaData)
         {
             this.Uid = uid;
             this.Name = name;
-            this.Group = group;
+            this.MetaData = metaData;
             this.DisplayName = displayName;
         }
 
@@ -61,12 +61,10 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         [DataMember]
         public string DisplayName { get; }
 
-        /// <summary>
-        /// Gets the group.
-        /// </summary>
+        /// <inheritdoc />
         [Id(3)]
         [DataMember]
-        public string? Group { get; }
+        public DefinitionMetaData? MetaData { get; }
 
         #endregion
 
@@ -101,7 +99,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
             return HashCode.Combine(this.Uid,
                                     this.Name,
                                     this.DisplayName,
-                                    this.Group,
+                                    this.MetaData,
                                     OnSignalGetHashCode());
         }
 
@@ -117,7 +115,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
             return this.Uid == other.Uid &&
                    this.Name == other.Name &&
                    this.DisplayName == other.DisplayName &&
-                   this.Group == other.Group &&
+                   this.MetaData == other.MetaData &&
                    OnSignalEquals(other);
         }
 

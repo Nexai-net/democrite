@@ -30,16 +30,23 @@ namespace Democrite.UnitTests.ToolKit.Tests
 
             var deserializedDef = JsonConvert.DeserializeObject(json, serializeSettings);
             Check.That(deserializedDef).IsNotNull()
-                                       .And
-                                       .IsInstanceOfType(item.GetType())
-                                       .And
-                                       .Not.IsSameReferenceAs(item)
-                                       .And
-                                       .IsEqualTo(item);
+                           .And
+                           .IsInstanceOfType(item.GetType())
+                           .And
+                           .Not.IsSameReferenceAs(item);
 
+            // check that through re-serialization with get the same
+            // Help also to get the diff
             var rejson = JsonConvert.SerializeObject(deserializedDef, serializeSettings);
-
             Check.That(rejson).IsEqualTo(json);
+
+#if DEBUG
+            if (item.GetHashCode() != deserializedDef!.GetHashCode())
+                item.Equals(deserializedDef);
+#endif
+
+            // If failt theire the issue may be in the equality check
+            Check.That(deserializedDef).IsEqualTo(item);
         }
     }
 }

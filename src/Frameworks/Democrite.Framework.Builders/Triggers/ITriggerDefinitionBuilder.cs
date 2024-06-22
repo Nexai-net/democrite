@@ -15,6 +15,11 @@ namespace Democrite.Framework.Builders.Triggers
     public interface ITriggerDefinitionBuilder<TDefWithExtention>
         where TDefWithExtention : ITriggerDefinitionBuilder<TDefWithExtention>
     {
+        /// <summary>
+        /// Set definition meta data
+        /// </summary>
+        TDefWithExtention MetaData(Action<IDefinitionMetaDataBuilder> action);
+
         /*
          * Sequences
          */

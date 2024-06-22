@@ -49,7 +49,7 @@ namespace Democrite.Framework.Node.Services
         #region Methods
 
         /// <inheritdoc />
-        public IVGrainProvider GetGrainProvider(ref readonly ISequenceStageDefinition _)
+        public IVGrainProvider GetGrainProvider(ref readonly SequenceStageDefinition _)
         {
             return this._defaultGrainProvider;
         }
@@ -96,7 +96,7 @@ namespace Democrite.Framework.Node.Services
         #region Methods
 
         /// <inheritdoc />
-        public IVGrainProvider GetGrainProvider(ref readonly ISequenceStageDefinition step)
+        public IVGrainProvider GetGrainProvider(ref readonly SequenceStageDefinition step)
         {
             if (this._providerScope.TryGetValue(step.Uid, out var provider))
                 return provider;

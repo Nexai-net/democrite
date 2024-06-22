@@ -23,7 +23,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
     [DataContract]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class StreamQueueDefinition : Equatable<StreamQueueDefinition>, IDefinition
+    public sealed class StreamQueueDefinition : IEquatable<StreamQueueDefinition>, IDefinition
     {
         #region Fields
 
@@ -41,9 +41,11 @@ namespace Democrite.Framework.Core.Abstractions.Streams
                                      string streamConfiguration,
                                      string streamKey,
                                      string? streamCustomKey,
-                                     Guid? streamCustomUid)
+                                     Guid? streamCustomUid,
+                                     DefinitionMetaData? metaData)
         {
             this.Uid = uid;
+            this.MetaData = metaData;
             this.DisplayName = displayName;
             this.StreamNamespace = streamKey;
             this.StreamUid = streamCustomUid;
@@ -99,6 +101,12 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         [Id(5)]
         public string StreamNamespace { get; }
 
+        /// <inheritdoc />
+        [DataMember]
+        [Newtonsoft.Json.JsonProperty]
+        [Id(6)]
+        public DefinitionMetaData? MetaData { get; }
+
         #endregion
 
         #region Methods
@@ -136,21 +144,39 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         }
 
         /// <inheritdoc />
-        protected sealed override bool OnEquals([NotNull] StreamQueueDefinition other)
+        public bool Equals(StreamQueueDefinition? other)
         {
-            return this.StreamNamespace == other.StreamNamespace &&
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(other, this))
+                return true;
+
+            return this.Uid == other.Uid &&
+                   this.StreamNamespace == other.StreamNamespace &&
                    this.StreamKey == other.StreamKey &&
                    this.StreamConfiguration == other.StreamConfiguration &&
-                   this.StreamUid == other.StreamUid;
+                   this.StreamUid == other.StreamUid &&
+                   this.MetaData == other.MetaData;
         }
 
         /// <inheritdoc />
-        protected sealed override int OnGetHashCode()
+        public override bool Equals(object? obj)
         {
-            return HashCode.Combine(this.StreamKey,
+            if (obj is StreamQueueDefinition stream)
+                return Equals(stream);
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.Uid,
+                                    this.StreamKey,
                                     this.StreamConfiguration,
                                     this.StreamUid, 
-                                    this.StreamNamespace);
+                                    this.StreamNamespace,
+                                    this.MetaData);
         }
 
         #endregion

@@ -23,8 +23,9 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
     [Immutable]
     [DataContract]
     [Serializable]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public class BlackboardTemplateControllerDefinition : IDefinition
+    public class BlackboardTemplateControllerDefinition : IEquatable<BlackboardTemplateControllerDefinition>, IDefinition
     {
         #region Fields
 
@@ -40,9 +41,11 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
         public BlackboardTemplateControllerDefinition(Guid uid,
                                                       BlackboardControllerTypeEnum controllerType,
                                                       ConcretType agentInterfaceType,
-                                                      ControllerBaseOptions options)
+                                                      ControllerBaseOptions options,
+                                                      DefinitionMetaData? metaData)
         {
             this.Uid = uid;
+            this.MetaData = metaData;
             this.ControllerType = controllerType;
             this.Options = options;
             this.AgentInterfaceType = agentInterfaceType;
@@ -55,33 +58,96 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
 
         /// <inheritdoc />
         [DataMember]
+        [Id(0)]
         public Guid Uid { get; }
 
         /// <inheritdoc />
         [DataMember]
+        [Id(1)]
+        public DefinitionMetaData? MetaData { get; }
+
+        /// <inheritdoc />
+        [DataMember]
+        [Id(2)]
         public string DisplayName { get; }
 
         /// <summary>
         /// Gets the type of the controller.
         /// </summary>
         [DataMember]
+        [Id(3)]
         public BlackboardControllerTypeEnum ControllerType { get; }
 
         /// <summary>
         /// Gets the options.
         /// </summary>
         [DataMember]
+        [Id(4)]
         public ControllerBaseOptions Options { get; }
 
         /// <summary>
         /// Gets the type of the agent interface.
         /// </summary>
         [DataMember]
+        [Id(5)]
         public ConcretType AgentInterfaceType { get; }
 
         #endregion
 
         #region Methods
+
+        /// <inheritdoc />
+        public bool Equals(BlackboardTemplateControllerDefinition? other)
+        {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(other, this))
+                return true;
+
+            return other.ControllerType == this.ControllerType &&
+                   other.AgentInterfaceType.Equals(this.AgentInterfaceType) &&
+                   other.DisplayName == this.DisplayName &&
+                   other.MetaData == this.MetaData &&
+                   other.Options == this.Options &&
+                   OnTemplateEquals(other);   
+        }
+
+        /// <summary>
+        /// Called when [template equals].
+        /// </summary>
+        protected virtual bool OnTemplateEquals(BlackboardTemplateControllerDefinition other)
+        {
+            return true;
+        }
+
+        /// <inheritdoc />
+        public sealed override bool Equals(object? obj)
+        {
+            if (obj is BlackboardTemplateControllerDefinition def)
+                return Equals(def);
+
+            return false;
+        }
+
+        /// <inheritdoc />
+        public sealed override int GetHashCode()
+        {
+            return HashCode.Combine(this.ControllerType,
+                                    this.AgentInterfaceType,
+                                    this.DisplayName,
+                                    this.MetaData,
+                                    this.Options,
+                                    OnTemplateGetHashCode());
+        }
+
+        /// <summary>
+        /// Called when [template get hash code].
+        /// </summary>
+        protected virtual int OnTemplateGetHashCode()
+        {
+            return 0;
+        }
 
         /// <inheritdoc />
         public virtual string ToDebugDisplayName()

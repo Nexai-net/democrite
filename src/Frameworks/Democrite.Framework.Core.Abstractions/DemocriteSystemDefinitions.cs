@@ -16,7 +16,7 @@ namespace Democrite.Framework.Core.Abstractions
             #region Fields
 
             internal static readonly SignalDefinition s_dynamicDefinitionChanged;
-            
+
             #endregion
 
             #region Ctor
@@ -26,7 +26,11 @@ namespace Democrite.Framework.Core.Abstractions
             /// </summary>
             static Signals()
             {
-                s_dynamicDefinitionChanged = new SignalDefinition(new Guid("F6B9F91B-6B2A-48D4-BED5-EEEDEE71F2DD"), "DynamicDefinitionChanged", group: nameof(Democrite));
+                s_dynamicDefinitionChanged = new SignalDefinition(new Guid("F6B9F91B-6B2A-48D4-BED5-EEEDEE71F2DD"),
+                                                                  "DynamicDefinitionChanged",
+                                                                  new DefinitionMetaData("Signal send to synchronize silo local dynamic definition cache.",
+                                                                                         nameof(Democrite) + "/" + "System",
+                                                                                         new[] { nameof(Democrite), "System" }));
                 DynamicDefinitionChanged = s_dynamicDefinitionChanged.SignalId;
             }
 

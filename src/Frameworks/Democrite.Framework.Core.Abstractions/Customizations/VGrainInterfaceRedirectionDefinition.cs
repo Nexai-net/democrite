@@ -4,12 +4,9 @@
 
 namespace Democrite.Framework.Core.Abstractions.Customizations
 {
-    using Democrite.Framework.Core.Abstractions.Extensions;
-
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Conditions;
     using Elvex.Toolbox.Extensions;
-    using Elvex.Toolbox.Loggers;
     using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
@@ -42,8 +39,9 @@ namespace Democrite.Framework.Core.Abstractions.Customizations
                                                     string displayName,
                                                     ConcretType source,
                                                     ConcretType redirect,
-                                                    ConditionExpressionDefinition? redirectionCondition = null)
-            : base(uid, displayName, source, Enums.VGrainRedirectionTypeEnum.OtherInterface, redirectionCondition)
+                                                    ConditionExpressionDefinition? redirectionCondition = null,
+                                                    DefinitionMetaData? metaData = null)
+            : base(uid, displayName, source, Enums.VGrainRedirectionTypeEnum.OtherInterface, metaData, redirectionCondition)
         {
             ArgumentNullException.ThrowIfNull(redirect);
 

@@ -4,8 +4,6 @@
 
 namespace Democrite.Framework.Core.Abstractions.Sequence
 {
-    using Elvex.Toolbox;
-    using Elvex.Toolbox.Helpers;
     using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
@@ -24,14 +22,15 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
     [Immutable]
     [Serializable]
     [DataContract]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceDefinition : Equatable<SequenceDefinition>, IDefinition
+    public sealed class SequenceDefinition : IEquatable<SequenceDefinition>, IDefinition
     {
         #region Fields
 
-        private readonly IReadOnlyDictionary<Guid, SequenceStageBaseDefinition> _indexedStages;
+        private readonly IReadOnlyDictionary<Guid, SequenceStageDefinition> _indexedStages;
 
-        // Index current Stahe Id to next stage id
+        // Index current Stage Id to next stage id
         private readonly IReadOnlyDictionary<Guid, Guid?> _indexedNextStages;
 
         #endregion
@@ -46,13 +45,15 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         public SequenceDefinition(Guid uid,
                                   string? displayName,
                                   SequenceOptionDefinition options,
-                                  IEnumerable<SequenceStageBaseDefinition> stages)
+                                  IEnumerable<SequenceStageDefinition> stages,
+                                  DefinitionMetaData? metadata)
         {
             this.Uid = uid;
             this.DisplayName = displayName ?? uid.ToString();
             this.Options = options ?? SequenceOptionDefinition.Default;
+            this.MetaData = metadata;
 
-            var arrayStages = stages?.ToArray() ?? EnumerableHelper<SequenceStageBaseDefinition>.ReadOnlyArray;
+            var arrayStages = stages?.ToArray() ?? EnumerableHelper<SequenceStageDefinition>.ReadOnlyArray;
             this.Stages = arrayStages;
 
             this._indexedStages = this.Stages.ToDictionary(k => k.Uid);
@@ -61,7 +62,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
             for (int indx = 0; indx < this.Stages.Count; indx++)
             {
                 var current = arrayStages[indx];
-                var next = indx + 1 < this.Stages.Count ? arrayStages[indx + 1] : (ISequenceStageDefinition?)null;
+                var next = indx + 1 < this.Stages.Count ? arrayStages[indx + 1] : (SequenceStageDefinition?)null;
 
                 indexedNextStages.Add(current.Uid, next?.Uid);
             }
@@ -79,15 +80,13 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
 
         #region Properties
 
-        /// <summary>
-        /// Gets the uid.
-        /// </summary>
+        /// <inheritdoc />
+        [Id(1)]
         [DataMember]
         public Guid Uid { get; }
 
-        /// <summary>
-        /// Gets the display name.
-        /// </summary>
+        /// <inheritdoc />
+        [Id(2)]
         [DataMember]
         public string DisplayName { get; }
 
@@ -95,32 +94,41 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// Gets the sequence options.
         /// </summary>
         [NotNull]
+        [Id(3)]
         [DataMember]
         public SequenceOptionDefinition Options { get; }
 
         /// <summary>
         /// Gets sequence's stages.
         /// </summary>
+        [Id(4)]
         [DataMember]
-        public IReadOnlyCollection<SequenceStageBaseDefinition> Stages { get; }
+        public IReadOnlyCollection<SequenceStageDefinition> Stages { get; }
 
         /// <summary>
         /// Gets the sequence input.
         /// </summary>
+        [Id(5)]
         [DataMember]
         public AbstractType? Input { get; }
 
         /// <summary>
         /// Gets the sequence output.
         /// </summary>
+        [Id(6)]
         [DataMember]
         public AbstractType? Output { get; }
+
+        /// <inheritdoc />
+        [Id(7)]
+        [DataMember]
+        public DefinitionMetaData? MetaData { get; }
 
         /// <summary>
         /// Gets the <see cref="Nullable{SequenceStageDefinition}"/> with the specified stage identifier.
         /// </summary>
         [IgnoreDataMember]
-        public ISequenceStageDefinition? this[Guid? stageId]
+        public SequenceStageDefinition? this[Guid? stageId]
         {
             get
             {
@@ -139,21 +147,37 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnEquals([NotNull] SequenceDefinition other)
+        public bool Equals(SequenceDefinition? other)
         {
+            if (other is null)
+                return false;
+
+            if (object.ReferenceEquals(other, this))
+                return true;
+
             return this.Uid == other.Uid &&
                    string.Equals(this.DisplayName, other.DisplayName) &&
                    this.Options.Equals(other.Options) &&
+                   this.MetaData == other.MetaData &&
                    this.Stages.SequenceEqual(other.Stages);
         }
 
         /// <inheritdoc />
-        protected override int OnGetHashCode()
+        public sealed override bool Equals(object? obj)
         {
-            return this.Uid.GetHashCode() ^
-                   (this.DisplayName?.GetHashCode() ?? 0) ^
-                   this.Options.GetHashCode() ^
-                   this.Stages.Aggregate(0, (acc, stg) => acc ^ stg.GetHashCode());
+            if (obj is SequenceDefinition sequence)
+                return Equals(sequence);
+            return false;
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.Uid,
+                                    this.DisplayName,
+                                    this.Options,
+                                    this.MetaData,
+                                    this.Stages.Aggregate(0, (acc, stg) => acc ^ stg.GetHashCode()));
         }
 
         /// <summary>
@@ -188,6 +212,36 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
             builder.Append(" : (");
             builder.Append(this.Input);
             builder.Append(") -> ");
+
+            if (this.MetaData is not null)
+            {
+                builder.AppendLine();
+                builder.Append(' ', 4);
+                builder.Append(nameof(this.MetaData.CategoryPath));
+                builder.Append(": ");
+                builder.AppendLine(this.MetaData.CategoryPath);
+
+                builder.Append(' ', 4);
+                builder.Append(nameof(this.MetaData.Description));
+                builder.Append(": ");
+                builder.AppendLine(this.MetaData.Description);
+
+                builder.Append(' ', 4);
+                builder.Append(nameof(this.MetaData.Tags));
+                builder.Append(": ");
+
+                bool first = true;
+                foreach (var tag in this.MetaData.Tags ?? EnumerableHelper<string>.ReadOnly)
+                {
+                    if (!first)
+                        builder.Append(", ");
+                    builder.Append(tag);
+                    first = false;
+                }
+
+                builder.AppendLine();
+            }
+
             builder.AppendLine();
 
             // Trigger
@@ -199,6 +253,18 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
             builder.Append(") <- ");
 
             return builder.ToString();
+        }
+
+        /// <inheritdoc />
+        public static bool operator ==(SequenceDefinition? lhs, SequenceDefinition? rhs)
+        {
+            return lhs?.Equals(rhs) ?? lhs is null;
+        }
+
+        /// <inheritdoc />
+        public static bool operator !=(SequenceDefinition? lhs, SequenceDefinition? rhs)
+        {
+            return !(lhs == rhs);
         }
 
         #endregion

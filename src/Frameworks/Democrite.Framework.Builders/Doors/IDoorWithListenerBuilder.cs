@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Builders.Doors
 {
     using Democrite.Framework.Builders.Signals;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
 
@@ -16,9 +17,6 @@ namespace Democrite.Framework.Builders.Doors
     {
         #region Properties
 
-        /// <inheritdoc cref="ISignalNetworkBasePartBuilder{TWizard, TDefinition}.Group(string)"/>
-        string? GroupName { get; }
-
         /// <summary>
         /// Gets unique door name
         /// </summary>
@@ -28,6 +26,11 @@ namespace Democrite.Framework.Builders.Doors
         /// Gets the unique id.
         /// </summary>
         Guid Uid { get; }
+
+        /// <summary>
+        /// Gets the definition meta data.
+        /// </summary>
+        DefinitionMetaData? DefinitionMetaData { get; }
 
         /// <summary>
         /// Gets the global signal retention period (history and not consumed), Default 1 day

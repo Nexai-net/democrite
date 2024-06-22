@@ -21,6 +21,11 @@ namespace Democrite.Framework.Core.Abstractions
         /// </summary>
         string DisplayName { get; }
 
+        /// <summary>
+        /// Gets the meta data.
+        /// </summary>
+        DefinitionMetaData? MetaData { get; }
+
         #endregion
 
         #region Methods

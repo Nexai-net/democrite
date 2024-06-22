@@ -10,7 +10,6 @@ namespace Democrite.Framework.Builders.Sequences
     using Democrite.Framework.Core.Abstractions.Signals;
 
     using System.Linq.Expressions;
-    using System.Runtime;
 
     /// <summary>
     /// Get a sequence pipeline steps builder
@@ -50,17 +49,17 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        ISequencePipelineStageFireSignalBuilder<TBuilderOutput> FireSignal(string signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput> FireSignal(string signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        ISequencePipelineStageFireSignalBuilder<TBuilderOutput> FireSignal(Guid signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput> FireSignal(Guid signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        ISequencePipelineStageFireSignalBuilder<TBuilderOutput> FireSignal(SignalId signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput> FireSignal(SignalId signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
     }
 
     /// <summary>
@@ -71,32 +70,32 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(string signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(string signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Guid signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Guid signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(SignalId signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(SignalId signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Expression<Func<TPreviousMessage, string>> signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Expression<Func<TPreviousMessage, string>> signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Expression<Func<TPreviousMessage, Guid>> signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Expression<Func<TPreviousMessage, Guid>> signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Fire a designated signal
         /// </summary>
-        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Expression<Func<TPreviousMessage, SignalId>> signalName);
+        ISequencePipelineStageFireSignalBuilder<TBuilderOutput, TPreviousMessage> FireSignal(Expression<Func<TPreviousMessage, SignalId>> signalName, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
     }
 
     /// <summary>
@@ -107,17 +106,17 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Add a new stage that inject in content to <see cref="IExecutionContext"/>
         /// </summary>
-        ISequencePipelineBuilder PushToContext<TInfo>(Expression<Func<TInfo>> data, bool @override = true);
+        ISequencePipelineBuilder PushToContext<TInfo>(Expression<Func<TInfo>> data, bool @override = true, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Add a new stage that clear context content to <see cref="IExecutionContext"/>
         /// </summary>
-        TBuilderOutput ClearContextMetadata<TInfo>();
+        TBuilderOutput ClearContextMetadata<TInfo>(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Add a new stage that clear context content to <see cref="IExecutionContext"/>
         /// </summary>
-        TBuilderOutput ClearAllContextMetadata();
+        TBuilderOutput ClearAllContextMetadata(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
     }
 
     /// <summary>
@@ -130,22 +129,22 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Add a new <see cref="IVGrain"/> in the pipeline to transform action based on input to produce normally and output
         /// </summary>
-        ISequencePipelineStageCallBuilder<TVGrain> Use<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg = null) where TVGrain : IVGrain;
+        ISequencePipelineStageCallBuilder<TVGrain> Use<TVGrain>(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null) where TVGrain : IVGrain;
 
         /// <summary>
         /// Selects the specified data as input
         /// </summary>
-        ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TSelected>> select, Action<ISequencePipelineStageConfigurator>? cfg = null);
+        ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TSelected>> select, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Selects the specified data as input
         /// </summary>
-        ISequencePipelineBuilder<TSelected> Select<TSelected>(TSelected select, Action<ISequencePipelineStageConfigurator>? cfg = null);
+        ISequencePipelineBuilder<TSelected> Select<TSelected>(TSelected select, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Add a new stage used to call an existing sequence
         /// </summary>
-        ISequencePipelineNestedSequenceCallBuilder CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<ISequencePipelineStageConfigurator>? cfg = null);
+        ISequencePipelineNestedSequenceCallBuilder CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
     }
 
     /// <summary>
@@ -159,29 +158,29 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Selects the specified data as input
         /// </summary>
-        ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TPreviousMessage, TSelected>> select, Action<ISequencePipelineStageConfigurator>? cfg = null);
+        ISequencePipelineBuilder<TSelected> Select<TSelected>(Expression<Func<TPreviousMessage, TSelected>> select, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Add a new <see cref="IVGrain"/> in the pipeline to transform action based on input to produce normally and output
         /// </summary>
-        ISequencePipelineStageCallBuilder<TPreviousMessage, TVGrain> Use<TVGrain>(Action<ISequencePipelineStageConfigurator>? cfg = null)
+        ISequencePipelineStageCallBuilder<TPreviousMessage, TVGrain> Use<TVGrain>(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null)
             where TVGrain : IVGrain;
 
         /// <summary>
         /// Add a new stage that inject in content to <see cref="IExecutionContext"/>
         /// </summary>
-        ISequencePipelineBuilder<TPreviousMessage> PushToContext<TInfo>(Expression<Func<TPreviousMessage, TInfo>> data, bool @override = true);
+        ISequencePipelineBuilder<TPreviousMessage> PushToContext<TInfo>(Expression<Func<TPreviousMessage, TInfo>> data, bool @override = true, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
         /// <summary>
         /// Add a new converter <see cref="ITransformerConvertVGrain{TInput}"/> in the pipeline to transform input into output
         /// </summary>
-        ISequencePipelineStageCallBuilder<TPreviousMessage, TConverterVGrain> Convert<TConverterVGrain>(Action<ISequencePipelineStageConfigurator>? cfg = null)
+        ISequencePipelineStageCallBuilder<TPreviousMessage, TConverterVGrain> Convert<TConverterVGrain>(Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null)
             where TConverterVGrain : IVGrain;
 
         /// <summary>
         /// Add a new stage used to call an existing sequence
         /// </summary>
-        ISequencePipelineNestedSequenceCallBuilder<TPreviousMessage> CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<ISequencePipelineStageConfigurator>? cfg = null);
+        ISequencePipelineNestedSequenceCallBuilder<TPreviousMessage> CallSequence(Guid sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null, Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilder = null, Guid? fixUid = null);
 
     }
 }

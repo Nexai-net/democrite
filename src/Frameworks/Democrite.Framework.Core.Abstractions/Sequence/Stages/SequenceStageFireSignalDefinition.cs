@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
 {
     using Democrite.Framework.Core.Abstractions.Enums;
+
     using Elvex.Toolbox.Abstractions.Expressions;
     using Elvex.Toolbox.Models;
 
@@ -15,20 +16,23 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
     [Immutable]
     [DataContract]
     [Serializable]
+    [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceStageFireSignalDefinition : SequenceStageBaseDefinition
+    public sealed class SequenceStageFireSignalDefinition : SequenceStageDefinition
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SequenceStageFireSignalDefinition"/> class.
         /// </summary>
-        public SequenceStageFireSignalDefinition(AbstractType? input,
+        public SequenceStageFireSignalDefinition(Guid uid,
+                                                 string displayName,
+                                                 AbstractType? input,
                                                  AccessExpressionDefinition signalInfo,
                                                  bool multi,
                                                  AccessExpressionDefinition? messageAccess,
-                                                 Guid? uid = null)
-            : base(StageTypeEnum.FireSignal, input, input, null, false, uid)
+                                                 DefinitionMetaData? definitionMeta)
+            : base(uid, displayName, StageTypeEnum.FireSignal, input, input, definitionMeta, false)
         {
             this.SignalInfo = signalInfo;
             this.MessageAccess = messageAccess;
@@ -43,18 +47,21 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         /// Gets the signal message.
         /// </summary>
         [DataMember]
+        [Id(0)]
         public AccessExpressionDefinition SignalInfo { get; }
 
         /// <summary>
         /// Gets the message access.
         /// </summary>
-        [DataMember] 
+        [DataMember]
+        [Id(1)]
         public AccessExpressionDefinition? MessageAccess { get; }
 
         /// <summary>
         /// Gets a value indicating whether this <see cref="SequenceStageFireSignalDefinition"/> must send multiple message.
         /// </summary>
-        [DataMember] 
+        [DataMember]
+        [Id(2)]
         public bool Multi { get; }
 
         #endregion
@@ -62,7 +69,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence.Stages
         #region Methods
 
         /// <inheritdoc />
-        protected override bool OnStageEquals(ISequenceStageDefinition other)
+        protected override bool OnStageEquals(SequenceStageDefinition other)
         {
             return other is SequenceStageFireSignalDefinition otherFire &&
                    otherFire.SignalInfo == this.SignalInfo &&

@@ -34,8 +34,10 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Initializes a new instance of the <see cref="SequencePipelineVGrainStageBaseBuilder{TWorflowStage, TInput}"/> class.
         /// </summary>
-        public SequencePipelineVGrainStageBaseBuilder(ISequencePipelineBaseBuilder sequencePipelineBuilder, Action<ISequencePipelineStageConfigurator>? configAction)
-            : base(configAction)
+        public SequencePipelineVGrainStageBaseBuilder(ISequencePipelineBaseBuilder sequencePipelineBuilder,
+                                                      Action<IDefinitionMetaDataWithDisplayNameBuilder>? metaDataBuilderAction,
+                                                      Guid? fixUid)
+            : base(metaDataBuilderAction, fixUid)
         {
             this._sequencePipelineBuilder = sequencePipelineBuilder;
         }
@@ -44,7 +46,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// Initializes a new instance of the <see cref="SequencePipelineVGrainStageBaseBuilder{TWorflowStage, TInput}"/> class.
         /// </summary>
         internal SequencePipelineVGrainStageBaseBuilder(IInternalSequencePipelineVGrainStageBaseBuilder root)
-            : base(null)
+            : base(null, null)
         {
             this._root = root;
         }
@@ -122,7 +124,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Converts to definition.
         /// </summary>
-        public virtual SequenceStageBaseDefinition ToDefinition()
+        public virtual SequenceStageDefinition ToDefinition()
         {
             return this._root?.ToDefinition() ?? InternalToDefinition();
         }
@@ -130,7 +132,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Save in <see cref="ISequenceStageDefinition"/> if element is root
         /// </summary>
-        protected virtual SequenceStageBaseDefinition InternalToDefinition()
+        protected virtual SequenceStageDefinition InternalToDefinition()
         {
             throw new NotImplementedException();
         }
@@ -154,18 +156,18 @@ namespace Democrite.Framework.Builders.Sequences
         }
 
         /// <inheritdoc />
-        protected override SequenceOptionStageDefinition? BuildConfigDefinition()
+        protected override DefinitionMetaData? BuildDefinitionMetaData(out string? displayName)
         {
             if (this._root != null)
-                return this._root.ConfigOption();
+                return this._root.BuildDefinitionMetaData(out displayName);
 
-            return base.BuildConfigDefinition();
+            return base.BuildDefinitionMetaData(out displayName);
         }
 
         /// <inheritdoc />
-        SequenceOptionStageDefinition? IInternalSequencePipelineVGrainStageBaseBuilder.ConfigOption()
+        DefinitionMetaData? IInternalSequencePipelineVGrainStageBaseBuilder.BuildDefinitionMetaData(out string? displayName)
         {
-            return BuildConfigDefinition();
+            return base.BuildDefinitionMetaData(out displayName);
         }
 
         #endregion

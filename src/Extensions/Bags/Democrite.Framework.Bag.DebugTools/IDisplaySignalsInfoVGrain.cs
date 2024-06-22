@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Bag.DebugTools
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Attributes.MetaData;
     using Democrite.Framework.Core.Abstractions.Signals;
 
     /// <summary>
@@ -12,6 +13,10 @@ namespace Democrite.Framework.Bag.DebugTools
     /// </summary>
     /// <seealso cref="IVGrain" />
     /// <seealso cref="ISignalReceiver" />
+    [VGrainMetaData("48AB5776-0D89-445B-871A-4EE1FA0E4293",
+                    displayName: "Display",
+                    description: "Used to show in logs signals when emit.",
+                    categoryPath: "tools")]
     public interface IDisplaySignalsInfoVGrain : IVGrain, ISignalReceiver
     {
         /// <summary>

@@ -52,7 +52,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
         #region Methods
 
         /// <inheritdoc />
-        public async ValueTask<StageStepResult> ExecAsync(ISequenceStageDefinition baseStep,
+        public async ValueTask<StageStepResult> ExecAsync(SequenceStageDefinition baseStep,
                                                           object? input,
                                                           IExecutionContext sequenceContext,
                                                           ILogger logger,

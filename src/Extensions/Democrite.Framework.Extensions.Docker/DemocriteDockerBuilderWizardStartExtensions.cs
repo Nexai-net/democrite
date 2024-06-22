@@ -7,7 +7,10 @@ namespace Democrite.Framework.Configurations
 {
     using Democrite.Framework.Extensions.Docker;
     using Democrite.Framework.Extensions.Docker.Abstractions;
+    using Democrite.Framework.Extensions.Docker.Abstractions.Options;
     using Democrite.Framework.Node.Abstractions.Artifacts;
+
+    using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
     /// Extensions use to setup docker artifact environment 
@@ -22,8 +25,28 @@ namespace Democrite.Framework.Configurations
         /// </summary>
         public static IDemocriteNodeWizard EnableDockerHost(this IDemocriteNodeWizard wizard)
         {
+            wizard.GetServiceCollection().AddSingleton<DockerDemocriteEnvironmentService>();
+            wizard.AddService<IDockerClientFactory, DockerClientFactory>();
             wizard.AddService<IArtifactExecutorDedicatedFactory, ArtifactExecutorDockerDedicatedFactory>();
             wizard.AddService<IDockerProcessorFactory, DockerProcessorFactory>();
+            return wizard;
+        }
+
+        /// <summary>
+        /// Adds the docker option.
+        /// </summary>
+        public static IDemocriteNodeWizard AddDockerOption(this IDemocriteNodeWizard wizard, DockerEnvironementOptions option)
+        {
+            wizard.AddNodeOption(option);
+            return wizard;
+        }
+
+        /// <summary>
+        /// Adds the docker option.
+        /// </summary>
+        public static IDemocriteNodeWizard AddDockerOption(this IDemocriteNodeWizard wizard, string optionSectionPath)
+        {
+            wizard.AddNodeOption<DockerEnvironementOptions>(optionSectionPath);
             return wizard;
         }
 

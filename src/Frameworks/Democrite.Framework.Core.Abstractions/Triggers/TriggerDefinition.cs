@@ -14,10 +14,11 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     /// <summary>
     /// Base definition of trigger definition
     /// </summary>
-    [Serializable]
     [Immutable]
-    [ImmutableObject(true)]
+    [Serializable]
     [DataContract]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
 
     [KnownType(typeof(CronTriggerDefinition))]
     [KnownType(typeof(SignalTriggerDefinition))]
@@ -35,9 +36,11 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
                                     TriggerTypeEnum triggerType,
                                     IEnumerable<TriggerTargetDefinition> targets,
                                     bool enabled,
+                                    DefinitionMetaData? metaData,
                                     DataSourceDefinition? triggerGlobalOutputDefinition = null)
         {
             this.Uid = uid;
+            this.MetaData = metaData;
             this.DisplayName = displayName;
             this.Enabled = enabled;
             this.TriggerType = triggerType;
@@ -82,6 +85,11 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         public DataSourceDefinition? TriggerGlobalOutputDefinition { get; }
 
         /// <inheritdoc />
+        [Id(6)]
+        [DataMember]
+        public DefinitionMetaData? MetaData { get; }
+
+        /// <inheritdoc />
         public bool Equals(TriggerDefinition? other)
         {
             if (other is null)
@@ -93,6 +101,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
             return this.Uid == other.Uid &&
                    this.Enabled == other.Enabled &&
                    this.TriggerType == other.TriggerType &&
+                   this.MetaData == other.MetaData &&
                    (this.TriggerGlobalOutputDefinition?.Equals(other.TriggerGlobalOutputDefinition) ?? other.TriggerGlobalOutputDefinition is null) &&
                    this.Targets.SequenceEqual(other.Targets);
         }
@@ -111,6 +120,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         {
             return HashCode.Combine(this.Uid,
                                     this.TriggerType,
+                                    this.MetaData,
                                     this.TriggerGlobalOutputDefinition);
         }
 

@@ -42,10 +42,13 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             {
                 var def = typeof(ITestExtractEmailTransformer).GetMethod(nameof(ITestExtractEmailTransformer.ExtractEmailsAsync))!.GetAbstractMethod();
 
-                var callDefinition = new SequenceStageCallDefinition(typeof(string).GetAbstractType(),
+                var callDefinition = new SequenceStageCallDefinition(Guid.NewGuid(),
+                                                                     "test",
+                                                                     typeof(string).GetAbstractType(),
                                                                      (ConcretType)typeof(ITestExtractEmailTransformer).GetAbstractType(),
                                                                      def,
                                                                      typeof(string[]).GetAbstractType(),
+                                                                     null,
                                                                      null,
                                                                      null,
                                                                      null);
