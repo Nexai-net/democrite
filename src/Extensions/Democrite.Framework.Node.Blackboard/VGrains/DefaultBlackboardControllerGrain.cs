@@ -54,7 +54,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public override async Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        protected override async Task<IReadOnlyCollection<BlackboardCommand>?> OnInitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
         {
             this.State!.Option = (option as DefaultControllerOptions) ?? DefaultControllerOptions.Default;
             await PushStateAsync(cancellationToken.CancellationToken);

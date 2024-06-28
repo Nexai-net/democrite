@@ -35,7 +35,7 @@ namespace Democrite.Framework.Builders
         /// </summary>
         public static SignalDefinition Create(in SignalId signalId, Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
-            return new SignalBuilder(signalId.Name, signalId.Uid).MetaData(metadataBuilder).Build();
+            return new SignalBuilder(signalId.Name ?? "Signal:" + signalId.Uid, signalId.Uid).MetaData(metadataBuilder).Build();
         }
     }
 }

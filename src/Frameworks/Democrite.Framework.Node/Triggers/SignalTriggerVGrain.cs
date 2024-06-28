@@ -14,6 +14,7 @@ namespace Democrite.Framework.Node.Triggers
 
     using Microsoft.Extensions.Logging;
 
+    using Orleans.Concurrency;
     using Orleans.Runtime;
 
     using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace Democrite.Framework.Node.Triggers
     /// <seealso cref="Grain" />
     /// <seealso cref="ISignalTriggerVGrain" />
     [DemocriteSystemVGrain]
-    internal sealed class SignalTriggerVGrain : TriggerBaseHandlerVGrain<TriggerState, SignalTriggerDefinition, ISignalTriggerVGrain>, ISignalTriggerVGrain, ISignalReceiver
+    internal sealed class SignalTriggerVGrain : TriggerBaseHandlerVGrain<TriggerState, SignalTriggerDefinition, ISignalTriggerVGrain>, ISignalTriggerVGrain, ISignalReceiver, ISignalReceiverReadOnly
     {
         #region Fields
 
@@ -76,6 +77,8 @@ namespace Democrite.Framework.Node.Triggers
         }
 
         /// <inheritdoc />
+        [OneWay]
+        [ReadOnly]
         public Task ReceiveSignalAsync(SignalMessage signal)
         {
             if (this.Enabled == false)

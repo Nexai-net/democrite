@@ -10,7 +10,6 @@ namespace Democrite.Framework.Node.Signals.Doors
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Signals;
-    using Democrite.Framework.Node.Abstractions.Services;
 
     using Elvex.Toolbox.Abstractions.Attributes;
     using Elvex.Toolbox.Abstractions.Services;
@@ -124,7 +123,7 @@ namespace Democrite.Framework.Node.Signals.Doors
         #region Methods
 
         /// <inheritdoc />
-        public Task InitializeAsync(DoorDefinition doorDefinition, GrainCancellationToken token)
+        public Task UpdateAsync(DoorDefinition doorDefinition, GrainCancellationToken token)
         {
             return InitializeImplAsync(doorDefinition, token.CancellationToken);
         }

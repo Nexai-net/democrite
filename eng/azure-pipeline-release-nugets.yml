@@ -23,6 +23,11 @@ parameters:
     type: boolean
     default: true
 
+  - name: export_symbols
+    displayName: Define if symbols must be exported
+    type: boolean
+    default: true
+
 variables:
   - group: democrite-frameworks-variables
 
@@ -31,6 +36,12 @@ variables:
   
   - ${{ if eq(parameters.release_target, 'Nuget') }}:
     - group: nuget-org-api-nexai
+
+  - name: pkg_push_filter
+    ${{ if parameters.export_symbols }}:
+      value: "*.symbols.nupkg"
+    ${{ else }}:
+      value: "*.nupkg"
 
   - template: Templates/ci-compute-version.yaml@tpl
     parameters:
@@ -56,7 +67,8 @@ steps:
   - template: Templates/dotnet/nuget-steps.yaml@tpl
     parameters:
       package_version: $(FinalPkgVersion)
-      include_symbols: ${{ parameters.prerelease }}
+      include_symbols: ${{ parameters.export_symbols }}
       solution_file_name: $(solution_file_name)
       nuget_depo: $(nuget_depo)
+      nuget_package_filter: $(pkg_push_filter)
       secret_api_key: $(secret_api_key)

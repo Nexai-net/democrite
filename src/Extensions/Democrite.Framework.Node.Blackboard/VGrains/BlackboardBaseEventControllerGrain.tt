@@ -65,19 +65,40 @@ var coreCode = """
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardBaseQuery request, GrainCancellationToken token)
+        public async Task<IReadOnlyCollection<BlackboardCommand>?> ProcessRequestAsync<TResponseRequested>(BlackboardBaseQuery request, GrainCancellationToken token)
+        {
+            await InitblackboardAccessAsync(token.CancellationToken);
+            return await OnProcessRequestAsync<TResponseRequested>(request, token);
+        }
+
+        /// <inheritdoc />
+        protected virtual Task<IReadOnlyCollection<BlackboardCommand>?> OnProcessRequestAsync<TResponseRequested>(BlackboardBaseQuery request, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(s_defaultRejectRequest);
         }
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token)
+        public async Task<IReadOnlyCollection<BlackboardCommand>?> ReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token)
+        {
+            await InitblackboardAccessAsync(token.CancellationToken);
+            return await OnReactToEventsAsync(eventBook, token);
+        }
+
+        /// <inheritdoc />
+        protected virtual Task<IReadOnlyCollection<BlackboardCommand>?> OnReactToEventsAsync(BlackboardEventBook eventBook, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> ManagedSignalMessageAsync(SignalMessage message, GrainCancellationToken token)
+        public async Task<IReadOnlyCollection<BlackboardCommand>?> ManagedSignalMessageAsync(SignalMessage message, GrainCancellationToken token)
+        {
+            await InitblackboardAccessAsync(token.CancellationToken);
+            return await OnManagedSignalMessageAsync(message, token);
+        }
+
+        /// <inheritdoc />
+        protected virtual Task<IReadOnlyCollection<BlackboardCommand>?> OnManagedSignalMessageAsync(SignalMessage message, GrainCancellationToken token)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }

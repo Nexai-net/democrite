@@ -31,6 +31,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Conditions;
+    using Elvex.Toolbox.Abstractions.Helpers;
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Disposables;
@@ -39,9 +40,12 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Orleans;
+    using Orleans.Concurrency;
     using Orleans.Runtime;
+    using Orleans.Serialization.Invocation;
 
     using System.Collections.Frozen;
     using System.Collections.Generic;
@@ -91,13 +95,11 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         private readonly IObjectConverter _converter;
         private readonly ITimeManager _timeManager;
 
-        private readonly SemaphoreSlim _singleMessageTreatmentLocker;
-        private readonly SemaphoreSlim _saveStateLocker;
-
+        private readonly ILoggerFactory _loggerFactory;
         private readonly CancellationTokenSource _lifetimeToken;
 
         // Extra protection to ensure metadata are always synchronized with data stored
-        private readonly SemaphoreSlim _metaDataLocker;
+        private readonly ReaderWriterLockSlim _metaDataLocker;
         private readonly SortedSet<BlackboardLogicalTypeHandler> _logicalHandlers;
 
         private IDeferredHandlerVGrain? _deferredHandler;
@@ -118,6 +120,10 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         static BlackboardGrain()
         {
+            //s_allControllerTypes = Enum.GetValues<BlackboardControllerTypeEnum>()
+            //                           .Where(b => b != BlackboardControllerTypeEnum.None)
+            //                           .ToArray();
+
             s_defaultController = typeof(IDefaultBlackboardControllerGrain);
             s_defaultControllerConcretType = (ConcretType)s_defaultController.GetAbstractType();
             s_defaultControllerConcretTypeSurrogate = ConcretBaseTypeConverter.ConvertToSurrogate(s_defaultControllerConcretType);
@@ -131,7 +137,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             Expression<Func<BlackboardGrain, BlackboardCommandTriggerSignal<int>, CommandExecutionContext, Task<bool>>> cmdSignalWithData = (g, cmd, ctx) => g.Command_TriggerSignalWithData<int>(cmd, ctx);
             s_cmdSignalWithData = ((MethodCallExpression)cmdSignalWithData.Body).Method.GetGenericMethodDefinition();
 
-            Expression<Func<BlackboardGrain, BlackboardBaseQuery, DeferredId?, GrainCancellationToken, Task<BlackboardQueryResponse>>> solveQueryExpr = (grain, q, d, t) => grain.SolveQueryRequestAsync<int>(q, d, t);
+            Expression<Func<BlackboardGrain, BlackboardBaseQuery, DeferredId?, GrainCancellationToken, Task<BlackboardQueryResponse>>> solveQueryExpr = (grain, q, d, t) => grain.SolveQueryRequestAsync<int>(q, d, null, t);
             s_solveGenericQueryRequest = ((MethodCallExpression)solveQueryExpr.Body).Method.GetGenericMethodDefinition();
 
             s_rootCommandExecutor = new Dictionary<BlackboardCommandTypeEnum, Func<BlackboardGrain, BlackboardCommand, CommandExecutionContext, Task<bool>>>()
@@ -152,6 +158,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 { BlackboardCommandStorageActionTypeEnum.Remove, (g, cmd, ctx) => g.Command_RemoveFromStorageAsync(cmd, ctx) },
                 { BlackboardCommandStorageActionTypeEnum.Decommission, (g, cmd, ctx) => g.Command_DecommissionFromStorageAsync(cmd, ctx) },
                 { BlackboardCommandStorageActionTypeEnum.ChangeStatus, (g, cmd, ctx) => g.Command_ChangeStatusFromStorageAsync(cmd, ctx) },
+                { BlackboardCommandStorageActionTypeEnum.ChangeMetaData, (g, cmd, ctx) => g.Command_ChangeMetaDataFromStorageAsync(cmd, ctx) },
 
             }.ToFrozenDictionary();
 
@@ -173,7 +180,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// Initializes a new instance of the <see cref="BlackboardGrain"/> class.
         /// </summary>
         public BlackboardGrain(ILogger<IBlackboardGrain> logger,
-                               [PersistentState(BlackboardConstants.BlackboardStorageStateKey, BlackboardConstants.BlackboardStorageConfigurationKey)] IPersistentState<BlackboardGrainStateSurrogate> persistentState,
+                               [PersistentState(BlackboardConstants.BlackboardStateStorageKey, BlackboardConstants.BlackboardStateStorageConfigurationKey)] IPersistentState<BlackboardGrainStateSurrogate> persistentState,
                                IGrainOrleanFactory grainFactory,
                                IServiceProvider serviceProvider,
                                ITimeManager timeManager,
@@ -187,8 +194,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             : base(logger, persistentState)
         {
-            this._saveStateLocker = new SemaphoreSlim(1);
-            this._singleMessageTreatmentLocker = new SemaphoreSlim(1);
+            this._loggerFactory = serviceProvider.GetService<ILoggerFactory>() ?? NullLoggerFactory.Instance;
 
             this._signalService = signalService;
             this._democriteSerializer = democriteSerializer;
@@ -197,7 +203,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             this._lifetimeToken = new CancellationTokenSource();
             this._controllers = new Dictionary<BlackboardControllerTypeEnum, BlackboardControllerHandler>();
 
-            this._metaDataLocker = new SemaphoreSlim(1);
+            this._metaDataLocker = new ReaderWriterLockSlim();
 
             this._repositoryFactory = repositoryFactory;
             this._grainOrleanFactory = grainFactory;
@@ -215,7 +221,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public async Task<bool> SealedAsync(GrainCancellationToken token)
+        public async Task<bool> SealedAsync(GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
 
@@ -224,18 +230,33 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             await using (StartModifyContext())
             {
-                return await CommandExecutionStartPointAsync(token.CancellationToken, new BlackboardCommandLifeStatusChange(BlackboardLifeStatusEnum.Sealed, this.State!.CurrentLifeStatus));
+                return await CommandExecutionStartPointAsync(token.CancellationToken,
+                                                             GetCallContextLogger(callContextId),
+                                                             new BlackboardCommandLifeStatusChange(BlackboardLifeStatusEnum.Sealed, this.State!.CurrentLifeStatus));
             }
         }
 
         /// <inheritdoc />
-        public async Task<bool> InitializeAsync(GrainCancellationToken token, IReadOnlyCollection<DataRecordContainer>? initData = null)
+        public async Task InitializaCallAsync()
+        {
+            if (this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.None)
+            {
+                using (var source = CancellationToken.None.ToGrainCancellationTokenSource())
+                {
+                    await InitializeAsync(source.Token);
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> InitializeAsync(GrainCancellationToken token, IReadOnlyCollection<DataRecordContainer>? initData = null, Guid? callContextId = null)
         {
             if (this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.WaitingInitialization || this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.None)
             {
                 await using (StartModifyContext())
                 {
-                    var initResult = await CommandExecutionStartPointAsync(token.CancellationToken, new BlackboardCommandLifeInitializeChange(this.State!.CurrentLifeStatus, initData));
+                    var localLogger = GetCallContextLogger(callContextId);
+                    var initResult = await CommandExecutionStartPointAsync(token.CancellationToken, localLogger, new BlackboardCommandLifeInitializeChange(this.State!.CurrentLifeStatus, initData));
 
                     if (initResult)
                     {
@@ -244,19 +265,19 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                     .Where(c => c.ControllerType == BlackboardControllerTypeEnum.Event)
                                                     .Select(c => c.Options)
                                                     .OfType<EventControllerOptions>()
-                                                    .SelectMany(options => options.ListenSignals.Select(s => new BlackboardCommandSignal(s.Uid,
+                                                    .SelectMany(options => options.ListenSignals.Select(s => new BlackboardCommandSignalSubscription(s.Uid,
                                                                                                                                          s.Name ?? s.Uid.ToString(),
                                                                                                                                          false,
                                                                                                                                          BlackboardCommandSignalTypeEnum.Attach))
 
-                                                                                  .Concat(options.ListenDoors.Select(s => new BlackboardCommandSignal(s.Uid,
+                                                                                  .Concat(options.ListenDoors.Select(s => new BlackboardCommandSignalSubscription(s.Uid,
                                                                                                                                                       s.Name ?? s.Uid.ToString(),
                                                                                                                                                       true,
                                                                                                                                                       BlackboardCommandSignalTypeEnum.Attach))))
-                                                    .ToArray() ?? EnumerableHelper<BlackboardCommandSignal>.ReadOnlyArray;
+                                                    .ToArray() ?? EnumerableHelper<BlackboardCommandSignalSubscription>.ReadOnlyArray;
 
                         if (signalCmds.Any())
-                            await CommandExecutionStartPointAsync(token.CancellationToken, signalCmds);
+                            await CommandExecutionStartPointAsync(token.CancellationToken, localLogger, signalCmds);
                     }
 
                     return initResult;
@@ -266,7 +287,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
-        public Task<BlackboardLifeStatusEnum> GetStatusAsync(GrainCancellationToken token)
+        [ReadOnly]
+        public Task<BlackboardLifeStatusEnum> GetStatusAsync(GrainCancellationToken token, Guid? callContextId = null)
         {
             return Task.FromResult(this.State!.CurrentLifeStatus);
         }
@@ -279,127 +301,160 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         ///     during activation.
         ///     
         /// </remarks>
-        public async Task BuildFromTemplateAsync(Guid blackboardTemplateUid, BlackboardId blackboardId)
+        public async Task BuildFromTemplateAsync(Guid blackboardTemplateUid, BlackboardId blackboardId, GrainCancellationToken token, Guid? callContextId)
         {
-            if (this.State!.IsBuild == false)
+            var grainId = base.GetGrainId();
+
+            try
             {
-                var templateProvider = this._serviceProvider.GetRequiredService<IBlackboardTemplateDefinitionProvider>();
-                var tmpl = await templateProvider.GetFirstValueByIdAsync(blackboardTemplateUid, default);
+                this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Start BuildFromTemplateAsync({blackboardTemplateUid}, {blackboardId})", grainId, blackboardTemplateUid, blackboardId);
+                if (this.State!.IsBuild == false)
+                {
+                    this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Start Building", grainId);
+
+                    var templateProvider = this._serviceProvider.GetRequiredService<IBlackboardTemplateDefinitionProvider>();
+                    var tmpl = await templateProvider.GetFirstValueByIdAsync(blackboardTemplateUid, token.CancellationToken);
 
 #pragma warning disable IDE0270 // Use coalesce expression
-                if (tmpl is null)
-                    throw new MissingDefinitionException(typeof(BlackboardTemplateDefinition), blackboardTemplateUid.ToString());
+                    if (tmpl is null)
+                        throw new MissingDefinitionException(typeof(BlackboardTemplateDefinition), blackboardTemplateUid.ToString());
 #pragma warning restore IDE0270 // Use coalesce expression
 
-                if (tmpl.ConfigurationDefinition?.InitializationRequired == true)
-                    this.State.CurrentLifeStatus = BlackboardLifeStatusEnum.WaitingInitialization;
+                    if (tmpl.ConfigurationDefinition?.InitializationRequired == true)
+                        this.State.CurrentLifeStatus = BlackboardLifeStatusEnum.WaitingInitialization;
 
-                this.State!.BuildUsingTemplate(tmpl, blackboardId);
+                    this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Start BuildUsingTemplate state", grainId);
+                    this.State!.BuildUsingTemplate(tmpl, blackboardId);
 
-                await PushStateAsync(default);
-            }
+                    await PushStateAsync(token.CancellationToken);
+                    this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- State Saved after build", grainId);
 
-            this._deferredHandler ??= await this._systemVGrainProvider.GetVGrainAsync<IDeferredHandlerVGrain>(null, this.Logger);
+                    this.Logger = this._loggerFactory.CreateLogger("[Blackboard {0} name: {1} template: {2}] ".WithArguments(grainId, this.State?.Name, this.State?.TemplateCopy?.Uid));
+                }
 
-            var allControllers = Enum.GetValues<BlackboardControllerTypeEnum>()
-                                     .Where(b => b != BlackboardControllerTypeEnum.None)
-                                     .ToArray();
+                this._deferredHandler ??= await this._systemVGrainProvider.GetVGrainAsync<IDeferredHandlerVGrain>(null, this.Logger);
 
-            if (this._controllers.Count == 0)
-            {
-                var initController = new Dictionary<(GrainId, ControllerBaseOptions?), BlackboardControllerHandler>();
-                var indexedCfgController = this.State!.TemplateCopy?.Controllers?.GroupBy(grp => grp.ControllerType)
-                                                                                 .ToDictionary(grp => grp.Key, v => v.Last()) ?? new Dictionary<BlackboardControllerTypeEnum, BlackboardTemplateControllerDefinition>();
+                token.CancellationToken.ThrowIfCancellationRequested();
 
-                foreach (var kvControllerType in indexedCfgController)
+                if (this._controllers.Count == 0)
                 {
-                    var controllerType = kvControllerType.Key;
-                    BlackboardTemplateControllerDefinition? controllerDefinition = null;
+                    this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Building controllers", grainId);
+                    token.CancellationToken.ThrowIfCancellationRequested();
 
-                    if (!indexedCfgController.TryGetValue(controllerType, out controllerDefinition))
-                        controllerDefinition = new BlackboardTemplateControllerDefinition(Guid.NewGuid(), controllerType, s_defaultControllerConcretType, DefaultControllerOptions.Default, null);
+                    var initController = new Dictionary<(GrainId, ControllerBaseOptions?), BlackboardControllerHandler>();
+                    var indexedCfgController = this.State!.TemplateCopy?.Controllers?.GroupBy(grp => grp.ControllerType)
+                                                                                     .ToDictionary(grp => grp.Key, v => v.Last()) ?? new Dictionary<BlackboardControllerTypeEnum, BlackboardTemplateControllerDefinition>();
 
-                    var grainDefType = controllerDefinition.AgentInterfaceType.ToType();
-
-                    var controllerGrain = this._grainOrleanFactory.GetGrain(grainDefType, this.GetPrimaryKey()).AsReference<IBlackboardBaseControllerGrain>()!;
-
-                    var key = (controllerGrain.GetGrainId(), controllerDefinition.Options);
-
-                    BlackboardControllerHandler? handler = null;
-                    initController.TryGetValue(key, out handler);
-
-                    if (handler == null)
+                    var primaryKey = this.GetPrimaryKey();
+                    foreach (var kvControllerType in indexedCfgController)
                     {
-                        handler = new BlackboardControllerHandler(this.State.BlackboardId.Uid,
-                                                                  grainDefType,
-                                                                  this._grainOrleanFactory,
-                                                                  controllerDefinition.Options,
-                                                                  this.State!.TemplateCopy!);
-                        initController.Add(key, handler);
+                        this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Building Controller -- {type} -- {controller}", grainId, kvControllerType.Key, kvControllerType.Value.DisplayName);
+
+                        var controllerType = kvControllerType.Key;
+                        BlackboardTemplateControllerDefinition? controllerDefinition = null;
+
+                        if (!indexedCfgController.TryGetValue(controllerType, out controllerDefinition))
+                            controllerDefinition = new BlackboardTemplateControllerDefinition(Guid.NewGuid(), controllerType, s_defaultControllerConcretType, DefaultControllerOptions.Default, null);
+
+                        var grainDefType = controllerDefinition.AgentInterfaceType.ToType();
+
+                        var controllerGrain = this._grainOrleanFactory.GetGrain(grainDefType, primaryKey).AsReference<IBlackboardBaseControllerGrain>()!;
+                        token.CancellationToken.ThrowIfCancellationRequested();
+
+                        var key = (controllerGrain.GetGrainId(), controllerDefinition.Options);
+
+                        BlackboardControllerHandler? handler = null;
+                        initController.TryGetValue(key, out handler);
+
+                        if (handler == null)
+                        {
+                            handler = new BlackboardControllerHandler(this.State.BlackboardId.Uid,
+                                                                      grainDefType,
+                                                                      this._grainOrleanFactory,
+                                                                      controllerDefinition.Options,
+                                                                      this.State!.TemplateCopy!);
+                            initController.Add(key, handler);
+                        }
+
+                        this._controllers.Add(controllerType, handler);
+                    }
+                }
+
+                var logicalPatternsRules = this.State!.TemplateCopy!.LogicalTypes
+                                                                    .GroupBy(k => k.LogicalTypePattern ?? ".*")
+                                                                    .ToDictionary(k => k.Key, v => v.Select(kv => kv).ToReadOnly());
+
+                if (logicalPatternsRules.Keys.Count != this._logicalHandlers.Count)
+                {
+                    this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Building Logical Handlers ", grainId);
+
+                    // TODO : found a solution on the logical Pattern order
+
+                    var updatedItem = new HashSet<BlackboardLogicalTypeHandler>();
+
+                    foreach (var kvLogicalType in logicalPatternsRules)
+                    {
+                        var handler = this._logicalHandlers.FirstOrDefault(h => h.Equals(kvLogicalType.Key));
+
+                        if (handler is null)
+                            handler = new BlackboardLogicalTypeHandler(kvLogicalType.Key, this._repositoryFactory);
+
+                        var rules = kvLogicalType.Value;
+
+                        var order = kvLogicalType.Value.OfType<BlackboardOrderLogicalTypeRule>().FirstOrDefault();
+                        var storage = kvLogicalType.Value.OfType<BlackboardStorageLogicalTypeRule>().FirstOrDefault();
+                        var remain = kvLogicalType.Value.OfType<BlackboardRemainOnSealedLogicalTypeRule>().FirstOrDefault();
+
+                        var extractedRules = new BlackboardLogicalTypeBaseRule?[]
+                                             {
+                                                 order,
+                                                 storage,
+                                                 remain
+                                             }
+                                             .Where(d => d is not null)
+                                             .OfType<BlackboardLogicalTypeBaseRule>()
+                                             .ToArray();
+
+                        rules = rules.Except(extractedRules).ToArray();
+
+                        this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Update Logical Handlers {key}", grainId, kvLogicalType.Key);
+
+                        handler.Update(this._blackboardDataLogicalTypeRuleValidatorProvider,
+                                       order,
+                                       storage?.Storage ?? this.State.TemplateCopy.DefaultStorageConfig,
+                                       remain,
+                                       rules);
+
+                        updatedItem.Add(handler);
                     }
 
-                    this._controllers.Add(controllerType, handler);
+                    var toRemoves = this._logicalHandlers.Except(updatedItem).ToArray();
+
+                    this._logicalHandlers.Clear();
+
+                    foreach (var handler in updatedItem)
+                        this._logicalHandlers.Add(handler);
+
+                    try
+                    {
+                        foreach (var toRm in toRemoves)
+                            toRm.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Clean Up old logical handlers failed -- {exception}", grainId, ex);
+                    }
                 }
             }
-
-            var logicalPatternsRules = this.State.TemplateCopy!.LogicalTypes
-                                                               .GroupBy(k => k.LogicalTypePattern ?? ".*")
-                                                               .ToDictionary(k => k.Key, v => v.Select(kv => kv).ToReadOnly());
-
-            if (logicalPatternsRules.Keys.Count != this._logicalHandlers.Count)
+            catch (Exception ex)
             {
-                // TODO : found a solution on the logical Pattern order
-
-                var updatedItem = new HashSet<BlackboardLogicalTypeHandler>();
-
-                foreach (var kvLogicalType in logicalPatternsRules)
-                {
-                    var handler = this._logicalHandlers.FirstOrDefault(h => h.Equals(kvLogicalType.Key));
-
-                    if (handler is null)
-                        handler = new BlackboardLogicalTypeHandler(kvLogicalType.Key);
-
-                    var rules = kvLogicalType.Value;
-
-                    var order = kvLogicalType.Value.OfType<BlackboardOrderLogicalTypeRule>().FirstOrDefault();
-                    var storage = kvLogicalType.Value.OfType<BlackboardStorageLogicalTypeRule>().FirstOrDefault();
-                    var remain = kvLogicalType.Value.OfType<BlackboardRemainOnSealedLogicalTypeRule>().FirstOrDefault();
-
-                    var extractedRules = new BlackboardLogicalTypeBaseRule?[]
-                                         {
-                                             order,
-                                             storage,
-                                             remain
-                                         }
-                                         .Where(d => d is not null)
-                                         .OfType<BlackboardLogicalTypeBaseRule>()
-                                         .ToArray();
-
-                    rules = rules.Except(extractedRules).ToArray();
-
-                    await handler.UpdateAsync(this._repositoryFactory,
-                                              this._blackboardDataLogicalTypeRuleValidatorProvider,
-                                              order,
-                                              storage?.Storage ?? this.State.TemplateCopy.DefaultStorageConfig,
-                                              remain,
-                                              rules);
-
-                    updatedItem.Add(handler);
-                }
-
-                var toRemoves = this._logicalHandlers.Except(updatedItem).ToArray();
-
-                this._logicalHandlers.Clear();
-
-                foreach (var handler in updatedItem)
-                    this._logicalHandlers.Add(handler);
-
-                foreach (var toRm in toRemoves)
-                    toRm.Dispose();
+                this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Failed BuildFromTemplateAsync({blackboardTemplateUid}, {blackboardId}) : {exception}", grainId, blackboardTemplateUid, blackboardId, ex);
+                throw;
             }
         }
 
         /// <inheritdoc />
+        [ReadOnly]
         public Task<BlackboardId> GetIdentityAsync()
         {
             return Task.FromResult(this.State!.BlackboardId);
@@ -408,7 +463,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region IBlackboardGrain
 
         /// <inheritdoc />
-        public async Task ChangeRecordDataStatusAsync(Guid uid, RecordStatusEnum recordStatus, GrainCancellationToken token)
+        public async Task ChangeRecordDataStatusAsync(Guid uid, RecordStatusEnum recordStatus, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequiredOrSealedStatus();
             await using (StartModifyContext())
@@ -418,13 +473,18 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? recordStatusFilter, GrainCancellationToken token)
+        [ReadOnly]
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter,
+                                                                                                                                     string? displayNameFilter,
+                                                                                                                                     RecordStatusEnum? recordStatusFilter,
+                                                                                                                                     GrainCancellationToken token,
+                                                                                                                                     Guid? callContextId = null)
         {
             CheckInitializationRequired();
 
             var metaDatas = EnumerableHelper<BlackboardRecordMetadata>.Enumerable;
 
-            await this._metaDataLocker.WaitAsync(token.CancellationToken);
+            this._metaDataLocker.EnterReadLock();
             try
             {
                 var metaData = GetAllStoredMetaDatByFilters(logicTypeFilter, displayNameFilter, recordStatusFilter);
@@ -432,108 +492,119 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             }
             finally
             {
-                this._metaDataLocker.Release();
+                this._metaDataLocker.ExitReadLock();
             }
 
-            return await GetAllStoredDataByMetaDataAsync<TDataProjection>(metaDatas, token.CancellationToken);
+            return await GetAllStoredDataByMetaDataAsync<TDataProjection>(metaDatas, callContextId, token.CancellationToken);
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(IReadOnlyCollection<Guid> dataUids, GrainCancellationToken token)
+        [ReadOnly]
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(IReadOnlyCollection<Guid> dataUids, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
 
-            await this._metaDataLocker.WaitAsync(token.CancellationToken);
+            this._metaDataLocker.EnterReadLock();
             try
             {
                 var metaData = GetMetadataByIds(dataUids);
 
-                return metaData.Select(kv => new MetaDataRecordContainer(kv.LogicalType,
-                                                                         kv.Uid,
-                                                                         kv.DisplayName,
-                                                                         kv.ContainsType is not null ? ConcretBaseTypeConverter.ConvertFromSurrogate(kv.ContainsType!) : (ConcretType?)null,
-                                                                         kv.Status,
-                                                                         kv.UTCCreationTime,
-                                                                         kv.CreatorIdentity,
-                                                                         kv.UTCLastUpdateTime,
-                                                                         kv.LastUpdaterIdentity,
-                                                                         kv.CustomMetadata)).ToReadOnly();
+                var records = metaData.Select(kv => new MetaDataRecordContainer(kv.LogicalType,
+                                                                                kv.Uid,
+                                                                                kv.DisplayName,
+                                                                                kv.ContainsType is not null ? ConcretBaseTypeConverter.ConvertFromSurrogate(kv.ContainsType!) : (ConcretType?)null,
+                                                                                kv.Status,
+                                                                                kv.UTCCreationTime,
+                                                                                kv.CreatorIdentity,
+                                                                                kv.UTCLastUpdateTime,
+                                                                                kv.LastUpdaterIdentity,
+                                                                                kv.CustomMetadata)).ToReadOnly();
+
+                return Task.FromResult(records);
             }
             finally
             {
-                this._metaDataLocker.Release();
+                this._metaDataLocker.ExitReadLock();
             }
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataAsync(GrainCancellationToken token)
+        [ReadOnly]
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataAsync(GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
-            return GetAllStoredMetaDataFilteredAsync(null, null, null, token);
+            return GetAllStoredMetaDataFilteredAsync(null, null, null, token, callContextId);
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? recordStatusFilter, GrainCancellationToken token)
+        [ReadOnly]
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? recordStatusFilter, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
 
-            await this._metaDataLocker.WaitAsync(token.CancellationToken);
+            this._metaDataLocker.EnterReadLock();
             try
             {
                 var metaData = GetAllStoredMetaDatByFilters(logicTypeFilter, displayNameFilter, recordStatusFilter);
 
-                return metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
-                                                                         kv.Value.Uid,
-                                                                         kv.Value.DisplayName,
-                                                                         kv.Value.ContainsType is not null ? ConcretBaseTypeConverter.ConvertFromSurrogate(kv.Value.ContainsType!) : (ConcretType?)null,
-                                                                         kv.Value.Status,
-                                                                         kv.Value.UTCCreationTime,
-                                                                         kv.Value.CreatorIdentity,
-                                                                         kv.Value.UTCLastUpdateTime,
-                                                                         kv.Value.LastUpdaterIdentity,
-                                                                         kv.Value.CustomMetadata)).ToReadOnly();
+                var records = metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
+                                                                                kv.Value.Uid,
+                                                                                kv.Value.DisplayName,
+                                                                                kv.Value.ContainsType is not null ? ConcretBaseTypeConverter.ConvertFromSurrogate(kv.Value.ContainsType!) : (ConcretType?)null,
+                                                                                kv.Value.Status,
+                                                                                kv.Value.UTCCreationTime,
+                                                                                kv.Value.CreatorIdentity,
+                                                                                kv.Value.UTCLastUpdateTime,
+                                                                                kv.Value.LastUpdaterIdentity,
+                                                                                kv.Value.CustomMetadata)).ToReadOnly();
+
+                return Task.FromResult(records);
             }
             finally
             {
-                this._metaDataLocker.Release();
+                this._metaDataLocker.ExitReadLock();
             }
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, GrainCancellationToken token)
+        [ReadOnly]
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
 
-            await this._metaDataLocker.WaitAsync(token.CancellationToken);
+            this._metaDataLocker.EnterReadLock();
             try
             {
                 var metaData = GetAllStoredMetaDatByFilters(filter);
 
-                return metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
-                                                                         kv.Value.Uid,
-                                                                         kv.Value.DisplayName,
-                                                                         kv.Value.ContainsType is not null ? ConcretBaseTypeConverter.ConvertFromSurrogate(kv.Value.ContainsType!) : (ConcretType?)null,
-                                                                         kv.Value.Status,
-                                                                         kv.Value.UTCCreationTime,
-                                                                         kv.Value.CreatorIdentity,
-                                                                         kv.Value.UTCLastUpdateTime,
-                                                                         kv.Value.LastUpdaterIdentity,
-                                                                         kv.Value.CustomMetadata)).ToReadOnly();
+                var records = metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
+                                                                                kv.Value.Uid,
+                                                                                kv.Value.DisplayName,
+                                                                                kv.Value.ContainsType is not null ? ConcretBaseTypeConverter.ConvertFromSurrogate(kv.Value.ContainsType!) : (ConcretType?)null,
+                                                                                kv.Value.Status,
+                                                                                kv.Value.UTCCreationTime,
+                                                                                kv.Value.CreatorIdentity,
+                                                                                kv.Value.UTCLastUpdateTime,
+                                                                                kv.Value.LastUpdaterIdentity,
+                                                                                kv.Value.CustomMetadata)).ToReadOnly();
+
+                return Task.FromResult(records);
             }
             finally
             {
-                this._metaDataLocker.Release();
+                this._metaDataLocker.ExitReadLock();
             }
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, GrainCancellationToken token)
+        [ReadOnly]
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
 
             var metaDatas = EnumerableHelper<BlackboardRecordMetadata>.Enumerable;
 
-            await this._metaDataLocker.WaitAsync(token.CancellationToken);
+            this._metaDataLocker.EnterReadLock();
             try
             {
                 var metaData = GetAllStoredMetaDatByFilters(filter);
@@ -541,45 +612,49 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             }
             finally
             {
-                this._metaDataLocker.Release();
+                this._metaDataLocker.ExitReadLock();
             }
 
-            return await GetAllStoredDataByMetaDataAsync<TDataProjection>(metaDatas, token.CancellationToken);
+            return await GetAllStoredDataByMetaDataAsync<TDataProjection>(metaDatas, callContextId, token.CancellationToken);
         }
 
         /// <inheritdoc />
-        public async Task<DataRecordContainer<TDataProjection?>?> GetStoredDataAsync<TDataProjection>(Guid dataUid, GrainCancellationToken token)
+        [ReadOnly]
+        public async Task<DataRecordContainer<TDataProjection?>?> GetStoredDataAsync<TDataProjection>(Guid dataUid, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
-            return (await GetStoredDataImplAsync<TDataProjection>(token.CancellationToken, dataUid.AsEnumerable().ToArray()))?.SingleOrDefault();
+            return (await GetStoredDataImplAsync<TDataProjection>(token.CancellationToken, callContextId, dataUid.AsEnumerable().ToArray()))?.SingleOrDefault();
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(IReadOnlyCollection<Guid> dataUids, GrainCancellationToken token)
+        [ReadOnly]
+        public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(IReadOnlyCollection<Guid> dataUids, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
-            return GetStoredDataImplAsync<TDataProjection>(token.CancellationToken, dataUids);
+            return GetStoredDataImplAsync<TDataProjection>(token.CancellationToken, callContextId, dataUids);
         }
 
         /// <inheritdoc />
-        public async Task<bool> PrepareDataSlotAsync(Guid uid, string logicType, string displayName, GrainCancellationToken token)
+        public async Task<bool> PrepareDataSlotAsync(Guid uid, string logicType, string displayName, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequiredOrSealedStatus();
 
             await using (StartModifyContext())
             {
                 return await CommandExecutionStartPointAsync(token.CancellationToken,
+                                                             GetCallContextLogger(callContextId),
                                                              new BlackboardCommandStoragePrepareRecord(uid, logicType, displayName));
             }
         }
 
         /// <inheritdoc />
-        public async Task<bool> PushDataAsync<TData>(DataRecordContainer<TData?> record, DataRecordPushRequestTypeEnum pushType, GrainCancellationToken token)
+        public async Task<bool> PushDataAsync<TData>(DataRecordContainer<TData?> record, DataRecordPushRequestTypeEnum pushType, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequiredOrSealedStatus();
             await using (StartModifyContext())
             {
                 return await CommandExecutionStartPointAsync(token.CancellationToken,
+                                                             GetCallContextLogger(callContextId),
                                                              new BlackboardCommandStorageAddRecord<TData>(record,
                                                                                                           InsertIfNew: pushType != DataRecordPushRequestTypeEnum.UpdateOnly,
                                                                                                           @Override: pushType != DataRecordPushRequestTypeEnum.OnlyNew));
@@ -587,31 +662,38 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
-        public Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, GrainCancellationToken token)
+        public async Task FireQueryAsync(BlackboardQueryCommand command, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequiredOrSealedStatus();
-            return SolveQueryRequestAsync<NoneType>(command, null, token);
+            await SolveQueryRequestAsync<NoneType>(command, null, callContextId, token);
         }
 
         /// <inheritdoc />
-        public Task<BlackboardQueryResponse> QueryAsync<TResponse>(BlackboardQueryRequest<TResponse> request, GrainCancellationToken token)
+        public Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequiredOrSealedStatus();
-            return SolveQueryRequestAsync<TResponse>(request, null, token);
+            return SolveQueryRequestAsync<NoneType>(command, null, callContextId, token);
         }
 
         /// <inheritdoc />
-        public async Task<bool> DeleteDataAsync(GrainCancellationToken token, IIdentityCard identity, params Guid[] slotIds)
+        public Task<BlackboardQueryResponse> QueryAsync<TResponse>(BlackboardQueryRequest<TResponse> request, GrainCancellationToken token, Guid? callContextId = null)
+        {
+            CheckInitializationRequiredOrSealedStatus();
+            return SolveQueryRequestAsync<TResponse>(request, null, callContextId, token);
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> DeleteDataAsync(GrainCancellationToken token, Guid? callContextId, IIdentityCard identity, params Guid[] slotIds)
         {
             CheckInitializationRequiredOrSealedStatus();
             // TODO : check identity
 
             await using (StartModifyContext())
             {
-                var ctx = new CommandExecutionContext(token.CancellationToken);
+                var ctx = new CommandExecutionContext(token.CancellationToken, GetCallContextLogger(callContextId));
                 var rmCmds = slotIds.Select(uid => new BlackboardCommandStorageRemoveRecord(uid)).ToArray();
 
-                return await CommandExecutionStartPointAsync(token.CancellationToken, rmCmds);
+                return await CommandExecutionStartPointAsync(token.CancellationToken, rmCmds, ctx, ctx.Logger);
             }
         }
 
@@ -624,7 +706,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                  this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.None ||
                  this.State!.CurrentLifeStatus == BlackboardLifeStatusEnum.Sealed))
             {
-                this.Logger.OptiLog(LogLevel.Critical, "Blackboard not ready for receiving signal messages {BlackboardStatus}", this.State!.CurrentLifeStatus);
+                this.Logger.OptiLog(LogLevel.Critical, "[Grain Id: {grainId}] Blackboard not ready for receiving signal messages {BlackboardStatus}", base.GetGrainId(), this.State!.CurrentLifeStatus);
                 return;
             }
 
@@ -632,20 +714,12 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             if (eventController is not null)
             {
-                await this._singleMessageTreatmentLocker.WaitAsync(this._lifetimeToken.Token);
-                try
+                using (var grainCancelSource = this._lifetimeToken.ToGrainCancellationTokenSource())
                 {
-                    using (var grainCancelSource = this._lifetimeToken.ToGrainCancellationTokenSource())
-                    {
-                        var cmds = await eventController.ManagedSignalMessageAsync(message, grainCancelSource.Token);
+                    var cmds = await eventController.ManagedSignalMessageAsync(message, grainCancelSource.Token);
 
-                        if (cmds is not null && cmds.Any())
-                            await CommandExecutionStartPointAsync(grainCancelSource.Token.CancellationToken, cmds, null);
-                    }
-                }
-                finally
-                {
-                    this._singleMessageTreatmentLocker.Release();
+                    if (cmds is not null && cmds.Any())
+                        await CommandExecutionStartPointAsync(grainCancelSource.Token.CancellationToken, cmds, null, this.Logger);
                 }
             }
         }
@@ -653,6 +727,14 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #endregion
 
         #region Tools
+
+        private ILogger GetCallContextLogger(Guid? callContextId)
+        {
+            if (callContextId is null)
+                return this.Logger;
+
+            return this._loggerFactory.CreateLogger(string.Format("[Blackboard {0}][CallContextId {1}] ", this.GetPrimaryKey(), callContextId));
+        }
 
         private static bool QueryRequestCommandFilter(BlackboardCommand c)
         {
@@ -673,18 +755,18 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <summary>
         /// Commands the execution.
         /// </summary>
-        private Task<bool> CommandExecutionStartPointAsync(CancellationToken token, params BlackboardCommand[] commands)
+        private Task<bool> CommandExecutionStartPointAsync(CancellationToken token, ILogger logger, params BlackboardCommand[] commands)
         {
-            return CommandExecutionStartPointAsync(token, commands, null);
+            return CommandExecutionStartPointAsync(token, commands, null, logger);
         }
 
         /// <summary>
         /// Commands the execution.
         /// </summary>
-        private async Task<bool> CommandExecutionStartPointAsync(CancellationToken token, IReadOnlyCollection<BlackboardCommand> commands, CommandExecutionContext? parentContext)
+        private async Task<bool> CommandExecutionStartPointAsync(CancellationToken token, IReadOnlyCollection<BlackboardCommand> commands, CommandExecutionContext? parentContext, ILogger? logger)
         {
             await using (StartModifyContext())
-            using (var execContext = parentContext is not null ? new CommandExecutionContext(parentContext) : new CommandExecutionContext(token))
+            using (var execContext = parentContext is not null ? new CommandExecutionContext(parentContext) : new CommandExecutionContext(token, logger ?? this.Logger))
             {
                 var result = await CommandExecutionerAsync(commands, execContext);
                 token.ThrowIfCancellationRequested();
@@ -713,7 +795,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                         var eventActions = await eventController.ReactToEventsAsync(new BlackboardEventBook(events), token.ToGrainCancellationTokenSource().Token);
 
                         if (eventActions is not null && eventActions.Any())
-                            await CommandExecutionStartPointAsync(token, eventActions, execContext);
+                            await CommandExecutionStartPointAsync(token, eventActions, execContext, execContext.Logger);
                     }
                 }
 
@@ -864,18 +946,34 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         protected override async Task OnActivationSetupState(BlackboardGrainState? state, CancellationToken ct)
         {
+            if (this._loggerFactory is not NullLoggerFactory)
+            {
+                var grainId = base.GetGrainId().GetGuidKey();
+                this.Logger = this._loggerFactory.CreateLogger("[Blackboard {0} name: {1} template: {2}] ".WithArguments(grainId, this.State?.Name, this.State?.TemplateCopy?.Uid));
+            }
+
             if ((this._controllers.Count == 0 || this._logicalHandlers.Count == 0) && state is not null && state.TemplateCopy is not null)
-                await BuildFromTemplateAsync(state.TemplateCopy.Uid, state.BlackboardId);
+            {
+                try
+                {
+                    await BuildFromTemplateAsync(state.TemplateCopy.Uid, state.BlackboardId, ct.ToGrainCancellationTokenSource().Token, null);
+                    ct.ThrowIfCancellationRequested();
+                }
+                catch (OperationCanceledException)
+                {
+                    this.Logger.OptiLog(LogLevel.Critical, "TIMEOUT ON BUILD {grainId}", base.GetGrainId().GetGuidKey());
+                }
+            }
 
             await base.OnActivationSetupState(state, ct);
         }
 
         /// <inheritdoc cref="IBlackboard.GetStoredDataAsync{TDataProjection}(Guid, GrainCancellationToken)"/>
-        private async Task<IReadOnlyCollection<DataRecordContainer<TData?>>> GetStoredDataImplAsync<TData>(CancellationToken token, IReadOnlyCollection<Guid> uids)
+        private async Task<IReadOnlyCollection<DataRecordContainer<TData?>>> GetStoredDataImplAsync<TData>(CancellationToken token, Guid? callContextId, IReadOnlyCollection<Guid> uids)
         {
             CheckInitializationRequired();
 
-            await this._metaDataLocker.WaitAsync(token);
+            this._metaDataLocker.EnterReadLock();
 
             BlackboardRecordMetadata[] metaDatas;
             try
@@ -887,69 +985,82 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             }
             finally
             {
-                this._metaDataLocker.Release();
+                this._metaDataLocker.ExitReadLock();
             }
-
-            return await GetAllStoredDataByMetaDataAsync<TData>(metaDatas, token);
+            return await GetAllStoredDataByMetaDataAsync<TData>(metaDatas, callContextId, token);
         }
 
         /// <inheritdoc />
         private async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataByMetaDataAsync<TDataProjection>(IEnumerable<BlackboardRecordMetadata> metaDatas,
+                                                                                                                                        Guid? callContextId,
                                                                                                                                         CancellationToken token)
         {
             CheckInitializationRequired();
 
-            var metaDatasWithRepoTasks = metaDatas.Select(kv => (RepoTask: GetDedicatedRepositoryAsync(kv.LogicalType, token), kv))
-                                                  .ToArray();
+            var logger = GetCallContextLogger(callContextId);
 
-            await (metaDatasWithRepoTasks.Select(t => t.RepoTask).ToArray()).SafeWhenAllAsync(token);
-
-            var fetchTasks = metaDatasWithRepoTasks.GroupBy(kv => kv.RepoTask.Result)
-                                                   .Select(kv => kv.Key.GetByIdsValueAsync(kv.Select(k => k.kv.Uid).Distinct().ToArray(), token).AsTask())
-                                                   .ToArray();
-
-            await fetchTasks.SafeWhenAllAsync(token);
-
-            var indexedResults = fetchTasks.Where(f => f.IsCompletedSuccessfully && f.Result is not null)
-                                    .SelectMany(f => f.Result)
-                                    .Distinct()
-                                    .GroupBy(k => k.Uid)
-                                    .ToDictionary(k => k.Key, v => v.OrderByDescending(vv => vv.UTCLastUpdateTime).First());
-
-            var resultProject = new List<DataRecordContainer<TDataProjection?>>();
-
-            foreach (var metadata in metaDatas)
+            try
             {
-                DataRecordContainer? container = null;
 
-                // If no data have been record in the repository storage then send at lead the metadata information
-                if (!indexedResults.TryGetValue(metadata.Uid, out container))
+                logger.OptiLog(LogLevel.Debug, "-- Get repository");
+
+                var metaDatasWithRepoTasks = metaDatas.Select(kv => (RepoTask: GetDedicatedRepositoryAsync(kv.LogicalType, token), kv))
+                                                      .ToArray();
+
+                await (metaDatasWithRepoTasks.Select(t => t.RepoTask).ToArray()).SafeWhenAllAsync(token);
+
+                var fetchTasks = metaDatasWithRepoTasks.GroupBy(kv => kv.RepoTask.Result)
+                                                       .Select(kv => kv.Key.GetByIdsValueAsync(kv.Select(k => k.kv.Uid).Distinct().ToArray(), token).AsTask())
+                                                       .ToArray();
+
+                await fetchTasks.SafeWhenAllAsync(token);
+
+                var indexedResults = fetchTasks.Where(f => f.IsCompletedSuccessfully && f.Result is not null)
+                                        .SelectMany(f => f.Result)
+                                        .Distinct()
+                                        .GroupBy(k => k.Uid)
+                                        .ToDictionary(k => k.Key, v => v.OrderByDescending(vv => vv.UTCLastUpdateTime).First());
+
+                var resultProject = new List<DataRecordContainer<TDataProjection?>>();
+
+                foreach (var metadata in metaDatas)
                 {
-                    var newContainer = new DataRecordContainer<TDataProjection>(metadata.LogicalType,
-                                                                                metadata.Uid,
-                                                                                metadata.DisplayName,
-                                                                                default,
-                                                                                metadata.Status,
-                                                                                metadata.UTCCreationTime,
-                                                                                metadata.CreatorIdentity,
-                                                                                metadata.UTCLastUpdateTime,
-                                                                                metadata.LastUpdaterIdentity,
-                                                                                metadata.CustomMetadata);
+                    DataRecordContainer? container = null;
 
-                    resultProject.Add(newContainer!);
-                    continue;
+                    // If no data have been record in the repository storage then send at lead the metadata information
+                    if (!indexedResults.TryGetValue(metadata.Uid, out container))
+                    {
+                        var newContainer = new DataRecordContainer<TDataProjection>(metadata.LogicalType,
+                                                                                    metadata.Uid,
+                                                                                    metadata.DisplayName,
+                                                                                    default,
+                                                                                    metadata.Status,
+                                                                                    metadata.UTCCreationTime,
+                                                                                    metadata.CreatorIdentity,
+                                                                                    metadata.UTCLastUpdateTime,
+                                                                                    metadata.LastUpdaterIdentity,
+                                                                                    metadata.CustomMetadata);
+
+                        resultProject.Add(newContainer!);
+                        continue;
+                    }
+
+                    if (container.TryProjectTo<TDataProjection>(this._converter, out var alreadyWellTyped) && alreadyWellTyped is not null)// is DataRecordContainer<TDataProjection?> alreadyWellTyped)
+                    {
+                        resultProject.Add(alreadyWellTyped!);
+                        continue;
+                    }
+
+                    throw new NotSupportedException("Data projection is not yet supported");
                 }
 
-                if (container.TryProjectTo<TDataProjection>(this._converter, out var alreadyWellTyped) && alreadyWellTyped is not null)// is DataRecordContainer<TDataProjection?> alreadyWellTyped)
-                {
-                    resultProject.Add(alreadyWellTyped!);
-                    continue;
-                }
-
-                throw new NotSupportedException("Data projection is not yet supported");
+                return resultProject;
             }
-
-            return resultProject;
+            catch (Exception ex)
+            {
+                logger.OptiLog(LogLevel.Debug, "-- Get Data Failed {exception}", ex);
+                throw;
+            }
         }
 
         /// <summary>
@@ -963,7 +1074,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 var iniCmds = await controller.GetController<TSpecializedController>(token);
 
                 if (iniCmds.InitControllerActions is not null && iniCmds.InitControllerActions.Any())
-                    await CommandExecutionStartPointAsync(token, iniCmds.InitControllerActions, parentContext);
+                    await CommandExecutionStartPointAsync(token, iniCmds.InitControllerActions, parentContext, parentContext?.Logger);
 
                 return iniCmds.Controller;
             }
@@ -1045,7 +1156,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         private async Task<bool> CommandExecuteSignalAsync(BlackboardCommand cmd, CommandExecutionContext ctx)
         {
-            if (cmd is BlackboardCommandSignal signalCmd)
+            if (cmd is BlackboardCommandSignalSubscription signalCmd)
             {
                 if (signalCmd.Type == BlackboardCommandSignalTypeEnum.Attach)
                 {
@@ -1129,7 +1240,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         private static async Task<BlackboardQueryResponse> SolveGenericQueryAsync(BlackboardGrain grain, BlackboardBaseQuery request, ConcretBaseType response, DeferredId? deferredId, GrainCancellationToken token)
         {
-            var tsk = (Task)s_solveGenericQueryRequest.MakeGenericMethod(response.ToType()).Invoke(grain, new object?[] { request, deferredId, token })!;
+            var tsk = (Task)s_solveGenericQueryRequest.MakeGenericMethod(response.ToType()).Invoke(grain, new object?[] { request, deferredId, request.QueryUid, token })!;
             await tsk;
 
             return tsk.GetResult<BlackboardQueryResponse>()!;
@@ -1138,111 +1249,121 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <summary>
         /// 
         /// </summary>
-        private async Task<BlackboardQueryResponse> SolveQueryRequestAsync<TResponse>(BlackboardBaseQuery query, DeferredId? deferredId, GrainCancellationToken token)
+        private async Task<BlackboardQueryResponse> SolveQueryRequestAsync<TResponse>(BlackboardBaseQuery query, DeferredId? deferredId, Guid? callContextId, GrainCancellationToken token)
         {
             CheckInitializationRequiredOrSealedStatus();
 
-            var ctrller = await GetControllerAsync<IBlackboardEventControllerGrain>(BlackboardControllerTypeEnum.Event, token.CancellationToken);
+            var logger = GetCallContextLogger(callContextId);
 
-            if (ctrller is null)
-                return BlackboardQueryRejectedResponse.NoController;
-
-            bool saveState = false;
-            var queryUid = query.QueryUid;
-
-            DeferredStatusMessage? runningDeferred = null;
-
-            // If not deferred id provided check all recorded
-            // This check different when the query come from direct call or retry
-            if (deferredId is null)
+            try
             {
-                var existingDeferreds = await this._deferredHandler!.GetLastDeferredStatusBySourceIdAsync(queryUid, this.IdentityCard);
+                var ctrller = await GetControllerAsync<IBlackboardEventControllerGrain>(BlackboardControllerTypeEnum.Event, token.CancellationToken);
 
-                // Get from existing deferred works the older not solved
-                runningDeferred = existingDeferreds.OrderByDescending(e => e.UTCLastUpdateStatus)
-                                                   .Cast<DeferredStatusMessage?>() // Cast to force null if not founded
-                                                   .FirstOrDefault<DeferredStatusMessage?>(d => d!.Value.Status == DeferredStatusEnum.Initialize || d!.Value.Status == DeferredStatusEnum.Alive);
-            }
-            else
-            {
-                runningDeferred = await this._deferredHandler!.GetLastDeferredStatusAsync(deferredId.Value.Uid);
-            }
+                if (ctrller is null)
+                    return BlackboardQueryRejectedResponse.NoController;
 
-            var ctrlResponses = await ctrller.ProcessRequestAsync<TResponse>(query, token);
+                bool saveState = false;
+                var queryUid = query.QueryUid;
 
-            if (ctrlResponses is null)
-                ctrlResponses = BlackboardCommandRejectAction.Default.AsEnumerable().ToArray();
+                DeferredStatusMessage? runningDeferred = null;
 
-            BlackboardQueryResponse? queryResponse = null;
-
-            var result = ctrlResponses.Where(QueryRequestCommandFilter)
-                                      .GroupBy(rep => rep.ActionType)
-                                      .ToDictionary(k => k.Key, v => v.Last());
-
-            if (result.TryGetValue(BlackboardCommandTypeEnum.Response, out var direct) && direct is BlackboardCommandResponse<TResponse> reponseCmd)
-            {
-                queryResponse = new BlackboardQueryDirectResponse<TResponse>(reponseCmd.Response, queryUid);
-                if (runningDeferred is not null)
-                    await this._deferredHandler.FinishDeferredWorkWithDataAsync(runningDeferred.Value.DeferredId.Uid, this.IdentityCard, reponseCmd.Response);
-            }
-            else if (result.TryGetValue(BlackboardCommandTypeEnum.Reject, out var rejected) && rejected is BlackboardCommandRejectAction rejectCmd)
-            {
-                if (runningDeferred is not null)
+                // If not deferred id provided check all recorded
+                // This check different when the query come from direct call or retry
+                if (deferredId is null)
                 {
-                    await this._deferredHandler.ExceptionDeferredWorkStatusAsync(runningDeferred.Value.DeferredId.Uid,
-                                                                                 this.IdentityCard,
-                                                                                 new BlackboardQueryRejectedException(queryUid,
-                                                                                                                      rejectCmd.SourceIssue.ToDebugDisplayName(),
-                                                                                                                      null).ToDemocriteInternal());
-                }
-                queryResponse = new BlackboardQueryRejectedResponse(rejectCmd.SourceIssue?.ToDebugDisplayName());
-            }
-            else if (result.TryGetValue(BlackboardCommandTypeEnum.Deferred, out var deferred) && deferred is BlackboardCommandDeferredResponse deferredCmd)
-            {
-                DeferredId deferredWorkUid;
+                    var existingDeferreds = await this._deferredHandler!.GetLastDeferredStatusBySourceIdAsync(queryUid, this.IdentityCard);
 
-                if (runningDeferred is not null)
-                {
-                    deferredWorkUid = runningDeferred.Value.DeferredId;
-                    await this._deferredHandler.KeepDeferredWorkStatusAsync(queryUid, this.IdentityCard);
+                    // Get from existing deferred works the older not solved
+                    runningDeferred = existingDeferreds.OrderByDescending(e => e.UTCLastUpdateStatus)
+                                                       .Cast<DeferredStatusMessage?>() // Cast to force null if not founded
+                                                       .FirstOrDefault<DeferredStatusMessage?>(d => d!.Value.Status == DeferredStatusEnum.Initialize || d!.Value.Status == DeferredStatusEnum.Alive);
                 }
                 else
                 {
-                    var newDeferredId = await this._deferredHandler.CreateDeferredWorkAsync(queryUid, this.IdentityCard, (ConcretBaseType)typeof(TResponse).GetAbstractType());
-                    deferredWorkUid = new DeferredId(newDeferredId, queryUid);
+                    runningDeferred = await this._deferredHandler!.GetLastDeferredStatusAsync(deferredId.Value.Uid);
                 }
 
-                saveState = this.State!.AddOrUpdateQuery(BlackboardDeferredQueryState.Create(deferredWorkUid, query, this._democriteSerializer));
+                var ctrlResponses = await ctrller.ProcessRequestAsync<TResponse>(query, token);
 
-                queryResponse = new BlackboardQueryDeferredResponse(deferredWorkUid);
+                if (ctrlResponses is null)
+                    ctrlResponses = BlackboardCommandRejectAction.Default.AsEnumerable().ToArray();
+
+                BlackboardQueryResponse? queryResponse = null;
+
+                var result = ctrlResponses.Where(QueryRequestCommandFilter)
+                                          .GroupBy(rep => rep.ActionType)
+                                          .ToDictionary(k => k.Key, v => v.Last());
+
+                if (result.TryGetValue(BlackboardCommandTypeEnum.Response, out var direct) && direct is BlackboardCommandResponse<TResponse> reponseCmd)
+                {
+                    queryResponse = new BlackboardQueryDirectResponse<TResponse>(reponseCmd.Response, queryUid);
+                    if (runningDeferred is not null)
+                        await this._deferredHandler.FinishDeferredWorkWithDataAsync(runningDeferred.Value.DeferredId.Uid, this.IdentityCard, reponseCmd.Response);
+                }
+                else if (result.TryGetValue(BlackboardCommandTypeEnum.Reject, out var rejected) && rejected is BlackboardCommandRejectAction rejectCmd)
+                {
+                    if (runningDeferred is not null)
+                    {
+                        await this._deferredHandler.ExceptionDeferredWorkStatusAsync(runningDeferred.Value.DeferredId.Uid,
+                                                                                     this.IdentityCard,
+                                                                                     new BlackboardQueryRejectedException(queryUid,
+                                                                                                                          rejectCmd.SourceIssue.ToDebugDisplayName(),
+                                                                                                                          null).ToDemocriteInternal());
+                    }
+                    queryResponse = new BlackboardQueryRejectedResponse(rejectCmd.SourceIssue?.ToDebugDisplayName());
+                }
+                else if (result.TryGetValue(BlackboardCommandTypeEnum.Deferred, out var deferred) && deferred is BlackboardCommandDeferredResponse deferredCmd)
+                {
+                    DeferredId deferredWorkUid;
+
+                    if (runningDeferred is not null)
+                    {
+                        deferredWorkUid = runningDeferred.Value.DeferredId;
+                        await this._deferredHandler.KeepDeferredWorkStatusAsync(queryUid, this.IdentityCard);
+                    }
+                    else
+                    {
+                        var newDeferredId = await this._deferredHandler.CreateDeferredWorkAsync(queryUid, this.IdentityCard, (ConcretBaseType)typeof(TResponse).GetAbstractType());
+                        deferredWorkUid = new DeferredId(newDeferredId, queryUid);
+                    }
+
+                    saveState = this.State!.AddOrUpdateQuery(BlackboardDeferredQueryState.Create(deferredWorkUid, query, this._democriteSerializer));
+
+                    queryResponse = new BlackboardQueryDeferredResponse(deferredWorkUid);
+                }
+
+                if (queryResponse is not null && queryResponse.Type != QueryReponseTypeEnum.Deferred)
+                {
+                    if (deferredId is not null)
+                        saveState = this.State!.RemoveQuery(deferredId.Value.Uid);
+                    else if (runningDeferred is not null)
+                        saveState = this.State!.RemoveQuery(runningDeferred.Value.DeferredId.Uid);
+                    else
+                        // TODO : check by request.Uid == DeferredId.SourceId instead of UID
+                        saveState = this.State!.RemoveQuery(query);
+                }
+
+                if (saveState)
+                    this._needSaving |= true;
+
+                // Check remain command that are not dedicated to query result
+                // Those remain command are executed at the end to prevent any deadlock loop due to a command that could retry the deferred request
+                var remainActions = ctrlResponses.Where(c => !QueryRequestCommandFilter(c))
+                                                 .ToArray();
+
+                if (remainActions.Any())
+                    await this.CommandExecutionStartPointAsync(token.CancellationToken, logger, remainActions);
+
+                if (queryResponse is null)
+                    throw new NotSupportedException("No Response - not supported yet");
+
+                return queryResponse;
             }
-
-            if (queryResponse is not null && queryResponse.Type != QueryReponseTypeEnum.Deferred)
+            catch (Exception ex)
             {
-                if (deferredId is not null)
-                    saveState = this.State!.RemoveQuery(deferredId.Value.Uid);
-                else if (runningDeferred is not null)
-                    saveState = this.State!.RemoveQuery(runningDeferred.Value.DeferredId.Uid);
-                else
-                    // TODO : check by request.Uid == DeferredId.SourceId instead of UID
-                    saveState = this.State!.RemoveQuery(query);
+                logger.OptiLog(LogLevel.Error, "Query Failed -- {exception}", ex);
+                throw;
             }
-
-            if (saveState)
-                this._needSaving |= true;
-
-            // Check remain command that are not dedicated to query result
-            // Those remain command are executed at the end to prevent any deadlock loop due to a command that could retry the deferred request
-            var remainActions = ctrlResponses.Where(c => !QueryRequestCommandFilter(c))
-                                             .ToArray();
-
-            if (remainActions.Any())
-                await this.CommandExecutionStartPointAsync(token.CancellationToken, remainActions);
-
-            if (queryResponse is null)
-                throw new NotSupportedException("No Response - not supported yet");
-
-            return queryResponse;
         }
 
         /// <summary>
@@ -1320,11 +1441,11 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 return await CommandExecutionerAsync(solvingActions, ctx);
 
             var successResult = true;
-            var repository = NoneType.IsEqualTo<TData>()
-                                    ? null
-                                    : await GetDedicatedRepositoryAsync(record.LogicalType, ctx.CancellationToken);
+            IRepository<DataRecordContainer, Guid>? repository = null;
 
-            await this._metaDataLocker.WaitAsync(ctx.CancellationToken);
+            if (!NoneType.IsEqualTo<TData>())
+                repository = await GetDedicatedRepositoryAsync(record.LogicalType, ctx.CancellationToken);
+
             try
             {
                 ctx.CancellationToken.ThrowIfCancellationRequested();
@@ -1335,20 +1456,26 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 if (!NoneType.IsEqualTo<TData>() && !await repository!.PushDataRecordAsync(record, true, ctx.CancellationToken))
                     throw new BlackboardPushException(record, "Push failed", null);
 
-                var entry = this.State!.Registry.Push(record, this._timeManager);
-                this._needSaving |= true;
+                this._metaDataLocker.EnterWriteLock();
 
-                ctx.EnqueueEvent(new BlackboardEventStorage(BlackboardEventStorageTypeEnum.Add, entry.Uid, entry));
+                try
+                {
+                    var entry = this.State!.Registry.Push(record, this._timeManager);
+                    this._needSaving |= true;
+
+                    ctx.EnqueueEvent(new BlackboardEventStorage(BlackboardEventStorageTypeEnum.Add, entry.Uid, entry));
+                }
+                finally
+                {
+                    this._metaDataLocker.ExitWriteLock();
+                }
             }
             catch (Exception ex)
             {
                 successResult = true;
                 throw new BlackboardPushException(record, ex.Message, ex);
             }
-            finally
-            {
-                this._metaDataLocker.Release();
-            }
+
             return successResult;
         }
 
@@ -1385,12 +1512,21 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             ArgumentNullException.ThrowIfNull(rmCommand);
 
-            await this._metaDataLocker.WaitAsync(ctx.CancellationToken);
+            BlackboardRecordMetadata recordMetadata = default;
+
+            this._metaDataLocker.EnterWriteLock();
             try
             {
-                if (!this.State!.Registry.RecordMetadatas.TryGetValue(rmCommand.Uid, out var recordMetadata))
+                if (!this.State!.Registry.RecordMetadatas.TryGetValue(rmCommand.Uid, out recordMetadata))
                     return false;
+            }
+            finally
+            {
+                this._metaDataLocker.ExitWriteLock();
+            }
 
+            try
+            {
                 var repository = await GetDedicatedRepositoryAsync(recordMetadata.LogicalType, ctx.CancellationToken);
 
                 ctx.CancellationToken.ThrowIfCancellationRequested();
@@ -1401,20 +1537,24 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                         throw new BlackboardCommandExecutionException(cmd, "Remove failed", null);
                 }
 
-                var removed = this.State!.Registry.Pop(recordMetadata.Uid);
+                this._metaDataLocker.EnterWriteLock();
+                try
+                {
+                    var removed = this.State!.Registry.Pop(recordMetadata.Uid);
 
-                if (removed is not null)
-                    this._needSaving |= true;
+                    if (removed is not null)
+                        this._needSaving |= true;
 
-                ctx.EnqueueEvent(new BlackboardEventStorage(BlackboardEventStorageTypeEnum.Remove, rmCommand.Uid, removed));
+                    ctx.EnqueueEvent(new BlackboardEventStorage(BlackboardEventStorageTypeEnum.Remove, rmCommand.Uid, removed));
+                }
+                finally
+                {
+                    this._metaDataLocker.ExitWriteLock();
+                }
             }
             catch (Exception ex)
             {
                 throw new BlackboardCommandExecutionException(cmd, ex.Message, ex);
-            }
-            finally
-            {
-                this._metaDataLocker.Release();
             }
 
             return true;
@@ -1437,6 +1577,36 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <summary>
         /// Command in charge to change status a record from the storage
         /// </summary>
+        private Task<bool> Command_ChangeMetaDataFromStorageAsync(BlackboardCommand cmd, CommandExecutionContext ctx)
+        {
+            CheckInitializationRequiredOrSealedStatus();
+
+            var chgCommand = cmd as BlackboardCommandStorageChangeMetaData;
+
+            ArgumentNullException.ThrowIfNull(chgCommand);
+
+            this._metaDataLocker.EnterWriteLock();
+            try
+            {
+                var utcNow = this._timeManager.UtcNow;
+
+                var newItemMetaData = this.State!.Registry.ChangeMetaData(chgCommand.Uid, chgCommand.NewMetaData, utcNow);
+                if (newItemMetaData is null)
+                    return TaskHelper.GetFromResultCache(false);
+
+                ctx.EnqueueEvent(new BlackboardEventStorage(BlackboardEventStorageTypeEnum.ChangeStatus, chgCommand.Uid, newItemMetaData));
+
+                return TaskHelper.GetFromResultCache(true);
+            }
+            finally
+            {
+                this._metaDataLocker.ExitWriteLock();
+            }
+        }
+
+        /// <summary>
+        /// Command in charge to change status a record from the storage
+        /// </summary>
         private async Task<bool> Command_ChangeStatusFromStorageAsync(BlackboardCommand cmd, CommandExecutionContext ctx)
         {
             CheckInitializationRequiredOrSealedStatus();
@@ -1445,12 +1615,21 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             ArgumentNullException.ThrowIfNull(chgCommand);
 
-            await this._metaDataLocker.WaitAsync(ctx.CancellationToken);
+            BlackboardRecordMetadata recordMetadata = default;
+
+            this._metaDataLocker.EnterReadLock();
             try
             {
-                if (!this.State!.Registry.RecordMetadatas.TryGetValue(chgCommand.Uid, out var recordMetadata))
+                if (!this.State!.Registry.RecordMetadatas.TryGetValue(chgCommand.Uid, out recordMetadata))
                     return false;
+            }
+            finally
+            {
+                this._metaDataLocker.ExitReadLock();
+            }
 
+            try
+            {
                 var repository = await GetDedicatedRepositoryAsync(recordMetadata.LogicalType, ctx.CancellationToken);
 
                 ctx.CancellationToken.ThrowIfCancellationRequested();
@@ -1470,16 +1649,20 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                         this._needSaving |= true;
                 }
 
-                var newItemMetaData = this.State!.Registry.ChangeStatus(recordMetadata.Uid, chgCommand.NewRecordStatus, utcNow);
-                ctx.EnqueueEvent(new BlackboardEventStorage(BlackboardEventStorageTypeEnum.ChangeStatus, chgCommand.Uid, newItemMetaData));
+                this._metaDataLocker.EnterWriteLock();
+                try
+                {
+                    var newItemMetaData = this.State!.Registry.ChangeStatus(recordMetadata.Uid, chgCommand.NewRecordStatus, utcNow);
+                    ctx.EnqueueEvent(new BlackboardEventStorage(BlackboardEventStorageTypeEnum.ChangeStatus, chgCommand.Uid, newItemMetaData));
+                }
+                finally
+                {
+                    this._metaDataLocker.ExitWriteLock();
+                }
             }
             catch (Exception ex)
             {
                 throw new BlackboardCommandExecutionException(cmd, ex.Message, ex);
-            }
-            finally
-            {
-                this._metaDataLocker.Release();
             }
 
             return true;
@@ -1560,7 +1743,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 }
 
                 if (initCommands is not null)
-                    await this.CommandExecutionStartPointAsync(ctx.CancellationToken, initCommands, ctx);
+                    await this.CommandExecutionStartPointAsync(ctx.CancellationToken, initCommands, ctx, ctx.Logger);
 
                 await Command_LifeStatus_Changed(cmd, ctx);
             }
@@ -1604,9 +1787,15 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             try
             {
                 IReadOnlyCollection<BlackboardRecordMetadata> metaDatas;
-                using (this._metaDataLocker.Lock())
+                this._metaDataLocker.EnterReadLock();
+
+                try
                 {
                     metaDatas = this.State!.Registry.RecordMetadatas.Values.ToArray();
+                }
+                finally
+                {
+                    this._metaDataLocker.ExitReadLock();
                 }
 
                 var logicalTypeToRemain = this._logicalHandlers.Where(h => h.RemainOnSealed)
@@ -1636,14 +1825,14 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
                 foreach (var signalSubscription in this.State!.GetSubscriptions())
                 {
-                    sealingCommands = sealingCommands.AddOnNull((BlackboardCommand)new BlackboardCommandSignal(signalSubscription.SignalId,
+                    sealingCommands = sealingCommands.AddOnNull((BlackboardCommand)new BlackboardCommandSignalSubscription(signalSubscription.SignalId,
                                                                                                                "",
                                                                                                                signalSubscription.FromDoor,
                                                                                                                BlackboardCommandSignalTypeEnum.Detach));
                 }
 
                 if (sealingCommands is not null)
-                    await this.CommandExecutionStartPointAsync(ctx.CancellationToken, sealingCommands, ctx);
+                    await this.CommandExecutionStartPointAsync(ctx.CancellationToken, sealingCommands, ctx, ctx.Logger);
 
                 return true;
             }
@@ -1666,8 +1855,6 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         protected override void DisposeResourcesEnd()
         {
             this._metaDataLocker.Dispose();
-            this._saveStateLocker.Dispose();
-            this._singleMessageTreatmentLocker.Dispose();
 
             base.DisposeResourcesEnd();
         }

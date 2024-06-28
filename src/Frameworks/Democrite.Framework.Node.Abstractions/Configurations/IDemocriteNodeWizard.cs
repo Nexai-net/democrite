@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Configurations
 {
     using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Node.Abstractions.Configurations;
     using Democrite.Framework.Node.Abstractions.Models;
 
     using System;
@@ -44,6 +45,11 @@ namespace Democrite.Framework.Configurations
         /// Setups in local memory definitions
         /// </summary>
         IDemocriteNodeWizard AddInMemoryDefinitionProvider(Action<IDemocriteNodeLocalDefinitionsBuilder> config);
+
+        /// <summary>
+        /// Setups the cluster options.
+        /// </summary>
+        IDemocriteNodeWizard SetupClusterOptions(Action<IDemocriteNodeClusterOptionWizard> action);
 
         /// <summary>
         /// Setups the nodes memories, how to same state, reminder, trigger ...

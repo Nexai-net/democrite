@@ -13,7 +13,34 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Include="TupleContainer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TupleContainer.tt</DependentUpon>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
 	  <PackageReference Include="Microsoft.Orleans.Core.Abstractions" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="TupleContainer.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>TupleContainer.cs</LastGenOutput>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="TupleContainer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>TupleContainer.tt</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>

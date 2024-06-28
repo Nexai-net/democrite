@@ -13,5 +13,9 @@ namespace Democrite.Framework.Cluster.Abstractions.Configurations.Builders
     /// <seealso cref="IDemocriteBaseGenericBuilder" />
     public interface IDemocriteExtensionBuilderTool : IBuilderDemocriteBaseWizard, IDemocriteBaseGenericBuilder
     {
+        /// <summary>
+        /// Try get specific builder
+        /// </summary>
+        TBuilder TryGetBuilder<TBuilder>();
     }
 }

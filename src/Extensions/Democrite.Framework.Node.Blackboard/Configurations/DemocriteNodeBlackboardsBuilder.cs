@@ -5,9 +5,11 @@
 namespace Democrite.Framework.Node.Blackboard.Configurations
 {
     using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Configurations;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Validators;
+    using Democrite.Framework.Node.Configurations;
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -78,16 +80,24 @@ namespace Democrite.Framework.Node.Blackboard.Configurations
         }
 
         /// <inheritdoc />
-        public IDemocriteNodeBlackboardsBuilder UseDefaultStorageForBoardState()
+        public IDemocriteNodeBlackboardsBuilder UseInMemoryStorageForBoardState()
         {
-            ((ISiloBuilder)this._wizardTools.SourceOrleanBuilder).AddMemoryGrainStorage(BlackboardConstants.BlackboardStorageConfigurationKey);
+            ((ISiloBuilder)this._wizardTools.SourceOrleanBuilder).AddMemoryGrainStorage(BlackboardConstants.BlackboardStateStorageConfigurationKey);
             return this;
         }
 
         /// <inheritdoc />
-        public IDemocriteNodeBlackboardsBuilder UseDefaultStorageForRegistryState()
+        public IDemocriteNodeBlackboardsBuilder UseInMemoryStorageForRegistryState()
         {
             ((ISiloBuilder)this._wizardTools.SourceOrleanBuilder).AddMemoryGrainStorage(BlackboardConstants.BlackboardRegistryStorageConfigurationKey);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IDemocriteNodeBlackboardsBuilder UseInMemoryStorageForRecords()
+        {
+            var memoryBuilder = this._wizardTools.TryGetBuilder<IDemocriteNodeMemoryBuilder>();
+            memoryBuilder.UseInMemoryRepository(BlackboardConstants.BlackboardStorageRecordsConfigurationKey);
             return this;
         }
 

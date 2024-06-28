@@ -8,6 +8,8 @@ namespace Democrite.Framework.Bag.DebugTools
     using Democrite.Framework.Core.Abstractions.Attributes.MetaData;
     using Democrite.Framework.Core.Abstractions.Signals;
 
+    using Orleans.Concurrency;
+
     /// <summary>
     /// VGrain used to write on the logger the information about a signal
     /// </summary>
@@ -17,11 +19,13 @@ namespace Democrite.Framework.Bag.DebugTools
                     displayName: "Display",
                     description: "Used to show in logs signals when emit.",
                     categoryPath: "tools")]
-    public interface IDisplaySignalsInfoVGrain : IVGrain, ISignalReceiver
+    public interface IDisplaySignalsInfoVGrain : IVGrain, ISignalReceiver, ISignalReceiverReadOnly
     {
         /// <summary>
         /// Displays the signal information on the logger.
         /// </summary>
+        [OneWay]
+        [ReadOnly]
         Task DisplaySignalInfoAsync(SignalMessage signalMessage, IExecutionContext ctx);
     }
 }

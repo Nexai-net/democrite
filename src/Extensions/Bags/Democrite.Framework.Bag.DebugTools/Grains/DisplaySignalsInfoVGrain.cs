@@ -44,6 +44,7 @@ namespace Democrite.Framework.Bag.DebugTools.Grains
         #region Methods
 
         /// <inheritdoc />
+        [OneWay]
         [ReadOnly]
         public Task DisplaySignalInfoAsync(SignalMessage signal, IExecutionContext ctx)
         {
@@ -51,6 +52,7 @@ namespace Democrite.Framework.Bag.DebugTools.Grains
         }
 
         /// <inheritdoc />
+        [OneWay]
         [ReadOnly]
         public async Task ReceiveSignalAsync(SignalMessage signal)
         {

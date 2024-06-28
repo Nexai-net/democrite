@@ -39,6 +39,6 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         ///     TODO : Migration process to transfert data store in blackboard to another one
         ///     
         /// </remarks>
-        Task BuildFromTemplateAsync(Guid blackboardTemplateUid, BlackboardId blackboardId);
+        Task BuildFromTemplateAsync(Guid blackboardTemplateUid, BlackboardId blackboardId, GrainCancellationToken token, Guid? callContextId);
     }
 }

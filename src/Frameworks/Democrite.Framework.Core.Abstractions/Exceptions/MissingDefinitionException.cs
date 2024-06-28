@@ -20,8 +20,9 @@ namespace Democrite.Framework.Core.Abstractions.Exceptions
         /// </summary>
         public MissingDefinitionException(Type definitionType,
                                           string definitionId,
+                                          string? extraInfo = null,
                                           Exception? innerException = null)
-            : this(DemocriteExceptionSR.DefinitionMissingExceptionMessage.WithArguments(definitionType, definitionId),
+            : this(DemocriteExceptionSR.DefinitionMissingExceptionMessage.WithArguments(definitionType, definitionId) + (string.IsNullOrEmpty(extraInfo) ? "" : " : " + extraInfo),
                    definitionType.GetAbstractType(),
                    definitionId,
                    DemocriteErrorCodes.Build(DemocriteErrorCodes.Categories.Definition, DemocriteErrorCodes.PartType.Identifier, DemocriteErrorCodes.ErrorType.Missing),

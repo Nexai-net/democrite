@@ -16,34 +16,5 @@ namespace Democrite.Framework.Node.Cron
     [GenerateSerializer]
     public sealed class CronReminderState : TriggerState
     {
-        #region Fields
-
-        private IGrainReminder? _grainReminder;
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets or sets the grain reminder token.
-        /// </summary>
-        [Id(0)]
-        public IGrainReminder? GrainReminderToken
-        {
-            get { return this._grainReminder; }
-            set
-            {
-                if (object.ReferenceEquals(this._grainReminder, value))
-                    return;
-
-                var old = this._grainReminder;
-                this._grainReminder = value;
-
-                if (old is IDisposable disposable)
-                    disposable.Dispose();
-            }
-        }
-
-        #endregion
     }
 }

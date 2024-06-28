@@ -17,7 +17,7 @@ namespace Democrite.Framework.Node.StreamQueue
     /// Grain service in charge to handled trigger link to a stream
     /// </summary>
     /// <seealso cref="IGrainService" />
-    public sealed class StreamTriggerVGrainService : TriggerBaseGrainService<IStreamTriggerHandlerVGrain>, IStreamTriggerVGrainService
+    public sealed class StreamTriggerVGrainService : TriggerBaseGrainService<IStreamTriggerHandlerVGrain>, IStreamTriggerVGrainService, ISiloStatusListener
     {
         #region Ctor
 
@@ -28,9 +28,26 @@ namespace Democrite.Framework.Node.StreamQueue
                                           Silo silo,
                                           ILoggerFactory loggerFactory,
                                           IGrainOrleanFactory grainFactory,
+                                          ISiloStatusOracle statusOracle,
                                           ITriggerDefinitionProvider triggerDefinitionProvider)
             : base(id, silo, loggerFactory, grainFactory, triggerDefinitionProvider, TriggerTypeEnum.Stream)
         {
+            statusOracle.SubscribeToSiloStatusEvents(this);
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Receive notifications about silo status events.
+        /// </summary>
+        public void SiloStatusChangeNotification(SiloAddress updatedSilo, SiloStatus status)
+        {
+            if (this.Status == GrainServiceStatus.Booting || this.Status == GrainServiceStatus.Stopped || updatedSilo.IsClient || status != SiloStatus.Dead)
+                return;
+
+            RefreshInfoAsync().ConfigureAwait(false);
         }
 
         #endregion

@@ -6,6 +6,7 @@ namespace Democrite.Framework.Core
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Enums;
+    using Democrite.Framework.Core.Models;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -67,6 +68,30 @@ namespace Democrite.Framework.Core
         {
             var vgrain = GetVGrainImpl(vgrainInterfaceType, input, executionContext, logger);
             return ValueTask.FromResult((IVGrain)vgrain);
+        }
+
+        /// <inheritdoc />
+        public ValueTask<IVGrain> GetVGrainWithConfigAsync<TConfig>(Type vgrainInterfaceType, TConfig? executionContextConfig, ILogger? logger = null)
+        {
+            return GetVGrainAsync(vgrainInterfaceType, ExecutionContextWithConfiguration<TConfig>.EmptyWithConfig(executionContextConfig), logger);
+        }
+
+        /// <inheritdoc />
+        public ValueTask<IVGrain> GetVGrainWithConfigAsync<TConfig>(Type vgrainInterfaceType, object? input, TConfig? executionContextConfig, ILogger? logger = null)
+        {
+            return GetVGrainAsync(vgrainInterfaceType, input, ExecutionContextWithConfiguration<TConfig>.EmptyWithConfig(executionContextConfig), logger);
+        }
+
+        /// <inheritdoc />
+        public ValueTask<TVGrainType> GetVGrainWithConfigAsync<TVGrainType, TConfig>(TConfig? executionContextConfig, ILogger? logger = null) where TVGrainType : IVGrain
+        {
+            return GetVGrainAsync<TVGrainType>(ExecutionContextWithConfiguration<TConfig>.EmptyWithConfig(executionContextConfig), logger);
+        }
+
+        /// <inheritdoc />
+        public ValueTask<TVGrainType> GetVGrainWithConfigAsync<TVGrainType, TConfig>(object? input, TConfig? executionContextConfig, ILogger? logger = null) where TVGrainType : IVGrain
+        {
+            return GetVGrainAsync<TVGrainType>(input, ExecutionContextWithConfiguration<TConfig>.EmptyWithConfig(executionContextConfig), logger);
         }
 
         #region Tools

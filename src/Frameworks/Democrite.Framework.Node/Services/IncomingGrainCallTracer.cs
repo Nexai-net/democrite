@@ -8,6 +8,7 @@ namespace Democrite.Framework.Node.Services
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Node.Abstractions.Models;
 
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
     using Orleans.Runtime;
@@ -28,8 +29,9 @@ namespace Democrite.Framework.Node.Services
         /// </summary>
         public IncomingGrainCallTracer(ILocalSiloDetails localSiloDetails,
                                        IOptions<ClusterNodeDiagnosticOptions> options,
-                                       IDiagnosticLogger diagnosticLogger)
-            : base(localSiloDetails, options, diagnosticLogger)
+                                       IDiagnosticLogger diagnosticLogger,
+                                       ILoggerFactory loggerFactory)
+            : base(localSiloDetails, options, diagnosticLogger, loggerFactory)
         {
         }
 

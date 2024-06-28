@@ -148,7 +148,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed record class BlackboardCommandSignal(Guid SignalUid, string DisplayName, bool IsDoor, BlackboardCommandSignalTypeEnum Type) : BlackboardCommand(BlackboardCommandTypeEnum.Signal)
+    public sealed record class BlackboardCommandSignalSubscription(Guid SignalUid, string DisplayName, bool IsDoor, BlackboardCommandSignalTypeEnum Type) : BlackboardCommand(BlackboardCommandTypeEnum.Signal)
     {
         /// <inheritdoc />
         public override string ToDebugDisplayName()

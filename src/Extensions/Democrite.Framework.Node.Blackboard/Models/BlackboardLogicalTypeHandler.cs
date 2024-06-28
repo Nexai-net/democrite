@@ -25,9 +25,14 @@ namespace Democrite.Framework.Node.Blackboard.Models
         private readonly Regex _logicalTypeFilter;
         private readonly string _logicalType;
 
-        private IRepository<DataRecordContainer, Guid> _repository = null!;
+        private readonly IRepositoryFactory _repositoryFactory;
+        private readonly ReaderWriterLockSlim _quickRepoLockerAccess;
+        private readonly SemaphoreSlim _asyncGetLocker;
+
         private BlackboardStorageDefinition _storage = null!;
-        private bool _repositoryNeedInitialization;
+
+        private IRepository<DataRecordContainer, Guid>? _repository;
+        private bool? _repositoryNeedInitialization;
 
         #endregion
 
@@ -36,8 +41,18 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="BlackboardLogicalTypeHandler"/> class.
         /// </summary>
-        public BlackboardLogicalTypeHandler(string logicalType)
+        public BlackboardLogicalTypeHandler(string logicalType,
+                                            IRepositoryFactory repositoryFactory)
         {
+            this._repositoryFactory = repositoryFactory;
+
+            // this locker is used to allow a quick access after the initialization
+            this._quickRepoLockerAccess = new ReaderWriterLockSlim();
+
+            // this locker ensure the repository is get and init only once
+            // We choose a semaphore before the init process in async
+            this._asyncGetLocker = new SemaphoreSlim(1);
+
             this._logicalType = logicalType;
             this._logicalTypeFilter = new Regex(logicalType, RegexOptions.Compiled);
         }
@@ -113,19 +128,23 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Gets the repository.
         /// </summary>
-        public ValueTask<IRepository<DataRecordContainer, Guid>> GetRepositoryAsync(CancellationToken token)
+        public async ValueTask<IRepository<DataRecordContainer, Guid>> GetRepositoryAsync(CancellationToken token)
         {
-            if (this._repositoryNeedInitialization && this._repository is ISupportInitialization<string> init && !init.IsInitialized)
+            this._quickRepoLockerAccess.EnterReadLock();
+            try
             {
-                var initTask = Task.Run(async () =>
-                {
-                    await init.InitializationAsync(this._storage.StorageKey, token);
-                    return this._repository;
-                });
+                var repo = this._repository;
+                var needInit = this._repositoryNeedInitialization;
 
-                return new ValueTask<IRepository<DataRecordContainer, Guid>>(initTask);
+                if (repo is not null && needInit is not null && (needInit == false || ((ISupportInitialization<string>)repo).IsInitialized))
+                    return repo;
             }
-            return ValueTask.FromResult(this._repository);
+            finally
+            {
+                this._quickRepoLockerAccess.ExitReadLock();
+            }
+
+            return await RepositoryPreparationAsync(token);
         }
 
         /// <summary>
@@ -140,19 +159,16 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Updates 
         /// </summary>
-        internal async ValueTask UpdateAsync(IRepositoryFactory repositoryFactory,
-                                             IBlackboardDataLogicalTypeRuleValidatorProvider blackboardDataLogicalTypeRuleValidatorProvider,
-                                             BlackboardOrderLogicalTypeRule? order,
-                                             BlackboardStorageDefinition storage,
-                                             BlackboardRemainOnSealedLogicalTypeRule? remain,
-                                             IReadOnlyCollection<BlackboardLogicalTypeBaseRule>? rules)
+        internal void Update(IBlackboardDataLogicalTypeRuleValidatorProvider blackboardDataLogicalTypeRuleValidatorProvider,
+                             BlackboardOrderLogicalTypeRule? order,
+                             BlackboardStorageDefinition storage,
+                             BlackboardRemainOnSealedLogicalTypeRule? remain,
+                             IReadOnlyCollection<BlackboardLogicalTypeBaseRule>? rules)
         {
             this.Order = order?.Order ?? -1;
-            this._repository = await repositoryFactory.GetAsync<IRepository<DataRecordContainer, Guid>, DataRecordContainer>(storage.StorageKey, storage.StorageConfiguration);
 
+            var oldStorage = this._storage;
             this._storage = storage;
-
-            this._repositoryNeedInitialization = this._repository is ISupportInitialization<string>;
 
             this.RemainOnSealed = remain is not null;
 
@@ -163,6 +179,22 @@ namespace Democrite.Framework.Node.Blackboard.Models
             else
             {
                 this.RuleSolver = null;
+            }
+
+            if (this._storage?.Equals(oldStorage) ?? oldStorage is null)
+                return;
+
+            // Storage change
+            this._asyncGetLocker.Wait();
+            try
+            {
+                // Reset repository to force a re-init with new storage informations
+                this._repository = null;
+                this._repositoryNeedInitialization = null;
+            }
+            finally
+            {
+                this._asyncGetLocker.Release();
             }
         }
 
@@ -198,6 +230,55 @@ namespace Democrite.Framework.Node.Blackboard.Models
         {
             return Equals(other?._logicalType);
         }
+
+        /// <inheritdoc />
+        protected override void DisposeEnd()
+        {
+            this._asyncGetLocker.Dispose();
+            this._quickRepoLockerAccess.Dispose();
+            base.DisposeEnd();
+        }
+
+        #region Tools
+
+        /// <summary>
+        /// Get and initializa the repository if needed
+        /// </summary>
+        private async ValueTask<IRepository<DataRecordContainer, Guid>> RepositoryPreparationAsync(CancellationToken token)
+        {
+            await this._asyncGetLocker.WaitAsync(token);
+            try
+            {
+                if (this._repository is null)
+                {
+                    var repository = await this._repositoryFactory.GetAsync<IRepository<DataRecordContainer, Guid>, DataRecordContainer>(this._storage.StorageKey, this._storage.StorageConfiguration, cancellationToken: token);
+
+                    this._quickRepoLockerAccess.EnterWriteLock();
+                    try
+                    {
+                        this._repository = repository;
+                        this._repositoryNeedInitialization = repository is ISupportInitialization<string>;
+                    }
+                    finally
+                    {
+                        this._quickRepoLockerAccess.ExitWriteLock();
+                    }
+                }
+
+                if (this._repositoryNeedInitialization! == true && this._repository is ISupportInitialization<string> init && !init.IsInitialized)
+                {
+                    await init.InitializationAsync(this._storage.StorageKey, token);
+                }
+            }
+            finally
+            {
+                this._asyncGetLocker.Release();
+            }
+
+            return this._repository;
+        }
+
+        #endregion
 
         #endregion
     }

@@ -53,7 +53,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Try to get a board by his unique couple <paramref name="boardName"/> '/' <paramref name="blackboardTemplateKey"/>
         /// </summary>
-        public BlackboardId? TryGetAsync(string boardName, string blackboardTemplateKey)
+        public BlackboardId? TryGet(string boardName, string blackboardTemplateKey)
         {
             var key = GenerateNamesKey(boardName, blackboardTemplateKey);
             if (this._indexedByCoupleNameBoardTmpl.TryGetValue(key, out var boardUid))
@@ -91,7 +91,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// </summary>
         public BlackboardId CreateNewBlackboardId(string boardName, string blackboardTemplateKey)
         {
-            var existingId = TryGetAsync(boardName, blackboardTemplateKey);
+            var existingId = TryGet(boardName, blackboardTemplateKey);
             if (existingId is not null)
                 return existingId.Value;
 
@@ -122,6 +122,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
         }
 
         #endregion
+
         #endregion
     }
 }

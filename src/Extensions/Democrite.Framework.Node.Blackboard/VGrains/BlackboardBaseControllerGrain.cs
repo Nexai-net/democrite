@@ -61,20 +61,34 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        public async Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        {
+            await InitblackboardAccessAsync(cancellationToken.CancellationToken);
+            return await OnInitializationAsync(option, cancellationToken);
+        }
+
+        #region Tools
+
+        /// <inheritdoc />
+        protected virtual Task<IReadOnlyCollection<BlackboardCommand>?> OnInitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
-
-        /// <inheritdoc />
-        public sealed override async Task OnActivateAsync(CancellationToken cancellationToken)
+        
+        /// <summary>
+        /// Initialize blackboards the access.
+        /// </summary>
+        protected async Task InitblackboardAccessAsync(CancellationToken token)
         {
-            var bbuid = base.GetGrainId().GetGuidKey();
-            this.Blackboard = await this._blackboardProvider.GetBlackboardAsync(bbuid, cancellationToken);
-
-            await base.OnActivateAsync(cancellationToken);
+            if (this.Blackboard is null)
+            {
+                var bbuid = base.GetGrainId().GetGuidKey();
+                this.Blackboard = await this._blackboardProvider.GetBlackboardAsync(bbuid, token);
+            }
         }
 
+        #endregion
+    
         #endregion
     }
 
@@ -124,20 +138,34 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        public async Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        {
+            await InitblackboardAccessAsync(cancellationToken.CancellationToken);
+            return await OnInitializationAsync(option, cancellationToken);
+        }
+
+        #region Tools
+
+        /// <inheritdoc />
+        protected virtual Task<IReadOnlyCollection<BlackboardCommand>?> OnInitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
-
-        /// <inheritdoc />
-        public sealed override async Task OnActivateAsync(CancellationToken cancellationToken)
+        
+        /// <summary>
+        /// Initialize blackboards the access.
+        /// </summary>
+        protected async Task InitblackboardAccessAsync(CancellationToken token)
         {
-            var bbuid = base.GetGrainId().GetGuidKey();
-            this.Blackboard = await this._blackboardProvider.GetBlackboardAsync(bbuid, cancellationToken);
-
-            await base.OnActivateAsync(cancellationToken);
+            if (this.Blackboard is null)
+            {
+                var bbuid = base.GetGrainId().GetGuidKey();
+                this.Blackboard = await this._blackboardProvider.GetBlackboardAsync(bbuid, token);
+            }
         }
 
+        #endregion
+    
         #endregion
     }
 
@@ -189,20 +217,34 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public virtual Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        public async Task<IReadOnlyCollection<BlackboardCommand>?> InitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
+        {
+            await InitblackboardAccessAsync(cancellationToken.CancellationToken);
+            return await OnInitializationAsync(option, cancellationToken);
+        }
+
+        #region Tools
+
+        /// <inheritdoc />
+        protected virtual Task<IReadOnlyCollection<BlackboardCommand>?> OnInitializationAsync(ControllerBaseOptions? option, GrainCancellationToken cancellationToken)
         {
             return Task.FromResult<IReadOnlyCollection<BlackboardCommand>?>(null);
         }
-
-        /// <inheritdoc />
-        public sealed override async Task OnActivateAsync(CancellationToken cancellationToken)
+        
+        /// <summary>
+        /// Initialize blackboards the access.
+        /// </summary>
+        protected async Task InitblackboardAccessAsync(CancellationToken token)
         {
-            var bbuid = base.GetGrainId().GetGuidKey();
-            this.Blackboard = await this._blackboardProvider.GetBlackboardAsync(bbuid, cancellationToken);
-
-            await base.OnActivateAsync(cancellationToken);
+            if (this.Blackboard is null)
+            {
+                var bbuid = base.GetGrainId().GetGuidKey();
+                this.Blackboard = await this._blackboardProvider.GetBlackboardAsync(bbuid, token);
+            }
         }
 
+        #endregion
+    
         #endregion
     }
 }

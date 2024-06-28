@@ -59,7 +59,18 @@ namespace Democrite.Framework.Node.Signals
         public async Task<Guid> SubscribeAsync(DedicatedGrainId<ISignalReceiver> grainId, GrainCancellationToken token)
         {
             await EnsureInitializedAsync(token.CancellationToken);
-            var subscriptionId = this.State!.AddOrUpdateSuscription(grainId);
+            var subscriptionId = this.State!.AddOrUpdateSubscription(grainId);
+
+            await PushStateAsync(default);
+
+            return subscriptionId;
+        }
+
+        /// <inheritdoc />
+        public async Task<Guid> SubscribeAsync(DedicatedGrainId<ISignalReceiverReadOnly> grainId, GrainCancellationToken token)
+        {
+            await EnsureInitializedAsync(token.CancellationToken);
+            var subscriptionId = this.State!.AddOrUpdateSubscription(grainId);
 
             await PushStateAsync(default);
 
@@ -85,6 +96,16 @@ namespace Democrite.Framework.Node.Signals
                 await UnsuscribeAsync(subscriptionId.Value, token);
         }
 
+        /// <inheritdoc />
+        public async Task UnsuscribeAsync(DedicatedGrainId<ISignalReceiverReadOnly> grainId, GrainCancellationToken token)
+        {
+            await EnsureInitializedAsync(token.CancellationToken);
+            var subscriptionId = this.State!.GetSuscription(grainId);
+
+            if (subscriptionId is not null)
+                await UnsuscribeAsync(subscriptionId.Value, token);
+        }
+
         #region Tools
 
         /// <summary>
@@ -99,18 +120,30 @@ namespace Democrite.Framework.Node.Signals
             foreach (var sub in subscriptions)
             {
                 ISignalReceiver? grain = null;
+                ISignalReceiverReadOnly? grainReadOnly = null;
 
-                if (sub.TargetGrainId.IsGrainService)
+                var targetGrainId = (IDedicatedGrainId?)sub.TargetGrainId ?? (IDedicatedGrainId?)sub.TargetReadOnlyGrainId;
+
+                if (targetGrainId!.IsGrainService)
                 {
-                    grain = this._remoteGrainServiceFactory.GetRemoteGrainService<ISignalReceiver>(sub.TargetGrainId.Target, sub.TargetGrainId.GrainInterface.ToType());
+                    if (sub.IsTargetReadOnly)
+                        grainReadOnly = this._remoteGrainServiceFactory.GetRemoteGrainService<ISignalReceiverReadOnly>(targetGrainId.Target, targetGrainId.GrainInterface.ToType());
+                    else
+                        grain = this._remoteGrainServiceFactory.GetRemoteGrainService<ISignalReceiver>(targetGrainId.Target, targetGrainId.GrainInterface.ToType());
                 }
                 else
                 {
-                    var addressable = this._grainFactory.GetGrain(sub.TargetGrainId.Target);
-                    grain = addressable.AsReference<ISignalReceiver>();
+                    if (sub.IsTargetReadOnly)
+                        grainReadOnly = this._grainFactory.GetGrain<ISignalReceiverReadOnly>(targetGrainId.Target);
+                    else
+                        grain = this._grainFactory.GetGrain<ISignalReceiver>(targetGrainId.Target);
                 }
 
-                await grain.ReceiveSignalAsync(signal!);
+                if (grain is not null)
+                    await grain.ReceiveSignalAsync(signal!);
+
+                if (grainReadOnly is not null)
+                    await grainReadOnly.ReceiveSignalAsync(signal!);
             }
 
             return signal.Uid;

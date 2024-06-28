@@ -19,7 +19,8 @@ namespace Democrite.Framework.Builders.Triggers
         #region Fields
         
         private readonly Guid _streamSourceDefinitionUid;
-        private uint _maxConcurrentProcess;
+        private uint? _fixedMaxConcurrentProcess;
+        private uint? _relativeMaxConcurrentProcessFactor;
 
         #endregion
 
@@ -46,7 +47,8 @@ namespace Democrite.Framework.Builders.Triggers
                                                this.DisplayName,
                                                this.Targets,
                                                true,
-                                               this._maxConcurrentProcess,
+                                               this._fixedMaxConcurrentProcess ?? 1000,
+                                               this._relativeMaxConcurrentProcessFactor,
                                                this._streamSourceDefinitionUid,
                                                base.DefinitionMetaData);
         }
@@ -54,7 +56,14 @@ namespace Democrite.Framework.Builders.Triggers
         /// <inheritdoc />
         public IDefinitionBaseBuilder<TriggerDefinition> MaxConcurrentProcess(uint maxConcurrent)
         {
-            this._maxConcurrentProcess = Math.Max(1, maxConcurrent);
+            this._fixedMaxConcurrentProcess = Math.Max(1, maxConcurrent);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IDefinitionBaseBuilder<TriggerDefinition> MaxConcurrentFactorClusterRelativeProcess(uint maxConcurrent)
+        {
+            this._relativeMaxConcurrentProcessFactor = Math.Max(1, maxConcurrent);
             return this;
         }
 

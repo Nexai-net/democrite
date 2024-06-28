@@ -28,7 +28,7 @@ namespace Democrite.Framework.Node.Signals.Doors
     /// <seealso cref="DoorBaseVGrain{IRelayFilterVGrain, RelayFilterDoorDefinition}" />
     /// <seealso cref="IRelayFilterVGrain" />
     [DemocriteSystemVGrain]
-    internal sealed class RelayFilterDoorVGrain : DoorBaseVGrain<IRelayFilterVGrain, RelayFilterDoorDefinition>, IRelayFilterVGrain
+    internal sealed class RelayFilterDoorVGrain : DoorBaseVGrain<IRelayFilterVGrain, RelayFilterDoorDefinition>, IRelayFilterVGrain, ISignalReceiverReadOnly
     {
         #region Fields
 

@@ -28,15 +28,18 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public StreamTriggerDefinition(Guid uid,
-                                       string displayName,        
+                                       string displayName,
                                        IEnumerable<TriggerTargetDefinition> targets,
                                        bool enabled,
                                        uint maxConcurrentProcess,
+                                       uint? relativeMaxConcurrentProcess,
                                        Guid streamSourceDefinitionUid,
-                                       DefinitionMetaData? metaData) 
+                                       DefinitionMetaData? metaData)
             : base(uid, displayName, TriggerTypeEnum.Stream, targets, enabled, metaData)
         {
-            this.MaxConcurrentProcess = maxConcurrentProcess;
+            this.FixedMaxConcurrentProcess = maxConcurrentProcess;
+            this.RelativeMaxConcurrentProcess = relativeMaxConcurrentProcess;
+
             this.StreamSourceDefinitionUid = streamSourceDefinitionUid;
         }
 
@@ -51,16 +54,37 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         [DataMember]
         [Newtonsoft.Json.JsonProperty]
         [System.Text.Json.Serialization.JsonInclude]
-        public uint MaxConcurrentProcess { get; }
+        public uint FixedMaxConcurrentProcess { get; }
 
         /// <summary>
-        /// Gets the stream source definition uid. <see cref="StreamQueueDefinition"/>
+        /// Gets the relative maximum concurrent process.
         /// </summary>
         [Id(1)]
         [DataMember]
         [Newtonsoft.Json.JsonProperty]
         [System.Text.Json.Serialization.JsonInclude]
+        public uint? RelativeMaxConcurrentProcess { get; }
+
+        /// <summary>
+        /// Gets the stream source definition uid. <see cref="StreamQueueDefinition"/>
+        /// </summary>
+        [Id(2)]
+        [DataMember]
+        [Newtonsoft.Json.JsonProperty]
+        [System.Text.Json.Serialization.JsonInclude]
         public Guid StreamSourceDefinitionUid { get; }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        protected override string OnDebugDisplayName()
+        {
+            return "[StreamSourceId: " + this.StreamSourceDefinitionUid + "]" +
+                   " [FixedMaxConcurrentProcess: " + this.FixedMaxConcurrentProcess + "]" +
+                   " [RelativeMaxConcurrentProcess: " + (this.RelativeMaxConcurrentProcess?.ToString() ?? "null") + "]";
+        }
 
         #endregion
     }

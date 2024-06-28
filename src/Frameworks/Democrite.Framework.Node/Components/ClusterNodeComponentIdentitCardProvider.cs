@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Node.Components
 {
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Node.Services;
 
     using Microsoft.Extensions.Logging;
 
@@ -18,7 +19,7 @@ namespace Democrite.Framework.Node.Components
     /// </summary>
     /// <seealso cref="GrainService" />
     /// <seealso cref="IComponentIdentitCardProvider" />
-    internal sealed class ClusterNodeComponentIdentitCardProvider : GrainService, IComponentIdentitCardProvider
+    internal sealed class ClusterNodeComponentIdentitCardProvider : DemocriteVGrainService, IComponentIdentitCardProvider
     {
         #region Fields
 
@@ -48,6 +49,12 @@ namespace Democrite.Framework.Node.Components
             // TODO : based on component create a correct dedicated component, cache results and synchnized between silo
 
             return ValueTask.FromResult<IComponentIdentityCard>(s_tmpIdentityCard);
+        }
+
+        /// <inheritdoc />
+        protected override Task RefreshInfoAsync()
+        {
+            return Task.CompletedTask;
         }
 
         #endregion

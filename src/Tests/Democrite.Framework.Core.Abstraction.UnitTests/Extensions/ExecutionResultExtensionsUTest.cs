@@ -95,7 +95,7 @@ namespace Democrite.Framework.Core.Abstraction.UnitTests.Extensions
 
             Check.That(output).IsEqualTo(execResult.Output);
             Check.That(memoryLogger.Logs.Count).IsEqualTo(1);
-            Check.That(memoryLogger.Logs.First().message).IsEqualTo("[SafeGetResult:45] - [ExecutionResult:" + execResult.ExecutionId + "] " + execResult.Message);
+            Check.That(memoryLogger.Logs.First().message).IsEqualTo("[SafeGetResult:56] - [ExecutionResult:" + execResult.ExecutionId + "] " + execResult.Message);
         }
 
         [Fact]

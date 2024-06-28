@@ -17,7 +17,7 @@ namespace Democrite.Framework.Node.Administrations
     using System;
     using System.Threading.Tasks;
 
-    internal sealed class AdministrationGrainService : GrainService, IAdministrationGrainService
+    internal sealed class AdministrationGrainService : DemocriteVGrainService, IAdministrationGrainService
     {
         #region Fields
 
@@ -50,15 +50,13 @@ namespace Democrite.Framework.Node.Administrations
         #region Methods
 
         /// <inheritdoc />
-        public override async Task Start()
+        protected override async Task RefreshInfoAsync()
         {
             using (var cancellation = new GrainCancellationTokenSource())
             {
                 var clusterRoute = await this._democriteSystemProvider.GetVGrainAsync<IClusterRouteRegistryVGrain>(null, this._localLogger);
                 await clusterRoute.SubscribeRouteChangeAsync(this.GetDedicatedGrainId<IAdminEventReceiver>(), cancellation.Token);
             }
-
-            await base.Start();
         }
 
         /// <inheritdoc />

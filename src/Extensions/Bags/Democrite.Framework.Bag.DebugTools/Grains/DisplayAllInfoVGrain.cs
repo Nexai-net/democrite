@@ -44,6 +44,7 @@ namespace Democrite.Framework.Bag.DebugTools.Grains
         #region Methods
 
         /// <inheritdoc />
+        [OneWay]
         [ReadOnly]
         public Task DisplayCallInfoAsync(IExecutionContext ctx)
         {

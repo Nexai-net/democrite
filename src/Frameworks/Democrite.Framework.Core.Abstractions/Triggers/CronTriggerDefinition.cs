@@ -62,5 +62,16 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         public bool UseSecond { get; }
 
         #endregion
+
+
+        #region Methods
+
+        /// <inheritdoc />
+        protected override string OnDebugDisplayName()
+        {
+            return "[CronExpression: " + this.CronExpression + "] [UseSecond: " + this.UseSecond + "]";
+        }
+
+        #endregion
     }
 }

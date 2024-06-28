@@ -13,7 +13,9 @@ namespace Democrite.Framework.Node.Services
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Extensions;
 
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
     using Orleans.Runtime;
@@ -30,6 +32,7 @@ namespace Democrite.Framework.Node.Services
 
         private static readonly Type s_exectionContextTrait = typeof(IExecutionContext);
         private readonly IOptions<ClusterNodeDiagnosticOptions> _options;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly NodeInfo _siloInfo;
 
         #endregion
@@ -41,11 +44,13 @@ namespace Democrite.Framework.Node.Services
         /// </summary>
         public GrainCallDiagnosticTracerService(ILocalSiloDetails localSiloDetails,
                                                 IOptions<ClusterNodeDiagnosticOptions> options,
-                                                IDiagnosticLogger diagnosticLogger)
+                                                IDiagnosticLogger diagnosticLogger,
+                                                ILoggerFactory loggerFactory)
             : base(diagnosticLogger)
         {
             // Store option to support hot option reloaded
             this._options = options;
+            this._loggerFactory = loggerFactory;
 
             this._siloInfo = new NodeInfo(localSiloDetails.ClusterId,
                                           localSiloDetails.DnsHostName,
@@ -117,7 +122,24 @@ namespace Democrite.Framework.Node.Services
                 }
             }
 
-            await context.Invoke();
+            try
+            {
+
+                await context.Invoke();
+            }
+            catch (Exception ex)
+            {
+                var argCount = context.Request.GetArgumentCount();
+                var execCtx = Enumerable.Range(0, argCount)
+                                        .Select(i => context.Request.GetArgument(i))
+                                        .OfType<IExecutionContext>()
+                                        .FirstOrDefault();
+
+                execCtx?.GetLogger(this._loggerFactory, context.Request.GetInterfaceType())
+                       ?.OptiLog(LogLevel.Error, "[Execution Call {grain}.{method}] Failed {exception} ", context.Grain, context.Request.GetMethod(), ex);
+
+                throw;
+            }
 
             if (this.HasConsumer && traceInOut)
             {

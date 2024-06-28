@@ -14,12 +14,17 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Democrite.Framework.Node.Blackboard.Models;
     using Democrite.Framework.Node.Blackboard.Models.Surrogates;
 
+    using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Collections;
+    using Elvex.Toolbox.Extensions;
+
     using Microsoft.Extensions.Logging;
 
     using Orleans.Placement;
     using Orleans.Runtime;
 
     using System;
+    using System.Security.Cryptography;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -27,13 +32,15 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     /// </summary>
     /// <seealso cref="Orleans.Grain" />
     [KeepAlive]
-    [PreferLocalPlacement]
     [DemocriteSystemVGrain]
     internal sealed class BlackboardRegistryGrain : VGrainBase<BlackboardRegistryState, BlackboardRegistryStateSurrogate, BlackboardRegistryStateConverter, IBlackboardRegistryGrain>, IBlackboardRegistryGrain
     {
         #region Fields
 
         private readonly IBlackboardTemplateDefinitionProvider _blackboardTemplateDefinitionProvider;
+
+        private readonly Dictionary<BlackboardId, GrainId> _grainIdCache;
+
         private readonly IGrainFactory _grainFactory;
 
         #endregion
@@ -44,13 +51,16 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// Initializes a new instance of the <see cref="BlackboardRegistryGrain"/> class.
         /// </summary>
         public BlackboardRegistryGrain(ILogger<IBlackboardRegistryGrain> logger,
-                                       [PersistentState(BlackboardConstants.BlackboardStorageStateKey, BlackboardConstants.BlackboardRegistryStorageConfigurationKey)] IPersistentState<BlackboardRegistryStateSurrogate> persistentState,
+                                       [PersistentState(BlackboardConstants.BlackboardRegistryStorageKey, BlackboardConstants.BlackboardRegistryStorageConfigurationKey)] IPersistentState<BlackboardRegistryStateSurrogate> persistentState,
                                        IGrainOrleanFactory grainFactory,
                                        IBlackboardTemplateDefinitionProvider blackboardTemplateDefinitionProvider)
+
             : base(logger, persistentState)
         {
-            this._grainFactory = grainFactory;
             this._blackboardTemplateDefinitionProvider = blackboardTemplateDefinitionProvider;
+            this._grainIdCache = new Dictionary<BlackboardId, GrainId>();
+
+            this._grainFactory = grainFactory;
         }
 
         #endregion
@@ -58,45 +68,52 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public async Task<GrainId> GetOrCreateAsync(string boardName, string blackboardTemplateKey)
+        public async Task<Tuple<BlackboardId, GrainId>> GetOrCreateAsync(string boardName, string blackboardTemplateKey, GrainCancellationToken token, Guid? callContextId = null)
         {
-            Guid? templateUid = null;
+            var boardId = this.State!.TryGet(boardName, blackboardTemplateKey);
 
-            var boardId = this.State!.TryGetAsync(boardName, blackboardTemplateKey);
-            if (boardId is null)
+            // GrainId is cached after BuildFromTemplateAsync is called
+            if (boardId is not null && this._grainIdCache.TryGetValue(boardId.Value, out var grainIdCached))
             {
-                var tmpl = await this._blackboardTemplateDefinitionProvider.GetFirstValueAsync(f => string.Equals(f.UniqueTemplateName, blackboardTemplateKey), default);
-
-#pragma warning disable IDE0270 // Use coalesce expression
-                if (tmpl == null)
-                    throw new MissingDefinitionException(typeof(BlackboardTemplateDefinition), blackboardTemplateKey);
-#pragma warning restore IDE0270 // Use coalesce expression
-
-                templateUid = tmpl.Uid;
-                boardId = this.State!.CreateNewBlackboardId(boardName, blackboardTemplateKey);
-                await PushStateAsync(default);
+                return Tuple.Create(boardId.Value, grainIdCached);
             }
 
+            boardId = this.State!.CreateNewBlackboardId(boardName, blackboardTemplateKey);
             var blackboardGrain = this._grainFactory.GetGrain<IBlackboardGrain>(boardId!.Value.Uid);
             var grainId = blackboardGrain.GetGrainId();
 
-            // This ensure a blackboard is initialized before any usage
-            if (templateUid is not null && templateUid.Value != Guid.Empty)
-                await blackboardGrain.BuildFromTemplateAsync(templateUid.Value, boardId.Value);
+            this._grainIdCache.Add(boardId.Value, grainId);
+            await PushStateAsync(default);
 
-            return grainId;
+            await InitializaBlackboardGrainAsync(blackboardGrain, boardId.Value, blackboardTemplateKey, token, callContextId);
+            return Tuple.Create(boardId.Value, grainId);
         }
 
         /// <inheritdoc />
-        public Task<GrainId?> TryGetAsync(Guid uid)
+        public Task<Tuple<BlackboardId, GrainId>?> TryGetAsync(string boardName, string blackboardTemplateKey)
         {
-            var boardId = this.State!.TryGetAsync(uid);
-            if (boardId is null)
-                return Task.FromResult<GrainId?>(null);
+            Tuple<BlackboardId, GrainId>? result = null;
+            var boardId = this.State!.TryGet(boardName, blackboardTemplateKey);
 
-            var addressable = this._grainFactory.GetGrain<IBlackboardGrain>(boardId.Value.Uid);
-            var grainId = addressable.GetGrainId();
-            return Task.FromResult<GrainId?>(grainId);
+            // GrainId is cached after BuildFromTemplateAsync is called
+            if (boardId is not null && this._grainIdCache.TryGetValue(boardId.Value, out var grainIdCached))
+            {
+                result = Tuple.Create(boardId.Value, grainIdCached);
+            }
+
+            return Task.FromResult(result);
+        }
+
+        /// <inheritdoc />
+        public Task<Tuple<BlackboardId, GrainId>?> TryGetAsync(Guid uid)
+        {
+            Tuple<BlackboardId, GrainId>? result = null;
+            var boardId = this.State!.TryGetAsync(uid);
+
+            if (boardId is not null && this._grainIdCache.TryGetValue(boardId.Value, out var grainId))
+                result = Tuple.Create(boardId.Value, grainId);
+
+            return Task.FromResult(result);
         }
 
         /// <inheritdoc />
@@ -105,6 +122,29 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             this.State!.Unregister(uid);
             await PushStateAsync(default);
         }
+
+        #region Tools
+
+        /// <summary>
+        /// Initializas the blackboard grain.
+        /// </summary>
+        private async Task InitializaBlackboardGrainAsync(IBlackboardGrain blackboardGrain,
+                                                          BlackboardId blackboardId,
+                                                          string blackboardTemplateKey,
+                                                          GrainCancellationToken token,
+                                                          Guid? callContextId = null)
+        {
+            var tmpl = await this._blackboardTemplateDefinitionProvider.GetFirstValueAsync(f => string.Equals(f.UniqueTemplateName, blackboardTemplateKey), token.CancellationToken);
+
+#pragma warning disable IDE0270 // Use coalesce expression
+            if (tmpl == null)
+                throw new MissingDefinitionException(typeof(BlackboardTemplateDefinition), blackboardTemplateKey);
+#pragma warning restore IDE0270 // Use coalesce expression
+
+            await blackboardGrain.BuildFromTemplateAsync(tmpl.Uid, blackboardId, token, callContextId);
+        }
+
+        #endregion
 
         #endregion
     }

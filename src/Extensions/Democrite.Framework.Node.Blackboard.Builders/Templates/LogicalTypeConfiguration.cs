@@ -160,9 +160,12 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         public ILogicalTypeConfiguration Storage(string storageKey, string? storageConfiguration = null)
         {
             EnqueueRule(new BlackboardStorageLogicalTypeRule(this.LogicalRecordTypePattern,
-                                                             new BlackboardStorageDefinition(string.IsNullOrEmpty(storageKey) ? "BlackboardRecords" : storageKey,
+                                                             new BlackboardStorageDefinition(string.IsNullOrEmpty(storageKey) 
+                                                                                                        ? BlackboardConstants.BlackboardStorageRecordsKey 
+                                                                                                        : storageKey,
+
                                                                                              string.IsNullOrEmpty(storageConfiguration) 
-                                                                                                        ? BlackboardConstants.BlackboardStorageConfigurationKey 
+                                                                                                        ? BlackboardConstants.BlackboardStorageRecordsConfigurationKey
                                                                                                         : storageConfiguration)));
             return this;
         }
@@ -172,7 +175,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         {
             EnqueueRule(new BlackboardStorageLogicalTypeRule(this.LogicalRecordTypePattern,
                                                              new BlackboardStorageDefinition(storageKey,
-                                                                                             BlackboardConstants.BlackboardStorageConfigurationKey)));
+                                                                                             BlackboardConstants.BlackboardStateStorageConfigurationKey)));
             return this;
         }
 

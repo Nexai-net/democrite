@@ -12,14 +12,20 @@ namespace Democrite.Framework.Node.Blackboard
     using Democrite.Framework.Node.Blackboard.VGrains;
 
     using Elvex.Toolbox.Collections;
+    using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
+    using Orleans.Runtime;
 
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Security.Cryptography;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -27,16 +33,17 @@ namespace Democrite.Framework.Node.Blackboard
     /// Get or provide a blackboad based on specific DeferredId or couple Name + Template Name
     /// </summary>
     /// <seealso cref="IBlackboardProvider" />
-    internal sealed class BlackboardProvider : IBlackboardProvider
+    internal sealed class BlackboardProvider : SafeDisposable, IBlackboardProvider
     {
         #region Fields
 
         private static readonly TimeSpan s_blackboardBuildAndRetreiveTimeout;
+        private readonly ILogger<IBlackboardProvider> _logger;
 
-        private static readonly Dictionary<Guid, BlackboardHandlerProxy> s_blackboardProxies;
-        private static readonly MultiKeyDictionary<string, BlackboardHandlerProxy> s_blackboardProxiesByName;
+        private readonly MultiKeyDictionary<string, BlackboardHandlerProxy> _blackboardProxiesByName;
+        private readonly Dictionary<Guid, BlackboardHandlerProxy> _blackboardProxies;
 
-        private static readonly SemaphoreSlim s_blackboardProxyLocker;
+        private readonly ReaderWriterLockSlim _blackboardProxyLockerRW;
 
         private readonly IBlackboardTemplateDefinitionProvider _blackboardTemplateDefinitionProvider;
         private readonly IBlackboardRegistryGrain _blackboardRegistry;
@@ -52,11 +59,7 @@ namespace Democrite.Framework.Node.Blackboard
         /// </summary>
         static BlackboardProvider()
         {
-            s_blackboardProxiesByName = new MultiKeyDictionary<string, BlackboardHandlerProxy>();
-            s_blackboardProxies = new Dictionary<Guid, BlackboardHandlerProxy>();
-            s_blackboardProxyLocker = new SemaphoreSlim(1);
-
-            s_blackboardBuildAndRetreiveTimeout = Debugger.IsAttached ? TimeSpan.FromSeconds(45) : TimeSpan.FromSeconds(5);
+            s_blackboardBuildAndRetreiveTimeout = Debugger.IsAttached ? TimeSpan.FromMinutes(45) : TimeSpan.FromMinutes(1);
         }
 
         /// <summary>
@@ -64,10 +67,16 @@ namespace Democrite.Framework.Node.Blackboard
         /// </summary>
         public BlackboardProvider(IBlackboardTemplateDefinitionProvider blackboardTemplateDefinitionProvider,
                                   IServiceProvider serviceProvider,
-                                  IGrainFactory grainFactory)
+                                  IGrainFactory grainFactory,
+                                  ILogger<IBlackboardProvider>? logger = null)
         {
+            this._logger = logger ?? NullLogger<BlackboardProvider>.Instance;
+
+            this._blackboardProxiesByName = new MultiKeyDictionary<string, BlackboardHandlerProxy>();
+            this._blackboardProxies = new Dictionary<Guid, BlackboardHandlerProxy>();
             this._blackboardTemplateDefinitionProvider = blackboardTemplateDefinitionProvider;
             this._serviceProvider = serviceProvider;
+            this._blackboardProxyLockerRW = new ReaderWriterLockSlim();
             this._grainFactory = grainFactory;
             this._blackboardRegistry = this._grainFactory.GetGrain<IBlackboardRegistryGrain>(IBlackboardRegistryGrain.GrainId);
         }
@@ -79,7 +88,8 @@ namespace Democrite.Framework.Node.Blackboard
         /// <inheritdoc />
         public async ValueTask<IBlackboardRef> GetBlackboardAsync(string boardName,
                                                                   string boardTemplateConfigurationKey,
-                                                                  CancellationToken token = default)
+                                                                  CancellationToken token = default,
+                                                                  Guid? callContextId = null)
         {
             ArgumentNullException.ThrowIfNull(boardName);
             ArgumentNullException.ThrowIfNull(boardTemplateConfigurationKey);
@@ -101,20 +111,21 @@ namespace Democrite.Framework.Node.Blackboard
                                                                         DemocriteErrorCodes.ErrorType.Multiple));
             }
 
-            return await GetBlackboardByNameAsync(boardName, tmpl.First(), token);
+            return await GetBlackboardByNameAsync(boardName, tmpl.First(), token, callContextId);
         }
 
         /// <inheritdoc />
-        public ValueTask<IBlackboardRef> GetBlackboardAsync(Guid uid, CancellationToken token = default)
+        public ValueTask<IBlackboardRef> GetBlackboardAsync(Guid uid, CancellationToken token = default, Guid? callContextId = null)
         {
             // Method used to put the "ByUid" and "ByName" code side and slit public and private methods
-            return GetBlackboardByUidAsync(uid, token);
+            return GetBlackboardByUidAsync(uid, token, callContextId);
         }
 
         /// <inheritdoc />
         public async ValueTask<IBlackboardRef> GetBlackboardAsync(string boardName,
                                                                   Guid boardTemplateConfigurationUid,
-                                                                  CancellationToken token = default)
+                                                                  CancellationToken token = default,
+                                                                  Guid? callContextId = null)
         {
             var tmpl = await this._blackboardTemplateDefinitionProvider.GetFirstValueByIdAsync(boardTemplateConfigurationUid, token);
 
@@ -123,7 +134,7 @@ namespace Democrite.Framework.Node.Blackboard
                 throw new MissingDefinitionException(typeof(BlackboardTemplateDefinition), boardTemplateConfigurationUid.ToString());
 #pragma warning restore IDE0270 // Use coalesce expression
 
-            return await GetBlackboardByNameAsync(boardName, tmpl, token);
+            return await GetBlackboardByNameAsync(boardName, tmpl, token, callContextId);
         }
 
         #region Tools
@@ -131,101 +142,138 @@ namespace Democrite.Framework.Node.Blackboard
         /// <summary>
         /// Gets or create the <see cref="IBlackboardRef"/>
         /// </summary>
-        private async ValueTask<IBlackboardRef> GetBlackboardByNameAsync(string boardName, BlackboardTemplateDefinition template, CancellationToken token)
+        private ValueTask<IBlackboardRef> GetBlackboardByNameAsync(string boardName, BlackboardTemplateDefinition template, CancellationToken token, Guid? callContextId)
         {
-            using (var timeout = CancellationHelper.DisposableTimeout(s_blackboardBuildAndRetreiveTimeout))
-            using (var grp = CancellationTokenSource.CreateLinkedTokenSource(timeout.Content, token))
-            {
-                IBlackboardRef? result = null;
-                bool isNew = false;
+            var keys = new string[2] { template.UniqueTemplateName, boardName };
 
-                await s_blackboardProxyLocker.WaitAsync(grp.Token);
-                try
-                {
-                    var keys = new string[2] { template.UniqueTemplateName, boardName };
+            return GetBlackboardImplAsync(() =>
+                                          {
+                                              if (this._blackboardProxiesByName.TryGetValue(keys, out var proxy))
+                                                  return proxy;
+                                              return null;
+                                          },
+                                          async (t) => await FecthBlackboardByNames(boardName, template, t),
+                                          () => new BlackboardMissingDemocriteException(null, boardName, template.UniqueTemplateName),
+                                          token,
+                                          callContextId);
+        }
 
-                    if (s_blackboardProxiesByName.TryGetValue(keys, out var proxy))
-                    {
-                        result = proxy;
-                    }
-                    else
-                    {
-                        var boardId = await this._blackboardRegistry.GetOrCreateAsync(boardName, template.UniqueTemplateName);
+        /// <summary>
+        /// Fecthes the blackboard by names from registry
+        /// </summary>
+        private async Task<Tuple<BlackboardId, GrainId>> FecthBlackboardByNames(string boardName, BlackboardTemplateDefinition template, GrainCancellationToken token)
+        {
+            var result = await this._blackboardRegistry.TryGetAsync(boardName, template.UniqueTemplateName);
 
-                        var newProxy = ActivatorUtilities.CreateInstance<BlackboardHandlerProxy>(this._serviceProvider, boardId);
-                        await newProxy.InitializeAsync(token);
-                        s_blackboardProxies[newProxy.Uid] = newProxy;
+            if (result is null)
+                result = await this._blackboardRegistry.GetOrCreateAsync(boardName, template.UniqueTemplateName, token);
 
-                        s_blackboardProxiesByName[keys] = newProxy;
-
-                        isNew = true;
-                        result = newProxy;
-                    }
-                }
-                finally
-                {
-                    s_blackboardProxyLocker.Release();
-                }
-
-                if (isNew)
-                    await CheckBlackboardInitializedAsync(result, token);
-
-                return result;
-            }
+            return result;
         }
 
         /// <inheritdoc />
-        private async ValueTask<IBlackboardRef> GetBlackboardByUidAsync(Guid uid, CancellationToken token = default)
+        private ValueTask<IBlackboardRef> GetBlackboardByUidAsync(Guid uid, CancellationToken token, Guid? callContextId)
         {
-            using (var timeout = CancellationHelper.DisposableTimeout(TimeSpan.FromSeconds(5)))
-            using (var grp = CancellationTokenSource.CreateLinkedTokenSource(timeout.Content, token))
+            return GetBlackboardImplAsync(() =>
+                                          {
+                                              if (_blackboardProxies.TryGetValue(uid, out var proxy))
+                                                  return proxy;
+                                              return null;
+                                          },
+                                          async (_) => await this._blackboardRegistry.TryGetAsync(uid),
+                                          () => new BlackboardMissingDemocriteException(uid, null, null),
+                                          token,
+                                          callContextId);
+        }
+
+        /// <inheritdoc />
+        private async ValueTask<IBlackboardRef> GetBlackboardImplAsync(Func<BlackboardHandlerProxy?> fetchFromCache,
+                                                                       Func<GrainCancellationToken, Task<Tuple<BlackboardId, GrainId>?>> getBlackboardFromRegistry,
+                                                                       Func<BlackboardMissingDemocriteException> formatMissingException,
+                                                                       CancellationToken token,
+                                                                       Guid? callContextId)
+        {
+            try
             {
-                IBlackboardRef? result = null;
-                bool isNew = false;
-
-                await s_blackboardProxyLocker.WaitAsync(grp.Token);
-                try
+                using (var timeout = CancellationHelper.DisposableTimeout(s_blackboardBuildAndRetreiveTimeout))
+                using (var grp = CancellationTokenSource.CreateLinkedTokenSource(timeout.Content, token))
+                using (var grainCancelSource = grp.ToGrainCancellationTokenSource())
                 {
-                    if (s_blackboardProxies.TryGetValue(uid, out var proxy))
+                    this._blackboardProxyLockerRW.EnterReadLock();
+                    try
                     {
-                        result = proxy;
+                        var proxy = fetchFromCache();
+                        if (proxy is not null)
+                            return proxy;
                     }
-                    else
+                    finally
                     {
-                        var boardId = await this._blackboardRegistry.TryGetAsync(uid) ?? throw new BlackboardMissingDemocriteException(uid, null, null);
+                        this._blackboardProxyLockerRW.ExitReadLock();
+                    }
 
-                        var newProxy = ActivatorUtilities.CreateInstance<BlackboardHandlerProxy>(this._serviceProvider, boardId);
-                        await newProxy.InitializeAsync(token);
+                    IBlackboardRef? result = null;
+                    bool isNew = false;
 
-                        s_blackboardProxies.Add(uid, newProxy);
+                    var tpl = await getBlackboardFromRegistry(grainCancelSource.Token);
 
-                        var keys = new string[2] { newProxy.TemplateName, newProxy.Name };
-                        s_blackboardProxiesByName[keys] = newProxy;
+                    if (tpl is null)
+                        throw formatMissingException();
+
+                    var boardId = tpl.Item2;
+                    var blackboardId = tpl.Item1;
+
+                    this._blackboardProxyLockerRW.EnterWriteLock();
+                    try
+                    {
+                        var proxy = fetchFromCache();
+                        if (proxy is not null)
+                            return proxy;
+
+                        var newProxy = ActivatorUtilities.CreateInstance<BlackboardHandlerProxy>(this._serviceProvider, boardId, blackboardId);
+
+                        var keys = new string[2] { blackboardId.BoardTemplateKey, blackboardId.BoardName };
+                        var uid = blackboardId.Uid;
+
+                        // Attention : In Theory could override a target
+                        _blackboardProxies[uid] = newProxy;
+                        _blackboardProxiesByName[keys] = newProxy;
 
                         isNew = true;
                         result = newProxy;
                     }
-                }
-                finally
-                {
-                    s_blackboardProxyLocker.Release();
-                }
+                    finally
+                    {
+                        this._blackboardProxyLockerRW.ExitWriteLock();
+                    }
 
-                if (isNew)
-                    await CheckBlackboardInitializedAsync(result, token);
+                    if (isNew)
+                        await CheckBlackboardInitializedAsync(result, token, callContextId);
 
-                return result;
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                this._logger.OptiLog(LogLevel.Error, "Provider {exception}", ex);
+                throw;
             }
         }
 
         /// <summary>
         /// Checks the blackboard initialized asynchronous.
         /// </summary>
-        private async Task CheckBlackboardInitializedAsync(IBlackboardRef result, CancellationToken token)
+        private async Task CheckBlackboardInitializedAsync(IBlackboardRef result, CancellationToken token, Guid? callContextId)
         {
             var status = await result.GetStatusAsync(token);
             if (status == BlackboardLifeStatusEnum.None)
-                await result.InitializeAsync(token);
+                await result.InitializeAsync(token, callContextId);
+        }
+
+        /// <inheritdoc />
+        protected override void DisposeEnd()
+        {
+            this._blackboardProxyLockerRW.Dispose();
+            base.DisposeEnd();
         }
 
         #endregion

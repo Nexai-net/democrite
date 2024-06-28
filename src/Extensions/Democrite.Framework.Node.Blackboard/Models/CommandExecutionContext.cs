@@ -8,6 +8,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
 
     using Elvex.Toolbox.Disposables;
 
+    using Microsoft.Extensions.Logging;
+
     using Orleans.Runtime;
 
     /// <summary>
@@ -31,7 +33,7 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// Initializes a new instance of the <see cref="CommandExecutionContext"/> class.
         /// </summary>
         public CommandExecutionContext(CommandExecutionContext parent)
-            : this(parent.CancellationToken, parent.Depth + 1)
+            : this(parent.CancellationToken, parent.Depth + 1, parent.Logger)
         {
             this._parent = parent;
         }
@@ -39,8 +41,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="CommandExecutionContext"/> class.
         /// </summary>
-        public CommandExecutionContext(CancellationToken cancellationToken)
-            : this(cancellationToken, depth: 0)
+        public CommandExecutionContext(CancellationToken cancellationToken, ILogger logger)
+            : this(cancellationToken, depth: 0, logger: logger)
         {
             this._eventQueue = new Queue<BlackboardEvent>();
             this._eventConsumed = new Queue<BlackboardEvent>();
@@ -50,10 +52,12 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// Initializes a new instance of the <see cref="CommandExecutionContext"/> class.
         /// </summary>
         private CommandExecutionContext(CancellationToken cancellationToken,
-                                       int depth)
+                                       int depth,
+                                       ILogger logger)
         {
             this._cancellationToken = cancellationToken;
             this.Depth = depth;
+            this.Logger = logger;
         }
 
         #endregion
@@ -72,6 +76,11 @@ namespace Democrite.Framework.Node.Blackboard.Models
         /// Gets the depth.
         /// </summary>
         public int Depth { get; }
+
+        /// <summary>
+        /// Gets the logger.
+        /// </summary>
+        public ILogger Logger { get; }
 
         #endregion
 

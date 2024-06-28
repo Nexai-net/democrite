@@ -15,6 +15,6 @@ namespace Democrite.Framework.Core.Abstractions.Doors
         /// <summary>
         /// Initializes the door.
         /// </summary>
-        Task InitializeAsync(DoorDefinition doorDefinition, GrainCancellationToken token);
+        Task UpdateAsync(DoorDefinition doorDefinition, GrainCancellationToken token);
     }
 }

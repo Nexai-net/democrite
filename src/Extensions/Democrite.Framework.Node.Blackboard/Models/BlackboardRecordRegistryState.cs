@@ -124,6 +124,31 @@ namespace Democrite.Framework.Node.Blackboard.Models
             return null;
         }
 
+        /// <summary>
+        /// Changes the meta data.
+        /// </summary>
+        internal BlackboardRecordMetadata? ChangeMetaData(Guid uid, RecordMetadata newMetaData, DateTime utcNow)
+        {
+            if (this._recordRegistry.TryGetValue(uid, out var entry))
+            {
+                var newEntry = new BlackboardRecordMetadata(entry.Uid,
+                                                            entry.LogicalType,
+                                                            entry.DisplayName,
+                                                            entry.ContainsType,
+                                                            entry.RecordContainerType,
+                                                            entry.Status,
+                                                            entry.UTCCreationTime,
+                                                            entry.CreatorIdentity,
+                                                            utcNow,
+                                                            entry.LastUpdaterIdentity,
+                                                            newMetaData);
+                this._recordRegistry[uid] = newEntry;
+                return newEntry;
+            }
+
+            return null;
+        }
+
         #endregion
     }
 }

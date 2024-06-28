@@ -20,7 +20,7 @@ namespace Democrite.Framework.Node.Signals.Models
     {
         #region Fields
 
-        private ImmutableDictionary<DedicatedGrainId<ISignalReceiver>, SignalSubscription> _subscriptions;
+        private ImmutableDictionary<IDedicatedGrainId, SignalSubscription> _subscriptions;
         private readonly ReaderWriterLockSlim _subscriptionLocker;
 
         #endregion
@@ -33,8 +33,8 @@ namespace Democrite.Framework.Node.Signals.Models
         public SignalSubscriptionState(IEnumerable<SignalSubscription> subscriptions)
         {
             this._subscriptionLocker = new ReaderWriterLockSlim();
-            this._subscriptions = subscriptions?.ToImmutableDictionary(s => s.TargetGrainId)
-                                        ?? ImmutableDictionary<DedicatedGrainId<ISignalReceiver>, SignalSubscription>.Empty;
+            this._subscriptions = subscriptions?.ToImmutableDictionary(s => (IDedicatedGrainId?)s.TargetGrainId ?? (IDedicatedGrainId?)s.TargetReadOnlyGrainId ?? throw new InvalidCastException("Invalid subscriptions"))
+                                        ?? ImmutableDictionary<IDedicatedGrainId, SignalSubscription>.Empty;
         }
 
         #endregion
@@ -66,55 +66,31 @@ namespace Democrite.Framework.Node.Signals.Models
         /// </summary>
         public Guid? GetSuscription(DedicatedGrainId<ISignalReceiver> targetGrainId)
         {
-            this._subscriptionLocker.EnterReadLock();
+            return GetSubscriptionImpl(targetGrainId);
+        }
 
-            try
-            {
-                if (this._subscriptions.TryGetValue(targetGrainId, out var existingSubscription))
-                    return existingSubscription.Uid;
-            }
-            finally
-            {
-                this._subscriptionLocker.ExitReadLock();
-            }
-
-            return null;
+        /// <summary>
+        /// Get suscription by <paramref name="targetGrainId"/>
+        /// </summary>
+        public Guid? GetSuscription(DedicatedGrainId<ISignalReceiverReadOnly> targetGrainId)
+        {
+            return GetSubscriptionImpl(targetGrainId);
         }
 
         /// <summary>
         /// Adds or update a suscriptions.
         /// </summary>
-        public Guid AddOrUpdateSuscription(DedicatedGrainId<ISignalReceiver> targetGrainId)
+        public Guid AddOrUpdateSubscription(DedicatedGrainId<ISignalReceiver> targetGrainId)
         {
-            this._subscriptionLocker.EnterReadLock();
+            return AddOrUpdateSubscriptionImpl(targetGrainId);
+        }
 
-            try
-            {
-                if (this._subscriptions.TryGetValue(targetGrainId, out var existingSubscription))
-                    return existingSubscription.Uid;
-            }
-            finally
-            {
-                this._subscriptionLocker.ExitReadLock();
-            }
-
-            this._subscriptionLocker.EnterWriteLock();
-
-            try
-            {
-                if (this._subscriptions.TryGetValue(targetGrainId, out var existingSubscription))
-                    return existingSubscription.Uid;
-
-                var subscription = new SignalSubscription(Guid.NewGuid(), targetGrainId);
-
-                this._subscriptions = this._subscriptions.Add(subscription.TargetGrainId, subscription);
-
-                return subscription.Uid;
-            }
-            finally
-            {
-                this._subscriptionLocker.ExitWriteLock();
-            }
+        /// <summary>
+        /// Adds or update a suscriptions.
+        /// </summary>
+        public Guid AddOrUpdateSubscription(DedicatedGrainId<ISignalReceiverReadOnly> targetGrainId)
+        {
+            return AddOrUpdateSubscriptionImpl(targetGrainId);
         }
 
         /// <summary>
@@ -202,6 +178,68 @@ namespace Democrite.Framework.Node.Signals.Models
                 return Equals(other);
             return false;
         }
+
+        #region Tools
+
+        /// <summary>
+        /// Get suscription by <paramref name="targetGrainId"/>
+        /// </summary>
+        private Guid? GetSubscriptionImpl(IDedicatedGrainId targetGrainId)
+        {
+            this._subscriptionLocker.EnterReadLock();
+
+            try
+            {
+                if (this._subscriptions.TryGetValue(targetGrainId, out var existingSubscription))
+                    return existingSubscription.Uid;
+            }
+            finally
+            {
+                this._subscriptionLocker.ExitReadLock();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Adds or update a suscriptions.
+        /// </summary>
+        private Guid AddOrUpdateSubscriptionImpl(IDedicatedGrainId targetGrainId)
+        {
+            this._subscriptionLocker.EnterReadLock();
+
+            try
+            {
+                if (this._subscriptions.TryGetValue(targetGrainId, out var existingSubscription))
+                    return existingSubscription.Uid;
+            }
+            finally
+            {
+                this._subscriptionLocker.ExitReadLock();
+            }
+
+            this._subscriptionLocker.EnterWriteLock();
+
+            try
+            {
+                if (this._subscriptions.TryGetValue(targetGrainId, out var existingSubscription))
+                    return existingSubscription.Uid;
+
+                var subscription = new SignalSubscription(Guid.NewGuid(),
+                                                          targetGrainId as DedicatedGrainId<ISignalReceiver>?,
+                                                          targetGrainId as DedicatedGrainId<ISignalReceiverReadOnly>?);
+
+                this._subscriptions = this._subscriptions.Add(targetGrainId, subscription);
+
+                return subscription.Uid;
+            }
+            finally
+            {
+                this._subscriptionLocker.ExitWriteLock();
+            }
+        }
+
+        #endregion
 
         #endregion
     }

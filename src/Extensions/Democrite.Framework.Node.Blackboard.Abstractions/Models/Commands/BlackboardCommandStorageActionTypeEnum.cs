@@ -14,6 +14,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
         Remove,
         Decommission,
         ChangeStatus,
-        Prepare
+        Prepare,
+        ChangeMetaData
     }
 }

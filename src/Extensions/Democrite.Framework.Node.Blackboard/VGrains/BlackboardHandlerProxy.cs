@@ -42,11 +42,9 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         private static readonly MethodInfo s_getStoreDataGeneric;
 
         private readonly ILogger<BlackboardHandlerProxy> _logger;
-        private readonly IGrainFactory _grainFactory;
-        private readonly GrainId _blackboardGrainId;
         private readonly ITimeManager _timeManager;
-        private IBlackboardGrain _boardGrain;
-        private BlackboardId _boardId;
+        private readonly IBlackboardGrain _boardGrain;
+        private readonly BlackboardId _boardId;
 
         #endregion
 
@@ -57,7 +55,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         static BlackboardHandlerProxy()
         {
-            Expression<Func<BlackboardHandlerProxy, Guid, Task<IReadOnlyCollection<DataRecordContainer<int>>>>> getStoreDataGeneric = (b, g) => b.GetStoredDataAsync<int>(default, g);
+            Expression<Func<BlackboardHandlerProxy, Guid, Task<IReadOnlyCollection<DataRecordContainer<int>>>>> getStoreDataGeneric = (b, g) => b.GetStoredDataAsync<int>(null, default, g);
             s_getStoreDataGeneric = ((MethodCallExpression)getStoreDataGeneric.Body).Method.GetGenericMethodDefinition();
         }
 
@@ -67,16 +65,16 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         public BlackboardHandlerProxy(IGrainOrleanFactory grainFactory,
                                       ILogger<BlackboardHandlerProxy> logger,
                                       GrainId blackboardGrainId,
-                                      ITimeManager timeManager)
+                                      ITimeManager timeManager,
+                                      BlackboardId boardId)
         {
-            this._grainFactory = grainFactory;
-            this._blackboardGrainId = blackboardGrainId;
             this._logger = logger;
             this._timeManager = timeManager;
+            this._boardId = boardId;
 
-            // Flag the field as not null event it is initialized later on
-            // this field MUST not be null is other method other than InitializeAsync
-            this._boardGrain = null!;
+            // Normally it's recommanded to prevent calling external method in CTOR
+            // Here we want to ensure the readonly preformance boost and ensure board grain is set before any usage
+            this._boardGrain = grainFactory.GetGrain<IBlackboardGrain>(blackboardGrainId);
         }
 
         #endregion
@@ -106,73 +104,74 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         #region Methods
 
         /// <inheritdoc />
-        public async Task<bool> InitializeAsync(CancellationToken token, IReadOnlyCollection<DataRecordContainer>? initData = null)
+        public async Task<bool> InitializeAsync(CancellationToken token, IReadOnlyCollection<DataRecordContainer>? initData = null, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.InitializeAsync(grainToken.Token, initData);
+                return await this._boardGrain.InitializeAsync(grainToken.Token, initData, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public Task<bool> InitializeAsync(CancellationToken token, params DataRecordContainer[] initData)
+        public Task<bool> InitializeAsync(CancellationToken token, Guid? callContextId = null, params DataRecordContainer[] initData)
         {
-            return InitializeAsync(token, (IReadOnlyCollection<DataRecordContainer>)(initData ?? EnumerableHelper<DataRecordContainer>.ReadOnlyArray));
+            return InitializeAsync(token, (IReadOnlyCollection<DataRecordContainer>)(initData ?? EnumerableHelper<DataRecordContainer>.ReadOnlyArray), callContextId);
         }
 
         /// <inheritdoc />
-        public async Task<bool> SealedAsync(CancellationToken token)
+        public async Task<bool> SealedAsync(CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.SealedAsync(grainToken.Token);
+                return await this._boardGrain.SealedAsync(grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task<BlackboardLifeStatusEnum> GetStatusAsync(CancellationToken token)
+        public async Task<BlackboardLifeStatusEnum> GetStatusAsync(CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetStatusAsync(grainToken.Token);
+                return await this._boardGrain.GetStatusAsync(grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task ChangeRecordDataStatusAsync(Guid uid, RecordStatusEnum recordStatus, CancellationToken token)
+        public async Task ChangeRecordDataStatusAsync(Guid uid, RecordStatusEnum recordStatus, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                await this._boardGrain.ChangeRecordDataStatusAsync(uid, recordStatus, grainToken.Token);
+                await this._boardGrain.ChangeRecordDataStatusAsync(uid, recordStatus, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task<bool> DeleteDataAsync(CancellationToken token, IIdentityCard identity, params Guid[] slotIds)
+        public async Task<bool> DeleteDataAsync(CancellationToken token, Guid? callContextId, IIdentityCard identity, params Guid[] slotIds)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.DeleteDataAsync(grainToken.Token, identity, slotIds);
+                return await this._boardGrain.DeleteDataAsync(grainToken.Token, callContextId, identity, slotIds);
             }
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, CancellationToken token)
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, null, null, grainToken.Token);
+                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, null, null, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter,
                                                                                                                                    string? displayNameFilter,
-                                                                                                                                   CancellationToken token)
+                                                                                                                                   CancellationToken token,
+                                                                                                                                   Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, null, grainToken.Token);
+                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, null, grainToken.Token, callContextId);
             }
         }
 
@@ -180,41 +179,44 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter,
                                                                                                                                    string? displayNameFilter,
                                                                                                                                    RecordStatusEnum? statusFilter,
-                                                                                                                                   CancellationToken token)
+                                                                                                                                   CancellationToken token,
+                                                                                                                                   Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, statusFilter, grainToken.Token);
+                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, statusFilter, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataAsync(CancellationToken token)
+        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataAsync(CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredMetaDataAsync(grainToken.Token);
+                return await this._boardGrain.GetAllStoredMetaDataAsync(grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter,
-                                                                                                        CancellationToken token)
+                                                                                                          CancellationToken token,
+                                                                                                          Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, null, null, grainToken.Token);
+                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, null, null, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter,
                                                                                                           string? displayNameFilter,
-                                                                                                          CancellationToken token)
+                                                                                                          CancellationToken token,
+                                                                                                          Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, displayNameFilter, null, grainToken.Token);
+                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, displayNameFilter, null, grainToken.Token, callContextId);
             }
         }
 
@@ -222,77 +224,78 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter,
                                                                                                         string? displayNameFilter,
                                                                                                         RecordStatusEnum? statusFilter,
-                                                                                                        CancellationToken token)
+                                                                                                        CancellationToken token,
+                                                                                                        Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, displayNameFilter, statusFilter, grainToken.Token);
+                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, displayNameFilter, statusFilter, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, CancellationToken token)
+        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(filter, grainToken.Token);
+                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(filter, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, CancellationToken token)
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(filter, grainToken.Token);
+                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(filter, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token)
+        public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token, Guid? callContextId = null)
         {
-            return GetAllStoredDataFilteredAsync<TDataProjection>(filter.Serialize(), token);
+            return GetAllStoredDataFilteredAsync<TDataProjection>(filter.Serialize(), token, callContextId);
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token)
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token, Guid? callContextId = null)
         {
-            return GetAllStoredMetaDataFilteredAsync(filter.Serialize(), token);
+            return GetAllStoredMetaDataFilteredAsync(filter.Serialize(), token, callContextId);
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(IReadOnlyCollection<Guid> dataUids, CancellationToken token)
+        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(IReadOnlyCollection<Guid> dataUids, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetStoredMetaDataAsync(dataUids, grainToken.Token);
+                return await this._boardGrain.GetStoredMetaDataAsync(dataUids, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(CancellationToken token, params Guid[] dataUids)
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetStoredMetaDataAsync(Guid? callContextId, CancellationToken token, params Guid[] dataUids)
         {
-            return GetStoredMetaDataAsync(dataUids, token);
+            return GetStoredMetaDataAsync(dataUids, token, callContextId);
         }
 
         /// <inheritdoc />
-        public async Task<DataRecordContainer<TDataProjection?>?> GetStoredDataAsync<TDataProjection>(Guid dataUid, CancellationToken token)
+        public async Task<DataRecordContainer<TDataProjection?>?> GetStoredDataAsync<TDataProjection>(Guid dataUid, CancellationToken token, Guid? callContextId = null)
         {
-            return (await GetStoredDataAsync<TDataProjection>(token, dataUid))?.SingleOrDefault();
+            return (await GetStoredDataAsync<TDataProjection>(callContextId, token, dataUid))?.SingleOrDefault();
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(CancellationToken token, params Guid[] dataUids)
+        public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(Guid? callContextId, CancellationToken token, params Guid[] dataUids)
         {
             return GetStoredDataAsync<TDataProjection>(dataUids, token);
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<DataRecordContainer>> GetStoredDataAsync(ConcretBaseType dataProjectionType, CancellationToken token, params Guid[] dataUids)
+        public async Task<IReadOnlyCollection<DataRecordContainer>> GetStoredDataAsync(ConcretBaseType dataProjectionType, Guid? callContextId, CancellationToken token, params Guid[] dataUids)
         {
             var speMthd = s_getStoreDataGeneric.MakeGenericMethodWithCache(dataProjectionType.ToType());
 
-            var resultTask = (Task)speMthd.Invoke(this, new object[] { token, dataUids })!;
+            var resultTask = (Task)speMthd.Invoke(this, new object?[] { callContextId, token, dataUids })!;
 
             await resultTask;
 
@@ -304,31 +307,32 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(IReadOnlyCollection<Guid> dataUids, CancellationToken token)
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetStoredDataAsync<TDataProjection>(IReadOnlyCollection<Guid> dataUids, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetStoredDataAsync<TDataProjection>(dataUids, grainToken.Token);
+                return await this._boardGrain.GetStoredDataAsync<TDataProjection>(dataUids, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task<bool> PrepareDataSlotAsync(Guid uid, string logicType, string displayName, CancellationToken token)
+        public async Task<bool> PrepareDataSlotAsync(Guid uid, string logicType, string displayName, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.PrepareDataSlotAsync(uid, logicType, displayName, grainToken.Token);
+                return await this._boardGrain.PrepareDataSlotAsync(uid, logicType, displayName, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
         public async Task<bool> PushDataAsync<TData>(DataRecordContainer<TData?> record,
                                                      DataRecordPushRequestTypeEnum pushType,
-                                                     CancellationToken token)
+                                                     CancellationToken token,
+                                                     Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.PushDataAsync(record, pushType, grainToken.Token);
+                return await this._boardGrain.PushDataAsync(record, pushType, grainToken.Token, callContextId);
             }
         }
 
@@ -340,7 +344,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                      RecordStatusEnum recordStatus = RecordStatusEnum.Ready,
                                                      DataRecordPushRequestTypeEnum pushType = DataRecordPushRequestTypeEnum.Push,
                                                      RecordMetadata? customMetadata = null,
-                                                     CancellationToken token = default)
+                                                     CancellationToken token = default,
+                                                     Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
@@ -360,7 +365,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                                                             string.Empty,
                                                                                             customMetadata),
                                                             pushType,
-                                                            grainToken.Token);
+                                                            grainToken.Token,
+                                                            callContextId);
             }
         }
 
@@ -371,36 +377,36 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                                                   RecordStatusEnum recordStatus = RecordStatusEnum.Ready,
                                                   DataRecordPushRequestTypeEnum pushType = DataRecordPushRequestTypeEnum.Push,
                                                   RecordMetadata? customMetadata = null,
-                                                  CancellationToken token = default)
+                                                  CancellationToken token = default,
+                                                  Guid? callContextId = null)
         {
-            return PushDataAsync(record, Guid.NewGuid(), logicType, displayName, recordStatus, pushType, customMetadata);
+            return PushDataAsync(record, Guid.NewGuid(), logicType, displayName, recordStatus, pushType, customMetadata, token, callContextId);
         }
 
         /// <inheritdoc />
-        public async Task<BlackboardQueryResponse> QueryAsync<TResponse>(BlackboardQueryRequest<TResponse> request, CancellationToken token)
+        public async Task<BlackboardQueryResponse> QueryAsync<TResponse>(BlackboardQueryRequest<TResponse> request, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.QueryAsync<TResponse>(request, grainToken.Token);
+                return await this._boardGrain.QueryAsync<TResponse>(request, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, CancellationToken token)
+        public async Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.QueryAsync(command, grainToken.Token);
+                return await this._boardGrain.QueryAsync(command, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        internal async Task InitializeAsync(CancellationToken _)
+        public async Task FireQueryAsync(BlackboardQueryCommand command, CancellationToken token, Guid? callContextId = null)
         {
-            if (this._boardGrain is null)
+            using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                this._boardGrain = this._grainFactory.GetGrain<IBlackboardGrain>(this._blackboardGrainId);
-                this._boardId = await this._boardGrain.GetIdentityAsync();
+                await this._boardGrain.FireQueryAsync(command, grainToken.Token, callContextId);
             }
         }
 

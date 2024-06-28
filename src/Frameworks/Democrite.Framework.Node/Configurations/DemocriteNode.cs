@@ -12,6 +12,9 @@ namespace Democrite.Framework
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Options;
+
+    using Orleans.Runtime;
 
     using System.Threading;
     using System.Threading.Tasks;
@@ -37,6 +40,20 @@ namespace Democrite.Framework
         #endregion
 
         #region Methods
+
+        /// <inheritdoc />
+        protected override Task OnStartAsync(CancellationToken token = default)
+        {
+            var option = this.Services.GetService<IOptions<ClusterNodeOptions>>();
+
+            if (option?.Value.AddSiloInformationToConsole ?? false)
+            {
+                var silo = this.Services.GetRequiredService<ILocalSiloDetails>();
+                Console.Title = silo.Name + " Cl. Id: " + silo.ClusterId;
+            }
+
+            return base.OnStartAsync(token);
+        }
 
         /// <inheritdoc />
         /// <remarks>

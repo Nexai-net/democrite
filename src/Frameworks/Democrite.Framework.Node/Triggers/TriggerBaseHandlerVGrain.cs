@@ -25,6 +25,7 @@ namespace Democrite.Framework.Node.Triggers
     using Newtonsoft.Json.Linq;
 
     using Orleans.Runtime;
+    using Orleans.Streams;
 
     using System;
     using System.Collections;
@@ -51,6 +52,9 @@ namespace Democrite.Framework.Node.Triggers
         private static readonly TimeSpan s_inputBuildTimeout = TimeSpan.FromMinutes(1);
 
         private readonly Dictionary<Guid, IDataSourceProvider?> _dataSourceProviders;
+
+        private readonly Dictionary<Guid, IAsyncStream<object>> _streamCache;
+        private readonly ReaderWriterLockSlim _streamCacheLocker;
 
         private readonly IStreamQueueDefinitionProvider _streamQueueDefinitionProvider;
         private readonly ISequenceDefinitionProvider _sequenceDefinitionProvider;
@@ -99,6 +103,9 @@ namespace Democrite.Framework.Node.Triggers
                                            ISignalService signalService)
             : base(logger, persistentState)
         {
+            this._streamCacheLocker = new ReaderWriterLockSlim();
+            this._streamCache = new Dictionary<Guid, IAsyncStream<object>>();
+
             this._dataSourceProviders = new Dictionary<Guid, IDataSourceProvider?>();
 
             this._triggerDefinitionProvider = triggerDefinitionProvider;
@@ -108,9 +115,6 @@ namespace Democrite.Framework.Node.Triggers
             this._dataSourceProviderFactory = inputSourceProviderFactory;
             this._streamQueueDefinitionProvider = streamQueueDefinitionProvider;
             this._signalService = signalService;
-
-            this._triggerDefinitionProvider.DataChanged -= TriggerDefinitionProvider_DataChanged;
-            this._triggerDefinitionProvider.DataChanged += TriggerDefinitionProvider_DataChanged;
         }
 
         #endregion
@@ -135,9 +139,13 @@ namespace Democrite.Framework.Node.Triggers
         #region Methods
 
         /// <inheritdoc />
-        public virtual async Task UpdateAsync()
+        public virtual async Task UpdateAsync(GrainCancellationToken grainCancellationToken)
         {
-            await EnsureTriggerDefinitionAsync(this.VGrainLifecycleToken);
+            using (var grp = CancellationTokenSource.CreateLinkedTokenSource(grainCancellationToken.CancellationToken, this.VGrainLifecycleToken))
+            {
+                this._force = true;
+                await EnsureTriggerDefinitionAsync(grp.Token);
+            }
         }
 
         /// <inheritdoc />
@@ -372,13 +380,13 @@ namespace Democrite.Framework.Node.Triggers
         /// <summary>
         /// Fires the streams targets.
         /// </summary>
-        private async Task FireStreamsTargets(IReadOnlyCollection<StreamQueueDefinition> targetStreamQueues,
-                                              object? input,
-                                              bool _,
-                                              CancellationToken token)
+        private Task FireStreamsTargets(IReadOnlyCollection<StreamQueueDefinition> targetStreamQueues,
+                                        object? input,
+                                        bool _,
+                                        CancellationToken token)
         {
             if (input is null)
-                return;
+                return Task.CompletedTask;
 
             var tasks = new List<Task>();
             foreach (var targetKV in targetStreamQueues.GroupBy(t => t.StreamConfiguration))
@@ -387,26 +395,54 @@ namespace Democrite.Framework.Node.Triggers
 
                 foreach (var target in targetKV)
                 {
-                    var stream = streamProvider.GetStream<object>(target.ToStreamId());
+                    IAsyncStream<object>? stream = null;
 
-                    tasks.Add(stream.OnNextAsync(input));
+                    this._streamCacheLocker.EnterReadLock();
+                    try
+                    {
+                        if (this._streamCache.TryGetValue(target.Uid, out var cachedStream))
+                            stream = cachedStream;
+                    }
+                    finally
+                    {
+                        this._streamCacheLocker.ExitReadLock();
+                    }
+
+                    var needNew = stream is null;
+
+                    if (needNew)
+                    {
+                        try
+                        {
+                            var targetStreamId = target.ToStreamId();
+                            stream = streamProvider.GetStream<object>(targetStreamId);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Logger.OptiLog(LogLevel.Error, "Stream Get from trigger : {exception}", ex);
+                        }
+
+                        if (stream is null)
+                            throw new InvalidOperationException("Impossible to get stream from this information " + target);
+
+                        this._streamCacheLocker.EnterWriteLock();
+                        try
+                        {
+                            this._streamCache[target.Uid] = stream;
+                        }
+                        finally
+                        {
+                            this._streamCacheLocker.ExitWriteLock();
+                        }
+                    }
+
+                    //   tasks.Add(stream!.OnNextAsync(input));
+                    stream!.OnNextAsync(input).ConfigureAwait(false);
                 }
             }
 
-            await tasks.SafeWhenAllAsync(token);
-        }
-
-        /// <summary>
-        /// Triggers the definition provider data changed.
-        /// </summary>
-        private void TriggerDefinitionProvider_DataChanged(object? sender, IReadOnlyCollection<Guid> e)
-        {
-            var idKey = base.GetGrainId().GetGuidKey();
-            if (e.Contains(idKey))
-            {
-                this._force = true;
-                UpdateAsync().ConfigureAwait(false);
-            }
+            //await tasks.SafeWhenAllAsync(token);
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -422,24 +458,39 @@ namespace Democrite.Framework.Node.Triggers
             if (triggerDefinitionId == Guid.Empty)
                 throw new InvalidVGrainIdException(GetGrainId(), "Trigger definition id");
 
+            this._streamCacheLocker.EnterWriteLock();
+            try
+            {
+                this._streamCache.Clear();
+            }
+            finally
+            {
+                this._streamCacheLocker.ExitWriteLock();
+            }
+
             this._force = false;
 
             using (var timeoutToken = CancellationHelper.DisposableTimeout(s_inputBuildTimeout))
             using (var ensureCancelToken = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Content, this.VGrainLifecycleToken, cancellationToken))
             {
-
                 var definition = (await this._triggerDefinitionProvider.GetFirstValueByIdAsync(triggerDefinitionId, ensureCancelToken.Token)) as TTriggerDefinition;
 
 #pragma warning disable IDE0270 // Use coalesce expression
-                if (definition == null && this._triggerDefinition is null)
-                    throw new MissingDefinitionException(typeof(TTriggerDefinition), triggerDefinitionId.ToString());
-#pragma warning restore IDE0270 // Use coalesce expression
-
-                if (definition is null)
+                if (definition == null)
                 {
+                    var oldDefinition = this._triggerDefinition;
+                    var oldEnabled = this.Enabled;
+
+                    this._triggerDefinition = null;
                     this.Enabled = false;
+
+                    if (oldDefinition is not null || oldEnabled)
+                        throw new MissingDefinitionException(typeof(TTriggerDefinition), triggerDefinitionId.ToString(), oldDefinition is not null ? "Trigger May be disabled or definition is lost" : "");
+
                     return;
+
                 }
+#pragma warning restore IDE0270 // Use coalesce expression
 
                 this.Enabled = true;
 
@@ -458,6 +509,13 @@ namespace Democrite.Framework.Node.Triggers
         /// Called when trigger grain need to be updated.
         /// </summary>
         protected abstract Task OnEnsureTriggerDefinitionAsync(CancellationToken token);
+
+        /// <inheritdoc />
+        protected override void DisposeResourcesEnd()
+        {
+            this._streamCacheLocker.Dispose();
+            base.DisposeResourcesEnd();
+        }
 
         #endregion
 

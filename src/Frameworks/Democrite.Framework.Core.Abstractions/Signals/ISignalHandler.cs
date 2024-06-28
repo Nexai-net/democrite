@@ -24,6 +24,17 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         Task<Guid> SubscribeAsync(DedicatedGrainId<ISignalReceiver> grainId, GrainCancellationToken token);
 
         /// <summary>
+        /// Subscribe a receiver for the signal.
+        /// </summary>
+        /// <remarks>
+        ///     Receiver are identify by his <see cref="GraindId"/> no risque of duplicates if you register multiple times
+        /// </remarks>
+        /// <returns>
+        ///     Return a unique id needed to unsuscribe
+        /// </returns>
+        Task<Guid> SubscribeAsync(DedicatedGrainId<ISignalReceiverReadOnly> grainId, GrainCancellationToken token);
+
+        /// <summary>
         /// Unsuscribes signals
         /// </summary>
         Task UnsuscribeAsync(Guid subscritionId, GrainCancellationToken token);
@@ -32,5 +43,10 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// Unsuscribes signals
         /// </summary>
         Task UnsuscribeAsync(DedicatedGrainId<ISignalReceiver> grainId, GrainCancellationToken token);
+
+        /// <summary>
+        /// Unsuscribes signals
+        /// </summary>
+        Task UnsuscribeAsync(DedicatedGrainId<ISignalReceiverReadOnly> grainId, GrainCancellationToken token);
     }
 }

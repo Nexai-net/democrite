@@ -77,7 +77,7 @@ namespace Democrite.Framework.Core
         /// <summary>
         /// Gets the logger.
         /// </summary>
-        public ILogger Logger { get; }
+        public ILogger Logger { get; protected set; }
 
         /// <inheritdoc />
         public VGrainMetaData MetaData { get; }

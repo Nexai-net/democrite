@@ -460,6 +460,7 @@ namespace Democrite.Framework.Node.Models
                     // If exec failed then raise issue
                     if (this._currentTaskExecution.IsCanceled || this._currentTaskExecution.IsFaulted)
                     {
+                        logger.OptiLog(LogLevel.Error, "[Stage {stageId}] -- Failed -- {exception}", this.State.CurrentStageExecId, this._currentTaskExecution.Exception);
                         this.State.SetError(this._currentTaskExecution.Exception);
                         return null;
                     }
@@ -519,9 +520,15 @@ namespace Democrite.Framework.Node.Models
                 this._nextStageInput = stageInput;
 
                 if (contextUpdated)
-                    diagnosticLogger.Log(ExecutionContextChangeDiagnosticLog.From(this._executionContext));
+                {
+                    var logCtxUpdate = ExecutionContextChangeDiagnosticLog.From(this._executionContext);
+                    logger.OptiLog(LogLevel.Debug, "[Exec Id {executionId}] [ContextUpdated] -- {log}", logCtxUpdate.CurrentExecutionId, logCtxUpdate);
+                    diagnosticLogger.Log(logCtxUpdate);
+                }
 
-                diagnosticLogger.Log(ExecutionCursorDiagnosticLog.From(nextCursor.Value, this._executionContext));
+                var log = ExecutionCursorDiagnosticLog.From(nextCursor.Value, this._executionContext);
+                logger.OptiLog(LogLevel.Debug, "[Exec Id {executionId}] -- {log}", log.CurrentExecutionId, log);
+                diagnosticLogger.Log(log);
 
                 this._currentTaskExecution = Task.Factory.StartNew(async () => await ExecuteStageAsync(stage,
                                                                                                        stageInput,
@@ -609,12 +616,12 @@ namespace Democrite.Framework.Node.Models
         /// <summary>
         /// Generic step execution
         /// </summary>
-        private ValueTask<StageStepResult> HandleStageAsync(SequenceStageDefinition step,
-                                                            object? input,
-                                                            IExecutionContext sequenceContext,
-                                                            ILogger logger,
-                                                            IDiagnosticLogger diagnosticLogger,
-                                                            ISequenceVGrainProvider sequenceVGrainProvider)
+        private async ValueTask<StageStepResult> HandleStageAsync(SequenceStageDefinition step,
+                                                                  object? input,
+                                                                  IExecutionContext sequenceContext,
+                                                                  ILogger logger,
+                                                                  IDiagnosticLogger diagnosticLogger,
+                                                                  ISequenceVGrainProvider sequenceVGrainProvider)
         {
             ArgumentNullException.ThrowIfNull(step);
 
@@ -635,13 +642,13 @@ namespace Democrite.Framework.Node.Models
                     }
                 }
 
-                return executor.ExecAsync(step,
-                                          input,
-                                          sequenceContext,
-                                          logger,
-                                          diagnosticLogger,
-                                          sequenceVGrainProvider.GetGrainProvider(ref step),
-                                          GetSecurityThreadHandler);
+                return await executor.ExecAsync(step,
+                                                input,
+                                                sequenceContext,
+                                                logger,
+                                                diagnosticLogger,
+                                                sequenceVGrainProvider.GetGrainProvider(ref step),
+                                                GetSecurityThreadHandler);
             }
             catch (Exception ex)
             {

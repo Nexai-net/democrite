@@ -262,7 +262,14 @@ namespace Democrite.Framework.Core.Signals
             using (var cancelSource = new GrainCancellationTokenSource())
             {
                 token.Register(() => cancelSource.Cancel());
-                var uid = await signalHandler.SubscribeAsync(receiver.GetDedicatedGrainId<ISignalReceiver>(), cancelSource.Token);
+
+                Guid uid = Guid.Empty;
+
+                if (receiver is ISignalReceiverReadOnly roReceiver)
+                    uid = await signalHandler.SubscribeAsync(roReceiver.GetDedicatedGrainId<ISignalReceiverReadOnly>(), cancelSource.Token);
+                else
+                    uid = await signalHandler.SubscribeAsync(receiver.GetDedicatedGrainId<ISignalReceiver>(), cancelSource.Token);
+
                 return new SubscriptionId(signalId, false, uid);
             }
         }
@@ -274,6 +281,8 @@ namespace Democrite.Framework.Core.Signals
             {
                 if (subscriptionId is not null)
                     await signalHandler.UnsuscribeAsync(subscriptionId.Value.Uid, cancelSource.Token);
+                else if (receiver is ISignalReceiverReadOnly roReceived)
+                    await signalHandler.UnsuscribeAsync(roReceived.GetDedicatedGrainId<ISignalReceiverReadOnly>(), cancelSource.Token);
                 else if (receiver is not null)
                     await signalHandler.UnsuscribeAsync(receiver.GetDedicatedGrainId<ISignalReceiver>(), cancelSource.Token);
             }

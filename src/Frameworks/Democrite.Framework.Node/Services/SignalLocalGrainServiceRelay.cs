@@ -18,7 +18,7 @@ namespace Democrite.Framework.Node.Services
     /// </summary>
     /// <seealso cref="GrainService" />
     /// <seealso cref="ISignalLocalGrainServiceRelay" />
-    internal sealed class SignalLocalGrainServiceRelay : GrainService, ISignalLocalGrainServiceRelay, ISignalReceiver
+    internal sealed class SignalLocalGrainServiceRelay : GrainService, ISignalLocalGrainServiceRelay, ISignalReceiver, ISignalReceiverReadOnly
     {
         #region Fields
         
@@ -27,7 +27,7 @@ namespace Democrite.Framework.Node.Services
 
         #endregion
 
-        #region Fields
+        #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalLocalGrainServiceRelay"/> class.

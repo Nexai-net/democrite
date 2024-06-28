@@ -20,6 +20,7 @@ namespace Democrite.Framework.Node.StreamQueue
 
     using Microsoft.Extensions.Logging;
 
+    using Orleans.Metadata;
     using Orleans.Runtime;
     using Orleans.Streams;
 
@@ -33,17 +34,21 @@ namespace Democrite.Framework.Node.StreamQueue
     /// <seealso cref="ITriggerHandlerVGrain" />
     /// <seealso cref="IGrainWithGuidCompoundKey" />
     [VGrainIdTypeValidator<IGrainWithGuidKey>()]
-    internal sealed class StreamTriggerHandlerVGrain : TriggerBaseHandlerVGrain<StreamTriggerState, StreamTriggerDefinition, IStreamTriggerHandlerVGrain>, IStreamTriggerHandlerVGrain, IGrainWithGuidCompoundKey
+    internal sealed class StreamTriggerHandlerVGrain : TriggerBaseHandlerVGrain<StreamTriggerState, StreamTriggerDefinition, IStreamTriggerHandlerVGrain>, IStreamTriggerHandlerVGrain, IGrainWithGuidCompoundKey, IRemindable
     {
         #region Fields
 
+        private const string UPDATE_STREAM_SUBSCRIPTION = "UpdateStreamSubscription";
+
+        private readonly TicketProcessPipeline _pipelineProcess = new TicketProcessPipeline();
+        private readonly IClusterManifestProvider _clusterManifestProvider;
+
         private readonly IStreamQueueDefinitionProvider _streamQueueDefinitionProvider;
-
         private readonly IWorkerTaskSchedulerProvider _taskSchedulerProvider;
-        //private IWorkerTaskScheduler? _taskScheduler;
 
-        //private readonly Queue<ProcessTicket> s_ticketBank;
-        //private readonly SemaphoreSlim _tickerLocker;
+        private IGrainReminder? _reminder;
+        private uint _lastMaxConcurrent;
+        private int _siloCount;
 
         #endregion
 
@@ -61,7 +66,8 @@ namespace Democrite.Framework.Node.StreamQueue
                                           IDataSourceProviderFactory inputSourceProviderFactory,
                                           IStreamQueueDefinitionProvider streamQueueDefinitionProvider,
                                           ISignalService signalService,
-                                          IWorkerTaskSchedulerProvider taskSchedulerProvider)
+                                          IWorkerTaskSchedulerProvider taskSchedulerProvider,
+                                          IClusterManifestProvider clusterManifestProvider)
             : base(logger,
                    persistentState,
                    triggerDefinitionProvider,
@@ -72,8 +78,9 @@ namespace Democrite.Framework.Node.StreamQueue
                    streamQueueDefinitionProvider,
                    signalService)
         {
+            this._clusterManifestProvider = clusterManifestProvider;
+
             this._streamQueueDefinitionProvider = streamQueueDefinitionProvider;
-            streamQueueDefinitionProvider.DataChanged += StreamQueueDefinitionProvider_DataChanged;
             this._taskSchedulerProvider = taskSchedulerProvider;
         }
 
@@ -100,7 +107,7 @@ namespace Democrite.Framework.Node.StreamQueue
             if (this.State?.StreamSubscription is not null && this.State?.StreamSubscription.StreamId == streamId)
             {
                 this.State!.StreamSubscription = await this.State!.StreamSubscription.ResumeAsync(onNextAsync: ReceiveStreamData, onErrorAsync: ReceiveStreamError);
-                await PushStateAsync(default);
+                await PushStateAsync(token);
                 return;
             }
 
@@ -108,16 +115,30 @@ namespace Democrite.Framework.Node.StreamQueue
             await (this.State?.StreamSubscription?.UnsubscribeAsync() ?? Task.CompletedTask);
 
             if (this.Enabled == false)
+            {
+                if (this._reminder is not null)
+                {
+                    await GrainReminderExtensions.UnregisterReminder(this, this._reminder);
+                    this._reminder = null;
+                }
                 return;
+            }
+
+            this._reminder = await GrainReminderExtensions.RegisterOrUpdateReminder(this, UPDATE_STREAM_SUBSCRIPTION, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(2));
 
             var streamProvider = GrainStreamingExtensions.GetStreamProvider(this, streamInfo.StreamConfiguration);
             var stream = streamProvider.GetStream<object>(streamInfo.ToStreamId());
 
             this.State!.StreamSubscription = await stream.SubscribeAsync(onNextAsync: ReceiveStreamData, onErrorAsync: ReceiveStreamError);
-            await PushStateAsync(default);
+            await PushStateAsync(token);
+
         }
 
-        private readonly TicketProcessPipeline _pipelineProcess = new TicketProcessPipeline();
+        /// <inheritdoc />
+        public async Task ReceiveReminder(string reminderName, TickStatus status)
+        {
+            await EnsureTriggerDefinitionAsync(default);
+        }
 
         /// <summary>
         /// Receives the stream data.
@@ -136,11 +157,32 @@ namespace Democrite.Framework.Node.StreamQueue
                 return;
             }
 
+            if (this._siloCount != this._clusterManifestProvider.Current.Silos.Count ||
+                this._lastMaxConcurrent > this.TriggerDefinition.FixedMaxConcurrentProcess)
+            {
+                this._siloCount = this._clusterManifestProvider.Current.Silos.Count;
+                var maxConcurrent = this.TriggerDefinition.FixedMaxConcurrentProcess;
+
+                if (this.TriggerDefinition.RelativeMaxConcurrentProcess is not null && 
+                    this.TriggerDefinition.RelativeMaxConcurrentProcess > 0)
+                {
+                    unchecked
+                    {
+                        maxConcurrent = (uint)(this._siloCount * this.TriggerDefinition.RelativeMaxConcurrentProcess);
+                    }
+                }
+
+                this._lastMaxConcurrent = Math.Min(maxConcurrent, this.TriggerDefinition.FixedMaxConcurrentProcess);
+
+                this.Logger.OptiLog(LogLevel.Information, "[{definitionName}: {definitionId}] Stream MaxConcurrent '{maxConcurrent}'", this.TriggerDefinition.DisplayName, this.TriggerDefinition.Uid, this._lastMaxConcurrent);
+            }
+
             await _pipelineProcess.ProcessAsync(async () => await FireTriggerAsync(item,
                                                                                    true,
                                                                                    this.VGrainLifecycleToken),
                                                 () => item,
-                                                this.TriggerDefinition.MaxConcurrentProcess, this.Logger);
+                                                this._lastMaxConcurrent,
+                                                this.Logger);
         }
 
         /// <summary>
@@ -150,14 +192,6 @@ namespace Democrite.Framework.Node.StreamQueue
         {
             this.Logger.OptiLog(LogLevel.Error, "[StreamTrigger: {streamTriggerId}] - stream error {exception}", this.TriggerDefinition?.Uid, exception);
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Raised when stream queue definition changed
-        /// </summary>
-        private void StreamQueueDefinitionProvider_DataChanged(object? sender, IReadOnlyCollection<Guid> e)
-        {
-            Task.Run(UpdateAsync).ConfigureAwait(false);
         }
 
         #endregion

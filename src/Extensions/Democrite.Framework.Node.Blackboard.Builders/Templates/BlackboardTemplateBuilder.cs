@@ -48,7 +48,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         /// </summary>
         static BlackboardTemplateBuilder()
         {
-            s_defaultSystemStorage = new BlackboardStorageDefinition(BlackboardConstants.BlackboardStorageRecordsKey, BlackboardConstants.BlackboardStorageConfigurationKey);
+            s_defaultSystemStorage = new BlackboardStorageDefinition(BlackboardConstants.BlackboardStorageRecordsKey, BlackboardConstants.BlackboardStorageRecordsConfigurationKey);
         }
 
         /// <summary>
@@ -171,7 +171,7 @@ namespace Democrite.Framework.Node.Blackboard.Builders.Templates
         {
             this._defaultBlackboardStorageDefinitions = new BlackboardStorageDefinition(storageKey,
                                                                                         string.IsNullOrEmpty(storageConfiguration)
-                                                                                                    ? BlackboardConstants.BlackboardStorageConfigurationKey
+                                                                                                    ? BlackboardConstants.BlackboardStorageRecordsConfigurationKey
                                                                                                     : storageConfiguration);
             return this;
         }

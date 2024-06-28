@@ -41,13 +41,17 @@ namespace Democrite.Framework.Configurations
                  .Add<IDisplaySignalsInfoVGrain, DisplaySignalsInfoVGrain>();
             });
 
-            var signalSebugSec = Sequence.Build(nameof(Democrite.Framework.Bag) + ":" + nameof(Democrite.Framework.Bag.DebugTools) + ":" + nameof(DebugToolConstants.DisplaySignalSequence), DebugToolConstants.DisplaySignalSequence, o =>
-                                         {
-                                             o.PreventSequenceExecutorStateStorage();
-                                         })
-                                         .RequiredInput<SignalMessage>()
-                                         .Use<IDisplaySignalsInfoVGrain>().Call((g, s, ctx) => g.DisplaySignalInfoAsync(s, ctx)).Return
-                                         .Build();
+            var signalSebugSec = Sequence.Build(nameof(Democrite.Framework.Bag) + ":" + nameof(Democrite.Framework.Bag.DebugTools) + ":" + nameof(DebugToolConstants.DisplaySignalSequence), 
+                                                DebugToolConstants.DisplaySignalSequence, 
+                                                o =>
+                                                {
+                                                    o.PreventSequenceExecutorStateStorage()
+                                                     .MinimalLogLevel(option?.LogLevel ?? DebugDisplayInfoOptions.Default.LogLevel);
+                                                })
+                                                .RequiredInput<SignalMessage>()
+                                                .Use<IDisplaySignalsInfoVGrain>().Call((g, s, ctx) => g.DisplaySignalInfoAsync(s, ctx))
+                                                                                 .Return
+                                                .Build();
 
             democriteNodeWizard.AddInMemoryDefinitionProvider(s => s.SetupSequences(signalSebugSec));
 
@@ -61,10 +65,12 @@ namespace Democrite.Framework.Configurations
         {
             democriteNodeWizard.AddInMemoryDefinitionProvider(s =>
             {
-                var displayTriggers = Trigger.Signals(signalDefinitions.Select(signal => signal.SignalId).ToArray(),
-                                                      b => b.AddTargetSequence(DebugToolConstants.DisplaySignalSequence).Build());
+                var triggers = signalDefinitions.Select(d => Trigger.Signal(d, "AutoTriggerShow:" + d.DisplayName, d.Uid)
+                                                                    .AddTargetSequence(DebugToolConstants.DisplaySignalSequence)
+                                                                    .Build())
+                                                .ToArray();
 
-                s.SetupTriggers(displayTriggers);
+                s.SetupTriggers(triggers);
             });
 
             return democriteNodeWizard;
@@ -77,10 +83,12 @@ namespace Democrite.Framework.Configurations
         {
             democriteNodeWizard.AddInMemoryDefinitionProvider(s =>
             {
-                var displayTriggers = Trigger.Doors(doorDefinitions.Select(signal => signal.DoorId).ToArray(),
-                                                    b => b.AddTargetSequence(DebugToolConstants.DisplaySignalSequence).Build());
+                var triggers = doorDefinitions.Select(d => Trigger.Door(d, "AutoTriggerShow:" + d.DisplayName, d.Uid)
+                                                                  .AddTargetSequence(DebugToolConstants.DisplaySignalSequence)
+                                                                  .Build())
+                                              .ToArray();
 
-                s.SetupTriggers(displayTriggers);
+                s.SetupTriggers(triggers);
             });
 
             return democriteNodeWizard;

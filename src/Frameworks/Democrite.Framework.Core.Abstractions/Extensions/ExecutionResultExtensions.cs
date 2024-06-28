@@ -8,6 +8,7 @@ namespace Democrite.Framework.Core.Abstractions
     using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using System;
     using System.Text;
@@ -20,7 +21,15 @@ namespace Democrite.Framework.Core.Abstractions
         /// <summary>
         /// Throws if failed or cancelled; otherwise return the execution result
         /// </summary>
-        public static TResult? SafeGetResult<TResult>(this IExecutionResult<TResult> result, ILogger logger)
+        public static void SafeGetResult(this IExecutionResult result, ILogger? logger = null)
+        {
+            SafeGetResult<NoneType>(result, logger);
+        }
+
+        /// <summary>
+        /// Throws if failed or cancelled; otherwise return the execution result
+        /// </summary>
+        public static TResult? SafeGetResult<TResult>(this IExecutionResult<TResult> result, ILogger? logger = null)
         {
             return SafeGetResult<TResult>((IExecutionResult)result, logger);
         }
@@ -28,9 +37,11 @@ namespace Democrite.Framework.Core.Abstractions
         /// <summary>
         /// Throws if failed or cancelled; otherwise return the execution result
         /// </summary>
-        public static TResult? SafeGetResult<TResult>(this IExecutionResult result, ILogger logger) 
+        public static TResult? SafeGetResult<TResult>(this IExecutionResult result, ILogger? logger = null) 
         {
             ArgumentNullException.ThrowIfNull(result);
+
+            logger ??= NullLogger.Instance;
 
             if (result.Cancelled)
                 throw new OperationCanceledException(result.Message ?? result.ToDebugDisplay());

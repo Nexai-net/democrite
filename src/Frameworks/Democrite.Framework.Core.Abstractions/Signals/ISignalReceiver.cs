@@ -6,7 +6,6 @@ namespace Democrite.Framework.Core.Abstractions.Signals
 {
     using Orleans.Concurrency;
     using Orleans.Runtime;
-    using Orleans.Services;
 
     using System.Threading.Tasks;
 
@@ -19,6 +18,19 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// Receives the signal asynchronous.
         /// </summary>
         [OneWay]
+        Task ReceiveSignalAsync(SignalMessage signal);
+    }
+
+    /// <summary>
+    /// Describe a signal receiver
+    /// </summary>
+    public interface ISignalReceiverReadOnly : IAddressable
+    {
+        /// <summary>
+        /// Receives the signal asynchronous.
+        /// </summary>
+        [OneWay]
+        [ReadOnly]
         Task ReceiveSignalAsync(SignalMessage signal);
     }
 }

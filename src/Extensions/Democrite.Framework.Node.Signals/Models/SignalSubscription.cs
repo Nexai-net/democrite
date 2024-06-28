@@ -13,8 +13,8 @@ namespace Democrite.Framework.Node.Signals.Models
     /// <summary>
     /// Information about target subscription of a <see cref="Signal"/> or <see cref="DoordSignal"/>
     /// </summary>
-    [Serializable]
     [Immutable]
+    [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
     internal sealed class SignalSubscription
@@ -24,10 +24,14 @@ namespace Democrite.Framework.Node.Signals.Models
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalSubscription"/> class.
         /// </summary>
-        public SignalSubscription(Guid uid, DedicatedGrainId<ISignalReceiver> targetGrainId)
+        public SignalSubscription(Guid uid,
+                                  DedicatedGrainId<ISignalReceiver>? targetGrainId,
+                                  DedicatedGrainId<ISignalReceiverReadOnly>? targetReadOnlyGrainId)
         {
             this.Uid = uid;
             this.TargetGrainId = targetGrainId;
+            this.TargetReadOnlyGrainId = targetReadOnlyGrainId;
+            this.IsTargetReadOnly = targetReadOnlyGrainId is not null;
         }
 
         #endregion
@@ -41,10 +45,21 @@ namespace Democrite.Framework.Node.Signals.Models
         public Guid Uid { get; }
 
         /// <summary>
+        /// Gets a value indicating whether this instance is target read only.
+        /// </summary>
+        public bool IsTargetReadOnly { get; }
+
+        /// <summary>
         /// Gets the target grain identifier.
         /// </summary>
         [Id(1)]
-        public DedicatedGrainId<ISignalReceiver> TargetGrainId { get; }
+        public DedicatedGrainId<ISignalReceiver>? TargetGrainId { get; }
+
+        /// <summary>
+        /// Gets the readonly target grain identifier.
+        /// </summary>
+        [Id(2)]
+        public DedicatedGrainId<ISignalReceiverReadOnly>? TargetReadOnlyGrainId { get; }
 
         #endregion
     }

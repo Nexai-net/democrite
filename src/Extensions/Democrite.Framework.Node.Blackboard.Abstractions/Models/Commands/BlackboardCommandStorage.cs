@@ -68,6 +68,22 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models.Commands
     }
 
     /// <summary>
+    /// Command in charge to change a record metadata
+    /// </summary>
+    [Immutable]
+    [Serializable]
+    [GenerateSerializer]
+    [ImmutableObject(true)]
+    public record class BlackboardCommandStorageChangeMetaData(Guid Uid, RecordMetadata NewMetaData) : BlackboardCommandStorage(BlackboardCommandStorageActionTypeEnum.ChangeMetaData)
+    {
+        /// <inheritdoc />
+        public override string ToDebugDisplayName()
+        {
+            return $"[{this.StorageAction}] - change record metadata - {this.Uid} new {this.NewMetaData}";
+        }
+    }
+
+    /// <summary>
     /// Command in charge to remove an element by his uid
     /// </summary>
     [Immutable]

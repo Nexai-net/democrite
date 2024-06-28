@@ -7,6 +7,8 @@ namespace Democrite.Framework.Bag.DebugTools
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes.MetaData;
 
+    using Orleans.Concurrency;
+
     /// <summary>
     /// VGrain used to write on the logger the information about an input and execution context
     /// </summary>
@@ -20,17 +22,20 @@ namespace Democrite.Framework.Bag.DebugTools
         /// <summary>
         /// Displays context information on the logger.
         /// </summary>
+        [ReadOnly]
+        [OneWay]
         Task DisplayCallInfoAsync(IExecutionContext ctx);
 
         /// <summary>
         /// Displays the input and context information on the logger.
         /// </summary>
+        [ReadOnly]
         Task<TInput> DisplayCallInfoAsync<TInput>(TInput input, IExecutionContext ctx);
-
 
         /// <summary>
         /// Displays the input and context information on the logger.
         /// </summary>
+        [ReadOnly]
         Task<TInput> DisplayCallInfoAsync<TInput, TConfig>(TInput input, IExecutionContext<TConfig> ctx);
     }
 }

@@ -4,7 +4,6 @@
 
 namespace Democrite.Framework.Core.Abstractions
 {
-    using Democrite.Framework.Core.Abstractions.Models.Surrogates;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Models;
 

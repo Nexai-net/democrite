@@ -7,7 +7,9 @@ namespace Democrite.Framework.Node.Triggers
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Triggers;
     using Democrite.Framework.Node.Abstractions.Triggers;
+    using Democrite.Framework.Node.Services;
 
+    using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Helpers;
 
     using Microsoft.Extensions.Logging;
@@ -24,13 +26,13 @@ namespace Democrite.Framework.Node.Triggers
     /// </summary>
     /// <typeparam name="TTriggerHandlerVGrain">The type of the trigger handler v grain.</typeparam>
     /// <seealso cref="Orleans.Runtime.GrainService" />
-    public abstract class TriggerBaseGrainService<TTriggerHandlerVGrain> : GrainService
+    public abstract class TriggerBaseGrainService<TTriggerHandlerVGrain> : DemocriteVGrainService
         where TTriggerHandlerVGrain : ITriggerHandlerVGrain
     {
         #region Fields
 
         private readonly ITriggerDefinitionProvider _triggerDefinitionProvider;
-
+        private readonly SemaphoreSlim _locker;
         private readonly TriggerTypeEnum _triggerType;
 
         #endregion
@@ -49,6 +51,8 @@ namespace Democrite.Framework.Node.Triggers
             : base(id, silo, loggerFactory)
         {
             this._triggerDefinitionProvider = triggerDefinitionProvider;
+
+            this._locker = new SemaphoreSlim(1);
             this.GrainFactory = grainFactory;
 
             this._triggerType = triggerType;
@@ -71,10 +75,17 @@ namespace Democrite.Framework.Node.Triggers
         #region Methods
 
         /// <inheritdoc />
-        public override async Task Start()
+        protected override async Task RefreshInfoAsync()
         {
-            await base.Start();
-            await LaunchTriggerHandlersAsync();
+            await this._locker.WaitAsync();
+            try
+            {
+                await LaunchTriggerHandlersAsync();
+            }
+            finally
+            {
+                this._locker.Release();
+            }
         }
 
         #region Tools
@@ -84,35 +95,80 @@ namespace Democrite.Framework.Node.Triggers
         /// </summary>
         private async void TriggerDefinitionProvider_DataChanged(object? sender, IReadOnlyCollection<Guid> definitionThatChanged)
         {
-            await LaunchTriggerHandlersAsync();
+            await this._locker.WaitAsync();
+            try
+            {
+                await LaunchTriggerHandlersAsync(definitionThatChanged);
+            }
+            finally
+            {
+                this._locker.Release();
+            }
         }
 
         /// <summary>
         /// Activate the trigger handlers <see cref="ICronTriggerHandlerVGrain"/> if missing on the cluster.
         /// </summary>
-        protected virtual async Task LaunchTriggerHandlersAsync()
+        protected virtual async Task LaunchTriggerHandlersAsync(IReadOnlyCollection<Guid>? definitionThatChanged = null)
         {
-            using (var timeoutToken = CancellationHelper.DisposableTimeout(TimeSpan.FromSeconds(10)))
+            try
             {
-                var triggers = await this._triggerDefinitionProvider.GetValuesAsync(t => t.TriggerType == this._triggerType, timeoutToken.Content);
+                using (var timeoutToken = CancellationHelper.DisposableTimeout(TimeSpan.FromMinutes(1)))
+                using (var grainCancelToken = timeoutToken.Content.ToGrainCancellationTokenSource())
+                {
+                    var token = timeoutToken.Content;
 
-                var grainFromTriggers = await GetGrainFromTriggersAsync(triggers, timeoutToken.Content);
+                    IEnumerable<TriggerDefinition> triggers = await this._triggerDefinitionProvider.GetValuesAsync(t => t.TriggerType == this._triggerType, token);
 
-                var triggerVGrainTasks = grainFromTriggers.Select(grain => grain.UpdateAsync())
-                                                          .ToArray();
+                    if (definitionThatChanged is not null && definitionThatChanged.Any())
+                        triggers = triggers.Where(t => definitionThatChanged.Contains(t.Uid));
 
-                if (triggerVGrainTasks.Any())
-                    await triggerVGrainTasks.SafeWhenAllAsync(timeoutToken.Content);
+                    var indexedDefinitions = triggers.GroupBy(k => k.Uid)
+                                                     .ToDictionary(k => k.Key, v => v.First());
+
+                    var grainFromTriggers = await GetGrainFromTriggersAsync(indexedDefinitions.Keys.Concat(definitionThatChanged ?? EnumerableHelper<Guid>.ReadOnly).Distinct().ToArray(), token);
+
+                    var tasks = new List<Task>();
+
+                    foreach (var tsk in grainFromTriggers)
+                    {
+                        var id = tsk.GetPrimaryKey();
+
+                        tasks.Add(tsk.UpdateAsync(grainCancelToken.Token).ContinueWith(t =>
+                        {
+                            token.ThrowIfCancellationRequested();
+
+                            var localDefId = id;
+                            if (t is not null && t.Exception is not null && indexedDefinitions.TryGetValue(id, out var trigger))
+                            {
+                                this.Logger.OptiLog(LogLevel.Error, "[Trigger: {definition}] {exception}", trigger.ToDebugDisplayName(), t.Exception);
+                            }
+                        }));
+                    }
+
+                    if (tasks.Any())
+                        await tasks.SafeWhenAllAsync(token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                if (ex is AggregateException aggr && aggr.InnerExceptions.All(e => e is OperationCanceledException))
+                    return;
+
+                this.Logger.OptiLog(LogLevel.Error, "Trigger Service Initialization Failed : {exception}", ex);
             }
         }
 
         /// <summary>
         /// Gets the grain from triggers.
         /// </summary>
-        protected virtual ValueTask<IEnumerable<TTriggerHandlerVGrain>> GetGrainFromTriggersAsync(IReadOnlyCollection<TriggerDefinition> triggers, CancellationToken token)
+        protected virtual ValueTask<IEnumerable<TTriggerHandlerVGrain>> GetGrainFromTriggersAsync(IReadOnlyCollection<Guid> triggerUids, CancellationToken token)
         {
             var traits = typeof(TTriggerHandlerVGrain);
-            var grains = triggers.Select(c => this.GrainFactory.GetGrain(traits, c.Uid, "").AsReference<TTriggerHandlerVGrain>());
+            var grains = triggerUids.Select(c => this.GrainFactory.GetGrain(traits, c, "").AsReference<TTriggerHandlerVGrain>());
             return ValueTask.FromResult(grains);
         }
 

@@ -6,6 +6,7 @@ namespace Democrite.Framework.Node.Signals.Doors
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Doors;
+    using Democrite.Framework.Node.Services;
 
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Helpers;
@@ -23,15 +24,14 @@ namespace Democrite.Framework.Node.Signals.Doors
     /// </summary>
     /// <seealso cref="GrainService" />
     /// <seealso cref="IDoorVGrainService" />
-    internal sealed class DoorVGrainService : GrainService, IDoorVGrainService
+    internal sealed class DoorVGrainService : DemocriteVGrainService, IDoorVGrainService
     {
         #region Fields
 
+        private readonly SemaphoreSlim _locker;
+
         private readonly IDoorDefinitionProvider _doorDefinitionProvider;
         private readonly IGrainFactory _grainFactory;
-
-        private readonly CancellationContext _cancellationContext;
-        private readonly ILogger _logger;
 
         #endregion
 
@@ -41,15 +41,13 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// Initializes a new instance of the <see cref="DoorVGrainService"/> class.
         /// </summary>
         public DoorVGrainService(GrainId grainId,
-                                   Silo silo,
-                                   ILoggerFactory loggerFactory,
-                                   IGrainOrleanFactory grainFactory,
-                                   IDoorDefinitionProvider doorDefinitionProvider)
+                                 Silo silo,
+                                 ILoggerFactory loggerFactory,
+                                 IGrainOrleanFactory grainFactory,
+                                 IDoorDefinitionProvider doorDefinitionProvider)
             : base(grainId, silo, loggerFactory)
         {
-            this._cancellationContext = new CancellationContext();
-
-            this._logger = loggerFactory.CreateLogger(nameof(DoorVGrainService));
+            this._locker = new SemaphoreSlim(1);
 
             this._grainFactory = grainFactory;
             this._doorDefinitionProvider = doorDefinitionProvider;
@@ -63,10 +61,17 @@ namespace Democrite.Framework.Node.Signals.Doors
         #region Methods
 
         /// <inheritdoc />
-        public override async Task Start()
+        protected override async Task RefreshInfoAsync()
         {
-            await base.Start();
-            await LaunchSignalsVGrainsAsync();
+            await this._locker.WaitAsync();
+            try
+            {
+                await LaunchSignalsVGrainsAsync();
+            }
+            finally
+            {
+                this._locker.Release();
+            }
         }
 
         /// <summary>
@@ -74,7 +79,15 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// </summary>
         private async void DoorDefinitionProvider_DataChanged(object? sender, IReadOnlyCollection<Guid> definitionThatChanged)
         {
-            await LaunchSignalsVGrainsAsync();
+            await this._locker.WaitAsync();
+            try
+            {
+                await LaunchSignalsVGrainsAsync(definitionThatChanged);
+            }
+            finally
+            {
+                this._locker.Release();
+            }
         }
 
         #region Tools
@@ -82,14 +95,17 @@ namespace Democrite.Framework.Node.Signals.Doors
         /// <summary>
         /// Launch door handler base on definition
         /// </summary>
-        private async Task LaunchSignalsVGrainsAsync()
+        private async Task LaunchSignalsVGrainsAsync(IReadOnlyCollection<Guid>? definitionThatChanged = null)
         {
             try
             {
-                using (var token = this._cancellationContext.Lock())
-                using (var grainCancellationToken = token.Content.ToGrainCancellationTokenSource())
+                using (var diposableTokenConteneur = CancellationHelper.DisposableTimeout(TimeSpan.FromMinutes(1)))
+                using (var grainCancellationToken = diposableTokenConteneur.Content.ToGrainCancellationTokenSource())
                 {
-                    var allDoordDefinitions = await this._doorDefinitionProvider.GetAllValuesAsync(token.Content);
+                    IEnumerable<DoorDefinition> allDoordDefinitions = await this._doorDefinitionProvider.GetAllValuesAsync(diposableTokenConteneur.Content);
+
+                    if (definitionThatChanged is not null && allDoordDefinitions.Any())
+                        allDoordDefinitions = allDoordDefinitions.Where(d => definitionThatChanged.Contains(d.Uid));
 
                     var initDoorTasks = allDoordDefinitions.Select(async doorDefinition =>
                     {
@@ -100,11 +116,15 @@ namespace Democrite.Framework.Node.Signals.Doors
                             var vgrainInterfaceType = Type.GetType(doorDefinition.VGrainInterfaceFullName, true, true);
 
                             var grain = this._grainFactory.GetGrain(vgrainInterfaceType, grainId);
-                            await grain.AsReference<IDoorVGrain>().InitializeAsync(doorDefinition, grainCancellationToken.Token);
+                            await grain.AsReference<IDoorVGrain>().UpdateAsync(doorDefinition, grainCancellationToken.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+
                         }
                         catch (Exception ex)
                         {
-                            this._logger.OptiLog(LogLevel.Critical,
+                            this.Logger.OptiLog(LogLevel.Critical,
                                                  "Could not start door {uid} - {name} due to {exception}",
                                                  doorDefinition.Uid,
                                                  doorDefinition.Name,
@@ -112,11 +132,12 @@ namespace Democrite.Framework.Node.Signals.Doors
                         }
                     }).ToArray();
 
-                    await initDoorTasks.SafeWhenAllAsync(token.Content);
+                    await initDoorTasks.SafeWhenAllAsync(diposableTokenConteneur.Content);
                 }
             }
-            catch (OperationCanceledException)
+            catch (Exception ex)
             {
+                this.Logger.OptiLog(LogLevel.Error, "VGrain Service Start Failed : {exception}", ex);
             }
         }
 

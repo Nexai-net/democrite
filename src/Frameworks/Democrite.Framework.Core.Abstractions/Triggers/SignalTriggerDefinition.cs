@@ -53,8 +53,18 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
 
         /// <inheritdoc />
         [Id(1)]
-        [DataMember] 
+        [DataMember]
         public DoorId? ListenDoor { get; }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        protected override string OnDebugDisplayName()
+        {
+            return "[ListenSignal: " + this.ListenSignal + "] [ListenDoor: " + this.ListenDoor + "]";
+        }
 
         #endregion
     }

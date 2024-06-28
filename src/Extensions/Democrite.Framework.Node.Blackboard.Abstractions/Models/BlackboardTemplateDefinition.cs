@@ -45,7 +45,7 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
             this.Uid = uid;
             this.MetaData = metaData;
             this.UniqueTemplateName = uniqueTemplateName;
-            this.DefaultStorageConfig = defaultStorageConfig ?? new BlackboardStorageDefinition(BlackboardConstants.BlackboardStorageRecordsKey, BlackboardConstants.BlackboardStorageConfigurationKey);
+            this.DefaultStorageConfig = defaultStorageConfig ?? new BlackboardStorageDefinition(BlackboardConstants.BlackboardStorageRecordsKey, BlackboardConstants.BlackboardStateStorageConfigurationKey);
             this.DisplayName = "Blackboard Tpl: " + uniqueTemplateName;
             this.Controllers = controllers?.ToArray();
             this.LogicalTypes = logicalTypes?.ToArray() ?? EnumerableHelper<BlackboardLogicalTypeBaseRule>.ReadOnlyArray;

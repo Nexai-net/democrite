@@ -94,6 +94,8 @@ namespace Democrite.Framework.Configurations
         private readonly INetworkInspector _networkInspector;
         private readonly ISiloBuilder _orleanSiloBuilder;
 
+        private readonly DemocriteNodeClusterOptionWizard _clusterOptionWizard;
+
         private ClusterNodeVGrainBuilder? _vgrainsCfg;
 
         #endregion
@@ -113,6 +115,8 @@ namespace Democrite.Framework.Configurations
             : base(host, false, builderContext, clusterBuilderTools)
         {
             ArgumentNullException.ThrowIfNull(clusterBuilderTools.NetworkInspector);
+
+            this._clusterOptionWizard = new DemocriteNodeClusterOptionWizard(siloBuilder.Services);
 
             this._inMemorySequenceDefinitionProviderSource = new InMemorySequenceDefinitionProvider(null!);
             this._artefactInMemoryProviderSource = new InMemoryArtifactProviderSource(null!);
@@ -203,6 +207,13 @@ namespace Democrite.Framework.Configurations
         {
             ArgumentNullException.ThrowIfNull(config);
             config(this);
+            return this;
+        }
+
+        /// <inheritdoc />
+        public IDemocriteNodeWizard SetupClusterOptions(Action<IDemocriteNodeClusterOptionWizard> action)
+        {
+            action?.Invoke(this._clusterOptionWizard);
             return this;
         }
 
@@ -499,6 +510,18 @@ namespace Democrite.Framework.Configurations
 
         #endregion
 
+        /// <inheritdoc />
+        public TBuilder TryGetBuilder<TBuilder>()
+        {
+            if (this is TBuilder builder)
+                return builder;
+
+            if (this._clusterOptionWizard is TBuilder clusterBuilder)
+                return clusterBuilder;
+
+            throw new InvalidCastException(typeof(TBuilder) + " not founded");
+        }
+
         #region Tools
 
         /// <inheritdoc />
@@ -506,6 +529,8 @@ namespace Democrite.Framework.Configurations
                                                 IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
                                                 ILogger logger)
         {
+            this._clusterOptionWizard.Build();
+
             var defaultMemoryAutoKey = configuration.GetSection(ConfigurationNodeSectionNames.NodeMemoryDefaultAutoConfigKey).Get<string>();
 
             AutoConfigImpl<INodeDemocriteMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,

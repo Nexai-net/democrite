@@ -127,7 +127,15 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         /// <inheritdoc />
         public string ToDebugDisplayName()
         {
-            return "[Id: " + this.Uid + "][Trigger: " + this.TriggerType + "]";
+            return "[Id: " + this.Uid + "][Trigger: " + this.TriggerType + "]" + OnDebugDisplayName();
+        }
+
+        /// <summary>
+        /// Called when [debug display name].
+        /// </summary>
+        protected virtual string OnDebugDisplayName()
+        {
+            return string.Empty;
         }
 
         /// <inheritdoc />

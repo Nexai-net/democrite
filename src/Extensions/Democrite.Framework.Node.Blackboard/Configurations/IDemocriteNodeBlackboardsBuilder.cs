@@ -22,14 +22,22 @@ namespace Democrite.Framework.Node.Blackboard.Configurations
         /// <remarks>
         ///     .AddMemoryGrainStorage(<see cref="BlackboardConstants.BlackboardRegistryStorageConfigurationKey"/>)
         /// </remarks>
-        IDemocriteNodeBlackboardsBuilder UseDefaultStorageForRegistryState();
+        IDemocriteNodeBlackboardsBuilder UseInMemoryStorageForRegistryState();
 
         /// <summary>
         /// Uses the default memory storage for <see cref="IBlackboardRef"/> state storage
         /// </summary>
         /// <remarks>
-        ///     .AddMemoryGrainStorage(<see cref="BlackboardConstants.BlackboardStorageConfigurationKey"/>)
+        ///     .AddMemoryGrainStorage(<see cref="BlackboardConstants.BlackboardStateStorageConfigurationKey"/>)
         /// </remarks>
-        IDemocriteNodeBlackboardsBuilder UseDefaultStorageForBoardState();
+        IDemocriteNodeBlackboardsBuilder UseInMemoryStorageForBoardState();
+
+        /// <summary>
+        /// Uses the default memory storage for <see cref="IBlackboardRef"/> records storage
+        /// </summary>
+        /// <remarks>
+        ///     .AddMemoryGrainStorage(<see cref="BlackboardConstants.BlackboardStorageRecordsConfigurationKey"/>)
+        /// </remarks>
+        IDemocriteNodeBlackboardsBuilder UseInMemoryStorageForRecords();
     }
 }

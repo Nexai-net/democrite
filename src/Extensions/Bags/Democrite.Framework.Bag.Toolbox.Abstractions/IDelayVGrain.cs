@@ -9,6 +9,8 @@ namespace Democrite.Framework.Bag.Toolbox.Abstractions
 
     using Elvex.Toolbox.Abstractions.Models;
 
+    using Orleans.Concurrency;
+
     using System;
 
     /// <summary>
@@ -24,21 +26,25 @@ namespace Democrite.Framework.Bag.Toolbox.Abstractions
         /// <summary>
         /// Delay of a specific time in <see cref="TimeSpan"/> pass in configuration
         /// </summary>
+        [ReadOnly]
         Task<TInput> DelayPassInputAsync<TInput>(TInput input, IExecutionContext<TimeSpan> executionContext);
 
         /// <summary>
         /// Delay of a specific time in <see cref="TimeSpan"/> pass in configuration
         /// </summary>
+        [ReadOnly]
         Task DelayAsync(IExecutionContext<TimeSpan> executionContext);
 
         /// <summary>
         /// Delay of a value in <see cref="TimeSpanRange"/> pass in configuration
         /// </summary>
+        [ReadOnly]
         Task<TInput> RandomDelayPassInputAsync<TInput>(TInput input, IExecutionContext<TimeSpanRange> executionContext);
 
         /// <summary>
         /// Delay of a value in <see cref="TimeSpanRange"/> pass in configuration
         /// </summary>
+        [ReadOnly]
         Task RandomDelayAsync(IExecutionContext<TimeSpanRange> executionContext);
 
     }

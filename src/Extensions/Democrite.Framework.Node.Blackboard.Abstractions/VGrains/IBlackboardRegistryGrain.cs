@@ -6,15 +6,17 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
+    using Democrite.Framework.Node.Blackboard.Abstractions.Models;
 
+    using Orleans.Concurrency;
     using Orleans.Runtime;
 
     /// <summary>
     /// Singleton grain used as registry to refer all the blackboard created
     /// </summary>
     /// <seealso cref="IVGrain" />
-    [VGrainIdSingleton(singletonValue: IBlackboardRegistryGrain.GrainId)]
     [DemocriteSystemVGrain]
+    [VGrainIdSingleton(singletonValue: IBlackboardRegistryGrain.GrainId)]
     internal interface IBlackboardRegistryGrain : IVGrain, IGrainWithStringKey
     {
         /// <summary>
@@ -25,12 +27,19 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.VGrains
         /// <summary>
         /// Try get <see cref="IBlackboardRef"/> based on his unique identifier <paramref name="uid"/>
         /// </summary>
-        Task<GrainId?> TryGetAsync(Guid uid);
+        [ReadOnly]
+        Task<Tuple<BlackboardId, GrainId>?> TryGetAsync(Guid uid);
+
+        /// <summary>
+        /// Try get <see cref="IBlackboardRef"/> based on his name and template name identifier <paramref name="uid"/>
+        /// </summary>
+        [ReadOnly]
+        Task<Tuple<BlackboardId, GrainId>?> TryGetAsync(string name, string templateName);
 
         /// <summary>
         /// Get existing or create a <see cref="IBlackboardRef"/> based on his unique couple identifier <paramref name="boardName"/> & <paramref name="blackboardTemplateKey"/>
         /// </summary>
-        Task<GrainId> GetOrCreateAsync(string boardName, string blackboardTemplateKey);
+        Task<Tuple<BlackboardId, GrainId>> GetOrCreateAsync(string boardName, string blackboardTemplateKey, GrainCancellationToken token, Guid? callContextId = null);
 
         /// <summary>
         /// Unregisters the specified blackboard.

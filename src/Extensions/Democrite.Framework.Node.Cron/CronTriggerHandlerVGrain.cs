@@ -15,6 +15,7 @@ namespace Democrite.Framework.Node.Cron
     using Democrite.Framework.Node.Abstractions.Inputs;
     using Democrite.Framework.Node.Triggers;
     using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 
@@ -39,6 +40,8 @@ namespace Democrite.Framework.Node.Cron
     internal sealed class CronTriggerHandlerVGrain : TriggerBaseHandlerVGrain<CronReminderState, CronTriggerDefinition, ICronTriggerHandlerVGrain>, IRemindable, ICronTriggerHandlerVGrain, IGrainWithGuidKey
     {
         #region Fields
+
+        private const string REMINDER_TICK_NAME = "TICK";
 
         private static readonly Regex s_allExceptSpacesReg = new Regex(@"[^\s]+");
 
@@ -96,13 +99,20 @@ namespace Democrite.Framework.Node.Cron
         public async Task ReceiveReminder(string reminderName, TickStatus status)
         {
             if (this.Enabled == false)
+            {
+                await DeactivateReminderAsync();
                 return;
+            }
 
             await EnsureTriggerDefinitionAsync(this.VGrainLifecycleToken);
 
             if (this.Enabled == false || !await UpdateNextTriggerAndCheckCanExecuteAsync(this.TriggerDefinition, this.VGrainLifecycleToken))
+            {
+                await DeactivateReminderAsync();
                 return;
+            }
 
+            this.Logger.OptiLog(LogLevel.Information, "[{definitionName}: {definitionId}] Tick cron '{cron}' {datetime:o}", this.TriggerDefinition.DisplayName, this.TriggerDefinition.Uid, this.TriggerDefinition.CronExpression, this._timeHandler.UtcNow);
             await base.FireTriggerAsync();
         }
 
@@ -112,21 +122,12 @@ namespace Democrite.Framework.Node.Cron
             await UpdateNextTriggerAndCheckCanExecuteAsync(this.TriggerDefinition!, token);
         }
 
-        public override Task UpdateAsync()
-        {
-            return base.UpdateAsync();
-        }
-
         /// <inheritdoc />
         private async Task<bool> UpdateNextTriggerAndCheckCanExecuteAsync(CronTriggerDefinition definition, CancellationToken token)
         {
             if (definition.Enabled == false)
             {
-                var oldReminderToken = this.State!.GrainReminderToken;
-                if (oldReminderToken is not null)
-                    await GrainReminderExtensions.UnregisterReminder(this, oldReminderToken);
-
-                this.State.GrainReminderToken = null;
+                await DeactivateReminderAsync();
                 return false;
             }
 
@@ -174,10 +175,16 @@ namespace Democrite.Framework.Node.Cron
             if (period > s_maxAllowPeriodTime)
                 period = s_maxAllowPeriodTime;
 
-            var reminderToken = await GrainReminderExtensions.RegisterOrUpdateReminder(this, definition.Uid.ToString(), dueTime, period);
-            this.State!.GrainReminderToken = reminderToken;
+            await GrainReminderExtensions.RegisterOrUpdateReminder(this, REMINDER_TICK_NAME, dueTime, period);
 
             return Math.Abs((current.Value - utcNow).TotalMinutes) < 1.0;
+        }
+
+        private async Task DeactivateReminderAsync()
+        {
+            var oldReminderToken = await GrainReminderExtensions.GetReminder(this, REMINDER_TICK_NAME);
+            if (oldReminderToken is not null)
+                await GrainReminderExtensions.UnregisterReminder(this, oldReminderToken);
         }
 
         #endregion

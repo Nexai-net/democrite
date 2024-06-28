@@ -5,7 +5,9 @@
 // Keep : Democrite.Framework.Configurations; to easy configuration use
 namespace Democrite.Framework.Configurations
 {
+    using Democrite.Framework.Builders;
     using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Configurations;
 
@@ -26,8 +28,17 @@ namespace Democrite.Framework.Configurations
         /// <summary>
         /// Setups blackboards
         /// </summary>
-        public static IDemocriteNodeWizard UseBlackboards(this IDemocriteNodeWizard wizard, Action<IDemocriteNodeBlackboardsBuilder> builder)
+        public static IDemocriteNodeWizard UseBlackboards(this IDemocriteNodeWizard wizard, Action<IDemocriteNodeBlackboardsBuilder>? builder = null)
         {
+            var blackboardAnalyzeFeedbackSignalDef = Signal.Create(BlackboardConstants.BlackboardAnalyzeFeedbackSignal, m => m.Description("Signal used as root for blackboard to get analyze result")
+                                                                                                                              .AddTags("Feedback", "Blackboard")
+                                                                                                                              .CategoryChain("Blackboard", "Signals", "Feedback"));
+
+            wizard.AddInMemoryDefinitionProvider(p =>
+            {
+                p.SetupSignals(blackboardAnalyzeFeedbackSignalDef);
+            });
+
             var bbBuilder = GetBlackboardBuilder(wizard.ConfigurationTools);
             builder?.Invoke(bbBuilder);
             return wizard;

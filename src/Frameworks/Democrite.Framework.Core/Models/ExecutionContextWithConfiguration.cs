@@ -40,5 +40,17 @@ namespace Democrite.Framework.Core.Models
         public TConfiguration? Configuration { get; }
 
         #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Simply create with just config
+        /// </summary>
+        public static IExecutionContext<TConfiguration> EmptyWithConfig(TConfiguration? configuration)
+        {
+            return new ExecutionContextWithConfiguration<TConfiguration>(Guid.Empty, Guid.Empty, null, configuration);
+        }
+
+        #endregion
     }
 }

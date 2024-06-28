@@ -14,6 +14,20 @@ namespace Democrite.Framework.Builders.Triggers
         /// <summary>
         /// Set the maximumn of concurrent message processing; Default 1000 - Minimun 1
         /// </summary>
+        /// <remarks>
+        ///     fixMaxConcurrentProcess
+        /// </remarks>
         IDefinitionBaseBuilder<TriggerDefinition> MaxConcurrentProcess(uint maxConcurrent);
+
+        /// <summary>
+        /// Set the maximumn of concurrent message processing relative to number of silo.
+        /// </summary>
+        /// <remarks>
+        ///     maxConcurrentProcess = (int)(factor * number_silo)
+        ///    
+        ///     if (fixMaxConcurrentProcess > 0 && maxConcurrentProcess > fixMaxConcurrentProcess)
+        ///         maxConcurrentProcess = fixMaxConcurrentProcess
+        /// </remarks>
+        IDefinitionBaseBuilder<TriggerDefinition> MaxConcurrentFactorClusterRelativeProcess(uint maxConcurrent);
     }
 }
