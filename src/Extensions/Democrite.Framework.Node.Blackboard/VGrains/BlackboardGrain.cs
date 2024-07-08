@@ -45,7 +45,6 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Orleans;
     using Orleans.Concurrency;
     using Orleans.Runtime;
-    using Orleans.Serialization.Invocation;
 
     using System.Collections.Frozen;
     using System.Collections.Generic;
@@ -137,7 +136,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             Expression<Func<BlackboardGrain, BlackboardCommandTriggerSignal<int>, CommandExecutionContext, Task<bool>>> cmdSignalWithData = (g, cmd, ctx) => g.Command_TriggerSignalWithData<int>(cmd, ctx);
             s_cmdSignalWithData = ((MethodCallExpression)cmdSignalWithData.Body).Method.GetGenericMethodDefinition();
 
-            Expression<Func<BlackboardGrain, BlackboardBaseQuery, DeferredId?, GrainCancellationToken, Task<BlackboardQueryResponse>>> solveQueryExpr = (grain, q, d, t) => grain.SolveQueryRequestAsync<int>(q, d, null, t);
+            Expression<Func<BlackboardGrain, BlackboardBaseQuery, DeferredId?, GrainCancellationToken, Task<BlackboardQueryResponse?>>> solveQueryExpr = (grain, q, d, t) => grain.SolveQueryRequestAsync<int>(q, d, null, t);
             s_solveGenericQueryRequest = ((MethodCallExpression)solveQueryExpr.Body).Method.GetGenericMethodDefinition();
 
             s_rootCommandExecutor = new Dictionary<BlackboardCommandTypeEnum, Func<BlackboardGrain, BlackboardCommand, CommandExecutionContext, Task<bool>>>()
@@ -669,17 +668,19 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
-        public Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, GrainCancellationToken token, Guid? callContextId = null)
+        public async Task<BlackboardQueryResponse?> QueryAsync(BlackboardQueryCommand command, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequiredOrSealedStatus();
-            return SolveQueryRequestAsync<NoneType>(command, null, callContextId, token);
+            var response = await SolveQueryRequestAsync<NoneType>(command, null, callContextId, token);
+            return response;
         }
 
         /// <inheritdoc />
-        public Task<BlackboardQueryResponse> QueryAsync<TResponse>(BlackboardQueryRequest<TResponse> request, GrainCancellationToken token, Guid? callContextId = null)
+        public async Task<BlackboardQueryResponse> QueryAsync<TResponse>(BlackboardQueryRequest<TResponse> request, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequiredOrSealedStatus();
-            return SolveQueryRequestAsync<TResponse>(request, null, callContextId, token);
+            var response = await SolveQueryRequestAsync<TResponse>(request, null, callContextId, token);
+            return response!;
         }
 
         /// <inheritdoc />
@@ -1249,7 +1250,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <summary>
         /// 
         /// </summary>
-        private async Task<BlackboardQueryResponse> SolveQueryRequestAsync<TResponse>(BlackboardBaseQuery query, DeferredId? deferredId, Guid? callContextId, GrainCancellationToken token)
+        private async Task<BlackboardQueryResponse?> SolveQueryRequestAsync<TResponse>(BlackboardBaseQuery query, DeferredId? deferredId, Guid? callContextId, GrainCancellationToken token)
         {
             CheckInitializationRequiredOrSealedStatus();
 
@@ -1354,8 +1355,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 if (remainActions.Any())
                     await this.CommandExecutionStartPointAsync(token.CancellationToken, logger, remainActions);
 
-                if (queryResponse is null)
-                    throw new NotSupportedException("No Response - not supported yet");
+                if (queryResponse is null && (query.ExpectedResponseType is not null || query.ExpectedResponseType != NoneType.AbstractTrait))
+                    throw new InvalidOperationException(string.Format("[Blackboard] [Query: {0}] - No Response - Expect response type {1}", query.QueryUid, query.ExpectedResponseType));
 
                 return queryResponse;
             }
