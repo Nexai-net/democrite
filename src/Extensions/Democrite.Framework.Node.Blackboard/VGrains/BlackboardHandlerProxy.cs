@@ -5,7 +5,6 @@
 namespace Democrite.Framework.Node.Blackboard.VGrains
 {
     using Democrite.Framework.Core.Abstractions;
-    using Democrite.Framework.Node.Abstractions.Services;
     using Democrite.Framework.Node.Blackboard.Abstractions;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models;
     using Democrite.Framework.Node.Blackboard.Abstractions.Models.Queries;
@@ -19,7 +18,6 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using Microsoft.Extensions.Logging;
 
     using Orleans.Runtime;
-    using Orleans.Serialization.Invocation;
 
     using System;
     using System.Collections;
@@ -27,7 +25,6 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using System.Reflection;
-    using System.Security.Cryptography;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -155,36 +152,41 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, CancellationToken token, Guid? callContextId = null)
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter,
+                                                                                                                                     CancellationToken token,
+                                                                                                                                     uint? limit = null,
+                                                                                                                                     Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, null, null, grainToken.Token, callContextId);
+                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, null, null, limit, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter,
-                                                                                                                                   string? displayNameFilter,
-                                                                                                                                   CancellationToken token,
-                                                                                                                                   Guid? callContextId = null)
+                                                                                                                                     string? displayNameFilter,
+                                                                                                                                     CancellationToken token,
+                                                                                                                                     uint? limit = null,
+                                                                                                                                     Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, null, grainToken.Token, callContextId);
+                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, null, limit: limit, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter,
-                                                                                                                                   string? displayNameFilter,
-                                                                                                                                   RecordStatusEnum? statusFilter,
-                                                                                                                                   CancellationToken token,
-                                                                                                                                   Guid? callContextId = null)
+                                                                                                                                     string? displayNameFilter,
+                                                                                                                                     RecordStatusEnum? statusFilter,
+                                                                                                                                     uint? limit,
+                                                                                                                                     CancellationToken token,
+                                                                                                                                     Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, statusFilter, grainToken.Token, callContextId);
+                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(logicTypeFilter, displayNameFilter, statusFilter, limit, grainToken.Token, callContextId);
             }
         }
 
@@ -200,11 +202,12 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter,
                                                                                                           CancellationToken token,
+                                                                                                          uint? limit = null,
                                                                                                           Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, null, null, grainToken.Token, callContextId);
+                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, null, null, limit, grainToken.Token, callContextId);
             }
         }
 
@@ -212,55 +215,74 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter,
                                                                                                           string? displayNameFilter,
                                                                                                           CancellationToken token,
+                                                                                                          uint? limit = null,
                                                                                                           Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, displayNameFilter, null, grainToken.Token, callContextId);
+                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, displayNameFilter, null, limit: limit, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter,
-                                                                                                        string? displayNameFilter,
-                                                                                                        RecordStatusEnum? statusFilter,
-                                                                                                        CancellationToken token,
-                                                                                                        Guid? callContextId = null)
+                                                                                                          string? displayNameFilter,
+                                                                                                          RecordStatusEnum? statusFilter,
+                                                                                                          uint? limit,
+                                                                                                          CancellationToken token,
+                                                                                                          Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter, displayNameFilter, statusFilter, grainToken.Token, callContextId);
+                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(logicTypeFilter,
+                                                                                displayNameFilter,
+                                                                                statusFilter,
+                                                                                limit: limit,
+                                                                                grainToken.Token,
+                                                                                callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, CancellationToken token, Guid? callContextId = null)
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, CancellationToken token, Guid? callContextId = null)
+        {
+            return GetAllStoredMetaDataFilteredAsync(filter, null, token, callContextId);
+        }
+
+        /// <inheritdoc />
+        public async Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, uint? limit, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(filter, grainToken.Token, callContextId);
+                return await this._boardGrain.GetAllStoredMetaDataFilteredAsync(filter, limit, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, CancellationToken token, Guid? callContextId = null)
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter,
+                                                                                                                                     uint? limit,
+                                                                                                                                     CancellationToken token,
+                                                                                                                                     Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {
-                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(filter, grainToken.Token, callContextId);
+                return await this._boardGrain.GetAllStoredDataFilteredAsync<TDataProjection>(filter, limit: limit, grainToken.Token, callContextId);
             }
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token, Guid? callContextId = null)
+        public Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(Expression<Func<BlackboardRecordMetadata, bool>> filter,
+                                                                                                                               CancellationToken token,
+                                                                                                                               uint? limit = null,
+                                                                                                                               Guid? callContextId = null)
         {
-            return GetAllStoredDataFilteredAsync<TDataProjection>(filter.Serialize(), token, callContextId);
+            return GetAllStoredDataFilteredAsync<TDataProjection>(filter.Serialize(), limit, token, callContextId);
         }
 
         /// <inheritdoc />
-        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token, Guid? callContextId = null)
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token, uint? limit = null, Guid? callContextId = null)
         {
-            return GetAllStoredMetaDataFilteredAsync(filter.Serialize(), token, callContextId);
+            return GetAllStoredMetaDataFilteredAsync(filter.Serialize(), limit, token, callContextId);
         }
 
         /// <inheritdoc />

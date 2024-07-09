@@ -46,7 +46,7 @@
         /// <summary>
         /// Send query type command without expecting any result
         /// </summary>
-        Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, GrainCancellationToken token, Guid? callContextId = null);
+        Task<BlackboardQueryResponse?> QueryAsync(BlackboardQueryCommand command, GrainCancellationToken token, Guid? callContextId = null);
 
         /// <summary>
         /// Send query type command without expecting any result
@@ -109,7 +109,7 @@
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
         [ReadOnly]
         [AlwaysInterleave]
-        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, GrainCancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, uint? limit, GrainCancellationToken token, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/> (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
@@ -117,7 +117,7 @@
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
         [ReadOnly]
         [AlwaysInterleave]
-        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, GrainCancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, uint? limit, GrainCancellationToken token, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
@@ -125,7 +125,7 @@
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
         [ReadOnly]
         [AlwaysInterleave]
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, GrainCancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, uint? limit, GrainCancellationToken token, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
@@ -133,7 +133,7 @@
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
         [ReadOnly]
         [AlwaysInterleave]
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, GrainCancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, uint? limit, GrainCancellationToken token, Guid? callContextId = null);
 
         #endregion
     }
@@ -246,7 +246,7 @@
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
         [ReadOnly]
         [AlwaysInterleave]
-        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, CancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, uint? limit, CancellationToken token, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/> (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
@@ -254,7 +254,7 @@
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
         [ReadOnly]
         [AlwaysInterleave]
-        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, CancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, uint? limit, CancellationToken token, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
@@ -262,7 +262,7 @@
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
         [ReadOnly]
         [AlwaysInterleave]
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, CancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? statusFilter, uint? limit, CancellationToken token, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
@@ -270,7 +270,7 @@
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
         [ReadOnly]
         [AlwaysInterleave]
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, CancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, uint? limit, CancellationToken token, Guid? callContextId = null);
         /// <summary>
         /// Pushes new or update the data with id <paramref name="uid"/>
         /// </summary>
@@ -316,19 +316,19 @@
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, CancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, CancellationToken token, uint? limit = null, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, CancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter, string? displayNameFilter, CancellationToken token, uint? limit = null, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/>
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
-        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token, uint? limit = null, Guid? callContextId = null);
 
         /// <summary>
         /// Gets all stored's data metadata (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>) associate to specific <paramref name="dataUids"/>
@@ -340,13 +340,13 @@
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/> (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
-        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, CancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, CancellationToken token, uint? limit = null, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate with a matching logic type <paramref name="logicTypeFilter"/> (<see cref="DataRecordContainer.RecordContainerType"/> == <see cref="RecordContainerTypeEnum.MetaData"/>)
         /// </summary>
         /// <param name="logicTypeFilter">Filter that support regex expression.</param>
-        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token, Guid? callContextId = null);
+        Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(Expression<Func<BlackboardRecordMetadata, bool>> filter, CancellationToken token, uint? limit = null, Guid? callContextId = null);
 
         /// <summary>
         /// Gets the stored data associate to specific <paramref name="dataUids"/>

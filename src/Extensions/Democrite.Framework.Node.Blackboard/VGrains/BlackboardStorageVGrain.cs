@@ -93,7 +93,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             }
             else
             {
-                var results = await board.GetAllStoredDataFilteredAsync<TData>(request.LogicalRecordTypePattern, null, request.RecordStatusFilter, executionContext.CancellationToken);
+                var results = await board.GetAllStoredDataFilteredAsync<TData>(request.LogicalRecordTypePattern, null, request.RecordStatusFilter, limit: null, executionContext.CancellationToken);
                 if (results is not null && results.Any())
                     allData = results;
             }

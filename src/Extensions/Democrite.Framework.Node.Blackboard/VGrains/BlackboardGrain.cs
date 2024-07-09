@@ -476,6 +476,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(string? logicTypeFilter,
                                                                                                                                      string? displayNameFilter,
                                                                                                                                      RecordStatusEnum? recordStatusFilter,
+                                                                                                                                     uint? limit,
                                                                                                                                      GrainCancellationToken token,
                                                                                                                                      Guid? callContextId = null)
         {
@@ -486,7 +487,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             this._metaDataLocker.EnterReadLock();
             try
             {
-                var metaData = GetAllStoredMetaDatByFilters(logicTypeFilter, displayNameFilter, recordStatusFilter);
+                var metaData = GetAllStoredMetaDatByFilters(logicTypeFilter, displayNameFilter, recordStatusFilter, limit);
                 metaDatas = metaData.Select(m => m.Value);
             }
             finally
@@ -532,19 +533,24 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataAsync(GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
-            return GetAllStoredMetaDataFilteredAsync(null, null, null, token, callContextId);
+            return GetAllStoredMetaDataFilteredAsync(null, null, null, limit: null, token, callContextId);
         }
 
         /// <inheritdoc />
         [ReadOnly]
-        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter, string? displayNameFilter, RecordStatusEnum? recordStatusFilter, GrainCancellationToken token, Guid? callContextId = null)
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(string? logicTypeFilter,
+                                                                                                    string? displayNameFilter,
+                                                                                                    RecordStatusEnum? recordStatusFilter,
+                                                                                                    uint? limit,
+                                                                                                    GrainCancellationToken token,
+                                                                                                    Guid? callContextId = null)
         {
             CheckInitializationRequired();
 
             this._metaDataLocker.EnterReadLock();
             try
             {
-                var metaData = GetAllStoredMetaDatByFilters(logicTypeFilter, displayNameFilter, recordStatusFilter);
+                var metaData = GetAllStoredMetaDatByFilters(logicTypeFilter, displayNameFilter, recordStatusFilter, limit);
 
                 var records = metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
                                                                                 kv.Value.Uid,
@@ -567,14 +573,14 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
         /// <inheritdoc />
         [ReadOnly]
-        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, GrainCancellationToken token, Guid? callContextId = null)
+        public Task<IReadOnlyCollection<MetaDataRecordContainer>> GetAllStoredMetaDataFilteredAsync(ConditionExpressionDefinition filter, uint? limit, GrainCancellationToken token, Guid? callContextId = null)
         {
             CheckInitializationRequired();
 
             this._metaDataLocker.EnterReadLock();
             try
             {
-                var metaData = GetAllStoredMetaDatByFilters(filter);
+                var metaData = GetAllStoredMetaDatByFilters(filter, limit);
 
                 var records = metaData.Select(kv => new MetaDataRecordContainer(kv.Value.LogicalType,
                                                                                 kv.Value.Uid,
@@ -597,7 +603,10 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
         /// <inheritdoc />
         [ReadOnly]
-        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter, GrainCancellationToken token, Guid? callContextId = null)
+        public async Task<IReadOnlyCollection<DataRecordContainer<TDataProjection?>>> GetAllStoredDataFilteredAsync<TDataProjection>(ConditionExpressionDefinition filter,
+                                                                                                                                     uint? limit,
+                                                                                                                                     GrainCancellationToken token,
+                                                                                                                                     Guid? callContextId = null)
         {
             CheckInitializationRequired();
 
@@ -606,7 +615,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             this._metaDataLocker.EnterReadLock();
             try
             {
-                var metaData = GetAllStoredMetaDatByFilters(filter);
+                var metaData = GetAllStoredMetaDatByFilters(filter, limit);
                 metaDatas = metaData.Select(m => m.Value);
             }
             finally
@@ -906,7 +915,8 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         /// </summary>
         private IEnumerable<KeyValuePair<Guid, BlackboardRecordMetadata>> GetAllStoredMetaDatByFilters(string? logicTypeFilter,
                                                                                                        string? displayNameFilter,
-                                                                                                       RecordStatusEnum? recordStatusFilter)
+                                                                                                       RecordStatusEnum? recordStatusFilter,
+                                                                                                       uint? limit)
         {
             CheckInitializationRequired();
 
@@ -927,13 +937,16 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
             if (recordStatusFilter is not null && recordStatusFilter.Value != RecordStatusEnum.None)
                 metaData = metaData.Where(m => (m.Value.Status & recordStatusFilter) == recordStatusFilter);
 
+            if (limit is not null && limit >= 1)
+                metaData = metaData.Take((int)limit);
+
             return metaData;
         }
 
         /// <summary>
         /// Gets all stored meta dat by filters.
         /// </summary>
-        private IEnumerable<KeyValuePair<Guid, BlackboardRecordMetadata>> GetAllStoredMetaDatByFilters(ConditionExpressionDefinition conditionExpression)
+        private IEnumerable<KeyValuePair<Guid, BlackboardRecordMetadata>> GetAllStoredMetaDatByFilters(ConditionExpressionDefinition conditionExpression, uint? limit)
         {
             CheckInitializationRequired();
 
@@ -941,7 +954,12 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
             var filter = conditionExpression.ToExpression<BlackboardRecordMetadata, bool>().Compile();
 
-            return metaData.Where(kv => filter(kv.Value));
+            var filterMetas = metaData.Where(kv => filter(kv.Value));
+
+            if (limit is not null && limit >= 1)
+                filterMetas = filterMetas.Take((int)limit);
+
+            return filterMetas;
         }
 
         /// <inheritdoc />
