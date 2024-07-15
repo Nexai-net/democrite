@@ -633,12 +633,23 @@ namespace Democrite.Framework.Node.Models
                 // Try convert input to ISequenceStageDefinition.Input type if needed
                 if (step.Input is not null && input != null)
                 {
+                    var stepInputType = step.Input!.ToType();
                     var inputType = input.GetType();
-                    if (step.Input != inputType && !inputType.IsAssignableTo(step.Input!.ToType()))
+                    if (step.Input != inputType && !inputType.IsAssignableTo(stepInputType))
                     {
-                        // TODO : Add flag in step to prevent auto convertion like double to int ...
-                        if (this._objectConverter.TryConvert(input, step.Input!.ToType(), out var convertInput))
-                            input = convertInput;
+                        try
+                        {
+                            if (NoneType.Trait == stepInputType)
+                                input = NoneType.Instance;
+
+                            else if (this._objectConverter.TryConvert(input, stepInputType, out var convertInput))
+                                input = convertInput;
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.OptiLog(LogLevel.Error, "Failed convert input {source} to {targetType} : {exception}", input, stepInputType, ex);
+                            throw;
+                        }
                     }
                 }
 
@@ -652,7 +663,7 @@ namespace Democrite.Framework.Node.Models
             }
             catch (Exception ex)
             {
-                logger.OptiLog(LogLevel.Error, "Step execution failed : {exception}", ex);
+                logger.OptiLog(LogLevel.Error, "[Step: {step}] execution failed : {exception}", step, ex);
                 throw;
             }
         }

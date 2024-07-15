@@ -434,10 +434,11 @@ namespace Democrite.Framework.Core
         /// </summary>
         protected async ValueTask PushStateAsync(TVGrainState newState, CancellationToken ct)
         {
+            this._state = newState;
+
             if (this.StateStorageEnabled == false)
                 return;
 
-            this._state = newState;
             await OnPushStateAsync(newState, ct);
         }
 

@@ -5,6 +5,8 @@
 namespace Democrite.Framework.Node.Models
 {
     using Democrite.Framework.Core.Abstractions.Signals;
+
+    using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Models;
 
     using System;
@@ -54,6 +56,12 @@ namespace Democrite.Framework.Node.Models
         /// <inheritdoc />
         public bool TryConvert(object obj, Type targetType, out object? result)
         {
+            if (NoneType.Trait == targetType)
+            {
+                result = NoneType.Instance;
+                return true;
+            }
+
             SignalSource? source = null;
             result = null;
 
