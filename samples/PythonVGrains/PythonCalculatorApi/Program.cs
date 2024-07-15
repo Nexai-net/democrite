@@ -69,6 +69,12 @@
 
             app.UseSwagger();
 
+            app.MapGet("/", request =>
+            {
+                request.Response.Redirect("swagger");
+                return Task.CompletedTask;
+            });
+
             app.MapGet("/calc", ([FromServices] IDemocriteExecutionHandler handler, [FromQuery] string operation) =>
             {
                 return handler.VGrain<IGenericArtifactExecutableVGrain>()

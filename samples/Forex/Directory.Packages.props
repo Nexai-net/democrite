@@ -4,17 +4,17 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Democrite -->
-    <PackageVersion Include="Democrite.Framework.Node" Version="0.2.1.186-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Node.Cron" Version="0.4.1.377-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Node.Signals" Version="0.4.1.377-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Core" Version="0.4.1.377-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Builders" Version="0.4.1.377-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Client" Version="0.4.1.377-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Core.Abstractions" Version="0.4.1.377-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Bag.Web" Version="0.4.1.377-prerelease" />
-    <PackageVersion Include="Democrite.Framework.Bag.Web.Abstractions" Version="0.4.1.377-prerelease" />
+    <PackageVersion Include="Democrite.Framework.Node" Version="0.4.3" />
+    <PackageVersion Include="Democrite.Framework.Node.Cron" Version="0.4.3" />
+    <PackageVersion Include="Democrite.Framework.Node.Signals" Version="0.4.3" />
+    <PackageVersion Include="Democrite.Framework.Core" Version="0.4.3" />
+    <PackageVersion Include="Democrite.Framework.Builders" Version="0.4.3" />
+    <PackageVersion Include="Democrite.Framework.Client" Version="0.4.3" />
+    <PackageVersion Include="Democrite.Framework.Core.Abstractions" Version="0.4.3" />
+    <PackageVersion Include="Democrite.Framework.Bag.Web" Version="0.4.3" />
+    <PackageVersion Include="Democrite.Framework.Bag.Web.Abstractions" Version="0.4.3" />
     <!-- Utilities -->
-    <PackageVersion Include="Swashbuckle.AspNetCore" version="6.5.0" />
-    <PackageVersion Include="HtmlAgilityPack" Version="1.11.59" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" version="6.6.2" />
+    <PackageVersion Include="HtmlAgilityPack" Version="1.11.61" />
   </ItemGroup>
 </Project>

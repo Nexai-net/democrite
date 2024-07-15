@@ -2,7 +2,6 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
-using Democrite.Framework.Client;
 using Democrite.Framework.Core.Abstractions;
 
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +10,8 @@ using Microsoft.OpenApi.Models;
 using Nexai.Sample.Forex.VGrain.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+await Task.Delay(3000);
 
 builder.Services.AddSwaggerGen(c =>
                 {

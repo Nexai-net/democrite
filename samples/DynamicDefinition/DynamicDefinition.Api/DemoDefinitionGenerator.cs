@@ -7,6 +7,8 @@
 
     using DynamicDefinition.Api.VGrains;
 
+    using Elvex.Toolbox.Models;
+
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -41,7 +43,7 @@
         {
             ArgumentException.ThrowIfNullOrEmpty(template);
 
-            var parts = template.OptiSplit(false,
+            var parts = template.OptiSplit(StringIncludeSeparatorMode.None,
                                            StringComparison.OrdinalIgnoreCase,
                                            StringSplitOptions.RemoveEmptyEntries,
                                            " ",

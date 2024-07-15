@@ -53,8 +53,8 @@ All configurations possible with Orleans are still available, but Democrite offe
 - [Doors](#door-types) : Connectors designed to initiate reactions based on stimulus that follow specific conditions.
 - [External Code VGrain](#external-code-vgrain) : VGrain write in other technologie than .net, like Python, C++, Javascript, ...
 - [Blackboard](#blackboard) : Technologie of shared memory with intelligent controller. Use to organize and process a specific task, goal.
-- [<font color="green">Redirections</font>](#redirections) : Enable switch of implementations for a particular contract during runtime.
-- [<font color="green">Dynamic Definitions</font>](#dynamic-definitions) : Allow definition to be generated and inject at runtime.
+- [Redirections](#redirections) : Enable switch of implementations for a particular contract during runtime.
+- [Dynamic Definitions](#dynamic-definitions) : Allow definition to be generated and inject at runtime.
 
 >[!TIP]
 > In green this is the lastest feature integrated
@@ -839,6 +839,25 @@ In the section [Sample/DynamicDefinition](/samples/DynamicDefinition//)
 ## Next
 
 ![Static Badge](https://img.shields.io/badge/BETA-FF6A00?style=for-the-badge&logo=windows)
+
+**v 0.4.3-prerelease:** <br/>
+[Release Node](/docs/ReleaseNotes.md#043-prerelease)
+
+- [x] Blackboard 
+    - [x] Query
+    - [x] Life Status
+    - [x] Signals
+    - [x] Deferred Query Response
+- [x] Signal - Hierarchy
+- [x] Sequence : improve input usage
+- [x] Execution Handler
+    - [x] Signal at the end
+    - [x] Deferred
+- [x] Meta-Data -- Descriptor
+- [x] Artifact - Enviroment - Docker
+    
+
+<br />
 
 **v 0.4.1-prerelease:** <br/>
 [Release Node](/docs/ReleaseNotes.md#041-prerelease)

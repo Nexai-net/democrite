@@ -82,7 +82,7 @@
         public async Task<IReadOnlyCollection<VGrainRedirectionDefinition>> GetAllRedirection(IExecutionContext executionContext)
         {
             var grain = await this._democriteSystemProvider.GetVGrainAsync<IClusterRouteRegistryVGrain>(executionContext);
-            using (var grainToken = executionContext.CancellationToken.ToGrainCancellationToken())
+            using (var grainToken = executionContext.CancellationToken.ToGrainCancellationTokenSource())
             {
                 var redirections = await grain.GetGlobalRedirection(string.Empty, grainToken.Token);
                 return redirections.Value.Info;

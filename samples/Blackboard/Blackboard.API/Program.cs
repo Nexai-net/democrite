@@ -109,8 +109,9 @@ builder.Host.UseDemocriteNode(b =>
      {
          // A blackboard is a grain that manager shared data and execute controller orders
          // The blackboard state is store in default blackboard storage (BlackboardConstants.BlackboardStorageConfigurationKey) or default one
-         b.UseDefaultStorageForBoardState()
-          .UseDefaultStorageForRegistryState();
+         b.UseInMemoryStorageForBoardState()
+          .UseInMemoryStorageForRecords()
+          .UseInMemoryStorageForRegistryState();
      })
 
      .SetupNodeMemories(m =>

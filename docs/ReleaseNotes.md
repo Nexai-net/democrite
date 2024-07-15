@@ -7,6 +7,39 @@ Release Notes
 
 # Beta
 
+## 0.4.3-prerelease
+
+In this version we mainly:
+- Enhance Blackboard usage
+- Managed result after processing
+- Stabilisation
+
+### Features
+- **Blackboard** : 
+    - **Query** : Able to send query to blackboard, A type Request to have information or a type command to give order without response to the blackboard.
+    - **Life Status** : Able to define a lifecycle status to request initialization or sealed with specific result when job is done.
+    - **Signal** : Able to subscribe, received and unsubscribe to signals.
+
+- **Sequence** :
+    - **Extend Call** : Able to use property access in the call part, example : (grain, input, ctx) => grain.MethodAsync(input.Property.SubProperty, ctx).
+
+- **Signal Hierarchy** : Able to create a hierarchy or signal, simply when a child fire it will automatically fire the parent.
+- **Execution Handler** :
+    - **Signal** : Add a signal information that need to be fire at the end of a execution.
+    - **Deferred** : Able let process continue in background and use the deferred system let you know when the job is done
+- **Meta Data** : Able to add description, tags, category information on descriptor like (Sequence, Trigger, ...), those meta data are used to "Understand" the goal
+- **Artifact** : Able to setup an execution environment. Support Docker
+
+### Breaking Changes
+>[CAUTION]
+> - **Artifact** : External execution had an issue during the message serialization. The protocol have been improved and change a bit.<br />
+>                  Python democrite librairy MUST be updated
+
+### Fix
+- **node** :
+    - **Deco/Reco** : With mongo db as cluster theire was a singleton issue
+    - **Restore** : 
+
 ## 0.4.1-prerelease
 
 In this version we mainly focus on dynamic feature :

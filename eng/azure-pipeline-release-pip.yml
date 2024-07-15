@@ -37,10 +37,8 @@ variables:
     ${{ else }}:
       value: testpypi
 
-
-
   - name: PythonPkgFolder
-    value: "./src/Extensions/Dist/Python/"
+    value: "./src/Extensions/Dist/Python/Lib/"
 
 steps:
 

@@ -12,7 +12,7 @@ namespace Democrite.Framework.Node.Services
     /// <summary>
     /// 
     /// </summary>
-    internal interface ISignalLocalGrainServiceRelay : IGrainService, ISignalReceiver
+    internal interface ISignalLocalGrainServiceRelay : IGrainService, ISignalReceiver, ISignalReceiverReadOnly
     {
         /// <summary>
         /// Subscribes the specified action to be called when <paramref name="signalId"/> is emit
