@@ -17,39 +17,14 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     /// <seealso cref="INodeReminderStateMemoryAutoConfigurator" />
     public sealed class AutoDefaultReminderStateMemoryAutoConfigurator : INodeReminderStateMemoryAutoConfigurator
     {
-        #region Ctor
-
-        /// <summary>
-        /// Initializes the <see cref="AutoDefaultReminderStateMemoryAutoConfigurator"/> class.
-        /// </summary>
-        static AutoDefaultReminderStateMemoryAutoConfigurator()
-        {
-            Default = new AutoDefaultReminderStateMemoryAutoConfigurator();
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the default.
-        /// </summary>
-        public static AutoDefaultReminderStateMemoryAutoConfigurator Default { get; }
-
-        #endregion
-
-        #region Methods
-
         /// <inheritdoc />
         public void AutoConfigure(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
                                   IConfiguration configuration,
                                   IServiceCollection serviceCollection,
                                   ILogger logger)
         {
-            var siloBuilder = democriteBuilderWizard.GetSiloBuilder();
-            siloBuilder.UseInMemoryReminderService();
+            var builder = DemocriteMemoryInLocalConfiguration.GetBuilder(democriteBuilderWizard);
+            builder.SetupReminderStorage();
         }
-
-        #endregion
     }
 }

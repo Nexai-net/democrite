@@ -63,6 +63,21 @@ namespace Democrite.Framework.Configurations
         /// </summary>
         void AddExtensionOption<TOptions>(Action<TOptions> options) where TOptions : class;
 
+        /// <summary>
+        /// Adds the cluster option to setup the communition info.
+        /// </summary>
+        TOptions AddExtensionOption<TOptions, TKey>(string configurationSection, TOptions fallbackOption, TKey key) where TOptions : class;
+
+        /// <summary>
+        /// Adds the cluster option to setup the communition info.
+        /// </summary>
+        void AddExtensionOption<TOptions, TKey>(TOptions instances, TKey key) where TOptions : class;
+
+        /// <summary>
+        /// Adds the cluster option to setup the communition info.
+        /// </summary>
+        void AddExtensionOption<TOptions>(Action<TOptions> options, string name) where TOptions : class;
+
         #endregion
     }
 }

@@ -9,7 +9,6 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     using Microsoft.Extensions.Options;
 
     using Orleans.Configuration;
-    using Orleans.Storage;
 
     using System.Linq;
 
@@ -26,7 +25,7 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
 
             if (defaultMemoryOptionServiceDescriptor is not null && defaultMemoryOptionServiceDescriptor.ImplementationInstance is DefaultMemoryGrainStorageOptions defaultOption)
             {
-                options.Configure(m =>
+                options.PostConfigure(m =>
                 {
                     m.NumStorageGrains = (int)defaultOption.NumStorageGrains;
                     m.InitStage = (int)defaultOption.InitStage;

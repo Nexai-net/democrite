@@ -6,7 +6,6 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
 {
     using Democrite.Framework.Configurations;
     using Democrite.Framework.Node.Abstractions.Configurations.AutoConfigurator;
-    using Democrite.Framework.Node.Abstractions.Models;
 
     using Microsoft.Extensions.Configuration;
 
@@ -19,31 +18,8 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
     /// Auto configure the VGrain state storage
     /// </summary>
     /// <seealso cref="INodeDemocriteMemoryAutoConfigurator" />
-    public sealed class AutoCustomGrainMemoryMongoConfigurator : AutoBaseMemoryStorageMongoConfigurator, INodeCustomGrainMemoryAutoConfigurator
+    public sealed class AutoCustomGrainMemoryMongoConfigurator : INodeCustomGrainMemoryAutoConfigurator
     {
-        #region Ctor
-
-        /// <summary>
-        /// Initializes the <see cref="AutoCustomGrainMemoryMongoConfigurator"/> class.
-        /// </summary>
-        static AutoCustomGrainMemoryMongoConfigurator()
-        {
-            Default = new AutoCustomGrainMemoryMongoConfigurator();
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the default.
-        /// </summary>
-        public static AutoCustomGrainMemoryMongoConfigurator Default { get; }
-
-        #endregion
-
-        #region Methods
-
         /// <inheritdoc />
         public void AutoConfigure(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
                                   IConfiguration configuration,
@@ -52,15 +28,7 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
                                   string sourceConfigurationKey,
                                   string targetKey)
         {
-            ArgumentNullException.ThrowIfNullOrEmpty(targetKey);
-
-            var option = configuration.GetSection(sourceConfigurationKey).Get<DefaultGrainStorageOption>();
-            AutoConfigureCustomStorage(democriteBuilderWizard,
-                                       configuration,
-                                       serviceCollection,
-                                       logger,
-                                       targetKey,
-                                       option?.BuildReadRepository ?? false);
+            AutoConfigureCustomStorage(democriteBuilderWizard, configuration, serviceCollection, logger, targetKey, false);
         }
 
         /// <inheritdoc />
@@ -69,53 +37,10 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
                                                IServiceCollection serviceCollection,
                                                ILogger logger,
                                                string key,
-                                               bool buildRepository)
+                                               bool buildReadRepository = false)
         {
-            ConfigureMongoStorages(democriteBuilderWizard,
-                                   configuration,
-                                   serviceCollection,
-                                   logger,
-                                   null,
-                                   null,
-                                   buildRepository,
-                                   key.AsEnumerable().ToArray());
+            var builder = DemocriteMongoBuilderDemocriteWizardStartExtensions.GetBuilder(serviceCollection, configuration, democriteBuilderWizard);
+            builder.SetupGrainStateStorage(key, buildRepository: buildReadRepository);
         }
-
-        /// <summary>
-        /// Configures the mongo as reminder storage.
-        /// </summary>
-        internal void ConfigureMongoStorages(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
-                                             IConfiguration configuration,
-                                             IServiceCollection serviceCollection,
-                                             ILogger logger,
-                                             string? connectionString,
-                                             MongoDBOptions? option,
-                                             bool buildRepository,
-                                             IReadOnlyCollection<string> keys)
-        {
-            foreach (var key in keys)
-            {
-               base.ConfigureMongoStorage<MongoDBOptions>(democriteBuilderWizard,
-                                                          configuration,
-                                                          serviceCollection,
-                                                          logger,
-                                                          connectionString,
-                                                          option,
-                                                          key,
-                                                          
-                                                          ConfigurationNodeSectionNames.NodeCustomMemory + 
-                                                          ConfigurationSectionNames.SectionSeparator + 
-                                                          key,
-                                                          
-                                                          ConfigurationNodeSectionNames.NodeCustomMemory + 
-                                                          ConfigurationSectionNames.SectionSeparator + 
-                                                          key + 
-                                                          ConfigurationSectionNames.SectionSeparator + 
-                                                          ConfigurationSectionNames.ConnectionString,
-                                                          buildRepository);
-            }
-        }
-
-        #endregion
     }
 }

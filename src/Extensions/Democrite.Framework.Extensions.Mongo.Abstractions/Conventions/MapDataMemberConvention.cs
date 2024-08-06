@@ -141,7 +141,11 @@ namespace Democrite.Framework.Extensions.Mongo.Abstractions.Conventions
             //else
             //{
 
-            classMap.SetDiscriminator(classType.AssemblyQualifiedName);
+            if (!classType.IsInterface)
+            {
+                classMap.SetDiscriminator(classType.AssemblyQualifiedName);
+                classMap.SetDiscriminatorIsRequired(true);
+            }
 
             //}
 

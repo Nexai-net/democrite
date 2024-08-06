@@ -5,33 +5,31 @@
 namespace Democrite.Framework.Core.Abstractions.Repositories
 {
     /// <summary>
-    /// External Storage call repository access service to access data, Read and write
+    /// External Storage  call repository access service to access data, Read and write
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    public interface IRepository<TEntity> : IReadOnlyRepository<TEntity>
+    public interface IRepository<TEntity, TEntityId> : IReadOnlyRepository<TEntity, TEntityId>
+        where TEntity : IEntityWithId<TEntityId>
+        where TEntityId : notnull, IEquatable<TEntityId>
     {
         /// <summary>
         /// Pushes the data record into storage
         /// </summary>
         Task<bool> PushDataRecordAsync(TEntity entity, bool insertIfNew, CancellationToken token);
-    }
 
-    /// <summary>
-    /// External Storage  call repository access service to access data, Read and write
-    /// </summary>
-    /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    public interface IRepository<TEntity, TEntityId> : IRepository<TEntity>, IReadOnlyRepository<TEntity, TEntityId>
-        where TEntity : IEntityWithId<TEntityId>
-        where TEntityId : notnull, IEquatable<TEntityId>
-    {
+        /// <summary>
+        /// Pushes the data record into storage
+        /// </summary>
+        Task<int> PushDataRecordAsync(IReadOnlyCollection<TEntity> entity, bool insertIfNew, CancellationToken token);
+
         /// <summary>
         /// Deletes a record by its unique id.
         /// </summary>
         Task<bool> DeleteRecordAsync(TEntityId uid, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Deletes records by they unique id.
+        /// Delete records by its ids.
         /// </summary>
-        Task<bool> DeleteRecordsAsync(CancellationToken cancellationToken, IEnumerable<TEntityId> uids);
+        Task<bool> DeleteRecordAsync(IReadOnlyCollection<TEntityId> entityIds, CancellationToken cancellationToken);
     }
 }

@@ -30,7 +30,8 @@ namespace Democrite.Framework.Core.Abstractions
                                                                   "DynamicDefinitionChanged",
                                                                   new DefinitionMetaData("Signal send to synchronize silo local dynamic definition cache.",
                                                                                          nameof(Democrite) + "/" + "System",
-                                                                                         new[] { nameof(Democrite), "System" }));
+                                                                                         new[] { nameof(Democrite), "System" },
+                                                                                         DateTime.UtcNow));
                 DynamicDefinitionChanged = s_dynamicDefinitionChanged.SignalId;
             }
 

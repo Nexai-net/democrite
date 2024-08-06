@@ -17,38 +17,14 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     /// <seealso cref="INodeDemocriteMemoryAutoConfigurator" />
     public sealed class AutoDefaultMemoryConfigurator : INodeDefaultMemoryAutoConfigurator
     {
-        #region Ctor
-
-        /// <summary>
-        /// Initializes the <see cref="AutoDefaultMemoryConfigurator"/> class.
-        /// </summary>
-        static AutoDefaultMemoryConfigurator()
-        {
-            Default = new AutoDefaultMemoryConfigurator();
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the default.
-        /// </summary>
-        public static AutoDefaultMemoryConfigurator Default { get; }
-
-        #endregion
-
-        #region Methods
-
         /// <inheritdoc />
         public void AutoConfigure(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
                                   IConfiguration configuration,
                                   IServiceCollection serviceCollection,
                                   ILogger logger)
         {
-            var siloBuilder = democriteBuilderWizard.GetSiloBuilder();
-            siloBuilder.AddMemoryGrainStorageAsDefault(MemoryConfiguratorHelper.OptionConfigurator);
+            var builder = DemocriteMemoryInLocalConfiguration.GetBuilder(democriteBuilderWizard);
+            builder.SetupDefaultStorage();
         }
-        #endregion
     }
 }

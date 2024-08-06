@@ -26,6 +26,11 @@ namespace Democrite
         /// <summary>
         /// The default dmocrite state storage configuration
         /// </summary>
+        public const string DefaultDefinitionStorageName = "Definitions";
+
+        /// <summary>
+        /// The default dmocrite state storage configuration
+        /// </summary>
         public const string DefaultDemocriteStateConfigurationKey = nameof(Democrite);
 
         /// <summary>

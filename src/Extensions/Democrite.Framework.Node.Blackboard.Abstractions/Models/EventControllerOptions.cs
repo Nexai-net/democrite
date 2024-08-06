@@ -73,16 +73,9 @@ namespace Democrite.Framework.Node.Blackboard.Abstractions.Models
         /// <inheritdoc />
         protected sealed override int OnGetHashCode()
         {
-            try
-            {
-                return this.ListenDoors.Aggregate(0, (acc, d) => acc ^ d.GetHashCode()) ^
-                       this.ListenSignals.Aggregate(0, (acc, d) => acc ^ d.GetHashCode()) ^
-                       OnEventControllerHashCode();
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+            return this.ListenDoors.Aggregate(0, (acc, d) => acc ^ d.GetHashCode()) ^
+                   this.ListenSignals.Aggregate(0, (acc, d) => acc ^ d.GetHashCode()) ^
+                   OnEventControllerHashCode();
         }
 
         /// <inheritdoc cref="object.Equals(object?)" />

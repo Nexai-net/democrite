@@ -75,7 +75,7 @@ namespace Democrite.Framework.Node.Signals
             var now = this._timeManager.UtcNow;
             var signalSource = new SignalSource(fireId,
                                                 this._signalDefinition!.SignalId.Uid,
-                                                this._signalDefinition!.SignalId.Name,
+                                                this._signalDefinition!.SignalId.Name ?? string.Empty,
                                                 false,
                                                 now,
                                                 sourceId,
@@ -101,7 +101,7 @@ namespace Democrite.Framework.Node.Signals
 
             var signalSource = new SignalSource<TData>(fireId,
                                                        this._signalDefinition!.SignalId.Uid,
-                                                       this._signalDefinition!.SignalId.Name,
+                                                       this._signalDefinition!.SignalId.Name ?? string.Empty,
                                                        false,
                                                        now,
                                                        sourceId,

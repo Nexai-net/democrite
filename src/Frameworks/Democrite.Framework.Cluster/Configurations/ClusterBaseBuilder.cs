@@ -21,6 +21,7 @@ namespace Democrite.Framework.Cluster.Configurations
     using Democrite.Framework.Core.Signals;
     using Democrite.Framework.Core.Triggers;
 
+    using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Helpers;
@@ -187,7 +188,7 @@ namespace Democrite.Framework.Cluster.Configurations
         }
 
         /// <inheritdoc />
-        public abstract TWizard NoCluster(string serviceId = "dev", string clusterId = "dev", bool useLoopback = true);
+        public abstract TWizard NoCluster(string? serviceId = "dev", string? clusterId = "dev", bool useLoopback = true);
 
         /// <inheritdoc />
         public TWizard SetupCluster(Action<IDemocriteClusterBuilder> clusterWizard)
@@ -226,7 +227,7 @@ namespace Democrite.Framework.Cluster.Configurations
         public IDemocriteClusterBuilder CustomizeClusterId(string serviceId, string clusterId)
         {
             ConfigureServices(s =>
-            { 
+            {
                 s.Configure<ClusterOptions>(options =>
                 {
                     options.ServiceId = serviceId;
@@ -324,6 +325,16 @@ namespace Democrite.Framework.Cluster.Configurations
             }
         }
 
+        public void AddExtensionOption<TOptions, TKey>(TOptions instance, TKey key) where TOptions : class
+        {
+            if (instance is not null)
+            {
+                var services = GetServiceCollection();
+                services.AddKeyedSingleton<IOptions<TOptions>>(key, instance.ToOption());
+                services.AddKeyedSingleton<IOptionsMonitor<TOptions>>(key, instance.ToMonitorOption());
+            }
+        }
+
         /// <inheritdoc />
         public abstract TWizard ConfigureLogging(Action<ILoggingBuilder> configureLogging);
 
@@ -336,7 +347,20 @@ namespace Democrite.Framework.Cluster.Configurations
         }
 
         /// <inheritdoc />
+        public void AddExtensionOption<TOption>(Action<TOption> optionsCfg, string name) where TOption : class
+        {
+            AddOption<TOption>(name, optionsCfg);
+        }
+
+        /// <inheritdoc />
         public TOption AddExtensionOption<TOption>(string configurationSection, TOption fallbackOption)
+            where TOption : class
+        {
+            return AddExtensionOption<TOption, NoneType>(configurationSection, fallbackOption, NoneType.Instance);
+        }
+
+        /// <inheritdoc />
+        public TOption AddExtensionOption<TOption, TKey>(string configurationSection, TOption fallbackOption, TKey key)
             where TOption : class
         {
             var services = GetServiceCollection();
@@ -355,7 +379,11 @@ namespace Democrite.Framework.Cluster.Configurations
             }
 
             ArgumentNullException.ThrowIfNull(fallbackOption);
-            AddExtensionOption(fallbackOption);
+
+            if (NoneType.IsEqualTo<TKey>())
+                AddExtensionOption(fallbackOption);
+            else
+                AddExtensionOption(fallbackOption, key);
             return fallbackOption;
         }
 
@@ -687,9 +715,19 @@ namespace Democrite.Framework.Cluster.Configurations
         /// <summary>
         /// Setup an option information
         /// </summary>
-        protected void AddOption<TOptions>(Action<TOptions> optionsCfg) where TOptions : class
+        protected void AddOption<TOptions>(Action<TOptions> optionsCfg) 
+            where TOptions : class
         {
             this._options.Enqueue((IServiceCollection s) => s.Configure(optionsCfg));
+        }
+
+        /// <summary>
+        /// Setup an option information
+        /// </summary>
+        protected void AddOption<TOptions>(string name, Action<TOptions> optionsCfg)
+            where TOptions : class
+        {
+            this._options.Enqueue((IServiceCollection s) => s.Configure(name, optionsCfg));
         }
 
         /// <summary>

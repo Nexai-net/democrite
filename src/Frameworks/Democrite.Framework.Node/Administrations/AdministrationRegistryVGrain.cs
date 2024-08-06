@@ -50,7 +50,7 @@ namespace Democrite.Framework.Node.Administrations
         /// Initializes a new instance of the <see cref="AdministrationRegistryVGrain"/> class.
         /// </summary>
         public AdministrationRegistryVGrain(ILogger<IGlobalAdministrationRegisterVGrain> logger,
-                                            [PersistentState("Administration", DemocriteConstants.DefaultDemocriteAdminStateConfigurationKey)] IPersistentState<AdministrationRegistryStateSurrogate> persistentState,
+                                            [PersistentState(DemocriteConstants.DefaultDemocriteAdminStateConfigurationKey, DemocriteConstants.DefaultDemocriteAdminStateConfigurationKey)] IPersistentState<AdministrationRegistryStateSurrogate> persistentState,
                                             IGrainOrleanFactory grainOrleanFactory,
                                             IRemoteGrainServiceFactory remoteGrainServiceFactory)
             : base(logger, persistentState)

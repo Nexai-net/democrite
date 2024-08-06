@@ -24,11 +24,15 @@ namespace Democrite.Framework.Core.Abstractions
         /// <summary>
         /// Initializes a new instance of the <see cref="DefinitionMetaData"/> class.
         /// </summary>
-        public DefinitionMetaData(string? description, string? categoryPath, IEnumerable<string>? tags)
+        public DefinitionMetaData(string? description,
+                                  string? categoryPath,
+                                  IEnumerable<string>? tags,
+                                  DateTime utcUpdateTime)
         {
             this.Description = description;
             this.CategoryPath = categoryPath;
             this.Tags = tags?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;
+            this.UTCUpdateTime = utcUpdateTime;
         }
 
         #endregion
@@ -52,6 +56,11 @@ namespace Democrite.Framework.Core.Abstractions
         /// Gets the tags.
         /// </summary>
         public IReadOnlyCollection<string> Tags { get; }
+
+        /// <summary>
+        /// Gets the UTC update time.
+        /// </summary>
+        public DateTime UTCUpdateTime { get; }
 
         #endregion
 

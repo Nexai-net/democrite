@@ -20,7 +20,7 @@ namespace Democrite.Framework.Node.Storages
     /// <seealso cref="Grain" />
     /// <seealso cref="IMemoryStorageRegistryGrain" />
     [KeepAlive]
-    internal sealed class MemoryStorageRegistryStateGrain : MemoryStorageRegistryBaseGrain<string, IGrainState<ReadOnlyMemory<byte>>>, IMemoryStorageStateRegistryGrain<string>
+    internal sealed class MemoryStorageRegistryStateGrain : MemoryStorageRegistryBaseGrain<string, IGrainState<ReadOnlyMemory<byte>>, IMemoryStorageGrain>, IMemoryStorageStateRegistryGrain<string>
     {
         #region Ctor
 
@@ -41,7 +41,7 @@ namespace Democrite.Framework.Node.Storages
         /// <inheritdoc />
         protected override Task<IGrainState<ReadOnlyMemory<byte>>?> OnRequestStoredDataAsync(string key, MemoryStorageInfo info)
         {
-            var storageGrain = this.RegisterGrainFactory.GetGrain<IMemoryStorageGrain>(info.Storage);
+            var storageGrain = info.StorageGrain ?? this.RegisterGrainFactory.GetGrain<IMemoryStorageGrain>(info.Storage);
             return storageGrain.ReadStateAsync<ReadOnlyMemory<byte>>(key);
         }
 

@@ -36,8 +36,9 @@ namespace Democrite.Framework.Node.Storages
     /// </summary>
     /// <seealso cref="Grain" />
     /// <seealso cref="IMemoryStorageRegistryGrain" />
-    internal abstract class MemoryStorageRegistryBaseGrain<TKey, TDataStored> : Grain, IMemoryStorageRegistryGrain
+    internal abstract class MemoryStorageRegistryBaseGrain<TKey, TDataStored, TStorageGrain> : Grain, IMemoryStorageRegistryGrain
         where TKey : notnull, IEquatable<TKey>
+        where TStorageGrain : IGrain
     {
         #region Fields
 
@@ -103,6 +104,8 @@ namespace Democrite.Framework.Node.Storages
             public GrainId? Source { get; init; }
 
             public GrainId Storage { get; set; }
+
+            public TStorageGrain? StorageGrain { get; set; }
         }
 
         #endregion
@@ -158,9 +161,21 @@ namespace Democrite.Framework.Node.Storages
                             this._memoryStorageInfo.Add(key, memoryStorageInfo);
                         }
 
-                        memoryStorageInfo.Storage = storageGrain ?? throw new InvalidOperationException("Storage Grain must be reported for future request");
+                        if (storageGrain is null)
+                            throw new InvalidOperationException("Storage Grain must be reported for future request");
+
+                        var storageGrainChange = memoryStorageInfo.Storage != storageGrain.Value;
+
+                        if (storageGrainChange)
+                            memoryStorageInfo.Storage = storageGrain.Value;
+
                         memoryStorageInfo.StoredType = type ?? throw new InvalidOperationException("Stored object type must be reported for future request");
-                        memoryStorageInfo.ParentType = parentTypes?.ToHashSet() ?? throw new InvalidOperationException("Stored object parent Types must be reported for future request");
+
+                        if (memoryStorageInfo.StorageGrain is null || storageGrainChange)
+                            memoryStorageInfo.StorageGrain = this.RegisterGrainFactory.GetGrain<TStorageGrain>(storageGrain.Value);
+
+                        if (memoryStorageInfo.ParentType is null)
+                            memoryStorageInfo.ParentType = parentTypes?.ToHashSet() ?? throw new InvalidOperationException("Stored object parent Types must be reported for future request");
                         break;
                 }
             }
@@ -174,14 +189,14 @@ namespace Democrite.Framework.Node.Storages
 
         /// <inheritdoc />
         [ReadOnly]
-        public Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreDataAsync([NotNull] AbstractType entityAbstract, GrainCancellationToken token)
+        public virtual Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreDataAsync([NotNull] AbstractType entityAbstract, GrainCancellationToken token)
         {
             return GetAllStoreByFilderDataAsync(kv => kv.StoredType == entityAbstract || (kv.ParentType?.Contains(entityAbstract) ?? false), token);
         }
 
         /// <inheritdoc />
         [ReadOnly]
-        public Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreByKeysDataAsync<TReportKey>(IReadOnlyCollection<TReportKey> fullkeys, GrainCancellationToken token)
+        public virtual Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreByKeysDataAsync<TReportKey>(IReadOnlyCollection<TReportKey> fullkeys, GrainCancellationToken token)
             where TReportKey : notnull, IEquatable<TReportKey>
         {
             IReadOnlyCollection<TKey>? sourceKeys;
@@ -196,7 +211,6 @@ namespace Democrite.Framework.Node.Storages
                                      .NotNull()
                                      .ToArray();
             }
-                
 
             return GetAllStoreByFilderDataAsync(kv => sourceKeys.Contains(kv.FullKey), token);
         }

@@ -183,7 +183,7 @@
         /// <summary>
         /// Send query type command without expecting any result
         /// </summary>
-        Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, CancellationToken token, Guid? callContextId = null);
+        Task<BlackboardQueryResponse?> QueryAsync(BlackboardQueryCommand command, CancellationToken token, Guid? callContextId = null);
 
         /// <summary>
         /// Send query type command without expecting any result

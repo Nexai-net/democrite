@@ -6,12 +6,16 @@ namespace Democrite.Framework.Core.Storages
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
+    using Democrite.Framework.Core.Repositories;
 
     using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
-    using Orleans.Runtime;
+    using Orleans.Providers;
 
     using System;
 
@@ -24,6 +28,7 @@ namespace Democrite.Framework.Core.Storages
         #region Fields
 
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<IRepositoryFactory> _logger;
 
         #endregion
 
@@ -32,9 +37,11 @@ namespace Democrite.Framework.Core.Storages
         /// <summary>
         /// Initializes a new instance of the <see cref="RepositoryFactory"/> class.
         /// </summary>
-        public RepositoryFactory(IServiceProvider serviceProvider)
+        public RepositoryFactory(IServiceProvider serviceProvider,
+                                 ILogger<IRepositoryFactory>? logger = null)
         {
             this._serviceProvider = serviceProvider;
+            this._logger = logger ?? NullLogger<IRepositoryFactory>.Instance;
         }
 
         #endregion
@@ -42,37 +49,54 @@ namespace Democrite.Framework.Core.Storages
         #region Methods
 
         /// <inheritdoc />
-        public async ValueTask<TTargetRepo> GetAsync<TTargetRepo, TEntity>(string stateName, string? storageName = null, bool blockInitialization = false, CancellationToken token = default)
-            where TTargetRepo : IReadOnlyRepository<TEntity>
+        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(string storageName,
+                                                                                            bool isReadOnly,
+                                                                                            string? configurationName = null,
+                                                                                            CancellationToken token = default)
+            where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>
+            where TEntity : IEntityWithId<TEntityId>
+            where TEntityId : notnull, IEquatable<TEntityId>
         {
-            var storageConfig = string.IsNullOrEmpty(storageName)
+            try
+            {
+                configurationName = string.IsNullOrEmpty(configurationName)
                                             ? DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey
-                                            : storageName;
+                                            : configurationName;
 
-            var specificFactory = this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>(storageConfig)
-                                  ?? this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey)
-                                  ?? this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>("Default");
+                storageName ??= ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME;
 
-            if (specificFactory is null)
-            {
-                // TODO : Get Default if null
-                throw new Exception();
-            }
+                var specificFactory = this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>(configurationName)
+                                      ?? this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey)
+                                      ?? this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
 
-            var repo = specificFactory.Get<TTargetRepo, TEntity>(this._serviceProvider, stateName);
+                if (specificFactory is null)
+                {
+                    // TODO : Get Default if null
+                    throw new Exception("No specific repository factory");
+                }
 
-            if (repo is null)
-                throw new KeyNotFoundException($"Could build a dedicated repository with following pair stateName:'{stateName}' storageName:'{storageName}'");
-
-            if (repo is ISupportInitialization initialization && !initialization.IsInitialized)
-            {
-                if (repo is ISupportInitialization<string> initWithStateName)
-                    await initWithStateName.InitializationAsync(storageName, token);
+                IReadOnlyRepository<TEntity, TEntityId> repo;
+                if (typeof(TTargetRepo) != typeof(IReadOnlyRepository<TEntity, TEntityId>) && typeof(TTargetRepo) != typeof(IRepository<TEntity, TEntityId>))
+                    repo = specificFactory.Get<TTargetRepo, TEntity, TEntityId>(this._serviceProvider, storageName, configurationName, isReadOnly);
+                else if (isReadOnly)
+                    repo = new ReadOnlyRepository<TEntity, TEntityId>(specificFactory, this._serviceProvider, configurationName, storageName);
                 else
-                    await initialization.InitializationAsync(token);
-            }
+                    repo = new Repository<TEntity, TEntityId>(specificFactory, this._serviceProvider, configurationName, storageName);
 
-            return repo;
+                if (repo is null)
+                    throw new KeyNotFoundException($"Could build a dedicated repository with following pair storageName:'{storageName}' configurationName:'{configurationName}'");
+
+                return repo;
+            }
+            catch (Exception ex)
+            {
+                this._logger.OptiLog(LogLevel.Error,
+                                     "[Repository Factory] - Storage Name '{storageName}', Configuration Name '{configurationName}' - {exception}",
+                                     storageName,
+                                     configurationName,
+                                     ex);
+                throw;
+            }
         }
 
         #endregion

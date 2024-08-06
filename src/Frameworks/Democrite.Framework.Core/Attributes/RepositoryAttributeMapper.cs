@@ -6,16 +6,21 @@ namespace Democrite.Framework.Core.Attributes
 {
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Repositories;
+    using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Storages;
 
     using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Orleans;
     using Orleans.Runtime;
 
     using System.Diagnostics;
+    using System.Linq.Expressions;
     using System.Reflection;
 
     /// <summary>
@@ -37,10 +42,8 @@ namespace Democrite.Framework.Core.Attributes
         /// </summary>
         static RepositoryAttributeMapper()
         {
-            var factoryWithEntityMth = typeof(RepositoryAttributeMapper).GetMethod(nameof(GetFactoryWithEntity), BindingFlags.Static | BindingFlags.NonPublic);
-            Debug.Assert(factoryWithEntityMth != null);
-
-            s_factoryWithEntityGenericMth = factoryWithEntityMth.GetGenericMethodDefinition();
+            Expression<Func<RepositoryAttribute, Factory<IGrainContext, object>>> factoryFunc = m => GetFactoryWithEntity<IReadOnlyRepository<SequenceDefinition, Guid>, SequenceDefinition, Guid>(m);
+            s_factoryWithEntityGenericMth = ((MethodCallExpression)factoryFunc.Body).Method.GetGenericMethodDefinition();
         }
 
         #endregion
@@ -54,9 +57,8 @@ namespace Democrite.Framework.Core.Attributes
                                           .GetTypeInfoExtension()
                                           .GetAllCompatibleTypes()
                                           .FirstOrDefault(t => t.IsInterface &&
-                                                               t.GetGenericArguments().Length.IsBetween(1, 2) &&
-                                                               (t.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<>) ||
-                                                                t.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<,>)));
+                                                               t.GetGenericArguments().Length == 2 &&
+                                                               t.GetGenericTypeDefinition().IsAssignableTo(typeof(IReadOnlyRepository<,>)));
 
 #pragma warning disable IDE0270 // Use coalesce expression
 
@@ -65,34 +67,41 @@ namespace Democrite.Framework.Core.Attributes
 
 #pragma warning restore IDE0270 // Use coalesce expression
 
-            var genericRequestedType = repositoryType.GetGenericArguments();
+            var genericRequestedType = parameter.ParameterType.AsEnumerable()
+                                                .Concat(repositoryType.GetGenericArguments())
+                                                .ToArray();
 
-            Debug.Assert(genericRequestedType != null && genericRequestedType.Length == 1, "Only repository are managed");
-
-            return (Factory<IGrainContext, object>)s_factoryWithEntityGenericMth.MakeGenericMethod(parameter.ParameterType, genericRequestedType.First()).Invoke(null, new[] { metadata })!;
+            var factory = (Factory<IGrainContext, object>)s_factoryWithEntityGenericMth.MakeGenericMethod(genericRequestedType).Invoke(null, new[] { metadata })!;
+            return factory;
         }
 
         #region Tools
 
         /// <inheritdoc />
-        private static Factory<IGrainContext, object> GetFactoryWithEntity<TTargetRepo, TEntity>(RepositoryAttribute metadata)
-            where TTargetRepo : IReadOnlyRepository<TEntity>
+        private static Factory<IGrainContext, object> GetFactoryWithEntity<TTargetRepo, TEntity, TEntityId>(RepositoryAttribute metadata)
+            where TEntity : IEntityWithId<TEntityId>
+            where TEntityId : notnull, IEquatable<TEntityId>
+            where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>
         {
             return ctx =>
             {
-                var factory = ctx.ActivationServices.GetRequiredService<IRepositoryFactory>();
-                var repositoryValueTask = factory.GetAsync<TTargetRepo, TEntity>(metadata.StateName, metadata.StorageName);
-
-                if (repositoryValueTask.IsCompleted == false)
+                try
                 {
-                    // due to IAttributeToFactoryMapper<RepositoryAttribute> signaure async could not be used
-                    // So we have to block the current thread waiting.
+                    var factory = ctx.ActivationServices.GetRequiredService<IRepositoryFactory>();
+                    var repository = factory.Get<TTargetRepo, TEntity, TEntityId>(metadata.StorageName,
+                                                                                  typeof(TTargetRepo).IsAssignableTo(typeof(IRepository<TEntity, TEntityId>)) == false,
+                                                                                  metadata.ConfigurationName);
 
-                    // Attention : dead lock normally .GetAwaiter().GetResult(); prevent it
-                    return repositoryValueTask.GetAwaiter().GetResult();
+                    return repository;
                 }
+                catch (Exception ex)
+                {
+                    var logger = ctx.ActivationServices.GetService<ILogger<RepositoryAttributeMapper>>() ?? NullLogger<RepositoryAttributeMapper>.Instance;
 
-                return repositoryValueTask.Result;
+                    logger.OptiLog(LogLevel.Error, "Failed RepositoryAttributeMapper {exception}", ex);
+
+                    throw;
+                }
             };
         }
 

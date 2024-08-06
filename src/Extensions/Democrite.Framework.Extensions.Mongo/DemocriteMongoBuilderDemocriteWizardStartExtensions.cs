@@ -8,7 +8,9 @@ namespace Democrite.Framework.Configurations
     using Democrite.Framework.Cluster.Configurations.Builders;
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Extensions.Mongo.Configurations;
-    using Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator;
+
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
 
     using Orleans.Providers;
     using Orleans.Providers.MongoDB.Configuration;
@@ -21,6 +23,12 @@ namespace Democrite.Framework.Configurations
 
     public static class DemocriteMongoBuilderDemocriteWizardStartExtensions
     {
+        #region Fields
+
+        private static readonly Type s_builderTraits = typeof(IDemocriteMongoStorageBuilder);
+
+        #endregion
+
         #region Methods
 
         /// <summary>
@@ -28,7 +36,7 @@ namespace Democrite.Framework.Configurations
         /// </summary>
         public static TWizard UseMongoCluster<TWizard, TWizardConfig>(this IDemocriteWizardStart<TWizard, TWizardConfig> wizard,
                                                                       Action<IDemocriteClusterExternalBuilder<MongoDBMembershipTableOptions>>? buildOption = null,
-                                                                      string? serviceId = null, 
+                                                                      string? serviceId = null,
                                                                       string? clusterId = null)
             where TWizard : IDemocriteWizard<TWizard, TWizardConfig>
             where TWizardConfig : IDemocriteCoreConfigurationWizard<TWizardConfig>
@@ -41,27 +49,25 @@ namespace Democrite.Framework.Configurations
 
                 var buildResult = builder.Build();
 
-                AutoMembershipsMongoConfigurator.MongoMemberShipsConfiguration(cl,
-                                                                               cl.GetServiceCollection(),
-                                                                               cfg,
-                                                                               buildResult.ConnectionString,
-                                                                               buildResult.Option);
-
-                cl.CustomizeClusterId(serviceId, clusterId);
+                var mongoBuilder = GetBuilder(cl.GetServiceCollection(), cl.GetConfiguration(), cl);
+                mongoBuilder.SetupMongoCluster(cl, buildResult.ConnectionString, buildResult.Option, serviceId, clusterId);
             });
         }
 
         /// <summary>
         /// Setup Mongo DB to storage
         /// </summary>
-        public static IDemocriteNodeMemoryBuilder UseMongoStorage(this IDemocriteNodeMemoryBuilder wizard,
-                                                                  Action<IDemocriteMongoStorageConfiguration> configuration)
+        /// <param name="storageType">Define whitch type of storage impacted</param>
+        /// <param name="connectionString">Set the connection if different or not set during the cluster setups</param>
+        public static IDemocriteNodeMemoryBuilder UseMongo(this IDemocriteNodeMemoryBuilder wizard,
+                                                           StorageTypeEnum storageType = StorageTypeEnum.All,
+                                                           string? connectionString = null,
+                                                           string? database = null,
+                                                           string? collectionPrefix = null)
         {
-            var cfg = new DemocriteMongoStorageConfiguration(wizard,
-                                                             wizard.GetServiceCollection(),
-                                                             wizard.GetConfiguration());
+            var mongoBuilder = GetBuilder(wizard.GetServiceCollection(), wizard.GetConfiguration(), wizard);
 
-            configuration(cfg);
+            mongoBuilder.Store(storageType, connectionString, database, collectionPrefix);
             return wizard;
         }
 
@@ -70,19 +76,12 @@ namespace Democrite.Framework.Configurations
         /// </summary>
         /// <param name="storageType">Define whitch type of storage impacted</param>
         /// <param name="connectionString">Set the connection if different or not set during the cluster setups</param>
-        public static IDemocriteNodeMemoryBuilder UseMongoStorage(this IDemocriteNodeMemoryBuilder wizard,
-                                                                  StorageTypeEnum storageType = StorageTypeEnum.All,
-                                                                  string? connectionString = null,
-                                                                  string? database = null,
-                                                                  string? collectionPrefix = null)
+        public static IDemocriteNodeMemoryBuilder UseMongo(this IDemocriteNodeMemoryBuilder wizard,
+                                                           Action<IDemocriteMongoStorageBuilder> builderAction)
         {
-            return UseMongoStorage(wizard, b =>
-            {
-                if (!string.IsNullOrEmpty(connectionString))
-                    b.ConnectionString(connectionString, database ?? nameof(Democrite).ToLower(), collectionPrefix);
-
-                b.Store(storageType, database, collectionPrefix);
-            });
+            var mongoBuilder = GetBuilder(wizard.GetServiceCollection(), wizard.GetConfiguration(), wizard);
+            builderAction(mongoBuilder);
+            return wizard;
         }
 
         /// <summary>
@@ -97,7 +96,14 @@ namespace Democrite.Framework.Configurations
                                                                        string? collectionPrefix = null,
                                                                        bool buildRepository = false)
         {
-            return UseMongoGrainStorage(wizard, key.AsEnumerable().ToReadOnly(), connectionString, database, collectionPrefix, buildRepository);
+            var builder = GetBuilder(wizard.GetServiceCollection(), wizard.GetConfiguration(), wizard);
+            builder.SetupGrainStateStorage(key,
+                                           connectionString,
+                                           database,
+                                           collectionPrefix,
+                                           buildRepository);
+
+            return wizard;
         }
 
         /// <summary>
@@ -106,22 +112,20 @@ namespace Democrite.Framework.Configurations
         /// <param name="storageType">Define whitch type of storage impacted</param>
         /// <param name="connectionString">Set the connection if different or not set during the cluster setups</param>
         public static IDemocriteNodeMemoryBuilder UseMongoGrainStorage(this IDemocriteNodeMemoryBuilder wizard,
-                                                                   IReadOnlyCollection<string> keys,
-                                                                   string? connectionString = null,
-                                                                   string? database = null,
-                                                                   string? collectionPrefix = null,
-                                                                   bool buildRepository = false)
+                                                                       IReadOnlyCollection<string> keys,
+                                                                       string? connectionString = null,
+                                                                       string? database = null,
+                                                                       string? collectionPrefix = null,
+                                                                       bool buildRepository = false)
         {
-            return UseMongoStorage(wizard, b =>
-            {
-                if (!string.IsNullOrEmpty(connectionString))
-                    b.ConnectionString(connectionString, database ?? nameof(Democrite).ToLower(), collectionPrefix);
+            var builder = GetBuilder(wizard.GetServiceCollection(), wizard.GetConfiguration(), wizard);
+            builder.SetupGrainStateStorage(keys,
+                                           connectionString,
+                                           database,
+                                           collectionPrefix,
+                                           buildRepository);
 
-                if (keys is null || keys.Count == 0)
-                    keys = ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME.AsEnumerable().ToArray();
-
-                b.CustomStorage(keys, database, collectionPrefix, buildRepository);
-            });
+            return wizard;
         }
 
         /// <summary>
@@ -135,7 +139,13 @@ namespace Democrite.Framework.Configurations
                                                                      string? database = null,
                                                                      string? collectionPrefix = null)
         {
-            return UseMongoRepository(wizard, key.AsEnumerable().ToReadOnly(), connectionString, database, collectionPrefix);
+            var builder = GetBuilder(wizard.GetServiceCollection(), wizard.GetConfiguration(), wizard);
+            builder.SetupRepositoryStorage(key,
+                                           connectionString,
+                                           database,
+                                           collectionPrefix);
+
+            return wizard;
         }
 
         /// <summary>
@@ -149,13 +159,13 @@ namespace Democrite.Framework.Configurations
                                                                  string? database = null,
                                                                  string? collectionPrefix = null)
         {
-            return UseMongoStorage(wizard, b =>
-            {
-                if (!string.IsNullOrEmpty(connectionString))
-                    b.ConnectionString(connectionString, database ?? nameof(Democrite).ToLower(), collectionPrefix);
+            var builder = GetBuilder(wizard.GetServiceCollection(), wizard.GetConfiguration(), wizard);
+            builder.SetupRepositoryStorage(keys,
+                                           connectionString,
+                                           database,
+                                           collectionPrefix);
 
-                b.CustomRepositoryStorage(keys, database, collectionPrefix);
-            });
+            return wizard;
         }
 
         /// <summary>
@@ -165,25 +175,49 @@ namespace Democrite.Framework.Configurations
                                                                       Action<IDemocriteClusterExternalBuilder<MongoDBOptions>> buildOption,
                                                                       string uniqueKeyName = ProviderConstants.DEFAULT_LOG_CONSISTENCY_PROVIDER_NAME)
         {
-            wizard.SetupNodeMemories(memory =>
-            {
-                var builder = new DemocriteExternalClusterBuilder<MongoDBOptions>(memory.GetConfiguration());
-                buildOption?.Invoke(builder);
+            //wizard.SetupNodeMemories(memory =>
+            //{
+            //    var builder = new DemocriteExternalClusterBuilder<MongoDBOptions>(memory.GetConfiguration());
+            //    buildOption?.Invoke(builder);
 
-                var buildResult = builder.Build();
+            //    var buildResult = builder.Build();
 
-                AutoCustomDefinitionProviderMongoConfigurator.Default
-                                                             .ConfigureMongoProviderStorage(memory,
-                                                                                            memory.GetConfiguration(),
-                                                                                            memory.GetServiceCollection(),
-                                                                                            memory.Logger,
-                                                                                            buildResult.ConnectionString,
-                                                                                            buildResult.Option,
-                                                                                            uniqueKeyName);
-            });
+            //    AutoCustomDefinitionProviderMongoConfigurator.Default
+            //                                                 .ConfigureMongoProviderStorage(memory,
+            //                                                                                memory.GetConfiguration(),
+            //                                                                                memory.GetServiceCollection(),
+            //                                                                                memory.Logger,
+            //                                                                                buildResult.ConnectionString,
+            //                                                                                buildResult.Option,
+            //                                                                                uniqueKeyName);
+            //});
 
-            return wizard;
+            //return wizard;
+
+            throw new NotImplementedException();
         }
+
+        #region Tools
+
+        /// <summary>
+        /// Gets the configuration.
+        /// </summary>
+        public static IDemocriteMongoStorageBuilder GetBuilder(IServiceCollection services, IConfiguration configuration, IDemocriteBaseGenericBuilder democriteBaseGenericBuilder)
+        {
+            var builder = services.FirstOrDefault(s => s.IsKeyedService == false &&
+                                                       s.ServiceType == s_builderTraits &&
+                                                       s.ImplementationInstance is not null)?.ImplementationInstance as IDemocriteMongoStorageBuilder;
+
+            if (builder == null)
+            {
+                builder = new DemocriteMongoStorageBuilder(services, configuration, democriteBaseGenericBuilder);
+                services.AddSingleton<IDemocriteMongoStorageBuilder>(builder);
+            }
+
+            return builder;
+        }
+
+        #endregion
 
         #endregion
     }

@@ -12,10 +12,13 @@ namespace Democrite.Framework.Node
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Storages;
+    using Democrite.Framework.Core.Repositories;
     using Democrite.Framework.Node.Models;
 
     using Elvex.Toolbox.Abstractions.Conditions;
     using Elvex.Toolbox.Abstractions.Services;
+    using Elvex.Toolbox.Abstractions.Supports;
+    using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Helpers;
     using Elvex.Toolbox.Models;
 
@@ -82,7 +85,7 @@ namespace Democrite.Framework.Node
         public async Task<EtagContainer<IReadOnlyCollection<TDefinition>>> GetDefinitionAsync<TDefinition>(GrainCancellationToken token, IReadOnlyCollection<Guid> uids)
             where TDefinition : class, IDefinition
         {
-            var fetchTasks = await ApplyActionOn(uids, (r, ids, t) => r.GetByIdsValueAsync<EtagDefinitionContainer<TDefinition>>(ids, t).AsTask(), token.CancellationToken);
+            var fetchTasks = await ApplyActionOn(uids, (r, ids, t) => r.GetValueByIdAsync<EtagDefinitionContainer<TDefinition>>(ids, t).AsTask(), token.CancellationToken);
 
             var results = fetchTasks.Where(t => t.IsCompletedSuccessfully)
                                     .SelectMany(t => t.Result ?? EnumerableHelper<EtagDefinitionContainer>.ReadOnly)
@@ -181,7 +184,7 @@ namespace Democrite.Framework.Node
         /// <inheritdoc />
         public async Task<bool> RemoveDefinitionAsync(IIdentityCard identity, GrainCancellationToken token, IReadOnlyCollection<Guid> definitionIds)
         {
-            var tasks = await ApplyActionOn(definitionIds, (r, ids, t) => r.DeleteRecordsAsync(t, ids), token.CancellationToken);
+            var tasks = await ApplyActionOn(definitionIds, (r, ids, t) => r.DeleteRecordAsync(ids, t), token.CancellationToken);
 
             var deleted = tasks.Where(t => t.IsCompletedSuccessfully)
                                .Select(t => t.Result)
@@ -291,13 +294,16 @@ namespace Democrite.Framework.Node
                 {
                     foreach (var type in missing)
                     {
-                        var repo = await this._repositoryFactory.GetAsync<IRepository<EtagDefinitionContainer, Guid>, EtagDefinitionContainer>(type.DisplayName.Replace(".", "").Trim().Replace(" ", "").Replace("-", "").Replace("_", ""),
-                                                                                                                                               DemocriteConstants.DefaultDemocriteDynamicDefinitionsRepositoryConfigurationKey,
-                                                                                                                                               cancellationToken: token);
-                        result.Add(type, repo);
+                        var repo = this._repositoryFactory.Get<IRepository<EtagDefinitionContainer, Guid>, EtagDefinitionContainer, Guid>(GetStorageNameFromType(type),
+                                                                                                                                          false,
+                                                                                                                                          configurationName: DemocriteConstants.DefaultDemocriteDynamicDefinitionsRepositoryConfigurationKey,
+                                                                                                                                          cancellationToken: token);
+
+                        var missingRepo = (IRepository<EtagDefinitionContainer, Guid>)repo;
+                        result.Add(type, missingRepo);
                         if (!this._repositoryCache.ContainsKey(type))
                         {
-                            this._repositoryCache.Add(type, repo);
+                            this._repositoryCache.Add(type, missingRepo);
                             continue;
                         }
                     }
@@ -308,7 +314,31 @@ namespace Democrite.Framework.Node
                 }
             }
 
+            foreach (var repo in result)
+            {
+                try
+                {
+                    if (repo.Value is ISupportInitialization<string> initStrRepo && !initStrRepo.IsInitialized)
+                        await initStrRepo.InitializationAsync(GetStorageNameFromType(repo.Key), token);
+                    else if (repo.Value is ISupportInitialization initRepo && !initRepo.IsInitialized)
+                        await initRepo.InitializationAsync(token);
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.OptiLog(LogLevel.Error,
+                                        "Repository failed - Storage Name '{storageName}' - Configuration Name '{configurationName}' : {exception}",
+                                        GetStorageNameFromType(repo.Key),
+                                        DemocriteConstants.DefaultDemocriteDynamicDefinitionsRepositoryConfigurationKey,
+                                        ex);
+                }
+            }
+
             return result;
+        }
+
+        private static string GetStorageNameFromType(ConcretType type)
+        {
+            return type.DisplayName.Replace(".", "").Trim().Replace(" ", "").Replace("-", "").Replace("_", "");
         }
 
         /// <inheritdoc />
@@ -349,7 +379,7 @@ namespace Democrite.Framework.Node
         {
             if (!@override)
             {
-                var existing = await repository.GetByIdValueAsync(definition.Uid, token.CancellationToken);
+                var existing = await repository.GetValueByIdAsync(definition.Uid, token.CancellationToken);
 
                 if (existing is not null)
                     return false;

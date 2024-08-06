@@ -14,7 +14,9 @@ namespace Democrite.Framework.Core.Abstractions.Repositories
         /// <summary>
         /// Gets all value
         /// </summary>
-        public static ValueTask<IReadOnlyCollection<TEntity>> GetAllAsync<TEntity>(this IReadOnlyRepository<TEntity> repo, CancellationToken token)
+        public static ValueTask<IReadOnlyCollection<TEntity>> GetAllAsync<TEntity, TEntityId>(this IReadOnlyRepository<TEntity, TEntityId> repo, CancellationToken token)
+                where TEntity : IEntityWithId<TEntityId>
+                where TEntityId : notnull, IEquatable<TEntityId>
         {
             return repo.GetValuesAsync(null, token);
         }

@@ -12,6 +12,7 @@ namespace Democrite.Framework.Node
 
     using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Patterns.Strategy;
+    using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Models;
     using Elvex.Toolbox.Patterns.Strategy;
     using Elvex.Toolbox.Supports;
@@ -39,7 +40,7 @@ namespace Democrite.Framework.Node
         private readonly Dictionary<Guid, DateTime> _indexDefinitionIdUpdates;
 
         private readonly SupportInitializationImplementation<NoneType> _lazyInitializer;
-        
+
         private readonly IVGrainDemocriteSystemProvider _vgrainDemocriteSystemProvider;
         private readonly ILogger<DynamicDefinitionSourceProvider<TDefinition>> _logger;
         private readonly ISignalLocalServiceRelay _signalLocalServiceRelay;
@@ -237,6 +238,7 @@ namespace Democrite.Framework.Node
                 }
                 catch (Exception ex)
                 {
+                    this._logger.OptiLog(LogLevel.Error, "[{definition}] Align definition from dynamic {exception}", typeof(TDefinition), ex);
                     throw;
                 }
                 finally

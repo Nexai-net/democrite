@@ -86,7 +86,7 @@ namespace Democrite.Framework.Builders
         public DefinitionMetaData Build(out string? displayName)
         {
             displayName = this._displayName;
-            return new DefinitionMetaData(this._description, this._categoryPath, this._tags.ToArray());
+            return new DefinitionMetaData(this._description, this._categoryPath, this._tags.ToArray(), DateTime.UtcNow);
         }
 
         /// <inheritdoc />

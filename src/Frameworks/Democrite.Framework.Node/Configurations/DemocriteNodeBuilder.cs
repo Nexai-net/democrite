@@ -602,7 +602,7 @@ namespace Democrite.Framework.Configurations
             AutoConfigImpl<INodeDefaultRepositoryMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
                                                                                                       indexedAssemblies,
                                                                                                       (s) => s.GetServiceByKey<string, IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey) != null,
-                                                                                                      ConfigurationNodeSectionNames.NodeRepositoryStoragesAutoConfigKey,
+                                                                                                      ConfigurationNodeSectionNames.NodeRepositoryStoragesDefaultAutoConfigKey,
                                                                                                       logger);
 
             ConfigDefaultOptions(this.GetServiceCollection(), configuration);

@@ -15,26 +15,14 @@ namespace Democrite.Framework.Core.Abstractions.Storages
         /// Get a new repository based on <paramref name="storageName"/> and <paramref name="stateName"/>
         /// </summary>
         /// <remarks>
-        ///     Initialize the repository if needed
+        ///     Repository is not initialized, initialization must be managed lazylly on call
         /// </remarks>
-        ValueTask<TTargetRepo> GetAsync<TTargetRepo, TEntity>(string stateName,
-                                                              string? storageName = null,
-                                                              bool blockInitialization = false,
-                                                              CancellationToken cancellationToken = default)
-            where TTargetRepo : IReadOnlyRepository<TEntity>;
-
-        ///// <summary>
-        ///// Get a new repository based on <paramref name="storageName"/> and <paramref name="stateName"/>
-        ///// </summary>
-        ///// <remarks>
-        /////     Initialize the repository if needed
-        ///// </remarks>
-        //ValueTask<TTargetRepo> GetAsync<TTargetRepo, TEntity>(Type targetRepo,
-        //                                                      Type entityType,
-        //                                                      string stateName,
-        //                                                      string? storageName = null,
-        //                                                      bool blockInitialization = false,
-        //                                                      CancellationToken cancellationToken = default)
-        //    where TTargetRepo : IReadOnlyRepository<TEntity>;
+        IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(string storageName,
+                                                                                     bool isReadOnly,
+                                                                                     string? configurationName = null,
+                                                                                     CancellationToken cancellationToken = default)
+            where TEntity : IEntityWithId<TEntityId>                                      
+            where TEntityId : notnull, IEquatable<TEntityId>
+            where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>;
     }
 }

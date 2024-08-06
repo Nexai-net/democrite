@@ -4,17 +4,20 @@
 
 namespace Democrite.Framework.Extensions.Mongo.Models
 {
+    using Democrite.Framework.Core.Abstractions.Repositories;
+
     using MongoDB.Bson;
     using MongoDB.Bson.Serialization.Attributes;
 
     using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal sealed class GrainStateContainer<TState>
+    internal sealed class GrainStateContainer<TState> : IEntityWithId<string>
     {
         [BsonId]
         [NotNull]
-        public string Id { get; init; }
+        [BsonElement("_id")]
+        public string Uid { get; init; }
 
         [BsonElement("_tag")]
         [NotNull]

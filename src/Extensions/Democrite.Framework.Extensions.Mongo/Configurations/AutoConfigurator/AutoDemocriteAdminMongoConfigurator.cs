@@ -18,66 +18,16 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
     /// Auto configure the democrite high system state storage
     /// </summary>
     /// <seealso cref="INodeDemocriteAdminMemoryAutoConfigurator" />
-    public sealed class AutoDemocriteAdminMongoConfigurator : AutoBaseMemoryStorageMongoConfigurator, INodeDemocriteAdminMemoryAutoConfigurator
+    public sealed class AutoDemocriteAdminMongoConfigurator : INodeDemocriteAdminMemoryAutoConfigurator
     {
-        #region Ctor
-
-        /// <summary>
-        /// Initializes the <see cref="AutoDemocriteAdminMongoConfigurator"/> class.
-        /// </summary>
-        static AutoDemocriteAdminMongoConfigurator()
-        {
-            Default = new AutoDemocriteAdminMongoConfigurator();
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the default.
-        /// </summary>
-        public static AutoDemocriteAdminMongoConfigurator Default { get; }
-
-        #endregion
-
-        #region Methods
-
         /// <inheritdoc />
         public void AutoConfigure(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
                                   IConfiguration configuration,
                                   IServiceCollection serviceCollection,
                                   ILogger logger)
         {
-            ConfigureMongoStorage(democriteBuilderWizard,
-                                          configuration,
-                                          serviceCollection,
-                                          logger,
-                                          null,
-                                          null);
+            var builder = DemocriteMongoBuilderDemocriteWizardStartExtensions.GetBuilder(serviceCollection, configuration, democriteBuilderWizard);
+            builder.SetupDemocriteAdminStorage();
         }
-
-        /// <summary>
-        /// Configures the mongo as reminder storage.
-        /// </summary>
-        internal void ConfigureMongoStorage(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
-                                            IConfiguration configuration,
-                                            IServiceCollection serviceCollection,
-                                            ILogger logger,
-                                            string? connectionString,
-                                            MongoDBOptions? option)
-        {
-            ConfigureMongoStorage<MongoDBGrainStorageOptions>(democriteBuilderWizard,
-                                                              configuration,
-                                                              serviceCollection,
-                                                              logger,
-                                                              connectionString,
-                                                              option,
-                                                              nameof(Democrite),
-                                                              ConfigurationNodeSectionNames.NodeDemocriteAdminMemory,
-                                                              ConfigurationNodeSectionNames.NodeDemocriteAdminMemoryConnectionString);
-        }
-
-        #endregion
     }
 }

@@ -38,7 +38,7 @@ namespace Democrite.Framework.Core.Extensions
             AddDefaultCoreService<IDiagnosticLogger, DiagnosticLogger>(serviceCollection);
 
             AddDefaultCoreService<IProcessSystemService, ProcessSystemService>(serviceCollection);
-            
+
             serviceCollection.TryAddSingleton<IJsonSerializer>(NewtownJsonSerializer.Instance);
             AddDefaultCoreService<ITimeManager, TimeManager>(serviceCollection);
 
@@ -54,8 +54,8 @@ namespace Democrite.Framework.Core.Extensions
             AddDefaultCoreService<ISignalService, SignalService>(serviceCollection);
             AddDefaultCoreService<IWorkerTaskSchedulerProvider, WorkerTaskSchedulerProvider>(serviceCollection);
 
-            AddDefaultCoreService<IAttributeToFactoryMapper<RepositoryAttribute>, RepositoryAttributeMapper>(serviceCollection);
             AddDefaultCoreService<IRepositoryFactory, RepositoryFactory>(serviceCollection);
+            AddDefaultCoreService<IAttributeToFactoryMapper<RepositoryAttribute>, RepositoryAttributeMapper>(serviceCollection);
 
             AddDefaultCoreService<IRemoteGrainServiceFactory, RemoteGrainServiceFactory>(serviceCollection);
             AddDefaultCoreService<IDynamicDefinitionHandler, DynamicDefinitionHandler>(serviceCollection);
@@ -71,7 +71,7 @@ namespace Democrite.Framework.Core.Extensions
             where TContract : class
             where TImplementation : class, TContract
         {
-            if (!serviceCollection.Any(s => s.ServiceType == typeof(TContract)))
+            //if (!serviceCollection.Any(s => s.ServiceType == typeof(TContract)))
             {
                 if (tryAdd)
                     serviceCollection.TryAddSingleton<TContract, TImplementation>();

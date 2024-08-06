@@ -4,8 +4,15 @@
 
 namespace Democrite.Framework.Extensions.Mongo.Services
 {
+    using Amazon.Runtime.Internal.Util;
+
     using Democrite.Framework.Extensions.Mongo.Models;
+
     using Elvex.Toolbox.Disposables;
+    using Elvex.Toolbox.Extensions;
+
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using MongoDB.Driver;
 
@@ -13,7 +20,7 @@ namespace Democrite.Framework.Extensions.Mongo.Services
     using Orleans.Providers.MongoDB.Utils;
 
     using System.Collections.Generic;
-    using System.Xml.Linq;
+    using System.Diagnostics;
 
     /// <summary>
     /// <see cref="IMongoClientFactory"/> use to allow storage to use different db
@@ -31,6 +38,7 @@ namespace Democrite.Framework.Extensions.Mongo.Services
         private readonly MongoDBConnectionOptions _rootDefaultOptions;
 
         private readonly ReaderWriterLockSlim _locker;
+        private readonly ILogger<MultipleMongoClientFactory> _logger;
 
         #endregion
 
@@ -40,11 +48,14 @@ namespace Democrite.Framework.Extensions.Mongo.Services
         /// Initializes a new instance of the <see cref="MultipleMongoClientFactory"/> class.
         /// </summary>
         public MultipleMongoClientFactory(IEnumerable<MongoDBConnectionOptions> configuredConnections,
-                                          IMongoClient? defaultClient = null)
+                                          IMongoClient? defaultClient = null,
+                                          ILogger<MultipleMongoClientFactory>? logger = null)
         {
             this._connectionCacheFromRequestName = new Dictionary<string, IMongoClient>(StringComparer.OrdinalIgnoreCase);
             this._connectionCacheFromConnectionString = new Dictionary<string, IMongoClient>();
             this._locker = new ReaderWriterLockSlim();
+
+            this._logger = logger ?? NullLogger<MultipleMongoClientFactory>.Instance;
 
             this._defaultClient = defaultClient;
             this._configuredConnections = configuredConnections.GroupBy(c => c.Key?.ToLower() ?? string.Empty)
@@ -60,47 +71,53 @@ namespace Democrite.Framework.Extensions.Mongo.Services
         /// <inheritdoc />
         public IMongoClient Create(string name)
         {
-            this._locker.EnterReadLock();
             try
             {
-                if (this._connectionCacheFromRequestName.TryGetValue(name, out var cachedClient))
-                    return cachedClient;
+                this._locker.EnterReadLock();
+                try
+                {
+                    if (this._connectionCacheFromRequestName.TryGetValue(name, out var cachedClient))
+                        return cachedClient;
+                }
+                finally
+                {
+                    this._locker.ExitReadLock();
+                }
+
+                string? connectionString = null;
+
+                if (this._configuredConnections.TryGetValue(name, out var connection))
+                {
+                    connectionString = connection.ConnectionString;
+                }
+
+                if (string.IsNullOrEmpty(connectionString))
+                    connectionString = this._rootDefaultOptions?.ConnectionString;
+
+                if (string.IsNullOrEmpty(connectionString))
+                    throw new InvalidDataException("Connection is empty for storage '" + name + "'");
+
+                var client = GetConnectionFromConfigString(connectionString);
+
+                this._locker.EnterWriteLock();
+                try
+                {
+                    if (this._connectionCacheFromRequestName.TryGetValue(name, out var cachedClient))
+                        return cachedClient;
+
+                    this._connectionCacheFromRequestName.Add(name, client);
+                    return client;
+                }
+                finally
+                {
+                    this._locker.ExitWriteLock();
+                }
             }
-            finally
+            catch (Exception ex)
             {
-                this._locker.ExitReadLock();
+                this._logger.OptiLog(LogLevel.Error, "Mongo Client failed config '{configurationName}' => {exception}", name, ex);
+                throw;
             }
-
-            string? connectionString = null;
-
-            if (this._configuredConnections.TryGetValue(name, out var connection))
-            {
-                connectionString = connection.ConnectionString;
-            }
-
-            if (string.IsNullOrEmpty(connectionString))
-                connectionString = this._rootDefaultOptions?.ConnectionString;
-
-            if (string.IsNullOrEmpty(connectionString))
-                throw new InvalidDataException("Connection is empty for storage '" + name + "'");
-
-            var client = GetConnectionFromConfigString(connectionString);
-
-            this._locker.EnterWriteLock();
-            try
-            {
-                if (this._connectionCacheFromRequestName.TryGetValue(name, out var cachedClient))
-                    return cachedClient;
-
-                this._connectionCacheFromRequestName.Add(name, client);
-                return client;
-            }
-            finally
-            {
-                this._locker.ExitWriteLock();
-            }
-
-            //throw new NotSupportedException("Could not generate a IMongoClient for request type '" + name + "'");
         }
 
         /// <summary>
@@ -142,7 +159,12 @@ namespace Democrite.Framework.Extensions.Mongo.Services
         protected virtual MongoClient InstanciateMongoClient(string configurationString)
         {
             configurationString = MongoConfigurator.CheckAndNormalizeConnectionString(configurationString);
-            return new MongoClient(MongoUrl.Create(configurationString));
+
+            var settings = MongoClientSettings.FromUrl(MongoUrl.Create(configurationString));
+            settings.MaxConnecting = settings.MaxConnectionPoolSize / 3;
+            settings.MinConnectionPoolSize = settings.MaxConnectionPoolSize / 3;
+
+            return new MongoClient(settings);
         }
 
         /// <summary>

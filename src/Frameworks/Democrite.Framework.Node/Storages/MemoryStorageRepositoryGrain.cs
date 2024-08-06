@@ -32,7 +32,7 @@ namespace Democrite.Framework.Node.Storages
         private readonly Dictionary<TKey, byte[]> _store;
         private readonly IGrainFactory _grainFactory;
         private long _primarykey;
-        private string _storageName;
+        private string _configurationName;
 
         #endregion
 
@@ -46,7 +46,7 @@ namespace Democrite.Framework.Node.Storages
         {
             // storage name will be set during the grain activation
             // It will not be null during grain usage
-            this._storageName = null!;
+            this._configurationName = null!;
 
             this._registries = new Dictionary<string, IMemoryStorageRepositoryRegistryGrain<TKey>>();
             this._store = new Dictionary<TKey, byte[]>();
@@ -102,8 +102,8 @@ namespace Democrite.Framework.Node.Storages
         /// <inheritdoc />
         public override Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            this._primarykey = this.GetPrimaryKeyLong(out var storageName);
-            this._storageName = storageName;
+            this._primarykey = this.GetPrimaryKeyLong(out var configurationName);
+            this._configurationName = configurationName;
 
             return base.OnActivateAsync(cancellationToken);
         }
@@ -118,10 +118,10 @@ namespace Democrite.Framework.Node.Storages
             if (this._registries.TryGetValue(stateName, out var cachedRegistry))
                 return cachedRegistry;
 
-            // Registry are distribute through memoryIndex % 10 + stateName ### storageName
+            // Registry are distribute through memoryIndex % 10 + stateName ### configuratioName
             // This will reduce the botle neck of all the memory grain reporting to same registry grain
 
-            var registry = this._grainFactory.GetGrain<IMemoryStorageRepositoryRegistryGrain<TKey>>(this._primarykey / 10, MemoryStorageRegistryHelper.ComputeRegistryExtName(stateName, this._storageName));
+            var registry = this._grainFactory.GetGrain<IMemoryStorageRepositoryRegistryGrain<TKey>>(this._primarykey / 10, MemoryStorageRegistryHelper.ComputeRegistryExtName(stateName, this._configurationName));
             this._registries.Add(stateName, registry);
             return registry;
         }

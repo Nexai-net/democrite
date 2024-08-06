@@ -6,6 +6,8 @@ namespace Democrite.Framework.Node.Abstractions.Repositories
 {
     using Elvex.Toolbox.Models;
 
+    using Orleans.Concurrency;
+
     /// <summary>
     /// In memory storage grain used to serialize in binary data in the cluster memory
     /// Grain Id must be a compound (index+StorageName). the age name will be used to contact the correct registry
@@ -26,6 +28,7 @@ namespace Democrite.Framework.Node.Abstractions.Repositories
         /// <summary>
         /// Read data bytes
         /// </summary>
+        [ReadOnly]
         Task<ReadOnlyMemory<byte>?> ReadDataAsync(TKey key);
 
         /// <summary>

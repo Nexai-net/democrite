@@ -17,7 +17,9 @@ namespace Democrite.Framework.Core.Abstractions.Storages
         /// <summary>
         /// Get a new repository based on <paramref name="storageName"/> and <paramref name="stateName"/>
         /// </summary>
-        TTargetRepo Get<TTargetRepo, TEntity>(IServiceProvider serviceProvider, string stateName)
-            where TTargetRepo : IReadOnlyRepository<TEntity>;
+        IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, string storageName, string configurationName, bool readOnly)
+            where TEntity : IEntityWithId<TEntityId>
+            where TEntityId : IEquatable<TEntityId>
+            where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>;
     }
 }

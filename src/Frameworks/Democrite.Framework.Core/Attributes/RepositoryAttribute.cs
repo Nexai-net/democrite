@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Core.Abstractions.Attributes
 {
+    using Democrite.Framework.Core.Attributes;
+
     using Orleans;
     using Orleans.Runtime;
 
@@ -15,32 +17,28 @@ namespace Democrite.Framework.Core.Abstractions.Attributes
     /// <seealso cref="IAttributeToFactoryMapper{StorageRepositoryAttribute}" />
     /// <seealso cref="IFacetMetadata" />
     [AttributeUsage(AttributeTargets.Parameter)]
-    public sealed class RepositoryAttribute : Attribute, IFacetMetadata
+    public sealed class RepositoryAttribute : Attribute, IFacetMetadata, IRepositoryParameterConfiguration
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RepositoryAttribute"/> class.
         /// </summary>
-        public RepositoryAttribute(string stateName, string storageName)
+        public RepositoryAttribute(string storageName, string? configurationName = null)
         {
             this.StorageName = storageName;
-            this.StateName = stateName;
+            this.ConfigurationName = configurationName;
         }
 
         #endregion
 
         #region Properties
 
-        /// <summary>
-        /// Gets the name of the storage.
-        /// </summary>
+        /// <inheritdoc />
         public string StorageName { get; }
 
-        /// <summary>
-        /// Gets the name of the state.
-        /// </summary>
-        public string StateName { get; }
+        /// <inheritdoc />
+        public string? ConfigurationName { get; }
 
         #endregion
     }

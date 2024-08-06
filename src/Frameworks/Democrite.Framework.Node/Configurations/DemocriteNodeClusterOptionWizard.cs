@@ -95,10 +95,7 @@ namespace Democrite.Framework.Node.Configurations
 
             if (this._clusterNodeOptions)
             {
-                this._serviceDescriptors.Configure<ClusterNodeOptions>(c =>
-                {
-                    c.AddSiloInformationToConsole = this._addConsoleSiloInfo;
-                });
+                this._serviceDescriptors.Configure<ClusterNodeOptions>(c => c.AddSiloInformationToConsole = this._addConsoleSiloInfo);
             }
         }
         

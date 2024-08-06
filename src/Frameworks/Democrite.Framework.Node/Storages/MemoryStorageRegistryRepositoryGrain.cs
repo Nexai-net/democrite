@@ -21,7 +21,7 @@ namespace Democrite.Framework.Node.Storages
     /// <seealso cref="Grain" />
     /// <seealso cref="IMemoryStorageRepositoryRegistryGrain" />
     [KeepAlive]
-    internal sealed class MemoryStorageRegistryRepositoryGrain<TKey> : MemoryStorageRegistryBaseGrain<TKey, byte[]>, IMemoryStorageRepositoryRegistryGrain<TKey>
+    internal sealed class MemoryStorageRegistryRepositoryGrain<TKey> : MemoryStorageRegistryBaseGrain<TKey, byte[], IMemoryStorageRepositoryGrain<TKey>>, IMemoryStorageRepositoryRegistryGrain<TKey>
         where TKey : notnull, IEquatable<TKey>
     {
         #region Ctor
@@ -43,7 +43,7 @@ namespace Democrite.Framework.Node.Storages
         /// <inheritdoc />
         protected override async Task<byte[]?> OnRequestStoredDataAsync(TKey key, MemoryStorageInfo info)
         {
-            var grain = this.RegisterGrainFactory.GetGrain<IMemoryStorageRepositoryGrain<TKey>>(info.Storage);
+            var grain = info.StorageGrain ?? this.RegisterGrainFactory.GetGrain<IMemoryStorageRepositoryGrain<TKey>>(info.Storage);
             var data = (await grain.ReadDataAsync(key))?.ToArray();
             return data;
         }
@@ -55,6 +55,5 @@ namespace Democrite.Framework.Node.Storages
         }
 
         #endregion
-
     }
 }

@@ -18,51 +18,14 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     /// <seealso cref="INodeDemocriteMemoryAutoConfigurator" />
     public sealed class AutoDefaultDemocriteDynamicDefinitionsMemoryConfigurator : INodeDemocriteDynamicDefinitionsMemoryAutoConfigurator
     {
-        #region Ctor
-
-        /// <summary>
-        /// Initializes the <see cref="AutoDefaultDemocriteDynamicDefinitionsMemoryConfigurator"/> class.
-        /// </summary>
-        static AutoDefaultDemocriteDynamicDefinitionsMemoryConfigurator()
-        {
-            Default = new AutoDefaultDemocriteDynamicDefinitionsMemoryConfigurator();
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the default.
-        /// </summary>
-        public static AutoDefaultDemocriteDynamicDefinitionsMemoryConfigurator Default { get; }
-
-        #endregion
-
-        #region Methods
-
         /// <inheritdoc />
         public void AutoConfigure(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
                                   IConfiguration configuration,
                                   IServiceCollection serviceCollection,
                                   ILogger logger)
         {
-            AutoDefaultCustomGrainMemoryConfigurator.Default.AutoConfigureCustomStorage(democriteBuilderWizard,
-                                                                                        configuration,
-                                                                                        serviceCollection,
-                                                                                        logger,
-                                                                                        DemocriteConstants.DefaultDemocriteDynamicDefinitionsConfigurationKey,
-                                                                                        false);
-
-            AutoDefaultCustomRepositoryMemoryConfigurator.Default.AutoConfigure(democriteBuilderWizard,
-                                                                                configuration,
-                                                                                serviceCollection,
-                                                                                logger,
-                                                                                new DefaultRepositoryStorageOption(DemocriteConstants.DefaultDemocriteDynamicDefinitionsRepositoryConfigurationKey,
-                                                                                                                   AllowWrite: true,
-                                                                                                                   TargetGrainState: false));
+            var builder = DemocriteMemoryInLocalConfiguration.GetBuilder(democriteBuilderWizard);
+            builder.SetupDynamicDefinitionStorage();
         }
-
-        #endregion
     }
 }

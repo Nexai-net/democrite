@@ -171,7 +171,7 @@ namespace Democrite.Framework.Core.Signals
                                                  IVGrainInformationProvider? vgrainInformationProvider = null)
             where TData : struct
         {
-            var signalVGrain = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new SignalNotFoundException(signalId.Name);
+            var signalVGrain = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new SignalNotFoundException(signalId.Name ?? signalId.Uid.ToString());
 
             var fireId = Guid.NewGuid();
 
@@ -197,7 +197,7 @@ namespace Democrite.Framework.Core.Signals
         /// <inheritdoc />
         public async Task<SubscriptionId> SubscribeAsync(SignalId signalId, ISignalReceiver receiver, CancellationToken token)
         {
-            var signalVGrain = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new SignalNotFoundException(signalId.Name);
+            var signalVGrain = this._grainFactory.GetGrain<ISignalVGrain>(signalId.Uid) ?? throw new SignalNotFoundException(signalId.Name ?? signalId.Uid.ToString());
             token.ThrowIfCancellationRequested();
 
             return await SubscribeImplAsync(signalId.Uid, receiver, signalVGrain, token);
@@ -263,7 +263,7 @@ namespace Democrite.Framework.Core.Signals
             {
                 token.Register(() => cancelSource.Cancel());
 
-                Guid uid = Guid.Empty;
+                var uid = Guid.Empty;
 
                 if (receiver is ISignalReceiverReadOnly roReceiver)
                     uid = await signalHandler.SubscribeAsync(roReceiver.GetDedicatedGrainId<ISignalReceiverReadOnly>(), cancelSource.Token);

@@ -251,12 +251,17 @@ namespace Democrite.Framework.Node.Blackboard.Models
             {
                 if (this._repository is null)
                 {
-                    var repository = await this._repositoryFactory.GetAsync<IRepository<DataRecordContainer, Guid>, DataRecordContainer>(this._storage.StorageKey, this._storage.StorageConfiguration, cancellationToken: token);
+                    var repository = this._repositoryFactory.Get<IRepository<DataRecordContainer, Guid>, DataRecordContainer, Guid>(this._storage.StorageKey, false, configurationName: this._storage.StorageConfiguration, cancellationToken: token);
+
+                    if (repository is ISupportInitialization<string> initStrRepo && !initStrRepo.IsInitialized)
+                        await initStrRepo.InitializationAsync(this._storage.StorageKey, token);
+                    else if (repository is ISupportInitialization initRepo && !initRepo.IsInitialized)
+                        await initRepo.InitializationAsync(token);
 
                     this._quickRepoLockerAccess.EnterWriteLock();
                     try
                     {
-                        this._repository = repository;
+                        this._repository = (IRepository<DataRecordContainer, Guid>)repository;
                         this._repositoryNeedInitialization = repository is ISupportInitialization<string>;
                     }
                     finally

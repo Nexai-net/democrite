@@ -415,7 +415,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
         }
 
         /// <inheritdoc />
-        public async Task<BlackboardQueryResponse> QueryAsync(BlackboardQueryCommand command, CancellationToken token, Guid? callContextId = null)
+        public async Task<BlackboardQueryResponse?> QueryAsync(BlackboardQueryCommand command, CancellationToken token, Guid? callContextId = null)
         {
             using (var grainToken = GrainCancellationTokenExtensions.ToGrainCancellationTokenSource(token))
             {

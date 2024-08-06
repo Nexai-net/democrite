@@ -17,43 +17,14 @@ namespace Democrite.Framework.Node.Configurations.AutoConfigurator
     /// <seealso cref="INodeDemocriteMemoryAutoConfigurator" />
     public sealed class AutoDefaultDemocriteAdminMemoryConfigurator : INodeDemocriteAdminMemoryAutoConfigurator
     {
-        #region Ctor
-
-        /// <summary>
-        /// Initializes the <see cref="AutoDefaultDemocriteAdminMemoryConfigurator"/> class.
-        /// </summary>
-        static AutoDefaultDemocriteAdminMemoryConfigurator()
-        {
-            Default = new AutoDefaultDemocriteAdminMemoryConfigurator();
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the default.
-        /// </summary>
-        public static AutoDefaultDemocriteAdminMemoryConfigurator Default { get; }
-
-        #endregion
-
-        #region Methods
-
         /// <inheritdoc />
         public void AutoConfigure(IDemocriteNodeMemoryBuilder democriteBuilderWizard,
                                   IConfiguration configuration,
                                   IServiceCollection serviceCollection,
                                   ILogger logger)
         {
-            AutoDefaultCustomGrainMemoryConfigurator.Default.AutoConfigureCustomStorage(democriteBuilderWizard,
-                                                                                        configuration,
-                                                                                        serviceCollection,
-                                                                                        logger,
-                                                                                        DemocriteConstants.DefaultDemocriteAdminStateConfigurationKey,
-                                                                                        false);
+            var builder = DemocriteMemoryInLocalConfiguration.GetBuilder(democriteBuilderWizard);
+            builder.SetupDemocriteAdminStorage();
         }
-
-        #endregion
     }
 }

@@ -29,12 +29,8 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
                                   ILogger logger)
         {
 
-            AutoCustomRepositoryMongoConfigurator.Default.AutoConfigure(democriteBuilderWizard,
-                                                                        configuration,
-                                                                        serviceCollection,
-                                                                        logger,
-                                                                        ConfigurationNodeSectionNames.NodeRepositoryStoragesAutoConfigKey,
-                                                                        DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey);
+            var builder = DemocriteMongoBuilderDemocriteWizardStartExtensions.GetBuilder(serviceCollection, configuration, democriteBuilderWizard);
+            builder.SetupDefaultRepositoryStorage();
         }
 
         #endregion

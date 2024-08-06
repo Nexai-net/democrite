@@ -6,85 +6,84 @@ namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
-    using Democrite.Framework.Node.Abstractions.Repositories;
+
+    using Elvex.Toolbox.Abstractions.Models;
 
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Options;
+
+    using Orleans.Configuration;
 
     using System;
 
-    /// <summary>
-    /// Factory used to produce repository based on cluster memory storage
-    /// </summary>
-    /// <seealso cref="IRepositorySpecificFactory" />
-    public sealed class MemorySpecificRepositoryFactory : DefaultSpecificRepositoryBaseFactory, IRepositorySpecificFactory
+    public sealed class MemorySpecificRepositoryFactory : IRepositorySpecificFactory
     {
-
-        #region Fields
-
-        private static readonly Type s_monoWithEntityIdRepo;
-
-        private static readonly Type s_monoRORepo;
-        private static readonly Type s_monoROWithEntityIdRepo;
-
-        #endregion
-
-        #region Ctor
-
         /// <summary>
-        /// Initializes the <see cref="MemoryRepositoryFactory"/> class.
+        /// Initializes a new instance of the <see cref="MemorySpecificRepositoryFactory"/> class.
         /// </summary>
-        static MemorySpecificRepositoryFactory()
+        public MemorySpecificRepositoryFactory(string? configurationName = null)
         {
-            s_monoWithEntityIdRepo = typeof(MemoryRepository<,>);
 
-            s_monoRORepo = typeof(MemoryReadOnlyRepository<>);
-            s_monoROWithEntityIdRepo = typeof(MemoryReadOnlyRepository<,>);
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MemoryRepositoryFactory"/> class.
-        /// </summary>
-        public MemorySpecificRepositoryFactory(string storageName)
-            : base(s_monoRORepo, s_monoROWithEntityIdRepo, s_monoWithEntityIdRepo, s_monoWithEntityIdRepo, storageName, true)
-        {
-        }
-
-        #endregion
-
-        #region Methods
 
         /// <inheritdoc />
-        protected override object InstanciateRepository(IServiceProvider serviceProvider, string stateName, Type serviceTargetTrait, Type repositoryType, Type repositoryWithEntityIdType)
+        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, string storageName, string configurationName, bool readOnly)
+            where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>
+            where TEntity : IEntityWithId<TEntityId>
+            where TEntityId : IEquatable<TEntityId>
         {
-            var instType = repositoryType;
+            return new MemoryRepository<TEntity, TEntityId>(storageName,
+                                                            configurationName,
+                                                            serviceProvider.GetRequiredService<IGrainFactory>(),
+                                                            serviceProvider.GetRequiredService<IOptionsMonitor<MemoryGrainStorageOptions>>(),
+                                                            serviceProvider.GetRequiredService<IDemocriteSerializer>(),
+                                                            serviceProvider.GetRequiredService<IDedicatedObjectConverter>(),
+                                                            serviceProvider.GetService<ILogger<IRepository<TEntity, TEntityId>>>() ?? NullLogger<IRepository<TEntity, TEntityId>>.Instance,
+                                                            readOnly);
+        }
+    }
 
-            var genericParams = serviceTargetTrait.GetGenericArguments();
+    public sealed class MemorySpecificStateContainerFactory : IRepositorySpecificFactory
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MemorySpecificStateContainerFactory"/> class.
+        /// </summary>
+        public MemorySpecificStateContainerFactory(string? configurationName = null)
+        {
 
-            var entityType = genericParams.First();
-            var entityIdInterface = entityType.GetTypeInfoExtension()
-                                              .GetAllCompatibleTypes()
-                                              .FirstOrDefault(i => i.IsInterface &&
-                                                                   i.IsGenericType &&
-                                                                   i.GetGenericTypeDefinition() == typeof(IEntityWithId<>));
-
-            if (entityIdInterface is null)
-                throw new InvalidCastException($"To get a repository on {entityType} with write access the entity MUST inherite from IEntityWithId<>");
-
-            if (genericParams.Length == 2 && repositoryWithEntityIdType == s_monoROWithEntityIdRepo)
-            {
-                instType = repositoryWithEntityIdType;
-            }
-            // Try get IRepository<TEntity> we need to search the EntityId Source to be able to construct the MemoryRepository correctly that need this entityId
-            else if (genericParams.Length == 1 && repositoryType == s_monoWithEntityIdRepo)
-            {
-                genericParams = genericParams.Concat(entityIdInterface.GetGenericArguments()).ToArray();
-            }
-
-            instType = instType.MakeGenericType(genericParams);
-
-            return ActivatorUtilities.CreateInstance(serviceProvider, instType, stateName, this.StorageName);
         }
 
-        #endregion
+        /// <inheritdoc />
+        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, string storageName, string configurationName, bool readOnly)
+            where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>
+            where TEntity : IEntityWithId<TEntityId>
+            where TEntityId : IEquatable<TEntityId>
+        {
+            /*
+             * In Memory storage the principe use registry to found where the data are.
+             * The registry master correctly dissocate repository registry and Grain state registry
+             * 
+             * The repository behavior is the same except Grain state repository can only read data and not update them
+             */
+            return new MemoryRepository<TEntity, TEntityId>(storageName,
+                                                            configurationName,
+                                                            serviceProvider.GetRequiredService<IGrainFactory>(),
+                                                            serviceProvider.GetRequiredService<IOptionsMonitor<MemoryGrainStorageOptions>>(),
+                                                            serviceProvider.GetRequiredService<IDemocriteSerializer>(),
+                                                            serviceProvider.GetRequiredService<IDedicatedObjectConverter>(),
+                                                            serviceProvider.GetService<ILogger<IRepository<TEntity, TEntityId>>>() ?? NullLogger<IRepository<TEntity, TEntityId>>.Instance,
+                                                            true);
+
+            //return new MemoryContainerRepository<InMemoryGrainState<TEntity>, TEntity, TEntityId, string>(storageName,
+            //                                                                                              configurationName,
+            //                                                                                              serviceProvider.GetRequiredService<IGrainFactory>(),
+            //                                                                                              serviceProvider.GetRequiredService<IOptionsMonitor<MemoryGrainStorageOptions>>(),
+            //                                                                                              serviceProvider.GetRequiredService<IDemocriteSerializer>(),
+            //                                                                                              serviceProvider.GetRequiredService<IDedicatedObjectConverter>(),
+            //                                                                                              serviceProvider.GetService<ILogger<IRepository<TEntity, TEntityId>>>() ?? NullLogger<IRepository<TEntity, TEntityId>>.Instance,
+            //                                                                                              readOnly);
+        }
     }
 }

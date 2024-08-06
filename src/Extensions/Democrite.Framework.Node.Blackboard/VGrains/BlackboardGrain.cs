@@ -1029,7 +1029,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                 await (metaDatasWithRepoTasks.Select(t => t.RepoTask).ToArray()).SafeWhenAllAsync(token);
 
                 var fetchTasks = metaDatasWithRepoTasks.GroupBy(kv => kv.RepoTask.Result)
-                                                       .Select(kv => kv.Key.GetByIdsValueAsync(kv.Select(k => k.kv.Uid).Distinct().ToArray(), token).AsTask())
+                                                       .Select(kv => kv.Key.GetValueByIdAsync(kv.Select(k => k.kv.Uid).Distinct().ToArray(), token).AsTask())
                                                        .ToArray();
 
                 await fetchTasks.SafeWhenAllAsync(token);
@@ -1653,7 +1653,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
 
                 ctx.CancellationToken.ThrowIfCancellationRequested();
 
-                var item = await repository.GetByIdValueAsync(chgCommand.Uid, ctx.CancellationToken);
+                var item = await repository.GetValueByIdAsync(chgCommand.Uid, ctx.CancellationToken);
 
                 if (item == null || item.Status == chgCommand.NewRecordStatus)
                     return false;

@@ -7,7 +7,6 @@ namespace Democrite.Framework.Node.Storages
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Enums;
 
-    using Elvex.Toolbox.Abstractions.Conditions;
     using Elvex.Toolbox.Models;
 
     using Orleans.Concurrency;
@@ -32,15 +31,7 @@ namespace Democrite.Framework.Node.Storages
         /// </remarks>
         [ReadOnly]
         Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreDataAsync([NotNull] AbstractType entityAbstract, GrainCancellationToken token);
-        //}
 
-        ///// <summary>
-        ///// Persistant grain used to monitor activity in memory storage for a dedicated configuration
-        ///// </summary>
-        ///// <seealso cref="IGrainWithStringKey" />
-        //internal interface IMemoryStorageRegistryGrain<TKey> : IMemoryStorageRegistryGrain
-        //    where TKey : notnull, IEquatable<TKey>
-        //{
         /// <summary>
         /// Gets all store data that match requested type <paramref name="entityAbstract"/>
         /// </summary>
