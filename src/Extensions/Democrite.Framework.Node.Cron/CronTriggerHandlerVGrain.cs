@@ -184,7 +184,19 @@ namespace Democrite.Framework.Node.Cron
         {
             var oldReminderToken = await GrainReminderExtensions.GetReminder(this, REMINDER_TICK_NAME);
             if (oldReminderToken is not null)
-                await GrainReminderExtensions.UnregisterReminder(this, oldReminderToken);
+            {
+                try
+                {
+                    await GrainReminderExtensions.UnregisterReminder(this, oldReminderToken);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception ex)
+                {
+                    this.Logger.OptiLog(LogLevel.Error, "[Cron Trigger: {definitionId}] desactivation failed {exception}", this.TriggerDefinition?.Uid ?? this.GetGrainId().GetGuidKey(), ex);
+                }
+            }
         }
 
         #endregion

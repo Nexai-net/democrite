@@ -252,8 +252,12 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         /// </summary>
         private IAggregateFluent<TEntity> PrepareAggregatePipeline()
         {
-            return this.MongoCollection.Aggregate(s_defaultAggregateOptions)
-                                       .ReplaceRoot(this._containedAccess);
+            var aggr = this.MongoCollection.Aggregate(s_defaultAggregateOptions);
+
+            var filter = base.EnhanceFilter(Builders<TContainer>.Filter.Empty);
+            aggr = aggr.Match(filter);
+
+            return aggr.ReplaceRoot(this._containedAccess);
         }
 
         #endregion

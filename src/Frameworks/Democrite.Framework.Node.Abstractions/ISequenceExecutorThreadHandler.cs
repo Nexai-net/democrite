@@ -4,9 +4,11 @@
 
 namespace Democrite.Framework.Node.Abstractions
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Node.Abstractions.Models;
+
     using Elvex.Toolbox.Abstractions.Disposables;
 
     using System;
@@ -41,7 +43,8 @@ namespace Democrite.Framework.Node.Abstractions
         /// Creates an inner <see cref="ISequenceExecutorExecThread"/>.
         /// </summary>
         ISequenceExecutorExecThread CreateInnerThread(SequenceExecutorExecThreadState sequenceExecutorExecThreadState,
-                                                      SequenceDefinition innerFlow);
+                                                      SequenceDefinition innerFlow, 
+                                                      IExecutionContext sourceExecutionContext);
 
         /// <summary>
         /// Registers the post process callback.

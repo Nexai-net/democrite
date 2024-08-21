@@ -17,6 +17,16 @@ namespace Democrite.Framework.Core.Abstractions
         /// <summary>
         /// Gets a transformer by vgrain interface type
         /// </summary>
+        ValueTask<IVGrain> GetVGrainAsync(Type vgrainInterfaceType);
+
+        /// <summary>
+        /// Gets a transformer by vgrain interface type
+        /// </summary>
+        ValueTask<TVGrainType> GetVGrainAsync<TVGrainType>() where TVGrainType : IVGrain;
+
+        /// <summary>
+        /// Gets a transformer by vgrain interface type
+        /// </summary>
         ValueTask<IVGrain> GetVGrainAsync(Type vgrainInterfaceType, IExecutionContext? executionContext, ILogger? logger = null);
 
         /// <summary>

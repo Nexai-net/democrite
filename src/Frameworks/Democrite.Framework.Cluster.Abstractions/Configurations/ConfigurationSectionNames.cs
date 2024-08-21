@@ -20,6 +20,11 @@ namespace Democrite.Framework.Configurations
         public const string AutoConfigKey = "AutoKey";
 
         /// <summary>
+        /// The property name used to defined if repository must be build from a grain storage
+        /// </summary>
+        public const string BuildRepository = "BuildRepository";
+
+        /// <summary>
         /// The property name used to defined the connection String
         /// </summary>
         public const string ConnectionString = "ConnectionString";

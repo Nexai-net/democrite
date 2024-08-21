@@ -12,8 +12,6 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations.AutoConfigurator
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
-    using Orleans.Providers.MongoDB.Configuration;
-
     /// <summary>
     /// Auto configure the VGrain state storage
     /// </summary>

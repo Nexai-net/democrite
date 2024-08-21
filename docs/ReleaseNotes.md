@@ -7,6 +7,13 @@ Release Notes
 
 # Beta
 
+## 0.4.4-prerelease
+
+This update focuses on stability and bug fixes. <br/>
+We've enhanced our development process with new testing and automation tools to prevent regressions and improve overall quality.<br/>
+
+Please note that Amexio group is now supporting this projet.
+
 ## 0.4.3-prerelease
 
 In this version we mainly:

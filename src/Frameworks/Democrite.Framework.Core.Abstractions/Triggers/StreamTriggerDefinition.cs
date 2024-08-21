@@ -31,13 +31,13 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
                                        string displayName,
                                        IEnumerable<TriggerTargetDefinition> targets,
                                        bool enabled,
-                                       uint maxConcurrentProcess,
+                                       uint fixedMaxConcurrentProcess,
                                        uint? relativeMaxConcurrentProcess,
                                        Guid streamSourceDefinitionUid,
                                        DefinitionMetaData? metaData)
             : base(uid, displayName, TriggerTypeEnum.Stream, targets, enabled, metaData)
         {
-            this.FixedMaxConcurrentProcess = maxConcurrentProcess;
+            this.FixedMaxConcurrentProcess = fixedMaxConcurrentProcess;
             this.RelativeMaxConcurrentProcess = relativeMaxConcurrentProcess;
 
             this.StreamSourceDefinitionUid = streamSourceDefinitionUid;

@@ -7,15 +7,9 @@ namespace Democrite.Framework.Node.Triggers
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Triggers;
 
-    using Elvex.Toolbox.Extensions;
-    using Elvex.Toolbox.Helpers;
-
     using Microsoft.Extensions.Logging;
 
     using Orleans.Runtime;
-
-    using System;
-    using System.Threading.Tasks;
 
     /// <inheritdoc />
     /// <seealso cref="GrainService" />

@@ -6,6 +6,7 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Extensions.Mongo.Abstractions.Repositories;
+    using Democrite.Framework.Extensions.Mongo.Models;
 
     using Elvex.Toolbox.Abstractions.Supports;
     using Elvex.Toolbox.Supports;
@@ -42,6 +43,7 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         #region Fields
 
         private static readonly Dictionary<Type, BsonDocument> s_projectDefinitionCache;
+        private static readonly FilterDefinition<TEntity>? s_discriminatorFilter;
         private static readonly ReaderWriterLockSlim s_projectionLocker;
         private static readonly BsonDocument s_idProjection;
 
@@ -50,7 +52,6 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         private readonly string _configurationName;
         private readonly string _storageName;
         private readonly bool _isReadOnly;
-
         private IMongoClient _client;
         private IOptions<MongoDBOptions>? _mongoDBOptions;
 
@@ -65,6 +66,9 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         {
             s_projectionLocker = new ReaderWriterLockSlim();
             s_projectDefinitionCache = new Dictionary<Type, BsonDocument>();
+
+            if (typeof(TEntity).IsAssignableTo(typeof(IContainerWithDiscriminator<TEntity>)))
+                s_discriminatorFilter = ((IContainerWithDiscriminator<TEntity>)Activator.CreateInstance<TEntity>()).DiscriminatorFilter;
 
             // Projection between EntityId and mongo _id
             s_idProjection = new BsonDocument()
@@ -149,7 +153,10 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         {
             await EnsureInitialized(token);
 
-            var entity = await this.MongoCollection.Find<TEntity>(filterExpression is not null ? Builders<TEntity>.Filter.Where(filterExpression) : Builders<TEntity>.Filter.Empty)
+            var filter = filterExpression is not null ? Builders<TEntity>.Filter.Where(filterExpression) : Builders<TEntity>.Filter.Empty;
+            filter = EnhanceFilter(filter);
+
+            var entity = await this.MongoCollection.Find<TEntity>(filter)
                                                    .Limit(1)
                                                    .FirstOrDefaultAsync(token);
             return entity;
@@ -160,7 +167,10 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         {
             await EnsureInitialized(token);
 
-            var entity = await this.MongoCollection.Find<TEntity>(filterExpression is not null ? Builders<TEntity>.Filter.Where(filterExpression) : Builders<TEntity>.Filter.Empty)
+            var filter = filterExpression is not null ? Builders<TEntity>.Filter.Where(filterExpression) : Builders<TEntity>.Filter.Empty;
+            filter = EnhanceFilter(filter);
+
+            var entity = await this.MongoCollection.Find<TEntity>(filter)
                                                    .Project(GetProjectionDefinition<TEntity, TProjection>(false))
                                                    .Limit(1)
                                                    .FirstOrDefaultAsync(token);
@@ -216,7 +226,10 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         {
             await EnsureInitialized(token);
 
-            var entities = await this.MongoCollection.Find<TEntity>(filterExpression is not null ? Builders<TEntity>.Filter.Where(filterExpression) : Builders<TEntity>.Filter.Empty)
+            var filter = filterExpression is not null ? Builders<TEntity>.Filter.Where(filterExpression) : Builders<TEntity>.Filter.Empty;
+            filter = EnhanceFilter(filter);
+
+            var entities = await this.MongoCollection.Find<TEntity>(filter)
                                                      .Project(GetProjectionDefinition<TEntity, TProjection>(false))
                                                      .ToListAsync(token);
             return entities;
@@ -226,7 +239,10 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         {
             await EnsureInitialized(token);
 
-            var entities = await this.MongoCollection.Find<TEntity>(filterExpression is not null ? Builders<TEntity>.Filter.Where(filterExpression) : Builders<TEntity>.Filter.Empty)
+            var filter = filterExpression is not null ? Builders<TEntity>.Filter.Where(filterExpression) : Builders<TEntity>.Filter.Empty;
+            filter = EnhanceFilter(filter);
+
+            var entities = await this.MongoCollection.Find<TEntity>(filter)
                                                      .ToListAsync(token);
             return entities;
         }
@@ -267,6 +283,16 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         }
 
         #region Tools
+
+        /// <summary>
+        /// Enhances the filter by the discriminator
+        /// </summary>
+        protected virtual FilterDefinition<TEntity> EnhanceFilter(FilterDefinition<TEntity> filter)
+        {
+            if (s_discriminatorFilter is not null)
+                return s_discriminatorFilter & filter;
+            return filter;
+        }
 
         /// <summary>
         /// Checks if the repository is initialized.

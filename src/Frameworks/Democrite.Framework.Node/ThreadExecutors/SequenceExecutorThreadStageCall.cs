@@ -18,6 +18,7 @@ namespace Democrite.Framework.Node.ThreadExecutors
     using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
+    using Orleans.Runtime;
 
     using System;
     using System.Linq;
@@ -136,6 +137,12 @@ namespace Democrite.Framework.Node.ThreadExecutors
                            }).ToArray();
 
             var vgrainProxy = await vgrainProvider.GetVGrainAsync(step.VGrainType.ToType(), input, sequenceContext, logger);
+
+            if (vgrainProxy is not null && sequenceContext is IExecutionContextInternal executionContextInternal)
+            {
+                var grainRef = vgrainProxy.AsReference<GrainReference>();
+                executionContextInternal.AddCancelGrainReference(grainRef);
+            }
 
             // OPTIM : Use generator to create proxy call without doing any reflexion
             var resultTask = (Task?)mthd.Invoke(vgrainProxy, args);

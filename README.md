@@ -9,6 +9,21 @@
     </tr>
 </table>
 
+<table style="border:none">
+    <tr style="border:none">
+        <td style="border:none">
+            <span style='font-size:32px;valign:center'>Sponsored by</span>
+        </td>
+        <td style="border:none">
+            <a href="https://www.amexiogroup.com"><img src="https://www.amexio.fr/wp-content/themes/Amexio/img/Amexio-Horizontal.svg" height="64px" /></a>
+        </td>
+    </tr>
+</table>
+
+<br />
+<br />
+<br />
+
 ![GitHub Tag](https://img.shields.io/github/v/tag/Nexai-net/democrite?style=for-the-badge)
 
 [![Nuget Democrite](https://img.shields.io/nuget/dt/democrite.framework.core.svg?color=%23512BD4&label=Nuget%20Democrite%20Framework%20downloads)](https://www.nuget.org/packages?q=democrite) [![MIT License](https://img.shields.io/github/license/nexai-net/democrite?color=%230b0&style=flat-square)](https://github.com/nexai-net/democrite/blob/main/LICENSE) [![Help Wanted](https://img.shields.io/github/issues/nexai-net/democrite/help%20wanted?color=%232EA043&label=help%20wanted&style=flat-square)](https://github.com/nexai-net/democrite/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) [![Good First Issues](https://img.shields.io/github/issues/nexai-net/democrite/good%20first%20issue?color=%23512BD4&label=good%20first%20issue&style=flat-square)](https://github.com/nexai-net/democrite/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
@@ -839,6 +854,11 @@ In the section [Sample/DynamicDefinition](/samples/DynamicDefinition//)
 ## Next
 
 ![Static Badge](https://img.shields.io/badge/BETA-FF6A00?style=for-the-badge&logo=windows)
+
+**v 0.4.4-prerelease:** <br/>
+- [x] Stabilisation
+- [x] Bug fixing
+- [x] Official support of Amexio Group to the projet
 
 **v 0.4.3-prerelease:** <br/>
 [Release Node](/docs/ReleaseNotes.md#043-prerelease)

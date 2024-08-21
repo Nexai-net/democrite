@@ -5,12 +5,9 @@
 namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
-    using Democrite.Framework.Core.Repositories;
     using Democrite.Framework.Node.Abstractions.Repositories;
-    using Democrite.Framework.Node.Models;
 
     using Elvex.Toolbox.Abstractions.Models;
-    using Elvex.Toolbox.Abstractions.Patterns.Decorators;
     using Elvex.Toolbox.Abstractions.Supports;
     using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Models;
@@ -18,8 +15,6 @@ namespace Democrite.Framework.Node.Storages
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Microsoft.Extensions.Options;
-
-    using Newtonsoft.Json.Linq;
 
     using Orleans.Configuration;
 
@@ -184,6 +179,7 @@ namespace Democrite.Framework.Node.Storages
             var bytes = this._democriteSerializer.SerializeToBinary(entity);
 
             return await storageShelveGrain.WriteDatAsync(entity.Uid,
+                                                          entity.Uid,  
                                                           insertIfNew,
                                                           this._storageName,
                                                           bytes,
@@ -224,7 +220,7 @@ namespace Democrite.Framework.Node.Storages
             CheckReadOnly();
 
             var storageShelveGrain = GetTargetStorage(uid);
-            return await storageShelveGrain.DeleteDataAsync(this._storageName, uid);
+            return await storageShelveGrain.DeleteDataAsync(this._storageName, uid, null);
         }
 
         /// <inheritdoc />
@@ -313,6 +309,9 @@ namespace Democrite.Framework.Node.Storages
         {
             if (EqualityComparer<TSource>.Default.Equals(source, default))
                 return default;
+
+            if (source is TProjection projection)
+                return projection;
 
             // OPTI : Usual non opti projection mapping passing by a json convertion -> Change to auto mapper techno more performant
 

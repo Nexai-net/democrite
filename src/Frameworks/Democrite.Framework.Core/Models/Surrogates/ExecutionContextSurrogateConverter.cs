@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Models.Surrogates
 {
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Models.Surrogates;
 
     using Orleans;
@@ -18,7 +19,7 @@ namespace Democrite.Framework.Core.Models.Surrogates
                                            surrogate.CurrentExecutionId,
                                            surrogate.ParentExecutionId);
 
-            if (surrogate.ContextDataContainers is not null && surrogate.ContextDataContainers.Any())
+            if (surrogate.ContextDataContainers is not null && surrogate.ContextDataContainers.Any() && ctx is IExecutionContextInternal internalCtx)
                 ctx.InjectAllDataContext(surrogate.ContextDataContainers);
 
             return ctx;

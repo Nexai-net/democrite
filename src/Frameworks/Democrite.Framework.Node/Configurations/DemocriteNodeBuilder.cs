@@ -561,7 +561,16 @@ namespace Democrite.Framework.Configurations
                                                                                                        indexedAssemblies,
                                                                                                        (s, key) => s.GetServiceByKey<string, IGrainStorage>(key) != null,
                                                                                                        logger,
-                                                                                                       (c, wizard, key, cfg, service, logger) => c.AutoConfigureCustomStorage(wizard, cfg, service, logger, key),
+                                                                                                       (c, wizard, key, cfg, service, logger) => c.AutoConfigureCustomStorage(wizard,
+                                                                                                                                                                              cfg,
+                                                                                                                                                                              service,
+                                                                                                                                                                              logger,
+                                                                                                                                                                              key,
+                                                                                                                                                                              GetConfigurationValue<bool>(cfg, ConfigurationNodeSectionNames.NodeCustomMemory + 
+                                                                                                                                                                                                               ConfigurationSectionNames.SectionSeparator + 
+                                                                                                                                                                                                               key + 
+                                                                                                                                                                                                               ConfigurationSectionNames.SectionSeparator + 
+                                                                                                                                                                                                               ConfigurationSectionNames.BuildRepository)),
                                                                                                        defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigBasedOnKeys<INodeCustomDefinitionProviderAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeDefinitionProvider,
@@ -606,6 +615,14 @@ namespace Democrite.Framework.Configurations
                                                                                                       logger);
 
             ConfigDefaultOptions(this.GetServiceCollection(), configuration);
+        }
+
+        /// <summary>
+        /// Gets the configuration value if exist
+        /// </summary>
+        private T? GetConfigurationValue<T>(IConfiguration cfg, string key)
+        {
+            return cfg.GetValue<T>(key) ?? default;
         }
 
         /// <summary>

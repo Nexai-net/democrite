@@ -105,8 +105,8 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             mockThreadHandler.Setup(m => m.RegisterPostProcess(It.IsAny<Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>>()))
                              .Callback<Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>>(postAction => postCallback = postAction);
 
-            mockThreadHandler.Setup(m => m.CreateInnerThread(It.IsAny<SequenceExecutorExecThreadState>(), innerDef))
-                             .Returns<SequenceExecutorExecThreadState, SequenceDefinition>((state, def) =>
+            mockThreadHandler.Setup(m => m.CreateInnerThread(It.IsAny<SequenceExecutorExecThreadState>(), innerDef, It.IsAny<IExecutionContext>()))
+                             .Returns<SequenceExecutorExecThreadState, SequenceDefinition, IExecutionContext>((state, def, sourceCtx) =>
                              {
                                  var mockInnerThread = new Mock<ISequenceExecutorExecThread>(MockBehavior.Strict);
                                  var innerCtx = new Democrite.Framework.Core.Models.ExecutionContext(state.FlowUid, state.CurrentStageExecId, state.ParentStageExecId);
@@ -157,7 +157,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
             // Check
 
             mockThreadHandler.Verify(m => m.RegisterPostProcess(It.IsAny<Func<SequenceStageDefinition, Func<ISecureContextToken<ISequenceExecutorThreadHandler>>, Task<StageStepResult>>>()), Times.Once);
-            mockThreadHandler.Verify(m => m.CreateInnerThread(It.IsAny<SequenceExecutorExecThreadState>(), innerDef), Times.Exactly(inputs.Length));
+            mockThreadHandler.Verify(m => m.CreateInnerThread(It.IsAny<SequenceExecutorExecThreadState>(), innerDef, It.IsAny<IExecutionContext>()), Times.Exactly(inputs.Length));
             mockThreadHandler.Verify(m => m.SetInnerThreads(It.IsAny<IReadOnlyCollection<ISequenceExecutorExecThread>>()), Times.Once);
 
             Check.That(testInnerThreads).IsNotNull().And.CountIs(inputs.Length);

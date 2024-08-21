@@ -47,7 +47,7 @@ namespace Democrite.Framework.Node.Storages
         /// Reports the action occured on a specific storage
         /// </summary>
         [OneWay]
-        Task ReportActionAsync<TKey>(StoreActionEnum storeAction, TKey fullkey, AbstractType? type, IReadOnlyCollection<AbstractType>? parentTypes, GrainId? source, GrainId? storageGrain)
+        Task ReportActionAsync<TKey>(StoreActionEnum storeAction, TKey fullkey, object? entityKey, AbstractType? type, IReadOnlyCollection<AbstractType>? parentTypes, GrainId? source, GrainId? storageGrain)
             where TKey : notnull, IEquatable<TKey>;
     }
 

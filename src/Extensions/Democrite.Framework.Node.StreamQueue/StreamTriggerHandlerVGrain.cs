@@ -172,7 +172,7 @@ namespace Democrite.Framework.Node.StreamQueue
                     }
                 }
 
-                this._lastMaxConcurrent = Math.Min(maxConcurrent, this.TriggerDefinition.FixedMaxConcurrentProcess);
+                this._lastMaxConcurrent = Math.Max(1, Math.Min(maxConcurrent, this.TriggerDefinition.FixedMaxConcurrentProcess));
 
                 this.Logger.OptiLog(LogLevel.Information, "[{definitionName}: {definitionId}] Stream MaxConcurrent '{maxConcurrent}'", this.TriggerDefinition.DisplayName, this.TriggerDefinition.Uid, this._lastMaxConcurrent);
             }

@@ -43,6 +43,13 @@ namespace Democrite.Framework.Core
         #region Methods
 
         /// <inheritdoc />
+        public ValueTask<TVGrainType> GetVGrainAsync<TVGrainType>()
+            where TVGrainType : IVGrain
+        {
+            return GetVGrainAsync<TVGrainType>(null, null, null);
+        }
+
+        /// <inheritdoc />
         public ValueTask<TVGrainType> GetVGrainAsync<TVGrainType>(IExecutionContext? executionContext, ILogger? logger = null)
             where TVGrainType : IVGrain
         {
@@ -61,6 +68,12 @@ namespace Democrite.Framework.Core
         public ValueTask<IVGrain> GetVGrainAsync(Type vgrainInterfaceType, IExecutionContext? executionContext, ILogger? logger = null)
         {
             return GetVGrainAsync(vgrainInterfaceType, null, executionContext, logger);
+        }
+
+        /// <inheritdoc />
+        public ValueTask<IVGrain> GetVGrainAsync(Type vgrainInterfaceType)
+        {
+            return GetVGrainAsync(vgrainInterfaceType, null, null, null);
         }
 
         /// <inheritdoc />

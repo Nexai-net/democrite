@@ -67,7 +67,8 @@ namespace Democrite.Framework.Node.ThreadExecutors
                                                                                                                                        sequenceContext.CurrentExecutionId,
                                                                                                                                        step.InnerFlow,
                                                                                                                                        subInput),
-                                                                                                    step.InnerFlow))
+                                                                                                    step.InnerFlow,
+                                                                                                    sequenceContext))
                                                  .ToArray();
 
                     foreach (var inner in innerThreads)

@@ -19,6 +19,7 @@ namespace Democrite.Framework.Node.Abstractions.Repositories
         /// Writes the data.
         /// </summary>
         Task<bool> WriteDatAsync(TKey key,
+                                 object? entityKey,
                                  bool insertIfNew,
                                  string stateName,
                                  ReadOnlyMemory<byte> data,
@@ -34,6 +35,6 @@ namespace Democrite.Framework.Node.Abstractions.Repositories
         /// <summary>
         /// Deletes the data
         /// </summary>
-        Task<bool> DeleteDataAsync(string stateName, TKey key);
+        Task<bool> DeleteDataAsync(string stateName, TKey key, object? entityKey);
     }
 }

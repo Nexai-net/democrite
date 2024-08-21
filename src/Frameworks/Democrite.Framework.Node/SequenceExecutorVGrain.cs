@@ -188,7 +188,8 @@ namespace Democrite.Framework.Node
                                                                                               this._objectConverter,
                                                                                               this._timeManager,
                                                                                               this._democriteSerializer,
-                                                                                              state);
+                                                                                              state,
+                                                                                              executionContext);
 
                     using (var container = this._sequenceVGrainProviderFactory.GetProvider(state.Customization))
                     {
@@ -273,6 +274,9 @@ namespace Democrite.Framework.Node
                                        ex.Message,
                                        state.ToDebugDisplayName(),
                                        ex);
+
+                    if (ex is OperationCanceledException)
+                        throw;
 
                     throw new SequenceExecutionException(ex.Message, ex);
                 }

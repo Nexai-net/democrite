@@ -29,7 +29,8 @@ namespace Democrite.Framework.Node.Storages
 
         private readonly Dictionary<string, IMemoryStorageRepositoryRegistryGrain<TKey>> _registries;
         
-        private readonly Dictionary<TKey, byte[]> _store;
+        private readonly Dictionary<TKey, Tuple<object?, byte[]>> _store;
+
         private readonly IGrainFactory _grainFactory;
         private long _primarykey;
         private string _configurationName;
@@ -49,7 +50,7 @@ namespace Democrite.Framework.Node.Storages
             this._configurationName = null!;
 
             this._registries = new Dictionary<string, IMemoryStorageRepositoryRegistryGrain<TKey>>();
-            this._store = new Dictionary<TKey, byte[]>();
+            this._store = new Dictionary<TKey, Tuple<object?, byte[]>>();
             this._grainFactory = grainFactory;
         }
 
@@ -58,12 +59,12 @@ namespace Democrite.Framework.Node.Storages
         #region Methods
 
         /// <inheritdoc />
-        public async Task<bool> DeleteDataAsync(string stateName, TKey key)
+        public async Task<bool> DeleteDataAsync(string stateName, TKey key, object? entityKey)
         {
             var delete = this._store.Remove(key);
 
             var registry = GetRegistry(stateName);
-            await registry!.ReportActionAsync(StoreActionEnum.Clear, key!, null, null, null, this.GetGrainId());
+            await registry!.ReportActionAsync(StoreActionEnum.Clear, key!, entityKey, null, null, null, this.GetGrainId());
             return delete;
         }
 
@@ -71,29 +72,30 @@ namespace Democrite.Framework.Node.Storages
         public Task<ReadOnlyMemory<byte>?> ReadDataAsync(TKey key)
         {
             if (this._store.TryGetValue(key, out var value))
-                return Task.FromResult((ReadOnlyMemory<byte>?)value);
+                return Task.FromResult((ReadOnlyMemory<byte>?)value.Item2);
 
             return Task.FromResult((ReadOnlyMemory<byte>?)null);
         }
 
         /// <inheritdoc />
         public async Task<bool> WriteDatAsync(TKey key,
+                                              object? entityKey,
                                               bool insertIfNew,
                                               string stateName,
                                               ReadOnlyMemory<byte> data,
                                               AbstractType entityType,
                                               IReadOnlyCollection<AbstractType> parentTypes)
         {
-            var containKey = this._store.ContainsKey(key);
+            var containKey = this._store.TryGetValue(key, out var existing) && object.Equals(existing.Item1, entityKey);
             if (!insertIfNew && !containKey)
                 return false;
 
-            this._store[key] = data.ToArray();
+            this._store[key] = Tuple.Create(entityKey, data.ToArray());
 
             if (containKey == false)
             {
                 var registry = GetRegistry(stateName);
-                await registry!.ReportActionAsync(StoreActionEnum.Write, key, entityType, parentTypes, null, this.GetGrainId());
+                await registry!.ReportActionAsync(StoreActionEnum.Write, key, entityKey, entityType, parentTypes, null, this.GetGrainId());
             }
 
             return true;

@@ -75,6 +75,7 @@ namespace Democrite.Framework.Node.Models
                                            ITimeManager timeManager,
                                            IDemocriteSerializer democriteSerializer,
                                            SequenceExecutorState rootState,
+                                           IExecutionContext sourceExecutionContext,
                                            bool forceFirstContextGeneration = false)
         {
             this.State = state;
@@ -90,6 +91,9 @@ namespace Democrite.Framework.Node.Models
             this._executionContext = new ExecutionContext(state.FlowUid,
                                                           state.CurrentStageExecId,
                                                           state.ParentStageExecId);
+
+            if (sourceExecutionContext is IExecutionContextInternal executionContextInternal && executionContextInternal.GrainCancellationToken is not null)
+                ((IExecutionContextInternal)this._executionContext).ForceGrainCancellationToken(executionContextInternal.GrainCancellationToken);
 
             this._locker = new SemaphoreSlim(1);
 
@@ -182,7 +186,7 @@ namespace Democrite.Framework.Node.Models
             #region Methods
 
             /// <inheritdoc />
-            public ISequenceExecutorExecThread CreateInnerThread(SequenceExecutorExecThreadState sequenceExecutorExecThreadState, SequenceDefinition innerFlow)
+            public ISequenceExecutorExecThread CreateInnerThread(SequenceExecutorExecThreadState sequenceExecutorExecThreadState, SequenceDefinition innerFlow, IExecutionContext sourceExecutionContext)
             {
                 return new SequenceExecutorExecThread(sequenceExecutorExecThreadState,
                                                       innerFlow,
@@ -191,7 +195,8 @@ namespace Democrite.Framework.Node.Models
                                                       this._sequenceExecutorExecThread._objectConverter,
                                                       this._sequenceExecutorExecThread._timeManager,
                                                       this._sequenceExecutorExecThread._democriteSerializer,
-                                                      this._sequenceExecutorExecThread.RootState);
+                                                      this._sequenceExecutorExecThread.RootState,
+                                                      sourceExecutionContext);
             }
 
             /// <inheritdoc />
@@ -360,7 +365,8 @@ namespace Democrite.Framework.Node.Models
                                                                         IObjectConverter objectConverter,
                                                                         ITimeManager timeManager,
                                                                         IDemocriteSerializer democriteSerializer,
-                                                                        SequenceExecutorState rootState)
+                                                                        SequenceExecutorState rootState,
+                                                                        IExecutionContext sourceExecutionContext)
         {
             return BuildFromImplAsync(threadState,
                                       getSequenceDef,
@@ -369,7 +375,8 @@ namespace Democrite.Framework.Node.Models
                                       objectConverter,
                                       timeManager,
                                       democriteSerializer,
-                                      rootState);
+                                      rootState,
+                                      sourceExecutionContext);
         }
 
         /// <summary>
@@ -382,7 +389,8 @@ namespace Democrite.Framework.Node.Models
                                                                                  IObjectConverter objectConverter,
                                                                                  ITimeManager timeManager,
                                                                                  IDemocriteSerializer democriteSerializer,
-                                                                                 SequenceExecutorState rootState)
+                                                                                 SequenceExecutorState rootState,
+                                                                                 IExecutionContext sourceExecutionContext)
         {
             var def = await getSequenceDef(threadState.FlowDefinitionId) ?? throw new SequenceDefinitionMissingException(threadState.FlowDefinitionId);
 
@@ -401,7 +409,7 @@ namespace Democrite.Framework.Node.Models
                         return host.InnerFlow;
 
                     return await getSequenceDef(id);
-                }, depth + 1, stageProviders, objectConverter, timeManager, democriteSerializer, rootState);
+                }, depth + 1, stageProviders, objectConverter, timeManager, democriteSerializer, rootState, sourceExecutionContext);
 
                 innerThreads.Add(innerThread);
             }
@@ -414,6 +422,7 @@ namespace Democrite.Framework.Node.Models
                                                   timeManager,
                                                   democriteSerializer,
                                                   rootState,
+                                                  sourceExecutionContext,
                                                   depth == 0);
         }
 
@@ -601,7 +610,7 @@ namespace Democrite.Framework.Node.Models
 
             logger.OptiLog(LogLevel.Trace, "-- End step : '{stage}' for output '{output}'", stage, output);
 
-            await this._locker.WaitAsync();
+            await this._locker.WaitAsync(sequenceContext.CancellationToken);
 
             try
             {

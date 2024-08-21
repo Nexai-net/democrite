@@ -4,11 +4,16 @@
 
 namespace Democrite.Framework.Core.Abstractions.Repositories
 {
+    public interface IEntityWithId
+    {
+
+    }
+
     /// <summary>
     /// Define an entity with a unique identity
     /// </summary>
     /// <typeparam name="TEntityId">The type of the entity identifier.</typeparam>
-    public interface IEntityWithId<TEntityId>
+    public interface IEntityWithId<TEntityId> : IEntityWithId
         where TEntityId : notnull, IEquatable<TEntityId>
     {
         /// <summary>

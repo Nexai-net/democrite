@@ -16,7 +16,9 @@ namespace Democrite.Framework.Core.Models
     using System;
     using System.ComponentModel;
     using System.Diagnostics;
+    using System.Diagnostics.Metrics;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using System.Runtime.Serialization;
     using System.Threading;
 
@@ -27,9 +29,12 @@ namespace Democrite.Framework.Core.Models
     [Immutable]
     [Serializable]
     [ImmutableObject(true)]
-    public class ExecutionContext : IExecutionContext
+    public class ExecutionContext : IExecutionContext, IExecutionContextInternal
     {
         #region Fields
+
+        [UnsafeAccessor(UnsafeAccessorKind.Method, Name = "Cancel")]
+        private static extern ref Task GrainTokenCancel(GrainCancellationToken token);
 
         private static readonly Dictionary<Type, FieldInfo> s_grainReferenceRuntimeCache;
         private static readonly ReaderWriterLockSlim s_grainReferenceRuntimeCacheLocker;
@@ -44,7 +49,7 @@ namespace Democrite.Framework.Core.Models
         private readonly HashSet<IContextDataContainer> _contextDataContainers;
 
         [NonSerialized]
-        private readonly GrainCancellationTokenSource _grainCancelTokenSource;
+        private GrainCancellationToken? _grainCancelToken;
 
         #endregion
 
@@ -80,7 +85,8 @@ namespace Democrite.Framework.Core.Models
                                 Guid currentExecutionId,
                                 Guid? parentExecutionId)
         {
-            this._grainCancelTokenSource = new GrainCancellationTokenSource();
+            // IGrainCancellationTokenRuntime
+            //this._grainCancelTokenSource = Activator.CreateInstance(typeof(GrainCancellationToken),  new object[] { flowUID, false,  })
 
             this.FlowUID = flowUID;
             this.CurrentExecutionId = currentExecutionId;
@@ -98,9 +104,9 @@ namespace Democrite.Framework.Core.Models
         private ExecutionContext(Guid flowUID,
                                  Guid currentExecutionId,
                                  Guid? parentExecutionId,
-                                 GrainCancellationTokenSource grainCancellationTokenSource)
+                                 GrainCancellationToken? grainCancellationToken)
         {
-            this._grainCancelTokenSource = grainCancellationTokenSource;
+            this._grainCancelToken = grainCancellationToken;
             this.FlowUID = flowUID;
             this.CurrentExecutionId = currentExecutionId;
             this.ParentExecutionId = parentExecutionId;
@@ -122,11 +128,22 @@ namespace Democrite.Framework.Core.Models
         [IgnoreDataMember]
         public CancellationToken CancellationToken
         {
-            get { return this._grainCancelTokenSource.Token.CancellationToken; }
+            get
+            {
+                ArgumentNullException.ThrowIfNull(this._grainCancelToken, "IExecutionContextInternal.AddCancelGrainReference(GrainReference grainRef) must be call before any other call");
+                return this._grainCancelToken!.CancellationToken;
+            }
         }
 
         /// <inheritdoc />
         public Guid? ParentExecutionId { get; }
+
+        /// <inheritdoc />
+        [IgnoreDataMember]
+        GrainCancellationToken? IExecutionContextInternal.GrainCancellationToken
+        {
+            get { return this._grainCancelToken; }
+        }
 
         #endregion
 
@@ -157,9 +174,9 @@ namespace Democrite.Framework.Core.Models
             var next = new ExecutionContext(this.FlowUID,
                                             Guid.NewGuid(),
                                             this.CurrentExecutionId,
-                                            this._grainCancelTokenSource);
+                                            this._grainCancelToken);
 
-            next.InjectAllDataContext(this.GetAllDataContext());
+            next.CopyContextImportantInformation(this);
             return next;
         }
 
@@ -170,7 +187,8 @@ namespace Democrite.Framework.Core.Models
                                                                           this.CurrentExecutionId,
                                                                           this.ParentExecutionId,
                                                                           contextInfo);
-            ctx.InjectAllDataContext(this.GetAllDataContext());
+
+            ctx.CopyContextImportantInformation(this);
             return ctx;
         }
 
@@ -211,8 +229,8 @@ namespace Democrite.Framework.Core.Models
         /// <inheritdoc />
         public virtual IExecutionContext Duplicate()
         {
-            var duplicate = new ExecutionContext(this.FlowUID, this.CurrentExecutionId, this.ParentExecutionId, this._grainCancelTokenSource);
-            duplicate.InjectAllDataContext(GetAllDataContext());
+            var duplicate = new ExecutionContext(this.FlowUID, this.CurrentExecutionId, this.ParentExecutionId, this._grainCancelToken);
+            duplicate.CopyContextImportantInformation(this);
             return duplicate;
         }
 
@@ -305,11 +323,17 @@ namespace Democrite.Framework.Core.Models
         #region Tools
 
         /// <summary>
-        /// Gets all data context.
+        /// Copies the context important information.
         /// </summary>
-        /// <remarks>
-        ///     Use during serialization
-        /// </remarks>
+        public void CopyContextImportantInformation(IExecutionContext source)
+        {
+            InjectAllDataContext(source.GetAllDataContext());
+
+            if (source is IExecutionContextInternal executionContextInternal)
+                this._grainCancelToken = executionContextInternal.GrainCancellationToken;
+        }
+
+        /// <inheritdoc />
         internal void InjectAllDataContext(IReadOnlyCollection<IContextDataContainer> contextDataContainers)
         {
             this._contextDataContainers.Clear();
@@ -325,40 +349,58 @@ namespace Democrite.Framework.Core.Models
         }
 
         /// <inheritdoc />
-        public void Cancel()
+        public ValueTask Cancel()
         {
-            this._grainCancelTokenSource.Cancel();
+            ArgumentNullException.ThrowIfNull(this._grainCancelToken, "IExecutionContextInternal.AddCancelGrainReference(GrainReference grainRef) must be call before any other call");
+            //Task.Run(async () => await GrainTokenCancel(this._grainCancelToken));
+
+            var cancel = typeof(GrainCancellationToken).GetMethod("Cancel", BindingFlags.NonPublic | BindingFlags.Instance);
+            cancel!.Invoke(this._grainCancelToken, new object[0]);
+            return ValueTask.CompletedTask;
         }
 
-        /// <summary>
-        /// Link vgrain invoked to global cancel system
-        /// </summary>
-        /// <remarks>
-        ///
-        ///  By default orlean manage automatically the cancellation token track using
-        ///  GrainCancellationToken in method parameters
-        ///  
-        ///  In the goal to minimize the impact and knowlegde of orlean in the user code
-        ///  We decide to used the IExecutionContext to carry the CancellationToken
-        ///  
-        ///  but to use orlean cancel hierarchy track we have to manually reproduce the
-        ///  behavior contain in GrainReferenceRuntime.SetGrainCancellationTokensTarget(GrainReference target, IInvokable request)
-        ///  
-        ///  grainToken.AddGrainReference(cancellationTokenRuntime, target);
-        /// 
-        /// </remarks>
-        internal void AddCancelGrainReference(IGrainContext grainToAttach)
+        /// <inheritdoc />
+        void IExecutionContextInternal.InitGrainCancelToken(GrainReference grainRef)
         {
-            var grainReferenceRuntime = (IGrainReferenceRuntime)s_propGrainRuntime.GetValue(grainToAttach.GrainReference)!;
+            if (this._grainCancelToken is not null)
+                return;
+
+            var grainReferenceRuntime = (IGrainReferenceRuntime)s_propGrainRuntime.GetValue(grainRef)!;
 
             var cancellationTokenRuntime = GetCancellationTokenRuntimeFromCache(grainReferenceRuntime);
 
-            s_addGrainCancelReference.Invoke(this._grainCancelTokenSource.Token,
+            var cancellRuntime = cancellationTokenRuntime.GetValue(grainReferenceRuntime);
+
+            this._grainCancelToken = (GrainCancellationToken)Activator.CreateInstance(typeof(GrainCancellationToken),
+                                                                                      BindingFlags.NonPublic | BindingFlags.Instance,
+                                                                                      null,
+                                                                                      new object?[] { this.FlowUID, false, cancellRuntime },
+                                                                                      null,
+                                                                                      null)!;
+        }
+
+        /// <inheritdoc />
+        void IExecutionContextInternal.AddCancelGrainReference(GrainReference grainRef)
+        {
+            if (this._grainCancelToken is null)
+                ((IExecutionContextInternal)this).InitGrainCancelToken(grainRef);
+
+            var grainReferenceRuntime = (IGrainReferenceRuntime)s_propGrainRuntime.GetValue(grainRef)!;
+
+            var cancellationTokenRuntime = GetCancellationTokenRuntimeFromCache(grainReferenceRuntime);
+
+            s_addGrainCancelReference.Invoke(this._grainCancelToken,
                                              new object?[]
                                              {
-                                                 cancellationTokenRuntime.GetValue(grainReferenceRuntime),
-                                                 grainToAttach.GrainReference
+                                                    cancellationTokenRuntime.GetValue(grainReferenceRuntime),
+                                                    grainRef
                                              });
+        }
+
+        /// <inheritdoc />  
+        void IExecutionContextInternal.ForceGrainCancellationToken(GrainCancellationToken registredCancellationToken)
+        {
+            this._grainCancelToken = registredCancellationToken;
         }
 
         /// <summary>

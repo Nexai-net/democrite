@@ -14,6 +14,7 @@ namespace Democrite.Framework.Core.Executions
     using Microsoft.Extensions.Logging.Abstractions;
 
     using Orleans.Concurrency;
+    using Orleans.Runtime;
 
     using System;
     using System.Diagnostics;
@@ -175,6 +176,12 @@ namespace Democrite.Framework.Core.Executions
 
             var executor = await this._vgrainProvider.GetVGrainAsync<TVGrain>(input, executionContext, this._logger);
 
+            if (executionContext is IExecutionContextInternal executionContextInternal)
+            {
+                var grainRef = executor.AsReference<GrainReference>();
+                executionContextInternal.AddCancelGrainReference(grainRef);
+            }
+
             Exception? exception = null;
             Task? executionTask = null;
             try
@@ -182,7 +189,7 @@ namespace Democrite.Framework.Core.Executions
                 token.ThrowIfCancellationRequested();
 
                 // Link cancel event to orlean grain cancel system
-                token.Register((ctx) => (ctx as IExecutionContext)?.Cancel(), executionContext, useSynchronizationContext: true);
+                token.Register((ctx) => (ctx as IExecutionContext)?.Cancel(), executionContext, useSynchronizationContext: false);
 
                 executionTask = OnRunAsync<TExpectedOutput>(executor, input, executionContext, fire);
                 await executionTask;
@@ -190,6 +197,7 @@ namespace Democrite.Framework.Core.Executions
             catch (Exception ex)
             {
                 exception = ex;
+                await executionContext.Cancel();
             }
 
             if (exception is null &&

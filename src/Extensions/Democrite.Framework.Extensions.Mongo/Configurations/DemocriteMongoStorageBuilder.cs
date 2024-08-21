@@ -438,6 +438,7 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations
                                       string? clusterId)
         {
             MongoDBOptions? genericOpt = null;
+            MongoDBConnectionOptions? connectionOption = null;
 
             if (cl.IsServerNode)
             {
@@ -450,7 +451,8 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations
                                                                                option?.CollectionPrefix,
                                                                                ConfigurationSectionNames.ClusterMembership,
                                                                                ConfigurationSectionNames.ClusterMembershipConnectionStringKey,
-                                                                               out var connectionOption);
+                                                                               out connectionOption);
+                SetupOptions(MongoDBConnectionOptions.DEMOCRITE_CLUSTER, opt, connectionOption, cl.GetServiceCollection());
 
                 genericOpt = opt;
                 cl.AddExtensionOption(opt);
@@ -466,7 +468,9 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations
                                                                                    option?.CollectionPrefix,
                                                                                    ConfigurationSectionNames.ClusterMembership,
                                                                                    ConfigurationSectionNames.ClusterMembershipConnectionStringKey,
-                                                                                   out var connectionOption);
+                                                                                   out connectionOption);
+
+                SetupOptions(MongoDBConnectionOptions.DEMOCRITE_CLUSTER, opt, connectionOption, cl.GetServiceCollection());
 
                 //var clientCopy = new MongoDBGatewayListProviderOptions()
                 //{
@@ -480,6 +484,14 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations
 
                 genericOpt = opt;
                 cl.AddExtensionOption(opt);
+            }
+
+            var services = cl.GetServiceCollection();
+
+            if (connectionOption is not null)
+            {
+                connectionOption.Key = MongoDBConnectionOptions.DEMOCRITE_CLUSTER;
+                services.AddSingleton(connectionOption);
             }
 
             //this._serviceCollection.PostConfigure<MongoDBMembershipTableOptions>(m => MongoConfigurator.MapOption(opt, m ?? new MongoDBMembershipTableOptions()));
@@ -574,7 +586,10 @@ namespace Democrite.Framework.Extensions.Mongo.Configurations
         /// <summary>
         /// Setups the options.
         /// </summary>
-        private static void SetupOptions<TOption>(string key, TOption option, MongoDBConnectionOptions connectionOption, IServiceCollection services) where TOption : MongoDBOptions, new()
+        private static void SetupOptions<TOption>(string key,
+                                                  TOption option,
+                                                  MongoDBConnectionOptions connectionOption,
+                                                  IServiceCollection services) where TOption : MongoDBOptions, new()
         {
             services.AddKeyedSingleton(key, option.ToOption());
             services.AddKeyedSingleton(key, option.ToMonitorOption());

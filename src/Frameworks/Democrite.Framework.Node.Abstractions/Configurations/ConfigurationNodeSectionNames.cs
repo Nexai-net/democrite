@@ -68,7 +68,7 @@ namespace Democrite.Framework.Configurations
         /// <summary>
         /// The section configuring the custom memory storage
         /// </summary>
-        public const string NodeCustomMemory = NodeStorages + ConfigurationSectionNames.SectionSeparator + "Custom";
+        public const string NodeCustomMemory = NodeStorages + ConfigurationSectionNames.SectionSeparator + "Customs";
 
         /// <summary>
         /// The section configuring the vgrain state memory

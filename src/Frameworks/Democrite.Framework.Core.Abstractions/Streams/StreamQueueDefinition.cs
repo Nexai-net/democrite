@@ -39,17 +39,17 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         public StreamQueueDefinition(Guid uid,
                                      string displayName,
                                      string streamConfiguration,
-                                     string streamKey,
-                                     string? streamCustomKey,
+                                     string streamNamespace,
+                                     string? streamKey,
                                      Guid? streamCustomUid,
                                      DefinitionMetaData? metaData)
         {
             this.Uid = uid;
             this.MetaData = metaData;
             this.DisplayName = displayName;
-            this.StreamNamespace = streamKey;
+            this.StreamNamespace = streamNamespace;
             this.StreamUid = streamCustomUid;
-            this.StreamKey = streamCustomKey;
+            this.StreamKey = streamKey;
             this.StreamConfiguration = streamConfiguration;
         }
 
@@ -86,7 +86,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         public string? StreamKey { get; }
 
         /// <summary>
-        /// Gets the stream namespace.
+        /// Gets the stream configuration key.
         /// </summary>
         [DataMember]
         [Newtonsoft.Json.JsonProperty]
@@ -94,7 +94,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         public string StreamConfiguration { get; }
 
         /// <summary>
-        /// Gets the stream key.
+        /// Gets part of the full key to group stream called namespace. (StreamNamespace+[StreamKey|StreamUid])
         /// </summary>
         [DataMember]
         [Newtonsoft.Json.JsonProperty]

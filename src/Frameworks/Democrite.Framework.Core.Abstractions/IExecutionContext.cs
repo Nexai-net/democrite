@@ -11,6 +11,8 @@ namespace Democrite.Framework.Core.Abstractions
 
     using Microsoft.Extensions.Logging;
 
+    using Orleans.Runtime;
+
     /// <summary>
     /// Define all execution context information 
     /// </summary>
@@ -45,7 +47,7 @@ namespace Democrite.Framework.Core.Abstractions
         /// <summary>
         /// Force operation to cancel
         /// </summary>
-        void Cancel();
+        ValueTask Cancel();
 
         /// <summary>
         /// Gets the logger associate to current sequence execution and vgrain
@@ -127,6 +129,74 @@ namespace Democrite.Framework.Core.Abstractions
         /// Duplicates this instance.
         /// </summary>
         IExecutionContext Duplicate();
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Define all the execution context method managed only by the democrit engine
+    /// </summary>
+    internal interface IExecutionContextInternal
+    {
+        #region Properties
+
+        /// <summary>
+        /// Gets the grain cancellation token.
+        /// </summary>
+        GrainCancellationToken? GrainCancellationToken { get; }
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Copies the context important information.
+        /// </summary>
+        void CopyContextImportantInformation(IExecutionContext source);
+
+        ///// <summary>
+        ///// Set all data context.
+        ///// </summary>
+        ///// <remarks>
+        /////     Use during serialization
+        ///// </remarks>
+        //void InjectAllDataContext(IReadOnlyCollection<IContextDataContainer> contextDataContainers);
+
+        /// <summary>
+        /// <see cref="GrainCancellationToken"> Cancel system of orlean need to be initialized from from specific
+        /// internal service.
+        /// </summary>
+        void InitGrainCancelToken(GrainReference grainReference);
+
+        /// <summary>
+        /// Link vgrain invoked to global cancel system
+        /// </summary>
+        /// <remarks>
+        ///
+        ///  By default orlean manage automatically the cancellation token track using
+        ///  GrainCancellationToken in method parameters
+        ///  
+        ///  In the goal to minimize the impact and knowlegde of orlean in the user code
+        ///  We decide to used the IExecutionContext to carry the CancellationToken
+        ///  
+        ///  but to use orlean cancel hierarchy track we have to manually reproduce the
+        ///  behavior contain in GrainReferenceRuntime.SetGrainCancellationTokensTarget(GrainReference target, IInvokable request)
+        ///  that will connect the target grain <see cref="GrainCancellationToken"/> to current one.
+        ///  
+        ///  this way when the current grain is cancelled the chain (children only) will be informed and cancelled also
+        ///  
+        ///  grainToken.AddGrainReference(cancellationTokenRuntime, target);
+        /// 
+        /// </remarks>
+        void AddCancelGrainReference(GrainReference grainReference);
+
+        /// <summary>
+        /// Forces the grain cancellation token.
+        /// </summary>
+        /// <remarks>
+        ///     Could different after registrationt to Cancellation system
+        /// </remarks>
+        void ForceGrainCancellationToken(GrainCancellationToken registredCancellationToken);
 
         #endregion
     }

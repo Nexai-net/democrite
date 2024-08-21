@@ -45,7 +45,9 @@ namespace Democrite.Framework.Node.Storages
         private static readonly Type s_keyTraits;
         private static readonly bool s_isKeyString;
 
+        private readonly Dictionary<object, MemoryStorageInfo> _memoryStorageInfoExtraKeyIndexation;
         private readonly Dictionary<TKey, MemoryStorageInfo> _memoryStorageInfo;
+
         private readonly IDedicatedObjectConverter _dedicatedObjectConverter;
         private readonly ReaderWriterLockSlim _registryLocker;
         private readonly ILogger<IMemoryStorageRegistryGrain> _logger;
@@ -77,7 +79,9 @@ namespace Democrite.Framework.Node.Storages
 
             this._registryLocker = new ReaderWriterLockSlim();
 
+            this._memoryStorageInfoExtraKeyIndexation = new Dictionary<object, MemoryStorageInfo>();
             this._memoryStorageInfo = new Dictionary<TKey, MemoryStorageInfo>();
+
             this.RegisterGrainFactory = grainFactory;
             this._logger = logger ?? NullLogger<IMemoryStorageRegistryGrain>.Instance;
         }
@@ -98,6 +102,8 @@ namespace Democrite.Framework.Node.Storages
             [NotNull]
             public TKey FullKey { get; init; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
+            public object? EntityKey { get; set; }
 
             public IReadOnlySet<AbstractType>? ParentType { get; set; }
 
@@ -125,6 +131,7 @@ namespace Democrite.Framework.Node.Storages
         [OneWay]
         public Task ReportActionAsync<TReportKey>(StoreActionEnum storeAction,
                                                   TReportKey fullkey,
+                                                  object? entityKey,
                                                   AbstractType? type,
                                                   IReadOnlyCollection<AbstractType>? parentTypes,
                                                   GrainId? source,
@@ -144,6 +151,10 @@ namespace Democrite.Framework.Node.Storages
                     case StoreActionEnum.Clear:
 
                         this._memoryStorageInfo.Remove(key);
+
+                        if (entityKey is not null)
+                            this._memoryStorageInfoExtraKeyIndexation.Remove(entityKey);
+
                         break;
 
                     case StoreActionEnum.Read:
@@ -165,6 +176,8 @@ namespace Democrite.Framework.Node.Storages
                             throw new InvalidOperationException("Storage Grain must be reported for future request");
 
                         var storageGrainChange = memoryStorageInfo.Storage != storageGrain.Value;
+
+                        memoryStorageInfo.EntityKey = entityKey;
 
                         if (storageGrainChange)
                             memoryStorageInfo.Storage = storageGrain.Value;
@@ -199,6 +212,8 @@ namespace Democrite.Framework.Node.Storages
         public virtual Task<IReadOnlyCollection<ReadOnlyMemory<byte>>> GetAllStoreByKeysDataAsync<TReportKey>(IReadOnlyCollection<TReportKey> fullkeys, GrainCancellationToken token)
             where TReportKey : notnull, IEquatable<TReportKey>
         {
+            var hashSetResult = new HashSet<TReportKey>();
+
             IReadOnlyCollection<TKey>? sourceKeys;
 
             if (fullkeys is IReadOnlyCollection<TKey> castKeys)
@@ -212,7 +227,7 @@ namespace Democrite.Framework.Node.Storages
                                      .ToArray();
             }
 
-            return GetAllStoreByFilderDataAsync(kv => sourceKeys.Contains(kv.FullKey), token);
+            return GetAllStoreByFilderDataAsync(kv => sourceKeys.Contains(kv.FullKey) || (kv.EntityKey is not null && kv.EntityKey is TReportKey rpKey && fullkeys.Contains(rpKey)), token);
         }
 
         #region Tools
