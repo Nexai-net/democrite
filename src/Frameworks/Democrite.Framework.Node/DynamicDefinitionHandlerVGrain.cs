@@ -294,10 +294,8 @@ namespace Democrite.Framework.Node
                 {
                     foreach (var type in missing)
                     {
-                        var repo = this._repositoryFactory.Get<IRepository<EtagDefinitionContainer, Guid>, EtagDefinitionContainer, Guid>(GetStorageNameFromType(type),
-                                                                                                                                          false,
-                                                                                                                                          configurationName: DemocriteConstants.DefaultDemocriteDynamicDefinitionsRepositoryConfigurationKey,
-                                                                                                                                          cancellationToken: token);
+                        var req = new RepositoryGetOptions(GetStorageNameFromType(type), false, DemocriteConstants.DefaultDemocriteDynamicDefinitionsRepositoryConfigurationKey);
+                        var repo = this._repositoryFactory.Get<IRepository<EtagDefinitionContainer, Guid>, EtagDefinitionContainer, Guid>(req, cancellationToken: token);
 
                         var missingRepo = (IRepository<EtagDefinitionContainer, Guid>)repo;
                         result.Add(type, missingRepo);

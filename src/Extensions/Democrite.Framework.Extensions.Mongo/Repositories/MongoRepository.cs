@@ -22,8 +22,12 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoRepository{TEntity, TEntityId}"/> class.
         /// </summary>
-        public MongoRepository(IMongoClientFactory mongoClientFactory, IServiceProvider serviceProvider, string configurationName, string storageName)
-            : base(mongoClientFactory, serviceProvider, configurationName, storageName)
+        public MongoRepository(IMongoClientFactory mongoClientFactory,
+                               IServiceProvider serviceProvider,
+                               string configurationName,
+                               string storageName,
+                               bool preventAnyKindOfDiscriminatorUsage)
+            : base(mongoClientFactory, serviceProvider, configurationName, storageName, preventAnyKindOfDiscriminatorUsage)
         {
         }
 
@@ -42,8 +46,12 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoReadOnlyRepository{TEntity, TEntityId}"/> class.
         /// </summary>
-        public MongoReadOnlyRepository(IMongoClientFactory mongoClientFactory, IServiceProvider serviceProvider, string configurationName, string storageName)
-            : base(mongoClientFactory, serviceProvider, configurationName, storageName, true)
+        public MongoReadOnlyRepository(IMongoClientFactory mongoClientFactory,
+                                       IServiceProvider serviceProvider,
+                                       string configurationName,
+                                       string storageName,
+                                       bool preventAnyKindOfDiscriminatorUsage)
+            : base(mongoClientFactory, serviceProvider, configurationName, storageName, true, preventAnyKindOfDiscriminatorUsage)
         {
         }
 

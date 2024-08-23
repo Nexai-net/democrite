@@ -87,7 +87,7 @@ namespace Democrite.Framework.Extensions.Mongo.Services
             : base(serviceProvider)
         {
             this._configurationKey = configurationKey;
-            var repository = mongoClientFactory.Get<IReadOnlyRepository<TDocumentType, Guid>, TDocumentType, Guid>(serviceProvider, DemocriteConstants.DefaultDefinitionStorageName, configurationKey, true);
+            var repository = mongoClientFactory.Get<IReadOnlyRepository<TDocumentType, Guid>, TDocumentType, Guid>(serviceProvider, new Core.Abstractions.Models.RepositoryGetOptions(DemocriteConstants.DefaultDefinitionStorageName, true, configurationKey));
 
             this._repository = repository;
             this._repositoryContainer = (IReadOnlyRepository<DefinitionContainer<TDocumentType>, Guid>)repository;

@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Core.Attributes
 {
     using Democrite.Framework.Core.Abstractions.Attributes;
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Storages;
@@ -88,9 +89,13 @@ namespace Democrite.Framework.Core.Attributes
                 try
                 {
                     var factory = ctx.ActivationServices.GetRequiredService<IRepositoryFactory>();
-                    var repository = factory.Get<TTargetRepo, TEntity, TEntityId>(metadata.StorageName,
-                                                                                  typeof(TTargetRepo).IsAssignableTo(typeof(IRepository<TEntity, TEntityId>)) == false,
-                                                                                  metadata.ConfigurationName);
+
+                    var request = new RepositoryGetOptions(metadata.StorageName,
+                                                           typeof(TTargetRepo).IsAssignableTo(typeof(IRepository<TEntity, TEntityId>)) == false,
+                                                           metadata.ConfigurationName,
+                                                           metadata.PreventAnyKindOfDiscriminatorUsage);
+
+                    var repository = factory.Get<TTargetRepo, TEntity, TEntityId>(request);
 
                     return repository;
                 }

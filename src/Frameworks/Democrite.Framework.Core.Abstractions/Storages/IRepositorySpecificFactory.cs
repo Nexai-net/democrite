@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Storages
 {
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Repositories;
 
     /// <summary>
@@ -17,7 +18,7 @@ namespace Democrite.Framework.Core.Abstractions.Storages
         /// <summary>
         /// Get a new repository based on <paramref name="storageName"/> and <paramref name="stateName"/>
         /// </summary>
-        IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, string storageName, string configurationName, bool readOnly)
+        IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, RepositoryGetOptions request)
             where TEntity : IEntityWithId<TEntityId>
             where TEntityId : IEquatable<TEntityId>
             where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>;

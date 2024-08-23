@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Repositories
 {
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
 
@@ -17,6 +18,7 @@ namespace Democrite.Framework.Core.Repositories
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
+    using System.Net;
     using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -45,20 +47,29 @@ namespace Democrite.Framework.Core.Repositories
         /// </summary>
         public ReadOnlyRepository(IRepositorySpecificFactory repositorySpecificFactory,
                                   IServiceProvider serviceProvider,
-                                  string configuratioName,
-                                  string storageName)
+                                  RepositoryGetOptions request)
         {
             this._initImpl = new SupportInitializationImplementation<string>(OnInitRepoAsync);
 
             this._repositorySpecificFactory = repositorySpecificFactory;
-            this._configurationName = configuratioName;
+            this._configurationName = request.ConfigurationName!;
             this._serviceProvider = serviceProvider;
-            this._storageName = storageName;
+
+            if (string.IsNullOrEmpty(request.StorageName))
+                request = request.WithStorageName(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
+
+            this._storageName = request.StorageName;
+            this.Request = request;
         }
 
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// Gets the request used to get this repository
+        /// </summary>
+        protected RepositoryGetOptions Request { get; }
 
         /// <inheritdoc />
         public bool IsReadOnly
@@ -182,10 +193,16 @@ namespace Democrite.Framework.Core.Repositories
         /// <inheritdoc cref="ISupportInitialization.InitializationAsync(CancellationToken)" />
         protected virtual async ValueTask OnInitRepoAsync(string? storageName, CancellationToken token)
         {
+            var localRequest = this.Request;
+
+            if (!string.IsNullOrEmpty(storageName))
+                localRequest = localRequest.WithStorageName(storageName);
+
+            if (this is not IRepository<TEntity, TEntityId> && localRequest.IsReadOnly == false)
+                localRequest = localRequest.WithIsReadOnly(true);
+
             this.SpecializedRepository = this._repositorySpecificFactory.Get<IReadOnlyRepository<TEntity, TEntityId>, TEntity, TEntityId>(this._serviceProvider,
-                                                                                                                                          storageName ?? this._storageName ?? ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME,
-                                                                                                                                          this._configurationName,
-                                                                                                                                          this is not IRepository<TEntity, TEntityId>);
+                                                                                                                                          localRequest);
 
             if (this.SpecializedRepository is ISupportInitialization<string> init)
                 await init.InitializationAsync(storageName);
@@ -246,9 +263,8 @@ namespace Democrite.Framework.Core.Repositories
         /// </summary>
         public Repository(IRepositorySpecificFactory repositorySpecificFactory,
                           IServiceProvider serviceProvider,
-                          string configuratioName,
-                          string storageName)
-            : base(repositorySpecificFactory, serviceProvider, configuratioName, storageName)
+                          RepositoryGetOptions request)
+            : base(repositorySpecificFactory, serviceProvider, request)
         {
 
         }

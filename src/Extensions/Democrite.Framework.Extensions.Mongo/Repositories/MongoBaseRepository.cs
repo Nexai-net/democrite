@@ -49,9 +49,12 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
 
         private readonly IMongoClientFactory _mongoClientFactory;
         private readonly IServiceProvider _serviceProvider;
+
+        private readonly bool _preventAnyKindOfDiscriminatorUsage;
         private readonly string _configurationName;
         private readonly string _storageName;
         private readonly bool _isReadOnly;
+
         private IMongoClient _client;
         private IOptions<MongoDBOptions>? _mongoDBOptions;
 
@@ -67,7 +70,8 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
             s_projectionLocker = new ReaderWriterLockSlim();
             s_projectDefinitionCache = new Dictionary<Type, BsonDocument>();
 
-            if (typeof(TEntity).IsAssignableTo(typeof(IContainerWithDiscriminator<TEntity>)))
+            var entityTraits = typeof(TEntity);
+            if (entityTraits.IsAssignableTo(typeof(IContainerWithDiscriminator<TEntity>)) && entityTraits.IsInterface == false && entityTraits.IsAbstract == false)
                 s_discriminatorFilter = ((IContainerWithDiscriminator<TEntity>)Activator.CreateInstance<TEntity>()).DiscriminatorFilter;
 
             // Projection between EntityId and mongo _id
@@ -89,7 +93,8 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
                                       IServiceProvider serviceProvider,
                                       string configurationName,
                                       string storageName,
-                                      bool isReadOnly = false)
+                                      bool isReadOnly = false,
+                                      bool preventAnyKindOfDiscriminatorUsage = false)
         {
             this._isReadOnly = isReadOnly;
 
@@ -98,6 +103,8 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
 
             this._storageName = storageName;
             this._configurationName = configurationName;
+
+            this._preventAnyKindOfDiscriminatorUsage = preventAnyKindOfDiscriminatorUsage;
 
             // Is Initialized before any report
             this.MongoCollection = null!;
@@ -287,10 +294,14 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         /// <summary>
         /// Enhances the filter by the discriminator
         /// </summary>
-        protected virtual FilterDefinition<TEntity> EnhanceFilter(FilterDefinition<TEntity> filter)
+        protected virtual FilterDefinition<TEntity>? EnhanceFilter(FilterDefinition<TEntity>? filter = null)
         {
-            if (s_discriminatorFilter is not null)
-                return s_discriminatorFilter & filter;
+            if (s_discriminatorFilter is not null && this._preventAnyKindOfDiscriminatorUsage == false)
+            {
+                if (filter is not null)
+                    return s_discriminatorFilter & filter;
+                return s_discriminatorFilter;
+            }
             return filter;
         }
 

@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Storages
 {
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Repositories;
 
     /// <summary>
@@ -17,10 +18,7 @@ namespace Democrite.Framework.Core.Abstractions.Storages
         /// <remarks>
         ///     Repository is not initialized, initialization must be managed lazylly on call
         /// </remarks>
-        IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(string storageName,
-                                                                                     bool isReadOnly,
-                                                                                     string? configurationName = null,
-                                                                                     CancellationToken cancellationToken = default)
+        IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(RepositoryGetOptions request, CancellationToken cancellationToken = default)
             where TEntity : IEntityWithId<TEntityId>                                      
             where TEntityId : notnull, IEquatable<TEntityId>
             where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>;

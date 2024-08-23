@@ -6,14 +6,13 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
 
-    using MongoDB.Bson;
-    using MongoDB.Bson.Serialization;
     using MongoDB.Driver;
 
     using Orleans.Providers.MongoDB.Utils;
 
     using System;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq.Expressions;
     using System.Threading;
@@ -35,9 +34,9 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         private static readonly AggregateOptions s_defaultAggregateOptions;
         private static readonly FilterDefinition<TEntity> s_allFilter;
 
-        private readonly Expression<Func<TContainer, TEntity>> _containedAccess;
+        private readonly StringFieldDefinition<TContainer, TEntityId> _containedDiscriminatorAccess;
         private readonly FieldDefinition<TContainer, TEntityId> _containedIdAccess;
-
+        private readonly Expression<Func<TContainer, TEntity>> _containedAccess;
         private readonly BuildCollectionNameDelegate _collectionNameDelegate;
         private readonly Func<TEntity, TContainer> _containerFactory;
 
@@ -70,15 +69,15 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
                                         Expression<Func<TContainer, TEntity>> containedAccess,
                                         Func<TEntity, TContainer> containerFactory,
                                         BuildCollectionNameDelegate collectionNameDelegate,
-                                        /*Expression<Func<TContainer, string>>? discriminatorAccess,
-                                        string? discriminator, */
-                                        bool isReadOnly = false)
-            : base(mongoClientFactory, serviceProvider, configurationName, storageName, isReadOnly)
+                                        bool isReadOnly = false,
+                                        bool preventAnyKindOfDiscriminatorUsage = false)
+            : base(mongoClientFactory, serviceProvider, configurationName, storageName, isReadOnly, preventAnyKindOfDiscriminatorUsage)
         {
             var fieldName = ((MemberExpression)containedAccess.Body).Member.Name;
 
             this._containedAccess = containedAccess;
             this._containedIdAccess = new StringFieldDefinition<TContainer, TEntityId>(fieldName + "." + nameof(IEntityWithId<TEntityId>.Uid));
+            this._containedDiscriminatorAccess = new StringFieldDefinition<TContainer, TEntityId>(fieldName + "._t");
             this._containerFactory = containerFactory;
 
             this._collectionNameDelegate = collectionNameDelegate;
@@ -254,10 +253,50 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
         {
             var aggr = this.MongoCollection.Aggregate(s_defaultAggregateOptions);
 
-            var filter = base.EnhanceFilter(Builders<TContainer>.Filter.Empty);
-            aggr = aggr.Match(filter);
+            var filter = base.EnhanceFilter();
+
+            if (filter is not null)
+                aggr = aggr.Match(filter);
 
             return aggr.ReplaceRoot(this._containedAccess);
+        }
+
+        /// <inheritdoc />
+        protected override async ValueTask OnInitializingAsync(string? storageName, CancellationToken token)
+        {
+            await base.OnInitializingAsync(storageName, token);
+
+            // Add specific search index related to optimize the state search
+
+            var indexes = await this.MongoCollection.Indexes.List().ToListAsync();
+
+            var indexedByName = indexes.GroupBy(i => i.GetElement("name").Value.AsString)
+                                       .ToImmutableDictionary(k => k.Key);
+
+            if (!indexedByName.ContainsKey("auto_type_uid"))
+            {
+                var indexDescription = Builders<TContainer>.IndexKeys.Combine(Builders<TContainer>.IndexKeys.Ascending(this._containedDiscriminatorAccess),
+                                                                              Builders<TContainer>.IndexKeys.Ascending(this._containedIdAccess));
+
+                await this.MongoCollection.Indexes.CreateOneAsync(new CreateIndexModel<TContainer>(indexDescription,
+                                                                                                   new CreateIndexOptions()
+                                                                                                   {
+                                                                                                       Background = true,
+                                                                                                       Name = "auto_type_uid"
+                                                                                                   }));
+            }
+
+            if (!indexedByName.ContainsKey("auto_uid"))
+            {
+                var indexDescription = Builders<TContainer>.IndexKeys.Ascending(this._containedIdAccess);
+
+                await this.MongoCollection.Indexes.CreateOneAsync(new CreateIndexModel<TContainer>(indexDescription,
+                                                                                                   new CreateIndexOptions()
+                                                                                                   {
+                                                                                                       Background = true,
+                                                                                                       Name = "auto_uid"
+                                                                                                   }));
+            }
         }
 
         #endregion
@@ -277,8 +316,9 @@ namespace Democrite.Framework.Extensions.Mongo.Repositories
                                                 string storageName,
                                                 Expression<Func<TContainer, TEntity>> containedAccess,
                                                 Func<TEntity, TContainer> containerFactory,
-                                                BuildCollectionNameDelegate collectionNameDelegate)
-            : base(mongoClientFactory, serviceProvider, configurationName, storageName, containedAccess, containerFactory, collectionNameDelegate, true)
+                                                BuildCollectionNameDelegate collectionNameDelegate,
+                                                bool preventAnyKindOfDiscriminatorUsage)
+            : base(mongoClientFactory, serviceProvider, configurationName, storageName, containedAccess, containerFactory, collectionNameDelegate, true, preventAnyKindOfDiscriminatorUsage)
         {
         }
     }

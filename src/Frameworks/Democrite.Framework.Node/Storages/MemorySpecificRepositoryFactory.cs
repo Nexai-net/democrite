@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Storages
 {
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
 
@@ -15,6 +16,7 @@ namespace Democrite.Framework.Node.Storages
     using Microsoft.Extensions.Options;
 
     using Orleans.Configuration;
+    using Orleans.Runtime;
 
     using System;
 
@@ -29,19 +31,19 @@ namespace Democrite.Framework.Node.Storages
         }
 
         /// <inheritdoc />
-        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, string storageName, string configurationName, bool readOnly)
+        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, RepositoryGetOptions request)
             where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>
             where TEntity : IEntityWithId<TEntityId>
             where TEntityId : IEquatable<TEntityId>
         {
-            return new MemoryRepository<TEntity, TEntityId>(storageName,
-                                                            configurationName,
+            return new MemoryRepository<TEntity, TEntityId>(request.StorageName,
+                                                            request.ConfigurationName!,
                                                             serviceProvider.GetRequiredService<IGrainFactory>(),
                                                             serviceProvider.GetRequiredService<IOptionsMonitor<MemoryGrainStorageOptions>>(),
                                                             serviceProvider.GetRequiredService<IDemocriteSerializer>(),
                                                             serviceProvider.GetRequiredService<IDedicatedObjectConverter>(),
                                                             serviceProvider.GetService<ILogger<IRepository<TEntity, TEntityId>>>() ?? NullLogger<IRepository<TEntity, TEntityId>>.Instance,
-                                                            readOnly);
+                                                            request.IsReadOnly);
         }
     }
 
@@ -56,7 +58,7 @@ namespace Democrite.Framework.Node.Storages
         }
 
         /// <inheritdoc />
-        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, string storageName, string configurationName, bool readOnly)
+        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, RepositoryGetOptions request)
             where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>
             where TEntity : IEntityWithId<TEntityId>
             where TEntityId : IEquatable<TEntityId>
@@ -67,23 +69,14 @@ namespace Democrite.Framework.Node.Storages
              * 
              * The repository behavior is the same except Grain state repository can only read data and not update them
              */
-            return new MemoryRepository<TEntity, TEntityId>(storageName,
-                                                            configurationName,
+            return new MemoryRepository<TEntity, TEntityId>(request.StorageName,
+                                                            request.ConfigurationName!,
                                                             serviceProvider.GetRequiredService<IGrainFactory>(),
                                                             serviceProvider.GetRequiredService<IOptionsMonitor<MemoryGrainStorageOptions>>(),
                                                             serviceProvider.GetRequiredService<IDemocriteSerializer>(),
                                                             serviceProvider.GetRequiredService<IDedicatedObjectConverter>(),
                                                             serviceProvider.GetService<ILogger<IRepository<TEntity, TEntityId>>>() ?? NullLogger<IRepository<TEntity, TEntityId>>.Instance,
                                                             true);
-
-            //return new MemoryContainerRepository<InMemoryGrainState<TEntity>, TEntity, TEntityId, string>(storageName,
-            //                                                                                              configurationName,
-            //                                                                                              serviceProvider.GetRequiredService<IGrainFactory>(),
-            //                                                                                              serviceProvider.GetRequiredService<IOptionsMonitor<MemoryGrainStorageOptions>>(),
-            //                                                                                              serviceProvider.GetRequiredService<IDemocriteSerializer>(),
-            //                                                                                              serviceProvider.GetRequiredService<IDedicatedObjectConverter>(),
-            //                                                                                              serviceProvider.GetService<ILogger<IRepository<TEntity, TEntityId>>>() ?? NullLogger<IRepository<TEntity, TEntityId>>.Instance,
-            //                                                                                              readOnly);
         }
     }
 }

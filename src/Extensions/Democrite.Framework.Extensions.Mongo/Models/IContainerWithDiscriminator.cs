@@ -11,6 +11,6 @@ namespace Democrite.Framework.Extensions.Mongo.Models
         /// <summary>
         /// Gets the discriminator filter.
         /// </summary>
-        FilterDefinition<TContainer> DiscriminatorFilter { get; }
+        FilterDefinition<TContainer>? DiscriminatorFilter { get; }
     }
 }

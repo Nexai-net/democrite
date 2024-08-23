@@ -17,7 +17,7 @@ namespace Democrite.Framework.Extensions.Mongo.Models
     {
         #region Fields
 
-        private static readonly FilterDefinition<GrainStateContainer<TState>> s_discriminator;
+        private static readonly FilterDefinition<GrainStateContainer<TState>>? s_discriminator;
 
         #endregion
 
@@ -29,7 +29,9 @@ namespace Democrite.Framework.Extensions.Mongo.Models
         static GrainStateContainer()
         {
             var traits = typeof(TState);
-            s_discriminator = Builders<GrainStateContainer<TState>>.Filter.Regex(new StringFieldDefinition<GrainStateContainer<TState>>("_doc._t"), new BsonRegularExpression(traits.Namespace + "." + traits.Name + ",*"));
+
+            if (traits.IsInterface == false && traits.IsAbstract == false)
+                s_discriminator = Builders<GrainStateContainer<TState>>.Filter.Regex(new StringFieldDefinition<GrainStateContainer<TState>>("_doc._t"), new BsonRegularExpression("^" + traits.Namespace + "." + traits.Name + ",*"));
         }
 
         #endregion
@@ -57,7 +59,7 @@ namespace Democrite.Framework.Extensions.Mongo.Models
         /// <summary>
         /// Gets the discriminator filter.
         /// </summary>
-        public FilterDefinition<GrainStateContainer<TState>> DiscriminatorFilter
+        public FilterDefinition<GrainStateContainer<TState>>? DiscriminatorFilter
         {
             get { return s_discriminator; }
         }

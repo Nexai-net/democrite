@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Repositories
 {
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
 
@@ -46,13 +47,13 @@ namespace Democrite.Framework.Core.Repositories
         #region Methods
 
         /// <inheritdoc />
-        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, string storageName, string configurationName, bool readOnly)
+        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(IServiceProvider serviceProvider, RepositoryGetOptions request)
             where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>
             where TEntity : IEntityWithId<TEntityId>
             where TEntityId : IEquatable<TEntityId>
         {
-            storageName ??= ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME;
-            configurationName ??= ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME;
+            var storageName = request.StorageName ?? ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME;
+            var configurationName = request.ConfigurationName ?? ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME;
 
             var fullConfigKey = configurationName + "##" + storageName + "##" + (typeof(TTargetRepo).GetTypeInfoExtension().FullShortName ?? typeof(TTargetRepo).Name);
             var entityTraits = typeof(TEntity);
@@ -82,9 +83,9 @@ namespace Democrite.Framework.Core.Repositories
 
                 this._factory ??= ActivatorUtilities.CreateInstance<TSpecificFactory>(serviceProvider);
 
-                var service = this._factory.Get<TTargetRepo, TEntity, TEntityId>(serviceProvider, storageName, configurationName, readOnly);
+                var service = this._factory.Get<TTargetRepo, TEntity, TEntityId>(serviceProvider, request);
 
-                Dictionary<Type, object> cacheByType;
+                Dictionary<Type, object>? cacheByType;
                 if (!this._cachedRepo.TryGetValue(fullConfigKey, out cacheByType))
                 {
                     cacheByType = new Dictionary<Type, object>();

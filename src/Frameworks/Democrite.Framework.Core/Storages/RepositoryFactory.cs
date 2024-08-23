@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Storages
 {
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
     using Democrite.Framework.Core.Repositories;
@@ -49,9 +50,7 @@ namespace Democrite.Framework.Core.Storages
         #region Methods
 
         /// <inheritdoc />
-        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(string storageName,
-                                                                                            bool isReadOnly,
-                                                                                            string? configurationName = null,
+        public IReadOnlyRepository<TEntity, TEntityId> Get<TTargetRepo, TEntity, TEntityId>(RepositoryGetOptions request,
                                                                                             CancellationToken token = default)
             where TTargetRepo : IReadOnlyRepository<TEntity, TEntityId>
             where TEntity : IEntityWithId<TEntityId>
@@ -59,11 +58,11 @@ namespace Democrite.Framework.Core.Storages
         {
             try
             {
-                configurationName = string.IsNullOrEmpty(configurationName)
+                var configurationName = string.IsNullOrEmpty(request.ConfigurationName)
                                             ? DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey
-                                            : configurationName;
+                                            : request.ConfigurationName;
 
-                storageName ??= ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME;
+                var storageName = request.StorageName ?? ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME;
 
                 var specificFactory = this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>(configurationName)
                                       ?? this._serviceProvider.GetKeyedService<IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey)
@@ -75,13 +74,15 @@ namespace Democrite.Framework.Core.Storages
                     throw new Exception("No specific repository factory");
                 }
 
+                var newRequest = new RepositoryGetOptions(storageName, request.IsReadOnly, configurationName, request.PreventAnyKindOfDiscriminatorUsage);
+
                 IReadOnlyRepository<TEntity, TEntityId> repo;
                 if (typeof(TTargetRepo) != typeof(IReadOnlyRepository<TEntity, TEntityId>) && typeof(TTargetRepo) != typeof(IRepository<TEntity, TEntityId>))
-                    repo = specificFactory.Get<TTargetRepo, TEntity, TEntityId>(this._serviceProvider, storageName, configurationName, isReadOnly);
-                else if (isReadOnly)
-                    repo = new ReadOnlyRepository<TEntity, TEntityId>(specificFactory, this._serviceProvider, configurationName, storageName);
+                    repo = specificFactory.Get<TTargetRepo, TEntity, TEntityId>(this._serviceProvider, newRequest);
+                else if (request.IsReadOnly)
+                    repo = new ReadOnlyRepository<TEntity, TEntityId>(specificFactory, this._serviceProvider, newRequest);
                 else
-                    repo = new Repository<TEntity, TEntityId>(specificFactory, this._serviceProvider, configurationName, storageName);
+                    repo = new Repository<TEntity, TEntityId>(specificFactory, this._serviceProvider, newRequest);
 
                 if (repo is null)
                     throw new KeyNotFoundException($"Could build a dedicated repository with following pair storageName:'{storageName}' configurationName:'{configurationName}'");
@@ -92,8 +93,8 @@ namespace Democrite.Framework.Core.Storages
             {
                 this._logger.OptiLog(LogLevel.Error,
                                      "[Repository Factory] - Storage Name '{storageName}', Configuration Name '{configurationName}' - {exception}",
-                                     storageName,
-                                     configurationName,
+                                     request.StorageName,
+                                     request.ConfigurationName,
                                      ex);
                 throw;
             }

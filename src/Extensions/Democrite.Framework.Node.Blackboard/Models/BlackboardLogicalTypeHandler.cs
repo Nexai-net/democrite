@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Blackboard.Models
 {
+    using Democrite.Framework.Core.Abstractions.Models;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Abstractions.Storages;
     using Democrite.Framework.Node.Blackboard.Abstractions;
@@ -251,7 +252,8 @@ namespace Democrite.Framework.Node.Blackboard.Models
             {
                 if (this._repository is null)
                 {
-                    var repository = this._repositoryFactory.Get<IRepository<DataRecordContainer, Guid>, DataRecordContainer, Guid>(this._storage.StorageKey, false, configurationName: this._storage.StorageConfiguration, cancellationToken: token);
+                    var request = new RepositoryGetOptions(this._storage.StorageKey, false, this._storage.StorageConfiguration);
+                    var repository = this._repositoryFactory.Get<IRepository<DataRecordContainer, Guid>, DataRecordContainer, Guid>(request, cancellationToken: token);
 
                     if (repository is ISupportInitialization<string> initStrRepo && !initStrRepo.IsInitialized)
                         await initStrRepo.InitializationAsync(this._storage.StorageKey, token);

@@ -24,10 +24,11 @@ namespace Democrite.Framework.Core.Abstractions.Attributes
         /// <summary>
         /// Initializes a new instance of the <see cref="RepositoryAttribute"/> class.
         /// </summary>
-        public RepositoryAttribute(string storageName, string? configurationName = null)
+        public RepositoryAttribute(string storageName, string? configurationName = null, bool preventAnyKindOfDiscriminatorUsage = false)
         {
             this.StorageName = storageName;
             this.ConfigurationName = configurationName;
+            this.PreventAnyKindOfDiscriminatorUsage = preventAnyKindOfDiscriminatorUsage;
         }
 
         #endregion
@@ -39,6 +40,11 @@ namespace Democrite.Framework.Core.Abstractions.Attributes
 
         /// <inheritdoc />
         public string? ConfigurationName { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether prevent any kind of discriminator usage.
+        /// </summary>
+        public bool PreventAnyKindOfDiscriminatorUsage { get; }
 
         #endregion
     }
