@@ -53,7 +53,7 @@ resources:
     - repository: tpl
       type: git
       name: Yaml-Templates
-      ref: refs/heads/dev
+#      ref: refs/heads/dev
 
 steps:
   - task: UseDotNet@2
