@@ -257,7 +257,8 @@
             await InstallInLocalAsync(definition, rootPath, files, logger, null, token);
 
             return s_template.Replace("<<PARENT_IMAGE>>", env.Image + ":" + (env.Tag ?? "latest"))
-                             .Replace("<<COPY_FILES>>", copyDockerfileBuilder.ToString());
+                             .Replace("<<COPY_FILES>>", copyDockerfileBuilder.ToString())
+                             .Replace("<<EXTR_BUILD_INSTRUCTION>>", string.Join(Environment.NewLine, env.ExtraDockerFileInstructions));
         }
 
         #endregion

@@ -1,6 +1,6 @@
 ﻿FROM <<PARENT_IMAGE>>
 WORKDIR /usr/src/app
 
-<<COPY_FILES>>
+<<EXTR_BUILD_INSTRUCTION>>
 
-RUN pip install democrite
+<<COPY_FILES>>

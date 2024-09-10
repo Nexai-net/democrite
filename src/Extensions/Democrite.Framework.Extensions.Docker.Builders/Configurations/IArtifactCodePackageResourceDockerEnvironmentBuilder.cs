@@ -21,16 +21,16 @@ namespace Democrite.Framework.Builders
         /// </summary>
         IArtifactCodePackageResourceDockerEnvironmentBuilder OnlyFromLocal();
 
-        ///// <summary>
-        ///// Setup a specific configuration link to an external global config
-        ///// </summary>
-        //IArtifactCodePackageResourceDockerEnvironmentBuilder ExternalConfiguration(string configurationName);
-
         /// <summary>
         /// Rquested GPU capacity and usage on the docker image
         /// </summary>
         IArtifactCodePackageResourceDockerEnvironmentBuilder UseGpu(string? gpuFilter = null);
 
         //IArtifactCodePackageResourceDockerEnvironmentBuilder Mount(string mountInfo);
+
+        /// <summary>
+        /// Adds the extra build instruction to customize the image.
+        /// </summary>
+        IArtifactCodePackageResourceDockerEnvironmentBuilder AddExtraBuildInstruction(params string[] buildInstruction);
     }
 }

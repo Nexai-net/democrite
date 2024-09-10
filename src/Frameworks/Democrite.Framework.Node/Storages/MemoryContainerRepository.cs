@@ -5,11 +5,8 @@
 namespace Democrite.Framework.Node.Storages
 {
     using Democrite.Framework.Core.Abstractions.Repositories;
-    using Democrite.Framework.Node.Abstractions.Repositories;
-    using Democrite.Framework.Node.Models;
 
     using Elvex.Toolbox.Abstractions.Models;
-    using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
@@ -50,72 +47,93 @@ namespace Democrite.Framework.Node.Storages
                                          bool readOnly)
             : base(storageName, configurationName, grainFactory, grainStorageOptions, democriteSerializer, dedicatedObjectConverter, logger, readOnly)
         {
-
         }
 
         #endregion
 
         #region Methods
 
+        /// <inheritdoc />
         public Task<bool> DeleteRecordAsync(TContainerId uid, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public Task<bool> DeleteRecordAsync(IReadOnlyCollection<TContainerId> entityIds, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public ValueTask<TContainer?> GetFirstValueAsync([AllowNull] Expression<Func<TContainer, bool>> filterExpression, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public ValueTask<TProjection?> GetFirstValueAsync<TProjection>([AllowNull] Expression<Func<TContainer, bool>> filterExpression, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public ValueTask<TContainer?> GetValueByIdAsync([NotNull] TContainerId entityId, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public ValueTask<TProjection?> GetValueByIdAsync<TProjection>([NotNull] TContainerId entityId, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public ValueTask<IReadOnlyCollection<TProjection>> GetValueByIdAsync<TProjection>([NotNull] IReadOnlyCollection<TContainerId> entityIds, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public ValueTask<IReadOnlyCollection<TContainer>> GetValueByIdAsync([NotNull] IReadOnlyCollection<TContainerId> entityIds, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public ValueTask<IReadOnlyCollection<TProjection>> GetValuesAsync<TProjection>([AllowNull] Expression<Func<TContainer, bool>> filterExpression, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public ValueTask<IReadOnlyCollection<TContainer>> GetValuesAsync([AllowNull] Expression<Func<TContainer, bool>> filterExpression, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public Task<bool> PushDataRecordAsync(TContainer entity, bool insertIfNew, CancellationToken token)
         {
             throw new NotImplementedException();
         }
 
+        /// <inheritdoc />
         public Task<int> PushDataRecordAsync(IReadOnlyCollection<TContainer> entity, bool insertIfNew, CancellationToken token)
         {
             throw new NotImplementedException();
         }
+
+        #region Tools
+
+        /// <inheritdoc />
+        protected override TProjection OnMap<TProjection, TSource>(in TSource? source, string objJson) where TSource : default
+        {
+            return base.OnMap<TProjection, TSource>(source, objJson);
+        }
+
+        #endregion
 
         #endregion
     }

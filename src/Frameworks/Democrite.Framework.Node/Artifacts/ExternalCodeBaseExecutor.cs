@@ -217,31 +217,34 @@ namespace Democrite.Framework.Node.Artifacts
         /// </summary>
         protected void ExtractCommandLineExec(out string executor, out List<string> arguments)
         {
-            arguments = new List<string>(5);
-            executor = this.ArtifactExecutableDefinition.ExecutablePath;
+            var def = this.ArtifactExecutableDefinition;
+            arguments = new List<string>(10);
+            executor = def.ExecutablePath;
 
-            if (!string.IsNullOrEmpty(this.ArtifactExecutableDefinition.Executor))
+            if (!string.IsNullOrEmpty(def.Executor))
             {
-                executor = this.ArtifactExecutableDefinition.Executor;
+                executor = def.Executor;
                 var indexOfSeparator = executor.IndexOf(":");
                 if (indexOfSeparator > -1)
                     executor = executor.Substring(0, indexOfSeparator);
 
-                arguments.Add(this.ArtifactExecutableDefinition.ExecutablePath);
+                arguments.AddRange(def.ExecutorArguments);
+
+                arguments.Add(def.ExecutablePath);
             }
 
-            if (this.ArtifactExecutableDefinition.Arguments != null && this.ArtifactExecutableDefinition.Arguments.Any())
+            if (def.Arguments != null && def.Arguments.Any())
             {
-                foreach (var arg in this.ArtifactExecutableDefinition.Arguments)
+                foreach (var arg in def.Arguments)
                     arguments.Add(arg);
             }
 
-            if (this.ArtifactExecutableDefinition.Verbose != ArtifactExecVerboseEnum.Minimal)
-                arguments.Add("--verbose:" + this.ArtifactExecutableDefinition.Verbose);
+            if (def.Verbose != ArtifactExecVerboseEnum.Minimal)
+                arguments.Add("--verbose:" + def.Verbose);
 
-            if (this.ArtifactExecutableDefinition.Configurations is not null)
+            if (def.Configurations is not null)
             {
-                foreach (var cfg in this.ArtifactExecutableDefinition.Configurations)
+                foreach (var cfg in def.Configurations)
                 {
                     var cfgKvValue = (Tuple<string, bool>)(s_solveConfigurationValue.MakeGenericMethodWithCache(cfg.ExpectedConfigurationType.ToType())
                                                                .Invoke(this, new object[] { cfg }))!;

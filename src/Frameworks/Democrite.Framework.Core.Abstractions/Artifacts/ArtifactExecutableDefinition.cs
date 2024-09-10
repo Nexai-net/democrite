@@ -38,6 +38,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                             bool allowPersistence,
                                             IEnumerable<string> arguments,
                                             string? executor,
+                                            IEnumerable<string> executorArguments,
                                             Uri packageSource,
                                             IEnumerable<string> packageFiles,
                                             ArtifactPackageTypeEnum packageType,
@@ -50,6 +51,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
             this.ExecutablePath = executablePath;
             this.AllowPersistence = allowPersistence;
             this.Executor = executor;
+            this.ExecutorArguments = executorArguments?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;
             this.Arguments = arguments?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;
             this.Configurations = configurations?.ToArray() ?? EnumerableHelper<ConfigurationBaseDefinition>.ReadOnlyArray;
             this.Environment = environment;
@@ -112,6 +114,13 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         [Id(6)]
         public string? Executor { get; }
 
+        /// <summary>
+        /// Gets the executor arguments placed before the executed file
+        /// </summary>
+        [DataMember]
+        [Id(7)]
+        public IReadOnlyCollection<string> ExecutorArguments { get; }
+
         #endregion
 
         #region Methods
@@ -127,6 +136,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                    (this.Environment?.Equals(exec.Environment) ?? exec.Environment is null) &&
                    this.Verbose == exec.Verbose &&
                    this.Executor == exec.Executor &&
+                   this.ExecutorArguments.SequenceEqual(exec.ExecutorArguments) &&
                    base.OnEquals(other);
         }
 
@@ -139,8 +149,9 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                     this.Configurations.Aggregate(0, (acc, a) => acc ^ (a?.GetHashCode() ?? 0)),
                                     this.Environment,
                                     this.Verbose,
-                                    this.Executor,
-                                    base.OnGetHashCode());
+                                    HashCode.Combine(this.Executor,
+                                                     this.ExecutorArguments.Aggregate(0, (acc, a) => acc ^ (a?.GetHashCode() ?? 0)),
+                                                     base.OnGetHashCode()));
         }
 
         #endregion

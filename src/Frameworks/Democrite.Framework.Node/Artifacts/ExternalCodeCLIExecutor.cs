@@ -16,6 +16,7 @@ namespace Democrite.Framework.Node.Artifacts
 
     using System;
     using System.Collections.Generic;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace Democrite.Framework.Node.Artifacts
     {
         #region Fields
 
-        private static readonly Regex s_logTypeRegex = new Regex("^LOG:(?<level>[0-6]{1}):(?<message>.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex s_logTypeRegex = new Regex("^LOG:(?<level>[0-6]{1}|Error|Warning|Trace|Debug|Information|Critical):(?<message>.*)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private readonly IProcessSystemService _processSystemService;
 
         #endregion
@@ -115,7 +116,7 @@ namespace Democrite.Framework.Node.Artifacts
             return await this._processSystemService.StartAsync(executor,
                                                                this.WorkingDir!.LocalPath,
                                                                token,
-                                                               args.ToArray());
+                                                               args.Select(s => Encoding.UTF8.GetString(Encoding.Default.GetBytes(s))).ToArray());
         }
 
         /// <summary>
@@ -130,8 +131,13 @@ namespace Democrite.Framework.Node.Artifacts
                 var message = match.Groups["message"].Value;
 
                 var logLevel = LogLevel.Information;
-                if (!string.IsNullOrEmpty(level) && int.TryParse(level, out int result) && result >= (int)LogLevel.Trace && result < (int)LogLevel.None)
-                    logLevel = (LogLevel)result;
+                if (!string.IsNullOrEmpty(level))
+                {
+                    if (int.TryParse(level, out int result) && result >= (int)LogLevel.Trace && result < (int)LogLevel.None)
+                        logLevel = (LogLevel)result;
+                    else if (Enum.TryParse<LogLevel>(level, true, out var strLevel) && strLevel != LogLevel.None)
+                        logLevel = strLevel;
+                }
 
                 ManagedExecutionMessage("LOG", logLevel, message, logger);
                 return true;

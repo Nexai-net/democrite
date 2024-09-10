@@ -19,6 +19,7 @@ namespace Democrite.Framework.Extensions.Docker.Builders.Configurations
         #region Fields
 
         private readonly Version? _minimalRequiredDockerVersion;
+        private readonly List<string> _extraImageBuildInstruction;
 
         private string? _imageName;
         private string? _useGpu;
@@ -36,6 +37,7 @@ namespace Democrite.Framework.Extensions.Docker.Builders.Configurations
         public ArtifactCodePackageResourceDockerEnvironmentBuilder(Version? minimalRequiredDockerVersion)
         {
             this._minimalRequiredDockerVersion = minimalRequiredDockerVersion;
+            this._extraImageBuildInstruction = new List<string>();
         }
 
         #endregion
@@ -73,6 +75,13 @@ namespace Democrite.Framework.Extensions.Docker.Builders.Configurations
         }
 
         /// <inheritdoc />
+        public IArtifactCodePackageResourceDockerEnvironmentBuilder AddExtraBuildInstruction(params string[] buildInstruction)
+        {
+            this._extraImageBuildInstruction.AddRange(buildInstruction);
+            return this;
+        }
+
+        /// <inheritdoc />
         public ArtifactExecutableEnvironmentDefinition Build()
         {
             ArgumentNullException.ThrowIfNullOrEmpty(this._imageName);
@@ -81,7 +90,8 @@ namespace Democrite.Framework.Extensions.Docker.Builders.Configurations
                                                                      this._tag,
                                                                      this._useGpu,
                                                                      onlyLocal: this._onlyLocal,
-                                                                     repository: this._repository);
+                                                                     repository: this._repository,
+                                                                     extraDockerFileInstructions: this._extraImageBuildInstruction);
         }
 
         #endregion

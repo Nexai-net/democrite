@@ -6,6 +6,7 @@ namespace Democrite.Framework.Builders.Artifacts
 {
     using Democrite.Framework.Core.Abstractions.Artifacts;
 
+    using System;
     using System.Text.RegularExpressions;
 
     /// <summary>
@@ -21,6 +22,14 @@ namespace Democrite.Framework.Builders.Artifacts
             if (string.IsNullOrEmpty(version))
                 version = "3.12.1";
             return builder.ExecuteBy("Python", Version.Parse(version));
+        }
+
+        /// <summary>
+        /// Configure java jar code
+        /// </summary>
+        public static IArtifactCodePackageResourceBuilderFrom Java(this IArtifactExecutablePackageResourceBuilder builder, string? version = null)
+        {
+            return builder.ExecuteBy("Java", executorArgs: "-jar");
         }
 
         /// <summary>
@@ -63,6 +72,6 @@ namespace Democrite.Framework.Builders.Artifacts
                 builderResult.AppendFiles("*", true);
 
             return builderResult;
-        }
+        }        
     }
 }

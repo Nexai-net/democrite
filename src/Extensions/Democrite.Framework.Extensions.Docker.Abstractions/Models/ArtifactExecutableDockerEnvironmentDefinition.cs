@@ -31,7 +31,8 @@
                                                              string? gpuRequirement,
                                                              bool onlyLocal = false,
                                                              string? repository = null,
-                                                             string? configurationName = null)
+                                                             string? configurationName = null,
+                                                             IEnumerable<string>? extraDockerFileInstructions = null)
             : base(ENVIRONMENT_KEY, configurationName, minimalRequiredVersion)
         {
             this.Repository = repository;
@@ -39,6 +40,7 @@
             this.GPURequirement = gpuRequirement;
             this.Image = image;
             this.Tag = tag;
+            this.ExtraDockerFileInstructions = extraDockerFileInstructions?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;
 
             this._fullImageName = GetFullImageFormatedName(repository);
         }
@@ -77,6 +79,12 @@
         [DataMember]
         public string? GPURequirement { get; }
 
+        /// <summary>
+        /// Gets the extra docker file instructions.
+        /// </summary>
+        [DataMember]
+        public IReadOnlyCollection<string> ExtraDockerFileInstructions { get; }
+
         #endregion
 
         #region Methods
@@ -105,7 +113,8 @@
                    string.Equals(this.Repository, docker.Repository, StringComparison.OrdinalIgnoreCase) &&
                    string.Equals(this.ConfigurationName, docker.ConfigurationName, StringComparison.OrdinalIgnoreCase) &&
                    string.Equals(this.Tag, docker.Tag, StringComparison.OrdinalIgnoreCase) &&
-                   string.Equals(this.GPURequirement, docker.GPURequirement, StringComparison.OrdinalIgnoreCase);
+                   string.Equals(this.GPURequirement, docker.GPURequirement, StringComparison.OrdinalIgnoreCase) &&
+                   this.ExtraDockerFileInstructions.SequenceEqual(docker.ExtraDockerFileInstructions);
         }
 
         /// <inheritdoc />
@@ -116,7 +125,8 @@
                                     this.GPURequirement,
                                     this.Repository,
                                     this.ConfigurationName,
-                                    this.OnlyLocal);
+                                    this.OnlyLocal,
+                                    this.ExtraDockerFileInstructions.Aggregate(0, (acc, e) => e.GetHashCode() ^ acc));
         }
 
         #endregion

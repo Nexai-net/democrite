@@ -142,8 +142,8 @@ namespace Democrite.Framework.Extensions.Docker
 
             var runningTask = Task.Run(async () =>
             {
-                var progress = new Progress<string>();
-                progress.ProgressChanged += (e, a) => base.ProcessOutputDataReceived(a);
+                //var progress = new Progress<string>();
+                //progress.ProgressChanged += (e, a) => base.ProcessOutputDataReceived(a);
 
                 // Listen stdout && stderr
 
@@ -162,10 +162,13 @@ namespace Democrite.Framework.Extensions.Docker
 
                 using (var reader = new StreamReader(stream))
                 {
-                    var line = await reader.ReadLineAsync(this.CancellationToken);
+                    while (!reader.EndOfStream)
+                    {
+                        var line = await reader.ReadLineAsync(this.CancellationToken);
 
-                    if (!string.IsNullOrEmpty(line))
-                        base.ProcessOutputDataReceived(line);
+                        if (!string.IsNullOrEmpty(line))
+                            base.ProcessOutputDataReceived(line);
+                    }
                 }
 #pragma warning restore CS0618 // Type or member is obsolete
 

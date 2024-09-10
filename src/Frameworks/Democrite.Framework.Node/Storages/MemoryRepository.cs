@@ -179,7 +179,7 @@ namespace Democrite.Framework.Node.Storages
             var bytes = this._democriteSerializer.SerializeToBinary(entity);
 
             return await storageShelveGrain.WriteDatAsync(entity.Uid,
-                                                          entity.Uid,  
+                                                          entity.Uid,
                                                           insertIfNew,
                                                           this._storageName,
                                                           bytes,
@@ -313,9 +313,23 @@ namespace Democrite.Framework.Node.Storages
             if (source is TProjection projection)
                 return projection;
 
+            if (source is ISupportConvert<TProjection> convertProj)
+                return convertProj.Convert();
+
+            if (source is ISupportConvert convert && convert.TryConvert<TProjection>(out var manualConvert))
+                return manualConvert;
+
             // OPTI : Usual non opti projection mapping passing by a json convertion -> Change to auto mapper techno more performant
 
             var objJson = Newtonsoft.Json.JsonConvert.SerializeObject(source);
+            return OnMap<TProjection, TSource>(source, objJson);
+        }
+
+        /// <summary>
+        /// Called when [map].
+        /// </summary>
+        protected virtual TProjection OnMap<TProjection, TSource>(in TSource? source, string objJson)
+        {
             return Newtonsoft.Json.JsonConvert.DeserializeObject<TProjection>(objJson) ?? throw new InvalidOperationException("Map source (" + typeof(TSource) + ") to projection (" + typeof(TProjection) + ") failed");
         }
 

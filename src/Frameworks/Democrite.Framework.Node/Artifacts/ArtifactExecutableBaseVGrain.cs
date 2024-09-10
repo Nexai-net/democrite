@@ -11,6 +11,7 @@ namespace Democrite.Framework.Node.Artifacts
     using Democrite.Framework.Node.Abstractions.Artifacts;
     using Democrite.Framework.Node.Resources;
     using Elvex.Toolbox;
+    using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -98,6 +99,9 @@ namespace Democrite.Framework.Node.Artifacts
 
             try
             {
+                if (artifactCodePackageResource?.Verbose == ArtifactExecVerboseEnum.Full)
+                    logger.OptiLog(LogLevel.Information, "[External VGrain] {app} starting ...", artifactCodePackageResource.DisplayName);
+
                 // StartAt external program
                 // And ping health check that external could be contacted
                 await executor.StartAsync(executionContext, logger, executionContext.CancellationToken);

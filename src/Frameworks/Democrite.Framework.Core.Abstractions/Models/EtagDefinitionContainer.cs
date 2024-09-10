@@ -6,10 +6,15 @@ namespace Democrite.Framework.Core.Abstractions.Models
 {
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Repositories;
+    using Democrite.Framework.Core.Abstractions.Sequence;
+
+    using Elvex.Toolbox.Abstractions.Supports;
 
     using System;
     using System.ComponentModel;
     using System.Linq;
+    using System.Linq.Expressions;
+    using System.Reflection;
     using System.Runtime.Serialization;
 
     /// <summary>
@@ -23,7 +28,22 @@ namespace Democrite.Framework.Core.Abstractions.Models
     [ImmutableObject(true)]
     public class EtagDefinitionContainer : IEntityWithId<Guid>
     {
+        #region Fields
+        
+        private static readonly MethodInfo s_genericCreateFrom;
+        
+        #endregion
+
         #region Ctor
+
+        /// <summary>
+        /// Initializes the <see cref="EtagDefinitionContainer"/> class.
+        /// </summary>
+        static EtagDefinitionContainer()
+        {
+            Expression<Func<EtagDefinitionContainer<SequenceDefinition>>> expr = () => EtagDefinitionContainer.Create<SequenceDefinition>((SequenceDefinition)null!, (EtagDefinitionContainer)null!);
+            s_genericCreateFrom = ((MethodCallExpression)expr.Body).Method.GetGenericMethodDefinition();
+        }
 
         /// <summary>
         /// Prevents a default instance of the <see cref="EtagDefinitionContainer"/> class from being created.
@@ -76,6 +96,24 @@ namespace Democrite.Framework.Core.Abstractions.Models
         }
 
         /// <summary>
+        /// Creates the specified <see cref="EtagDefinitionContainer"/>.
+        /// </summary>
+        internal static EtagDefinitionContainer<TDefinition> Create<TDefinition>(TDefinition definition, EtagDefinitionContainer source)
+            where TDefinition : class, IDefinition
+        {
+            return new EtagDefinitionContainer<TDefinition>(source.Uid, source.Etag, source.Discriminator, definition);
+        }
+
+        /// <summary>
+        /// Creates the specified <see cref="EtagDefinitionContainer"/>.
+        /// </summary>
+        internal static EtagDefinitionContainer CreateFrom(Type definitionType, IDefinition definition, EtagDefinitionContainer source)
+        {
+            return (EtagDefinitionContainer)s_genericCreateFrom.MakeGenericMethodWithCache(definitionType)
+                                                               .Invoke(null, new object?[] { definition, source })!;
+        }
+
+        /// <summary>
         /// Test is the definition follow the requirement type
         /// </summary>
         public virtual bool IsDefinition<TDefinition>()
@@ -103,9 +141,15 @@ namespace Democrite.Framework.Core.Abstractions.Models
     [DataContract]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class EtagDefinitionContainer<TDefinition> : EtagDefinitionContainer
+    public sealed class EtagDefinitionContainer<TDefinition> : EtagDefinitionContainer, ISupportConvert
         where TDefinition : class, IDefinition
     {
+        #region Fields
+
+        private readonly static Type s_genericTraits = typeof(EtagDefinitionContainer<>);
+        private readonly static Type s_definitionTraits = typeof(TDefinition);
+
+        #endregion
 
         #region Ctor
 
@@ -188,6 +232,39 @@ namespace Democrite.Framework.Core.Abstractions.Models
                 return requested;
 
             throw new InvalidCastException($"Could not cast definition type {this.Definition} to requested {typeof(TRequestDefinition)}");
+        }
+
+        /// <inheritdoc />
+        public bool TryConvert<TTarget>(out TTarget? target)
+        {
+            if (TryConvert(out var targetObj, typeof(TTarget)))
+            {
+                target = (TTarget)targetObj!;
+                return true;
+            }
+
+            target = default;
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryConvert(out object? target, Type targetType)
+        {
+            target = null;
+
+            if (!targetType.IsGenericType)
+                return false;
+
+            var genericTarget = targetType.GetGenericTypeDefinition();
+            if (genericTarget != s_genericTraits)
+                return false;
+
+            var expectedDefinition = targetType.GetGenericArguments().Single();
+            if (!s_definitionTraits.IsAssignableTo(expectedDefinition))
+                return false;
+
+            target = EtagDefinitionContainer.CreateFrom(expectedDefinition, this.Definition, this);
+            return true;
         }
 
         #endregion

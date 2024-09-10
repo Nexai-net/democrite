@@ -122,12 +122,18 @@ namespace Democrite.Framework.Node.Artifacts
                         var clientTask = this._comServer.WaitNextClientAsync(launchingCancelTokenSource.Token);
                         await this._comServer.StartAsync(launchingCancelTokenSource.Token);
 
+                        if (this.ArtifactExecutableDefinition.Verbose == ArtifactExecVerboseEnum.Full)
+                            logger.OptiLog(LogLevel.Information, "Launch External VGrain {app} {args}", this.ArtifactExecutableDefinition.DisplayName, args);
+
                         processor = await LaunchProcess(executor, args, this.ArtifactExecutableDefinition, launchingCancelTokenSource.Token);
 
                         // If process failed then it MUST stop the client connection
 #pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                        processor.GetAwaiterTask().ContinueWith(_ => launchingCancelTokenSource.Cancel()).ConfigureAwait(false);
+                        processor.GetAwaiterTask().ContinueWith(_ =>
+                        {
+                            launchingCancelTokenSource.Cancel();
+                        }).ConfigureAwait(false);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 #pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods
 
@@ -156,7 +162,7 @@ namespace Democrite.Framework.Node.Artifacts
                                                             ex);
                     }
 
-                    logger.OptiLog(LogLevel.Critical, "External execution error {exception}", ex);
+                    logger.OptiLog(LogLevel.Critical, "External execution error {exception}, Failed to launch or ping issues", ex);
                     throw ex;
                 }
             }

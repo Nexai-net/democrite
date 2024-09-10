@@ -107,7 +107,7 @@ namespace Democrite.Framework.Node.Artifacts
         [ReadOnly]
         public Task ConcurrentRunWithInputAsync<TInput>(TInput? input, IExecutionContext<Guid> executionContext)
         {
-            return ConcurrentRunWithInputAsync<TInput>(input, executionContext);
+            return RunWithInputAsync<TInput>(input, executionContext);
         }
 
         /// <inheritdoc />

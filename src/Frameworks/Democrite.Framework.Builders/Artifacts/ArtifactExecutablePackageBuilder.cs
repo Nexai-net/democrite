@@ -46,6 +46,7 @@ namespace Democrite.Framework.Builders.Artifacts
         private string? _executablePath;
         private bool _allowPersistence;
         private string? _executor;
+        private string[] _executorArgs;
         private Uri? _packageSource;
         private Version? _packageVersion;
         private ArtifactExecVerboseEnum _verbose;
@@ -87,12 +88,12 @@ namespace Democrite.Framework.Builders.Artifacts
         }
 
         /// <inheritdoc />
-        public IArtifactCodePackageResourceBuilderFrom ExecuteBy(string executor, Version version)
+        public IArtifactCodePackageResourceBuilderFrom ExecuteBy(string executor, Version? version = null, params string[] executorArgs)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(executor);
-            ArgumentNullException.ThrowIfNull(version);
 
             this._executor = executor;
+            this._executorArgs = executorArgs;
             this._executorVersion = version;
             return this;
 
@@ -277,7 +278,10 @@ namespace Democrite.Framework.Builders.Artifacts
                                                     this._arguments ?? EnumerableHelper<string>.ReadOnlyArray,
                                                     (string.IsNullOrWhiteSpace(this._executor)
                                                           ? string.Empty
-                                                          : this._executor + ":" + this._executorVersion),
+                                                          : (this._executorVersion is not null) 
+                                                                    ? this._executor + ":" + this._executorVersion
+                                                                    : this._executor),
+                                                    this._executorArgs,
                                                     this._packageSource,
                                                     this._packageFiles.OrderBy(p => p).ToArray(),
                                                     this._packageType.GetValueOrDefault(),

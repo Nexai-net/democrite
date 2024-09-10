@@ -17,7 +17,7 @@ namespace Democrite.Framework.Builders.Artifacts
         /// <summary>
         /// Define the executor; example to run python script you need python installed.
         /// </summary>
-        IArtifactCodePackageResourceBuilderFrom ExecuteBy(string executor, Version version);
+        IArtifactCodePackageResourceBuilderFrom ExecuteBy(string executor, Version? version = null, params string[] executorArgs);
 
         /// <summary>
         /// Set definition meta data
@@ -99,8 +99,11 @@ namespace Democrite.Framework.Builders.Artifacts
     public interface IArtifactCodePackageResourceBuilderFinalizer : IArtifactCodePackageResourceBuilderFiles<IArtifactCodePackageResourceBuilderFinalizer>, IDefinitionBaseCompiler<ArtifactExecutableDefinition>
     {
         /// <summary>
-        /// Define the argument to pass by the executable at start.
+        /// Define the argument to pass to executed file
         /// </summary>
+        /// <remarks>
+        ///     Those arguments are placed after the executable file
+        /// </remarks>
         IArtifactCodePackageResourceBuilderFinalizer Arguments(params string[] args);
 
         /// <summary>
