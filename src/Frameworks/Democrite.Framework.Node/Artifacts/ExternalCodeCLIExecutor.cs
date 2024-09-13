@@ -66,7 +66,7 @@ namespace Democrite.Framework.Node.Artifacts
             var base64Cmd = FormatCommand(input, executionContext);
 
             ExtractCommandLineExec(out var executor, out var args);
-            args.Add("--cmd:'" + base64Cmd + "'");
+            JoinArgument(args, "--cmd", "'" + base64Cmd + "'");
 
             using (var processor = await LaunchProcessAsync(executor, args, this.ArtifactExecutableDefinition, cancellationToken))
             {

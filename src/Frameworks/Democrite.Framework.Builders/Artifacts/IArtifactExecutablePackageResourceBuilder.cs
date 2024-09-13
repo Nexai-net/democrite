@@ -17,7 +17,7 @@ namespace Democrite.Framework.Builders.Artifacts
         /// <summary>
         /// Define the executor; example to run python script you need python installed.
         /// </summary>
-        IArtifactCodePackageResourceBuilderFrom ExecuteBy(string executor, Version? version = null, params string[] executorArgs);
+        IArtifactCodePackageResourceBuilderFrom ExecuteBy(string executor, Version? version = null, char argumentSeparator = ':', params string[] executorArgs);
 
         /// <summary>
         /// Set definition meta data

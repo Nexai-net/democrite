@@ -115,7 +115,7 @@ namespace Democrite.Framework.Node.Artifacts
                 {
                     using (var portReserved = this._networkInspector.GetAndReservedNextUnusedPort(30000, 65536))
                     {
-                        args.Add("--port:" + portReserved.Token);
+                        JoinArgument(args, "--port", portReserved.Token.ToString());
 
                         this._comServer = new ComServer(portReserved.Token);
 

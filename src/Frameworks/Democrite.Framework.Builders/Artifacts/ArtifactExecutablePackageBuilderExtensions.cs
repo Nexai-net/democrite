@@ -29,7 +29,7 @@ namespace Democrite.Framework.Builders.Artifacts
         /// </summary>
         public static IArtifactCodePackageResourceBuilderFrom Java(this IArtifactExecutablePackageResourceBuilder builder, string? version = null)
         {
-            return builder.ExecuteBy("Java", executorArgs: "-jar");
+            return builder.ExecuteBy("Java", argumentSeparator: ' ', executorArgs: "-jar");
         }
 
         /// <summary>

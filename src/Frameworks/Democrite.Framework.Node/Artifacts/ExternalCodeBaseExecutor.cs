@@ -221,6 +221,8 @@ namespace Democrite.Framework.Node.Artifacts
             arguments = new List<string>(10);
             executor = def.ExecutablePath;
 
+            var executorArgumentSeparator = def.ExecutorArgumentSeparator ?? ':';
+
             if (!string.IsNullOrEmpty(def.Executor))
             {
                 executor = def.Executor;
@@ -240,7 +242,7 @@ namespace Democrite.Framework.Node.Artifacts
             }
 
             if (def.Verbose != ArtifactExecVerboseEnum.Minimal)
-                arguments.Add("--verbose:" + def.Verbose);
+                JoinArgument(arguments, "--verbose", def.Verbose.ToString());
 
             if (def.Configurations is not null)
             {
@@ -249,8 +251,22 @@ namespace Democrite.Framework.Node.Artifacts
                     var cfgKvValue = (Tuple<string, bool>)(s_solveConfigurationValue.MakeGenericMethodWithCache(cfg.ExpectedConfigurationType.ToType())
                                                                .Invoke(this, new object[] { cfg }))!;
 
-                    arguments.Add("--config" + ((cfgKvValue.Item2) ? "_b64" : "") + ":" + cfg.ConfigName + "='" + cfgKvValue.Item1 + "'");
+                    JoinArgument(arguments, "--config" + ((cfgKvValue.Item2) ? "_b64" : ""), cfg.ConfigName + "='" + cfgKvValue.Item1 + "'");
                 }
+            }
+        }
+
+        protected void JoinArgument(IList<string> args, string key, string value)
+        {
+            var executorArgumentSeparator = this.ArtifactExecutableDefinition.ExecutorArgumentSeparator ?? ':';
+            if (executorArgumentSeparator == ' ')
+            {
+                args.Add(key);
+                args.Add(value);
+            }
+            else
+            {
+                args.Add(key + executorArgumentSeparator + value);
             }
         }
 

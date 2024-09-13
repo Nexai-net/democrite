@@ -46,6 +46,7 @@ namespace Democrite.Framework.Builders.Artifacts
         private string? _executablePath;
         private bool _allowPersistence;
         private string? _executor;
+        private char? _executableArgSeparator;
         private string[] _executorArgs;
         private Uri? _packageSource;
         private Version? _packageVersion;
@@ -88,11 +89,12 @@ namespace Democrite.Framework.Builders.Artifacts
         }
 
         /// <inheritdoc />
-        public IArtifactCodePackageResourceBuilderFrom ExecuteBy(string executor, Version? version = null, params string[] executorArgs)
+        public IArtifactCodePackageResourceBuilderFrom ExecuteBy(string executor, Version? version = null, char argumentSeparator = ':', params string[] executorArgs)
         {
             ArgumentNullException.ThrowIfNullOrEmpty(executor);
 
             this._executor = executor;
+            this._executableArgSeparator = argumentSeparator;
             this._executorArgs = executorArgs;
             this._executorVersion = version;
             return this;
@@ -281,6 +283,7 @@ namespace Democrite.Framework.Builders.Artifacts
                                                           : (this._executorVersion is not null) 
                                                                     ? this._executor + ":" + this._executorVersion
                                                                     : this._executor),
+                                                    this._executableArgSeparator,
                                                     this._executorArgs,
                                                     this._packageSource,
                                                     this._packageFiles.OrderBy(p => p).ToArray(),

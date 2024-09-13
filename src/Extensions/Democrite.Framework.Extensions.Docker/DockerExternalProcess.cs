@@ -70,7 +70,7 @@ namespace Democrite.Framework.Extensions.Docker
             };
 
             this._env = env;
-            this._deamonMode = arguments.FirstOrDefault(a => a.StartsWith("--port:")) is not null;
+            this._deamonMode = arguments.FirstOrDefault(a => a.StartsWith("--port")) is not null;
 
             //this._client = new DockerClientConfiguration()
             //                        .CreateClient(string.IsNullOrEmpty(env.MinimalRequiredVersion)
@@ -123,7 +123,17 @@ namespace Democrite.Framework.Extensions.Docker
                     }
                 };
 
-                createParam.Cmd.Add("--server:host.docker.internal");
+                var executableSeparator = this._definition.ExecutorArgumentSeparator ?? ':';
+
+                if (executableSeparator == ' ')
+                {
+                    createParam.Cmd.Add("--server");
+                    createParam.Cmd.Add("host.docker.internal");
+                }
+                else
+                {
+                    createParam.Cmd.Add("--server" + executableSeparator + "host.docker.internal");
+                }
             }
 
             await ClearExistingContainerAsync(createParam.Name);

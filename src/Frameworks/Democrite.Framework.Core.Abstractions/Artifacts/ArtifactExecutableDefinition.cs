@@ -38,6 +38,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                             bool allowPersistence,
                                             IEnumerable<string> arguments,
                                             string? executor,
+                                            char? executorArgumentSeparator,
                                             IEnumerable<string> executorArguments,
                                             Uri packageSource,
                                             IEnumerable<string> packageFiles,
@@ -51,6 +52,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
             this.ExecutablePath = executablePath;
             this.AllowPersistence = allowPersistence;
             this.Executor = executor;
+            this.ExecutorArgumentSeparator = executorArgumentSeparator;
             this.ExecutorArguments = executorArguments?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;
             this.Arguments = arguments?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;
             this.Configurations = configurations?.ToArray() ?? EnumerableHelper<ConfigurationBaseDefinition>.ReadOnlyArray;
@@ -121,6 +123,13 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         [Id(7)]
         public IReadOnlyCollection<string> ExecutorArguments { get; }
 
+        /// <summary>
+        /// Gets the executor argument separator; default ':', Example --cmd:VALUE
+        /// </summary>
+        [DataMember]
+        [Id(8)]
+        public char? ExecutorArgumentSeparator { get; }
+
         #endregion
 
         #region Methods
@@ -136,6 +145,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                    (this.Environment?.Equals(exec.Environment) ?? exec.Environment is null) &&
                    this.Verbose == exec.Verbose &&
                    this.Executor == exec.Executor &&
+                   this.ExecutorArgumentSeparator == exec.ExecutorArgumentSeparator &&
                    this.ExecutorArguments.SequenceEqual(exec.ExecutorArguments) &&
                    base.OnEquals(other);
         }
@@ -150,6 +160,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                     this.Environment,
                                     this.Verbose,
                                     HashCode.Combine(this.Executor,
+                                                     this.ExecutorArgumentSeparator,
                                                      this.ExecutorArguments.Aggregate(0, (acc, a) => acc ^ (a?.GetHashCode() ?? 0)),
                                                      base.OnGetHashCode()));
         }
