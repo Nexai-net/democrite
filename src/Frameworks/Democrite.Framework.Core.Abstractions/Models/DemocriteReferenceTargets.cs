@@ -37,7 +37,7 @@ namespace Democrite.Framework.Core.Abstractions.Models
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    internal record class ReferenceTypeTarget(Uri RefId, RefTypeEnum RefType, ConcretType Type) : ReferenceTarget(RefId, RefType);
+    internal record class ReferenceTypeTarget(Uri RefId, RefTypeEnum RefType, AbstractType Type) : ReferenceTarget(RefId, RefType);
 
     /// <summary>
     /// Define Method reference by the <paramref name="RefId"/>
@@ -46,6 +46,7 @@ namespace Democrite.Framework.Core.Abstractions.Models
     [Serializable]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    internal sealed record class ReferenceTypeMethodTarget(Uri RefId, RefTypeEnum RefType, ConcretType Type, AbstractMethod Method) : ReferenceTypeTarget(RefId, RefType, Type);
-
+    internal sealed record class ReferenceTypeMethodTarget(Uri RefId, RefTypeEnum RefType, AbstractType Type, AbstractMethod Method) : ReferenceTypeTarget(RefId, RefType, Type)
+    {
+    }
 }

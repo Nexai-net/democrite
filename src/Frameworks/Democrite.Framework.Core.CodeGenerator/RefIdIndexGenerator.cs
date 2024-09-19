@@ -39,7 +39,7 @@ namespace Democrite.Framework.Core.CodeGenerator
             {
                 "VGrainMetaDataAttribute",
                 "VGrainMetaDataMethodAttribute",
-                "VGrainSimpleNameIdentifierAttribute",
+                "RefSimpleNameIdentifierAttribute",
             };
 
             s_attributesSNI = new HashSet<string>(attrSNI.SelectMany(a => new[] { a, a.Replace(nameof(Attribute), "") }));
@@ -84,8 +84,8 @@ namespace Democrite.Framework.Core.CodeGenerator
 
             var errors = new List<Diagnostic>();
 
-            var semanticModels =  context.Compilation.SyntaxTrees.Select(t => context.Compilation.GetSemanticModel(t))
-                                                                 .ToArray();                                       
+            var semanticModels = context.Compilation.SyntaxTrees.Select(t => context.Compilation.GetSemanticModel(t))
+                                                                 .ToArray();
 
             var sourceNamespace = context.Compilation.AssemblyName;
 
@@ -130,48 +130,59 @@ namespace Democrite.Framework.Core.CodeGenerator
                                                                             : ctrParameters[k.Indx]),
                                                           v => attrData.ConstructorArguments[v.Indx].ToCSharpString());
 
-                    var memberIdentifier = (member as ClassDeclarationSyntax)?.Identifier ?? 
-                                           (member as InterfaceDeclarationSyntax)?.Identifier ?? 
-                                           (member as StructDeclarationSyntax)?.Identifier ?? 
+                    var memberIdentifier = (member as ClassDeclarationSyntax)?.Identifier ??
+                                           (member as InterfaceDeclarationSyntax)?.Identifier ??
+                                           (member as StructDeclarationSyntax)?.Identifier ??
+                                           (member as RecordDeclarationSyntax)?.Identifier ??
+                                           (member as EnumDeclarationSyntax)?.Identifier ??
                                            (member as MethodDeclarationSyntax)?.Identifier;
+
+                    if (memberIdentifier is null)
+                    {
+                        errors.Add(Diagnostic.Create(ErrorManager.EDG002, member.GetLocation(), member.GetType()));
+                        continue;
+                    }
 
                     var model = context.Compilation.GetSemanticModel(memberIdentifier.Value.SyntaxTree).GetDeclaredSymbol(member);
 
                     registryLines.Append(' ', 12);
+                    List<string> arguments = null;
+                    int nbGenericArgs = 0;
 
                     if (byType.Key.Item1 == SyntaxKind.MethodDeclaration)
                     {
-                        registryLines.Append("registry.RegisterMethod<");
+                        registryLines.Append("registry.RegisterMethod(");
                         var mthdMemberIdentifier = (member.Parent as ClassDeclarationSyntax)?.Identifier ?? (member.Parent as InterfaceDeclarationSyntax)?.Identifier ?? (member.Parent as StructDeclarationSyntax)?.Identifier;
                         model = context.Compilation.GetSemanticModel(mthdMemberIdentifier.Value.SyntaxTree).GetDeclaredSymbol(member.Parent);
 
                         var mthd = (MethodDeclarationSyntax)member;
-                        registryLines.Append(string.Join(", ", mthd.ParameterList.Parameters.Select(p => (p.Type?.GetTypeFullNameWithNamespace(t => semanticModels.Select(s =>
-                                                                                                                                                                  {
-                                                                                                                                                                      try
-                                                                                                                                                                      {
-                                                                                                                                                                          return s.GetDeclaredSymbol(t);
-                                                                                                                                                                      }
-                                                                                                                                                                      catch (Exception ex)
-                                                                                                                                                                      {
-                                                                                                                                                                          return null;
-                                                                                                                                                                      }
-                                                                                                                                                                  })
-                                                                                                                                                                  .Where(s => s != null)
-                                                                                                                                                                  .FirstOrDefault()) ?? "global::Elvex.Toolbox.NoneType"))));
-                        if (mthd.ParameterList.Parameters.Any())
-                            registryLines.Append(", ");
+
+                        arguments = new List<string>();
+
+                        nbGenericArgs = mthd.TypeParameterList?.Parameters.Count ?? 0;
+
+                        arguments.AddRange(mthd.ParameterList.Parameters
+                                                             .Select(p => (p.Type?.GetTypeFullNameWithNamespace(t => semanticModels.Select(s =>
+                                                                                                                                           {
+                                                                                                                                               try
+                                                                                                                                               {
+                                                                                                                                                   return s.GetDeclaredSymbol(t);
+                                                                                                                                               }
+                                                                                                                                               catch (Exception ex)
+                                                                                                                                               {
+                                                                                                                                                   return null;
+                                                                                                                                               }
+                                                                                                                                           })
+                                                                                                                                           .Where(s => s != null)
+                                                                                                                                           .FirstOrDefault()) ?? "global::Elvex.Toolbox.AnyType"))
+                                                             .Select(s => "typeof(" + s + ")"));
                     }
                     else
                     {
-                        registryLines.Append("registry.Register<");
+                        registryLines.Append("registry.Register(");
                     }
 
                     var type = (ITypeSymbol)model;
-
-                    registryLines.Append("global::" + type.ToString().Trim('{', '}'));
-
-                    registryLines.Append(">(");
 
                     if (byType.Key.Item1 != SyntaxKind.MethodDeclaration)
                     {
@@ -206,9 +217,39 @@ namespace Democrite.Framework.Core.CodeGenerator
                         registryLines.Append("\"");
                     }
 
+                    var typeName = type.ToString().Trim('{', '}');
+
+                    if (type.IsType && type is INamedTypeSymbol namedType && namedType.IsGenericType)
+                    {
+                        // Search if type is generic
+                        if (namedType.TypeArguments.Any(t => t.IsDefinition))
+                        {
+                            var supIndexOf = typeName.IndexOf('<');
+                            if (supIndexOf > 0)
+                                typeName = typeName.Substring(0, supIndexOf) + "<" + new string(',', namedType.TypeParameters.Length - 1) + ">";
+                        }
+                    }
+
+                    registryLines.Append(", typeof(global::" + typeName + ")");
+
+                    if (byType.Key.Item1 == SyntaxKind.MethodDeclaration)
+                    {
+                        registryLines.Append(", ");
+                        registryLines.Append(nbGenericArgs);
+                    }
+
+                    if (arguments != null && arguments.Any())
+                    {
+                        foreach (var arg in arguments)
+                        {
+                            registryLines.Append(',');
+                            registryLines.Append(arg);
+                        }
+                    }
+
                     registryLines.AppendLine(");");
                 }
-             
+
                 registryLines.AppendLine();
                 registryLines.Append(' ', 12);
             }
@@ -275,6 +316,12 @@ namespace Democrite.Framework.Core.CodeGenerator
                 case SyntaxKind.ClassDeclaration:
                     return isVGrain ? "VGrainImplementation" : "Type";
 
+                case SyntaxKind.StructDeclaration:
+                case SyntaxKind.RecordDeclaration:
+                case SyntaxKind.RecordStructDeclaration:
+                case SyntaxKind.EnumDeclaration:
+                    return "Type";
+
                 case SyntaxKind.InterfaceDeclaration:
                     return "VGrain";
             }
@@ -287,16 +334,14 @@ namespace Democrite.Framework.Core.CodeGenerator
         /// </summary>
         private bool IsVGrain(MemberDeclarationSyntax s)
         {
-            return (s is ClassDeclarationSyntax || s is InterfaceDeclarationSyntax || s is StructDeclarationSyntax) &&
-                   s.Ancestors()
-                    .SelectMany(m => s is ClassDeclarationSyntax cls
-                                            ? cls.BaseList?.Types
-                                            : s is StructDeclarationSyntax str
-                                                    ? str.BaseList?.Types   
-                                                    : s is InterfaceDeclarationSyntax i
-                                                        ? (IEnumerable<BaseTypeSyntax>)i.BaseList?.Types
-                                                        : Array.Empty<BaseTypeSyntax>())
-                    .Any(c => c.Type.GetTypeSimpleName() == "IVGrain");
+            return (s is ClassDeclarationSyntax || s is InterfaceDeclarationSyntax) &&
+                    s.Ancestors()
+                     .SelectMany(m => (s is ClassDeclarationSyntax cls
+                                             ? cls.BaseList?.Types
+                                                 : s is InterfaceDeclarationSyntax i
+                                                         ? (IEnumerable<BaseTypeSyntax>)i.BaseList?.Types
+                                                         : Array.Empty<BaseTypeSyntax>()) ?? Array.Empty<BaseTypeSyntax>())
+                     .Any(c => c?.Type != null && c.Type.GetTypeSimpleName() == "IVGrain");
         }
 
         #endregion

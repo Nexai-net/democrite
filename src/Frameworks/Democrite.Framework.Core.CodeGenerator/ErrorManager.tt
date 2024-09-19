@@ -7,13 +7,9 @@
 <#
     var errors = new Dictionary<string, (string Title, string Description, string Category, string SeverityEnumValue)>()
     {
-        {  "EDG001", ("simpleNameIdentifier missing", "Missing value/field named 'simpleNameIdentifier'", "Mapper", "Error") },
-        //{  "EDG002", ("Mapper Target Multiple Class Ctor", "Multiple  or zero available ctors", "Mapper", "Error") },
-        //{  "WDG003", ("Field/Prop don't mapped", "Missing field/ctor({0}) parameter {1} -> {2}", "Mapper", "Warning") },
-        //{  "EDG003", ("Field/Prop don't mapped", "Missing field/ctor({0}) parameter {1} -> {2}", "Mapper", "Error") },
-        //{  "EDG004", ("Field/Prop don't mapped", "Missing field/ctor required '{0}'", "Mapper", "Error") },
-        //{  "EDG005", ("Field/Prop collection could be mapped because property source is not a collection", "Invalid field/ctor collection match", "Mapper", "Error") },
-        {  "EDG999", ("Internal Error", "Mapper failed {0}", "Mapper", "Error") },
+        {  "EDG001", ("simpleNameIdentifier missing", "Missing value/field named 'simpleNameIdentifier'", "RefId Registry", "Error") },
+        {  "EDG002", ("RefId on type not managed", "An attribute result in ref id have been applyed on not manage type {0}", "RefId Registry", "Error") },
+        {  "EDG999", ("Internal Error", "RefId Registry failed {0}", "RefId Registry", "Error") },
     };
 
 #>

@@ -11,7 +11,7 @@ namespace Democrite.Framework.Core.Abstractions.Attributes.MetaData
     /// This description will be used as meta-data in the analytics algorithm and wysiwyg interface (like SyDE studio)
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = false)]
-    public class VGrainMetaDataAttribute : VGrainSimpleNameIdentifierAttribute
+    public class VGrainMetaDataAttribute : RefSimpleNameIdentifierAttribute
     {
         #region Ctor
 

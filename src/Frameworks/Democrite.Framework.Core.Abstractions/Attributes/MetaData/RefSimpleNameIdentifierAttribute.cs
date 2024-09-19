@@ -10,15 +10,15 @@ namespace Democrite.Framework.Core.Abstractions.Attributes.MetaData
     /// Tag to provide information to easy item identification
     /// </summary>
     /// <seealso cref="System.Attribute" />
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Method | AttributeTargets.Enum, AllowMultiple = false, Inherited = false)]
-    public class VGrainSimpleNameIdentifierAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum, AllowMultiple = false, Inherited = false)]
+    public class RefSimpleNameIdentifierAttribute : Attribute
     {
         #region Ctor
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="VGrainSimpleNameIdentifierAttribute"/> class.
+        /// Initializes a new instance of the <see cref="RefSimpleNameIdentifierAttribute"/> class.
         /// </summary>
-        public VGrainSimpleNameIdentifierAttribute(string simpleNameIdentifier, string? namespaceIdentifier = null)
+        public RefSimpleNameIdentifierAttribute(string simpleNameIdentifier, string? namespaceIdentifier = null)
         {
             this.SimpleNameIdentifier = simpleNameIdentifier;
             this.NamespaceIdentifier = namespaceIdentifier;

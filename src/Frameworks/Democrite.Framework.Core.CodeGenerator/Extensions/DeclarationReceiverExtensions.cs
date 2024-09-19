@@ -91,7 +91,7 @@ namespace Microsoft.CodeAnalysis
             {
                 if (type.TypeKind == TypeKind.TypeParameter)
                 {
-                    return "global::Elvex.Toolbox.NoneType";
+                    return "global::Elvex.Toolbox.AnyType";
                 }
                 return "global::" + type.ToString().Trim('{', '}');
             }

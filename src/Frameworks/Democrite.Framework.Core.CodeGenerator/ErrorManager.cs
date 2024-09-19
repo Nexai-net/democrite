@@ -29,9 +29,11 @@ namespace Democrite.Framework.Core.CodeGenerator
             s_errorInfo = new Dictionary<string, DiagnosticDescriptor>()
             {
                  
-                {  "EDG001", new DiagnosticDescriptor("EDG001", "simpleNameIdentifier missing", "Missing value/field named 'simpleNameIdentifier'", "Mapper", DiagnosticSeverity.Error, isEnabledByDefault: true) },
+                {  "EDG001", new DiagnosticDescriptor("EDG001", "simpleNameIdentifier missing", "Missing value/field named 'simpleNameIdentifier'", "RefId Registry", DiagnosticSeverity.Error, isEnabledByDefault: true) },
                  
-                {  "EDG999", new DiagnosticDescriptor("EDG999", "Internal Error", "Mapper failed {0}", "Mapper", DiagnosticSeverity.Error, isEnabledByDefault: true) },
+                {  "EDG002", new DiagnosticDescriptor("EDG002", "RefId on type not managed", "An attribute result in ref id have been applyed on not manage type {0}", "RefId Registry", DiagnosticSeverity.Error, isEnabledByDefault: true) },
+                 
+                {  "EDG999", new DiagnosticDescriptor("EDG999", "Internal Error", "RefId Registry failed {0}", "RefId Registry", DiagnosticSeverity.Error, isEnabledByDefault: true) },
                 
             };
         }
@@ -48,7 +50,14 @@ namespace Democrite.Framework.Core.CodeGenerator
             get { return s_errorInfo["EDG001"]; }
         }
         /// <summary>
-        /// Internal Error : Mapper failed {0}
+        /// RefId on type not managed : An attribute result in ref id have been applyed on not manage type {0}
+        /// </summary>
+        public static DiagnosticDescriptor EDG002
+        {
+            get { return s_errorInfo["EDG002"]; }
+        }
+        /// <summary>
+        /// Internal Error : RefId Registry failed {0}
         /// </summary>
         public static DiagnosticDescriptor EDG999
         {

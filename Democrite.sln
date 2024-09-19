@@ -118,6 +118,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Extensi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Democrite.Framework.Core.CodeGenerator", "src\Frameworks\Democrite.Framework.Core.CodeGenerator\Democrite.Framework.Core.CodeGenerator.csproj", "{17BF9E29-0EE8-49F7-97AE-4D7C00DEC921}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Democrite.Framework.Core.CodeGenerator.UnitTests", "src\Tests\Democrite.Framework.Core.CodeGenerator.UnitTests\Democrite.Framework.Core.CodeGenerator.UnitTests.csproj", "{9439918C-82C8-4E3A-B0B6-8E653CD4AF36}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -284,6 +286,10 @@ Global
 		{17BF9E29-0EE8-49F7-97AE-4D7C00DEC921}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17BF9E29-0EE8-49F7-97AE-4D7C00DEC921}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17BF9E29-0EE8-49F7-97AE-4D7C00DEC921}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9439918C-82C8-4E3A-B0B6-8E653CD4AF36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9439918C-82C8-4E3A-B0B6-8E653CD4AF36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9439918C-82C8-4E3A-B0B6-8E653CD4AF36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9439918C-82C8-4E3A-B0B6-8E653CD4AF36}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -332,6 +338,7 @@ Global
 		{FF0F2C7C-D442-4627-8395-59F83BDC606F} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
 		{A8726AE1-43F7-49E7-986A-C10805A34DAC} = {2F1AD903-9D49-4E20-9673-C93C5F85185B}
 		{17BF9E29-0EE8-49F7-97AE-4D7C00DEC921} = {6BF28FB3-9FA0-4A68-A66F-B7701CD93C69}
+		{9439918C-82C8-4E3A-B0B6-8E653CD4AF36} = {40C9D1BA-089B-41C3-A99E-5ED5D06462D1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {89BCBB25-4DD3-406C-91A9-BB2F978C23F2}

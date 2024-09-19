@@ -33,11 +33,12 @@
 
 		<!-- Testing Purpose -->
 		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals.UnitTests" />
+		<InternalsVisibleTo Include="Democrite.Framework.Core.CodeGenerator.UnitTests" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Democrite.Framework.Core.CodeGenerator\Democrite.Framework.Core.CodeGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+	  <ProjectReference Include="..\Democrite.Framework.Core.CodeGenerator\Democrite.Framework.Core.CodeGenerator.csproj"  OutputItemType="Analyzer"  PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
