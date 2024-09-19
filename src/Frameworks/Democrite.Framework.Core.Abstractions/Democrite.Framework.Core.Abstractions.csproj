@@ -38,7 +38,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Democrite.Framework.Core.CodeGenerator\Democrite.Framework.Core.CodeGenerator.csproj"  OutputItemType="Analyzer"  PrivateAssets="all" />
+	  <ProjectReference Include="..\Democrite.Framework.Core.CodeGenerator\Democrite.Framework.Core.CodeGenerator.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
