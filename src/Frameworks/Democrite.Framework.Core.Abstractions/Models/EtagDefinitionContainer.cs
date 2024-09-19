@@ -260,7 +260,7 @@ namespace Democrite.Framework.Core.Abstractions.Models
                 return false;
 
             var expectedDefinition = targetType.GetGenericArguments().Single();
-            if (!s_definitionTraits.IsAssignableTo(expectedDefinition))
+            if (this.Definition is not null && this.Definition.GetType().IsAssignableTo(expectedDefinition) == false)
                 return false;
 
             target = EtagDefinitionContainer.CreateFrom(expectedDefinition, this.Definition, this);

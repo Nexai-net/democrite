@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Core.Abstractions.Sequence
 {
+    using Elvex.Toolbox.Extensions;
     using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
@@ -24,7 +25,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
     [DataContract]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class SequenceDefinition : IEquatable<SequenceDefinition>, IDefinition
+    public sealed class SequenceDefinition : IEquatable<SequenceDefinition>, IDefinition, IRefDefinition
     {
         #region Fields
 
@@ -43,6 +44,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public SequenceDefinition(Guid uid,
+                                  Uri refId,
                                   string? displayName,
                                   SequenceOptionDefinition options,
                                   IEnumerable<SequenceStageDefinition> stages,
@@ -74,6 +76,7 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
 
             this.Input = inputStage?.Input;
             this.Output = outputStage?.Output;
+            this.RefId = refId;
         }
 
         #endregion
@@ -142,6 +145,11 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
             }
         }
 
+        /// <inheritdoc />
+        [Id(8)]
+        [DataMember]
+        public Uri RefId { get; }
+
         #endregion
 
         #region Methods
@@ -197,8 +205,26 @@ namespace Democrite.Framework.Core.Abstractions.Sequence
         /// <inheritdoc />
         public bool Validate(ILogger logger, bool matchWarningAsError = false)
         {
-            // Check input -> output validity
-            throw new NotImplementedException();
+            bool valid = true;
+
+            var input = this.Input;
+            var index = 0;
+            foreach (var stage in this.Stages)
+            {
+                if (stage.Input?.Equals(input) == false)
+                {
+                    logger.OptiLog(LogLevel.Error, "Stages input -> output chain doesn't match at stage {stage} index {index}", stage, index);
+                    valid = false;
+                    break;
+                }
+                index++;
+                input = stage.Output;
+            }
+
+            foreach (var stage in this.Stages)
+                valid &= stage.Validate(logger, matchWarningAsError);
+
+            return valid;
         }
 
         /// <inheritdoc />

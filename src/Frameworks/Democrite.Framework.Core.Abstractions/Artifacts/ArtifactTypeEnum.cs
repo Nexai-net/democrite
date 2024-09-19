@@ -11,5 +11,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
     {
         None,
         Executable,
+        Data,
+        Other
     }
 }

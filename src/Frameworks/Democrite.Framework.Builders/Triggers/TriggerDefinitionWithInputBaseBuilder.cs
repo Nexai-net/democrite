@@ -5,6 +5,8 @@
 namespace Democrite.Framework.Builders.Implementations.Triggers
 {
     using Democrite.Framework.Builders.Triggers;
+    using Democrite.Framework.Core;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Core.Abstractions.Triggers;
 
@@ -15,7 +17,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
     /// </summary>
     /// <typeparam name="TOutputMesage">The type of the output mesage.</typeparam>
     /// <seealso cref="ITriggerDefinitionBuilder" />
-    internal abstract class TriggerDefinitionWithInputBaseBuilder : TriggerDefinitionBaseBuilder<ITriggerDefinitionFinalizeBuilder>, ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder>, ITriggerDefinitionFinalizeBuilder
+    internal abstract class TriggerDefinitionWithInputBaseBuilder : TriggerDefinitionBaseBuilder, ITriggerDefinitionBuilder, ITriggerDefinitionFinalizeBuilder
     {
         #region Ctor
 
@@ -23,9 +25,11 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// Initializes a new instance of the <see cref="TriggerDefinitionWithInputBaseBuilder"/> class.
         /// </summary>
         protected TriggerDefinitionWithInputBaseBuilder(TriggerTypeEnum triggerType,
+                                                        string simpleNameIdentifier,
                                                         string displayName,
-                                                        Guid? fixUid = null)
-            : base(triggerType, displayName, fixUid)
+                                                        Guid? fixUid,
+                                                        Action<IDefinitionMetaDataBuilder>? metadataBuilder)
+            : base(triggerType, simpleNameIdentifier, displayName, fixUid, metadataBuilder)
         {
         }
 
@@ -43,12 +47,19 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         #region Methods
 
         /// <inheritdoc />
-        public ITriggerDefinitionFinalizeBuilder SetOutput(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> outputBuilders)
+        public ITriggerDefinitionBuilder SetOutput(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> outputBuilders)
         {
             var builder = new TriggerOutputBuilder();
             ArgumentNullException.ThrowIfNull(nameof(outputBuilders));
             this.TriggerGlobalOutputDefinition = outputBuilders(builder).Build();
 
+            return this;
+        }
+
+        /// <inheritdoc />
+        public ITriggerDefinitionBuilder SetOutput(DataSourceDefinition outputdef)
+        {
+            this.TriggerGlobalOutputDefinition = outputdef;
             return this;
         }
 

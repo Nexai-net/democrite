@@ -24,7 +24,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
     [DataContract]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public abstract class ArtifactDefinition : IEquatable<ArtifactDefinition>, ISupportDebugDisplayName, IDefinition
+    public abstract class ArtifactDefinition : IEquatable<ArtifactDefinition>, ISupportDebugDisplayName, IDefinition, IRefDefinition
     {
         #region Ctor
 
@@ -32,6 +32,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         /// Initializes a new instance of the <see cref="ArtifactDefinition"/> class.
         /// </summary>
         protected ArtifactDefinition(Guid uid,
+                                     Uri refId,
                                      string displayName,
                                      Version? version,
                                      string hash,
@@ -40,6 +41,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                      DefinitionMetaData? metaData)
         {
             ArgumentNullException.ThrowIfNull(uid);
+            ArgumentNullException.ThrowIfNull(refId);
             ArgumentNullException.ThrowIfNull(displayName);
             ArgumentNullException.ThrowIfNull(hash);
             ArgumentNullException.ThrowIfNull(creationOn);
@@ -51,6 +53,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
             this.CreationOn = creationOn;
             this.ArtifactType = artifactType;
             this.MetaData = metaData;
+            this.RefId = refId;
         }
 
         #endregion
@@ -92,6 +95,11 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         [Id(6)]
         public DefinitionMetaData? MetaData { get; }
 
+        /// <inheritdoc />
+        [Id(7)]
+        [DataMember]
+        public Uri RefId { get; }
+
         #endregion
 
         #region Methods
@@ -112,6 +120,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                    this.CreationOn == other.CreationOn &&
                    this.ArtifactType == other.ArtifactType &&
                    this.MetaData == other.MetaData &&
+                   this.RefId == other.RefId &&
                    OnEquals(other);
         }
 
@@ -133,10 +142,11 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                     this.DisplayName,
                                     this.Version,
                                     this.Hash,
-                                    this.CreationOn,
-                                    this.ArtifactType,
-                                    this.MetaData,
-                                    OnGetHashCode());
+                                    HashCode.Combine(this.CreationOn,
+                                                     this.ArtifactType,
+                                                     this.MetaData,
+                                                     this.RefId,
+                                                     OnGetHashCode()));
         }
 
         /// <inheritdoc cref="object.GetHashCode" />

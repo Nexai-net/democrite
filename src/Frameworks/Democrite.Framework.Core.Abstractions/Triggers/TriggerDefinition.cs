@@ -6,6 +6,8 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
 {
     using Democrite.Framework.Core.Abstractions.Inputs;
 
+    using Elvex.Toolbox.Extensions;
+
     using Microsoft.Extensions.Logging;
 
     using System.ComponentModel;
@@ -24,7 +26,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     [KnownType(typeof(SignalTriggerDefinition))]
     [KnownType(typeof(StreamTriggerDefinition))]
     
-    public abstract class TriggerDefinition : IEquatable<TriggerDefinition>, IDefinition
+    public abstract class TriggerDefinition : IEquatable<TriggerDefinition>, IDefinition, IRefDefinition
     {
         #region Ctor
 
@@ -32,6 +34,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         /// Initializes a new instance of the <see cref="TriggerDefinition"/> class.
         /// </summary>
         protected TriggerDefinition(Guid uid,
+                                    Uri refId,
                                     string displayName,        
                                     TriggerTypeEnum triggerType,
                                     IEnumerable<TriggerTargetDefinition> targets,
@@ -46,6 +49,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
             this.TriggerType = triggerType;
             this.Targets = targets?.ToArray() ?? EnumerableHelper<TriggerTargetDefinition>.ReadOnlyArray;
             this.TriggerGlobalOutputDefinition = triggerGlobalOutputDefinition;
+            this.RefId = refId;
         }
 
         #endregion
@@ -88,6 +92,15 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         [Id(6)]
         [DataMember]
         public DefinitionMetaData? MetaData { get; }
+
+        /// <inheritdoc />
+        [Id(7)]
+        [DataMember]
+        public Uri RefId { get; }
+
+        #endregion
+
+        #region Methods
 
         /// <inheritdoc />
         public bool Equals(TriggerDefinition? other)
@@ -141,8 +154,20 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         /// <inheritdoc />
         public bool Validate(ILogger logger, bool matchWarningAsError = false)
         {
-            throw new NotImplementedException();
+            bool valid = true;
+
+            if (this.Targets is null || this.Targets.Count == 0)
+            {
+                logger.OptiLog(LogLevel.Error, "At least one target is required");
+                valid = false;
+            }
+
+            valid &= RefIdHelper.ValidateRefId(this.RefId, logger);
+            valid &= OnValidate(logger, matchWarningAsError);
+            return valid;
         }
+
+        protected abstract bool OnValidate(ILogger logger, bool matchWarningAsError = false);
 
         #endregion
     }

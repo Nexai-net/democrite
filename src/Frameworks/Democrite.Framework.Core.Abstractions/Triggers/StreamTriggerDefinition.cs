@@ -4,6 +4,10 @@
 
 namespace Democrite.Framework.Core.Abstractions.Triggers
 {
+    using Elvex.Toolbox.Extensions;
+
+    using Microsoft.Extensions.Logging;
+
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -20,6 +24,12 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     [ImmutableObject(true)]
     public sealed class StreamTriggerDefinition : TriggerDefinition
     {
+        #region Fields
+
+        public const uint DEFAULT_FIX_CONCURRENT_PROCESS = 1000;
+
+        #endregion
+
         #region Ctor
 
         /// <summary>
@@ -28,6 +38,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public StreamTriggerDefinition(Guid uid,
+                                       Uri refId,
                                        string displayName,
                                        IEnumerable<TriggerTargetDefinition> targets,
                                        bool enabled,
@@ -35,7 +46,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
                                        uint? relativeMaxConcurrentProcess,
                                        Guid streamSourceDefinitionUid,
                                        DefinitionMetaData? metaData)
-            : base(uid, displayName, TriggerTypeEnum.Stream, targets, enabled, metaData)
+            : base(uid, refId, displayName, TriggerTypeEnum.Stream, targets, enabled, metaData)
         {
             this.FixedMaxConcurrentProcess = fixedMaxConcurrentProcess;
             this.RelativeMaxConcurrentProcess = relativeMaxConcurrentProcess;
@@ -84,6 +95,26 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
             return "[StreamSourceId: " + this.StreamSourceDefinitionUid + "]" +
                    " [FixedMaxConcurrentProcess: " + this.FixedMaxConcurrentProcess + "]" +
                    " [RelativeMaxConcurrentProcess: " + (this.RelativeMaxConcurrentProcess?.ToString() ?? "null") + "]";
+        }
+
+        /// <inheritdoc />
+        protected override bool OnValidate(ILogger logger, bool matchWarningAsError = false)
+        {
+            var valid = true;
+
+            if (this.StreamSourceDefinitionUid == Guid.Empty)
+            {
+                logger.OptiLog(LogLevel.Error, "Stream definition uid must not be empty.");
+                valid = false;
+            }
+
+            if (this.FixedMaxConcurrentProcess == 0 && (this.RelativeMaxConcurrentProcess is null || this.RelativeMaxConcurrentProcess < 1))
+            {
+                logger.OptiLog(LogLevel.Error, "At least one consumer must be allowed.");
+                valid = false;
+            }
+
+            return valid;
         }
 
         #endregion

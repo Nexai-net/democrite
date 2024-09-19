@@ -7,8 +7,10 @@ namespace Democrite.Framework.Core
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Core.Abstractions.Deferred;
+    using Democrite.Framework.Core.Abstractions.Models.References;
     using Democrite.Framework.Core.Abstractions.Repositories;
     using Democrite.Framework.Core.Executions;
+
     using Elvex.Toolbox;
 
     using Microsoft.Extensions.Logging;
@@ -30,6 +32,7 @@ namespace Democrite.Framework.Core
         private readonly ILogger<IDemocriteExecutionHandler> _logger;
         private readonly IDemocriteSerializer _democriteSerializer;
         private readonly IVGrainProvider _vgrainProvider;
+        private readonly IGrainFactory _grainFactory;
 
         #endregion
 
@@ -39,6 +42,7 @@ namespace Democrite.Framework.Core
         /// Initializes a new instance of the <see cref="DemocriteExecutionHandler"/> class.
         /// </summary>
         public DemocriteExecutionHandler(IVGrainProvider vgrainProvider,
+                                         IGrainFactory grainFactory,
                                          IDemocriteSerializer democriteSerializer,
                                          IDeferredAwaiterHandler deferredAwaiterHandler,
                                          ILogger<IDemocriteExecutionHandler>? logger = null)
@@ -46,6 +50,7 @@ namespace Democrite.Framework.Core
             this._vgrainProvider = vgrainProvider;
             this._democriteSerializer = democriteSerializer;
             this._deferredAwaiterHandler = deferredAwaiterHandler;
+            this._grainFactory = grainFactory;
             this._logger = logger ?? NullLogger<IDemocriteExecutionHandler>.Instance;
         }
 
@@ -68,7 +73,8 @@ namespace Democrite.Framework.Core
         }
 
         /// <inheritdoc />
-        public IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>(long id, string? customIdPart = null) where TVGrain : IVGrain
+        public IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>(long id, string? customIdPart = null) 
+            where TVGrain : IVGrain
         {
             return VGrainImpl<TVGrain>(GrainIdKeyExtensions.CreateIntegerKey(id, customIdPart));
         }
@@ -77,6 +83,47 @@ namespace Democrite.Framework.Core
         public IExecutionDirectBuilder<TVGrain> VGrain<TVGrain>(string id) where TVGrain : IVGrain
         {
             return VGrainImpl<TVGrain>(IdSpan.Create(id));
+        }
+
+        /// <inheritdoc />
+        public IExecutionRefBuilder VGrain(Uri refId)
+        {
+            if (RefIdHelper.IsRefId(refId) == false)
+                throw new InvalidDataException("'{0}' is not a valid democrite ref id");
+
+            RefIdHelper.Explode(refId, out var type, out var @namespace, out var sni);
+
+            if (type != Abstractions.Enums.RefTypeEnum.VGrain &&
+                type != Abstractions.Enums.RefTypeEnum.VGrainImplementation)
+            {
+                throw new InvalidDataException("'{0}' is not a valid democrite ref id only VGrain and VGrainImplementation are allowed");
+            }
+
+            return VGrain(new RefVGrainQuery(sni, @namespace));
+        }
+
+        /// <inheritdoc />
+        public IExecutionRefBuilder VGrain(RefVGrainQuery refIdQuery, string id)
+        {
+            return VGrainImpl(refIdQuery, IdSpan.Create(id));
+        }
+
+        /// <inheritdoc />
+        public IExecutionRefBuilder VGrain(RefVGrainQuery refIdQuery, Guid id, string? customIdPart = null)
+        {
+            return VGrainImpl(refIdQuery, GrainIdKeyExtensions.CreateGuidKey(id, customIdPart));
+        }
+
+        /// <inheritdoc />
+        public IExecutionRefBuilder VGrain(RefVGrainQuery refIdQuery, long id, string? customIdPart = null)
+        {
+            return VGrainImpl(refIdQuery, GrainIdKeyExtensions.CreateIntegerKey(id, customIdPart));
+        }
+
+        /// <inheritdoc />
+        public IExecutionRefBuilder VGrain(RefVGrainQuery refIdQuery)
+        {
+            return VGrainImpl(refIdQuery, null);
         }
 
         /// <inheritdoc />
@@ -115,7 +162,48 @@ namespace Democrite.Framework.Core
             return SequenceImpl<object>(sequenceId, null, customizationDescriptions);
         }
 
+        /// <inheritdoc />
+        public IExecutionFlowLauncher Sequence(RefSequenceQuery sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IExecutionFlowLauncher Sequence(RefSequenceQuery sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IExecutionBuilder<TInput, IExecutionFlowLauncher> Sequence<TInput>(RefSequenceQuery sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IExecutionBuilder<TInput, IExecutionFlowLauncher> Sequence<TInput>(RefSequenceQuery sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IExecutionBuilder<object, IExecutionFlowLauncher> SequenceWithInput(RefSequenceQuery sequenceId, Action<IExecutionConfigurationBuilder>? cfgBuilder = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public IExecutionBuilder<object, IExecutionFlowLauncher> SequenceWithInput(RefSequenceQuery sequenceId, in ExecutionCustomizationDescriptions? customizationDescriptions)
+        {
+            throw new NotImplementedException();
+        }
+
         #region Tools
+
+        private IExecutionRefBuilder VGrainImpl(RefVGrainQuery refIdQuery, IdSpan? forcedGrainId)
+        {
+            return new ExecutionRefBuilder(this._grainFactory, refIdQuery, forcedGrainId);
+        }
 
         /// <inheritdoc />
         private IExecutionDirectBuilder<TVGrain> VGrainImpl<TVGrain>(IdSpan? forcedGrainId)

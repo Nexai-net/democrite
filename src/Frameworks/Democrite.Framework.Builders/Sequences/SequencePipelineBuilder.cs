@@ -13,6 +13,7 @@ namespace Democrite.Framework.Builders.Sequences
     using Elvex.Toolbox.Abstractions.Expressions;
 
     using System.Linq.Expressions;
+    using System.Reflection;
 
     /// <summary>
     /// Pipeline builder
@@ -33,7 +34,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <summary>
         /// Initializes a new instance of the <see cref="SequencePipelineBuilder{TOutput}"/> class.
         /// </summary>
-        internal SequencePipelineBuilder(SequenceBuilder sequenceBuilder)
+        public SequencePipelineBuilder(SequenceBuilder sequenceBuilder)
         {
             ArgumentNullException.ThrowIfNull(sequenceBuilder);
 
@@ -49,6 +50,17 @@ namespace Democrite.Framework.Builders.Sequences
         {
             this._sequenceBuilder.EnqueueStage(stage);
             return new SequencePipelineBuilder<NoneType>(this._sequenceBuilder);
+        }
+
+        /// <inheritdoc />
+        public ISequencePipelineBuilder EnqueueStage(ISequencePipelineStageDefinitionProvider stage, Type? outputType)
+        {
+            this._sequenceBuilder.EnqueueStage(stage);
+
+            if (outputType is null || outputType == NoneType.Trait)
+                return new SequencePipelineBuilder<NoneType>(this._sequenceBuilder);
+
+            return (ISequencePipelineBuilder)Activator.CreateInstance(typeof(SequencePipelineBuilder<>).MakeGenericTypeWithCache(outputType), this._sequenceBuilder)!;
         }
 
         /// <inheritdoc />

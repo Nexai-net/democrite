@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=C:\Users\Mickaelthumerel\source\repos\devops\democrite.autotests\democrite\docs\definitions.schema.json
+# https://github.com/Nexai-net/democrite/docs/democrite.schema.json
+
+global:
+  namespace: com.definition.full
+
+triggers:
+  - cron: every-2-sec
+    uid: ad76d73f-5927-4742-b8ac-b033613e2641
+    period: "*/2 * * * *"
+    targets:
+      sequences:
+        - ref/sum-count
+        - 76c9805a-217d-44ed-893e-140687152514
+
+signals:
+  - signal: open-signal
+
+sequences:
+  - sequence: tokenize-text
+    uid: 76c9805a-217d-44ed-893e-140687152514
+    meta-data:
+      description: transform a text into NLP tokens
+      tags:
+        - NLP
+        - text
+        - token
+
+    steps:
+      - select: bag.text@text-visitor
+        from-input: input
+
+      - use: bag.text@toolbox
+        call: simplify
+
+      - use: bag.text@langue-detector
+        call: lang
+
+      - use: bag.text@tokenizer
+        call: tokenize
+        config:
+          from-input: lang
+
+      - use: bag.text@pattern-matching
+        call: tag
+        config:
+          type: bag.text@pattern-matching-model
+          from-input:
+            - 1b2e1a88-ae82-45bf-bd79-1f99c3b52401
+            - input.lang
+
+      - select: bag.text@text-token
+        from-input: 
+          - input.Tokens

@@ -40,4 +40,18 @@ namespace Democrite.Framework.Core.Abstractions
 
         #endregion
     }
+
+    /// <summary>
+    /// Define a serializable entity accces by a ref id
+    /// </summary>
+    public interface IRefDefinition : IDefinition
+    {
+        /// <summary>
+        /// Gets the reference identifier.
+        /// </summary>
+        /// <remarks>
+        ///     ref://TYPE@NAMESPACE/REF_ID
+        /// </remarks>
+        Uri RefId { get; }
+    }
 }

@@ -11,15 +11,18 @@ namespace Democrite.Framework.Core.Abstractions.Attributes.MetaData
     /// This description will be used as meta-data in the analytics algorithm and wysiwyg interface (like SyDE studio)
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class VGrainMetaDataMethodAttribute : Attribute
+    public class VGrainMetaDataMethodAttribute : VGrainSimpleNameIdentifierAttribute
     {
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VGrainMetaDataAttribute"/> class.
         /// </summary>
-        public VGrainMetaDataMethodAttribute(string? displayName = null, string? description = null)
+        public VGrainMetaDataMethodAttribute(string simpleNameIdentifier, string? displayName = null, string? description = null)
+            : base(simpleNameIdentifier, null)
         {
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(simpleNameIdentifier);
+
             this.DisplayName = displayName;
             this.Description = description;
         }

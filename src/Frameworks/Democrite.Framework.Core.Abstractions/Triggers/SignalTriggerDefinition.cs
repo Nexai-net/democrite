@@ -8,6 +8,10 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
     using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Core.Abstractions.Signals;
 
+    using Elvex.Toolbox.Extensions;
+
+    using Microsoft.Extensions.Logging;
+
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -28,6 +32,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public SignalTriggerDefinition(Guid uid,
+                                       Uri refId,
                                        string displayName,
                                        IEnumerable<TriggerTargetDefinition> targets,
                                        bool enabled,
@@ -36,7 +41,7 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
                                        DefinitionMetaData? metaData,
                                        DataSourceDefinition? triggerGlobalOutputDefinition = null)
 
-            : base(uid, displayName, TriggerTypeEnum.Signal, targets, enabled, metaData, triggerGlobalOutputDefinition)
+            : base(uid, refId, displayName, TriggerTypeEnum.Signal, targets, enabled, metaData, triggerGlobalOutputDefinition)
         {
             this.ListenSignal = listenSignal;
             this.ListenDoor = listenDoor;
@@ -64,6 +69,20 @@ namespace Democrite.Framework.Core.Abstractions.Triggers
         protected override string OnDebugDisplayName()
         {
             return "[ListenSignal: " + this.ListenSignal + "] [ListenDoor: " + this.ListenDoor + "]";
+        }
+
+        /// <inheritdoc />
+        protected override bool OnValidate(ILogger logger, bool matchWarningAsError = false)
+        {
+            var valid = true;
+
+            if (this.ListenDoor is null && this.ListenSignal is null)
+            {
+                logger.OptiLog(LogLevel.Error, "At least a door or a simple signal is required");
+                valid = false;
+            }
+
+            return valid;
         }
 
         #endregion

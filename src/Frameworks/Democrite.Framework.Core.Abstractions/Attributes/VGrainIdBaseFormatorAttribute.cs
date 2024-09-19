@@ -37,9 +37,6 @@ namespace Democrite.Framework.Core.Abstractions.Attributes
         #endregion
 
         #region Methods
-
-
-
         #endregion
     }
 }

@@ -33,6 +33,14 @@ namespace Democrite.Framework.Builders.Sequences
         ISequencePipelineBuilder<TOutput> EnqueueStage<TOutput>(ISequencePipelineStageDefinitionProvider stage);
 
         /// <summary>
+        /// Generic method to add a stage into the current pipeline.
+        /// </summary>
+        /// <returns>
+        ///     Return next stage builder with input <typeparamref name="outputType"/>
+        /// </returns>
+        ISequencePipelineBuilder EnqueueStage(ISequencePipelineStageDefinitionProvider stage, Type? outputType);
+
+        /// <summary>
         /// Get a sub <see cref="SequenceBuilder"/>
         /// </summary>
         /// <remarks>

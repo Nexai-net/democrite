@@ -12,6 +12,9 @@ namespace Democrite.Framework.Builders
     public interface IDefinitionMetaDataBaseBuilder<TWizard>
         where TWizard : IDefinitionMetaDataBaseBuilder<TWizard>
     {
+        /// <inheritdoc cref="IRefDefinition.RefId" />
+        IDefinitionMetaDataBuilder Namespace(string? namespaceIdentifier);
+
         /// <inheritdoc cref="DefinitionMetaData.CategoryPath" />
         TWizard CategoryPath(string categoryPath);
 
@@ -41,7 +44,6 @@ namespace Democrite.Framework.Builders
         DefinitionMetaData Build();
     }
 
-
     /// <summary>
     /// Builder used to help create the <see cref="DefinitionMetaData"/> information
     /// </summary>
@@ -53,6 +55,6 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Builds <see cref="DefinitionMetaData"/> >
         /// </summary>
-        DefinitionMetaData Build(out string? displayName);
+        DefinitionMetaData Build(out string? displayName, out string? namespaceIdentifier);
     }
 }

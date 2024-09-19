@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Node.Models
 {
+    using Democrite.Framework.Node;
     using Democrite.Framework.Node.Configurations;
 
     using Orleans.Serialization.Configuration;

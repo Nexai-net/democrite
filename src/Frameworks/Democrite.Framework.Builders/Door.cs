@@ -16,9 +16,9 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Creates <see cref="DoorDefinitions"/>
         /// </summary>
-        public static IDoorBuilder Create(string doorName, Guid? uid = null)
+        public static IDoorBuilder Create(string simpleNameIdentifier, string? displayName = null, Guid? fixUid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
         {
-            return new DoorStartBuilder(doorName, uid);
+            return new DoorStartBuilder(simpleNameIdentifier, displayName ?? simpleNameIdentifier, fixUid, metaDataBuilder);
         }
     }
 }

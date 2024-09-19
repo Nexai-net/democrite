@@ -16,6 +16,8 @@ namespace Democrite.Framework.Bag.DebugTools
     /// <seealso cref="IVGrain" />
     /// <seealso cref="ISignalReceiver" />
     [VGrainMetaData("48AB5776-0D89-445B-871A-4EE1FA0E4293",
+                    "display-signal",
+                    namespaceIdentifier: DebugToolConstants.BAG_NAMESPACE,
                     displayName: "Display",
                     description: "Used to show in logs signals when emit.",
                     categoryPath: "tools")]
@@ -26,6 +28,7 @@ namespace Democrite.Framework.Bag.DebugTools
         /// </summary>
         [OneWay]
         [ReadOnly]
+        [VGrainMetaDataMethod("from-message")]
         Task DisplaySignalInfoAsync(SignalMessage signalMessage, IExecutionContext ctx);
     }
 }

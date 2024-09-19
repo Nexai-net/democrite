@@ -22,7 +22,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
     [DataContract]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public abstract class SignalNetworkBasePartDefinition : IEquatable<SignalNetworkBasePartDefinition>, IDefinition
+    public abstract class SignalNetworkBasePartDefinition : IEquatable<SignalNetworkBasePartDefinition>, IDefinition, IRefDefinition
     {
         #region Ctor
 
@@ -30,12 +30,14 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// Initializes a new instance of the <see cref="SignalNetworkBasePartDefinition"/> class.
         /// </summary>
         protected SignalNetworkBasePartDefinition(Guid uid,
+                                                  Uri refId,
                                                   string name,
                                                   string displayName,
                                                   DefinitionMetaData? metaData)
         {
             this.Uid = uid;
             this.Name = name;
+            this.RefId = refId;
             this.MetaData = metaData;
             this.DisplayName = displayName;
         }
@@ -66,6 +68,11 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         [DataMember]
         public DefinitionMetaData? MetaData { get; }
 
+        /// <inheritdoc />
+        [Id(4)]
+        [DataMember]
+        public Uri RefId { get; }
+
         #endregion
 
         #region Methods
@@ -80,6 +87,8 @@ namespace Democrite.Framework.Core.Abstractions.Signals
                 logger.OptiLog(LogLevel.Critical, "Signal id MUST not be equals to Guid.Empty");
                 isValid = false;
             }
+
+            isValid &= RefIdHelper.ValidateRefId(this.RefId, logger);
 
             return isValid && OnValidate(logger, matchWarningAsError);
         }
@@ -100,6 +109,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
                                     this.Name,
                                     this.DisplayName,
                                     this.MetaData,
+                                    this.RefId,
                                     OnSignalGetHashCode());
         }
 
@@ -116,6 +126,7 @@ namespace Democrite.Framework.Core.Abstractions.Signals
                    this.Name == other.Name &&
                    this.DisplayName == other.DisplayName &&
                    this.MetaData == other.MetaData &&
+                   this.RefId == other.RefId &&
                    OnSignalEquals(other);
         }
 

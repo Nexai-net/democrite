@@ -33,6 +33,7 @@ namespace Democrite.Framework.Core.Abstractions.Doors
         /// Initializes a new instance of the <see cref="RelayFilterDoorDefinition"/> class.
         /// </summary>
         public RelayFilterDoorDefinition(Guid uid,
+                                         Uri refId,
                                          string name,
                                          string vgrainInterfaceFullName,
                                          IEnumerable<SignalId>? signalSourceIds,
@@ -45,6 +46,7 @@ namespace Democrite.Framework.Core.Abstractions.Doors
                                          uint? historyMaxRetention = null,
                                          uint? notConsumedMaxRetiention = null)
             : base(uid,
+                   refId,
                    name,
                    vgrainInterfaceFullName,
                    signalSourceIds,

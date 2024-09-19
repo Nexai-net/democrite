@@ -4,14 +4,12 @@
 
 namespace Democrite.Framework.Core.Abstractions.Streams
 {
-    using Elvex.Toolbox;
     using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 
     using System;
     using System.ComponentModel;
-    using System.Diagnostics.CodeAnalysis;
     using System.Runtime.Serialization;
 
     /// <summary>
@@ -23,7 +21,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
     [DataContract]
     [GenerateSerializer]
     [ImmutableObject(true)]
-    public sealed class StreamQueueDefinition : IEquatable<StreamQueueDefinition>, IDefinition
+    public sealed class StreamQueueDefinition : IEquatable<StreamQueueDefinition>, IDefinition, IRefDefinition
     {
         #region Fields
 
@@ -37,6 +35,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         /// Initializes a new instance of the <see cref="StreamQueueDefinition"/> class.
         /// </summary>
         public StreamQueueDefinition(Guid uid,
+                                     Uri refId,
                                      string displayName,
                                      string streamConfiguration,
                                      string streamNamespace,
@@ -45,6 +44,7 @@ namespace Democrite.Framework.Core.Abstractions.Streams
                                      DefinitionMetaData? metaData)
         {
             this.Uid = uid;
+            this.RefId = refId;
             this.MetaData = metaData;
             this.DisplayName = displayName;
             this.StreamNamespace = streamNamespace;
@@ -107,6 +107,12 @@ namespace Democrite.Framework.Core.Abstractions.Streams
         [Id(6)]
         public DefinitionMetaData? MetaData { get; }
 
+        /// <inheritdoc />
+        [DataMember]
+        [Newtonsoft.Json.JsonProperty]
+        [Id(7)]
+        public Uri RefId { get; }
+
         #endregion
 
         #region Methods
@@ -140,6 +146,8 @@ namespace Democrite.Framework.Core.Abstractions.Streams
                 isValid = false;
             }
 
+            isValid &= RefIdHelper.ValidateRefId(this.RefId, logger);
+
             return isValid;
         }
 
@@ -157,7 +165,8 @@ namespace Democrite.Framework.Core.Abstractions.Streams
                    this.StreamKey == other.StreamKey &&
                    this.StreamConfiguration == other.StreamConfiguration &&
                    this.StreamUid == other.StreamUid &&
-                   this.MetaData == other.MetaData;
+                   this.MetaData == other.MetaData &&
+                   this.RefId == other.RefId;
         }
 
         /// <inheritdoc />
@@ -176,7 +185,8 @@ namespace Democrite.Framework.Core.Abstractions.Streams
                                     this.StreamConfiguration,
                                     this.StreamUid, 
                                     this.StreamNamespace,
-                                    this.MetaData);
+                                    this.MetaData,
+                                    this.RefId);
         }
 
         #endregion

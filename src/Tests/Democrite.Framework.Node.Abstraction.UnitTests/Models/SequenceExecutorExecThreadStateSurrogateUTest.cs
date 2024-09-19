@@ -2,6 +2,8 @@
 {
     using AutoFixture;
 
+    using Democrite.Framework.Core;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
     using Democrite.Framework.Node.Abstractions.Models;
@@ -69,6 +71,7 @@
             fixture.Register<SequenceDefinition>(() =>
             {
                 return new SequenceDefinition(Guid.NewGuid(),
+                                              RefIdHelper.Generate(RefTypeEnum.Sequence, "test"),
                                               fixture.Create<string>(),
                                               SequenceOptionDefinition.Default,
                                               new SequenceStageDefinition[]

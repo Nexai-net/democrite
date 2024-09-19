@@ -50,11 +50,10 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         [Fact]
         public void Build_Filter_Only_On_Signal()
         {
-            var signalA = Signal.Create("SignalA");
+            var signalA = Signal.Create("signal-a");
 
             var id = Guid.NewGuid();
-            var def = Door.Create("DoorTest", id)
-                          .MetaData(m => m.CategoryPath("GrpA"))
+            var def = Door.Create("door-test", fixUid: id, metaDataBuilder: m => m.CategoryPath("GrpA"))
                           .Listen(signalA)
                           .UseRelayFilter(r => r.Condition(s => s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false))
                           .Build();
@@ -63,7 +62,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             Check.That(def.Uid).IsEqualTo(id);
             Check.That(def.MetaData).IsNotNull();
             Check.That(def.MetaData!.CategoryPath).IsNotNull().And.IsEqualTo("GrpA");
-            Check.That(def.Name).IsEqualTo("DoorTest");
+            Check.That(def.Name).IsEqualTo("door-test");
             Check.That(def.VGrainInterfaceFullName).IsNotNull().And.IsEqualTo(typeof(IRelayFilterVGrain).AssemblyQualifiedName);
             Check.That(def.SignalSourceIds).IsNotNull().And.ContainsExactly(signalA.SignalId);
 
@@ -108,9 +107,9 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         [Fact]
         public void Build_Filter_Only_On_Signal_Enum_Filter()
         {
-            var signalA = Signal.Create("SignalA");
+            var signalA = Signal.Create("signal-a");
 
-            var def = Door.Create("DoorTest")
+            var def = Door.Create("door-test")
                           .Listen(signalA)
                           .UseRelayFilter<SignalTestMessage>((msg, s) => msg.Type == SignalCarryTypeEnum.Poney)
                           .Build();
@@ -128,13 +127,12 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         [Fact]
         public void Build_Filter_Only_On_Signal_With_ContentType()
         {
-            var signalA = Signal.Create("SignalA");
+            var signalA = Signal.Create("signal-a");
 
             var id = Guid.NewGuid();
             var tecthId = Guid.NewGuid();
 
-            var def = Door.Create("DoorTest", id)
-                          .MetaData(m => m.CategoryPath("GrpA"))
+            var def = Door.Create("door-test", fixUid: id, metaDataBuilder: m => m.CategoryPath("GrpA"))
                           .Listen(signalA)
                           .UseRelayFilter<Guid>((id, s) => s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false)
                           .Build();
@@ -143,7 +141,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             Check.That(def.Uid).IsEqualTo(id);
             Check.That(def.MetaData).IsNotNull();
             Check.That(def.MetaData!.CategoryPath).IsNotNull().And.IsEqualTo("GrpA");
-            Check.That(def.Name).IsEqualTo("DoorTest");
+            Check.That(def.Name).IsEqualTo("door-test");
             Check.That(def.VGrainInterfaceFullName).IsNotNull().And.IsEqualTo(typeof(IRelayFilterVGrain).AssemblyQualifiedName);
             Check.That(def.SignalSourceIds).IsNotNull().And.ContainsExactly(signalA.SignalId);
 
@@ -188,13 +186,12 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         [Fact]
         public void Build_Filter_On_Full_Signal_With_ContentType()
         {
-            var signalA = Signal.Create("SignalA");
+            var signalA = Signal.Create("signal-a");
 
             var id = Guid.NewGuid();
             var tecthId = Guid.NewGuid();
 
-            var def = Door.Create("DoorTest", id)
-                          .MetaData(m => m.CategoryPath("GrpA"))
+            var def = Door.Create("door-test", fixUid: id, metaDataBuilder: m => m.CategoryPath("GrpA"))
                           .Listen(signalA)
                           .UseRelayFilter<Guid>((id, s) => id == tecthId && s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false)
                           .Build();
@@ -203,7 +200,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             Check.That(def.Uid).IsEqualTo(id);
             Check.That(def.MetaData).IsNotNull();
             Check.That(def.MetaData!.CategoryPath).IsNotNull().And.IsEqualTo("GrpA");
-            Check.That(def.Name).IsEqualTo("DoorTest");
+            Check.That(def.Name).IsEqualTo("door-test");
             Check.That(def.VGrainInterfaceFullName).IsNotNull().And.IsEqualTo(typeof(IRelayFilterVGrain).AssemblyQualifiedName);
             Check.That(def.SignalSourceIds).IsNotNull().And.ContainsExactly(signalA.SignalId);
 
@@ -237,11 +234,10 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         [Fact]
         public void Build_Filter_On_Signal_Without_Relay_Content()
         {
-            var signalA = Signal.Create("SignalA");
+            var signalA = Signal.Create("signal-a");
 
             var id = Guid.NewGuid();
-            var def = Door.Create("DoorTest", id)
-                          .MetaData(m => m.CategoryPath("GrpA"))
+            var def = Door.Create("door-test", fixUid: id, metaDataBuilder: m => m.CategoryPath("GrpA"))
                           .Listen(signalA)
                           .UseRelayFilter(r => r.DontRelaySignalContent()
                                                 .Condition(s => s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false))
@@ -251,7 +247,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             Check.That(def.Uid).IsEqualTo(id);
             Check.That(def.MetaData).IsNotNull();
             Check.That(def.MetaData!.CategoryPath).IsNotNull().And.IsEqualTo("GrpA");
-            Check.That(def.Name).IsEqualTo("DoorTest");
+            Check.That(def.Name).IsEqualTo("door-test");
             Check.That(def.VGrainInterfaceFullName).IsNotNull().And.IsEqualTo(typeof(IRelayFilterVGrain).AssemblyQualifiedName);
             Check.That(def.SignalSourceIds).IsNotNull().And.ContainsExactly(signalA.SignalId);
 
@@ -266,15 +262,14 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         [Fact]
         public void Build_Invalid_Filter_On_Signal()
         {
-            var signalA = Signal.Create("SignalA");
+            var signalA = Signal.Create("signal-a");
 
             var id = Guid.NewGuid();
             var tecthId = Guid.NewGuid();
 
             try
             {
-                var def = Door.Create("DoorTest", id)
-                              .MetaData(m => m.CategoryPath("GrpA"))
+                var def = Door.Create("door-test", fixUid: id, metaDataBuilder: m => m.CategoryPath("GrpA"))
                               .Listen(signalA)
                               .UseRelayFilter(s => ExternalMethod() && s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false)
                               .Build();
@@ -296,15 +291,14 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         [Fact]
         public void Build_Invalid_Filter_With_Context_On_Signal()
         {
-            var signalA = Signal.Create("SignalA");
+            var signalA = Signal.Create("signal-a");
 
             var id = Guid.NewGuid();
             var tecthId = Guid.NewGuid();
 
             try
             {
-                var def = Door.Create("DoorTest", id)
-                              .MetaData(m => m.CategoryPath("GrpA"))
+                var def = Door.Create("door-test", fixUid: id, metaDataBuilder: m => m.CategoryPath("GrpA"))
                               .Listen(signalA)
                               .UseRelayFilter<Guid>((id, s) => id == Guid.NewGuid() && ExternalMethod() && s.From.VGrainMetaData != null && s.From.VGrainMetaData.Value.IsDemocriteSystem == false)
                               .Build();
@@ -365,8 +359,8 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         private static SignalMessage DefaultSignalBuilder<TTMessageCarryType>(TTMessageCarryType data, Fixture fixture)
             where TTMessageCarryType : struct
         {
-            return new SignalMessage(Guid.NewGuid(), 
-                                     DateTime.UtcNow, 
+            return new SignalMessage(Guid.NewGuid(),
+                                     DateTime.UtcNow,
                                      new SignalSource<TTMessageCarryType>(fixture.Create<Guid>(),
                                                                           fixture.Create<Guid>(),
                                                                           fixture.Create<string>(),
@@ -374,7 +368,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
                                                                           fixture.Create<DateTime>(),
                                                                           fixture.Create<GrainId>(),
                                                                           fixture.Create<VGrainMetaData>(),
-                                                                          data));    
+                                                                          data));
         }
 
         private bool ExternalMethod()

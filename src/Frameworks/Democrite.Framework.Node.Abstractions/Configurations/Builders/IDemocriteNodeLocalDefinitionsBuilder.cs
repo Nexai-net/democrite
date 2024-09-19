@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Configurations
 {
     using Democrite.Framework.Cluster.Abstractions.Configurations.Builders;
+    using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Sequence;
@@ -34,6 +35,12 @@ namespace Democrite.Framework.Configurations
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Setup callable definitions
+        /// </summary>
+        IDemocriteNodeLocalDefinitionsBuilder Setup<TDefinition>(params TDefinition[] definitions)
+            where TDefinition : IDefinition, IRefDefinition;
 
         /// <summary>
         /// Setup callable sequence

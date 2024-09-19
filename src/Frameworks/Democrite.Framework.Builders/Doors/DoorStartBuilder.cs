@@ -31,8 +31,8 @@ namespace Democrite.Framework.Builders.Doors
         /// <summary>
         /// Initializes a new instance of the <see cref="DoorStartBuilder"/> class.
         /// </summary>
-        public DoorStartBuilder(string name, Guid? uid = null)
-            : base(name, uid)
+        public DoorStartBuilder(string simpleNameIdentifier, string? displayName = null, Guid? uid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
+            : base(simpleNameIdentifier, displayName, uid, metaDataBuilder)
         {
             this._signalIds = new HashSet<SignalId>();
             this._doorIds = new HashSet<DoorId>();

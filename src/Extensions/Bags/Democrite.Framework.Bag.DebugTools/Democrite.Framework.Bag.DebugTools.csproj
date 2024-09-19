@@ -14,7 +14,8 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Builders\Democrite.Framework.Builders.csproj" />
-	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
+	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Core.CodeGenerator\Democrite.Framework.Core.CodeGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
+	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Core\Democrite.Framework.Core.csproj" PrivateAssets="all" />
 	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
 	</ItemGroup>
 </Project>

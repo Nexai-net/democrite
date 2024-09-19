@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Build Test": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\..\\Extensions\\Bags\\Democrite.Framework.Bag.DebugTools\\Democrite.Framework.Bag.DebugTools.csproj"
+    }
+  }
+}

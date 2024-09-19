@@ -3,12 +3,13 @@
 // Produce by nexai & community (cf. docs/Teams.md)
 
 // Maintains Microsoft.Extensions.Hosting to easy fluent setups
+// KEEP : Microsoft.Extensions.Hosting
 namespace Microsoft.Extensions.Hosting
 {
-    using Democrite.Framework;
     using Democrite.Framework.Cluster.Configurations;
     using Democrite.Framework.Configurations;
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework;
     using Democrite.Framework.Node.Models;
 
     using Microsoft.Extensions.Configuration;

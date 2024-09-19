@@ -20,7 +20,12 @@ namespace Democrite.Framework.Builders.Doors
         /// <summary>
         /// Gets unique door name
         /// </summary>
-        string Name { get; }
+        string? DisplayName { get; }
+
+        /// <summary>
+        /// Gets the simple name identifier.
+        /// </summary>
+        string SimpleNameIdentifier { get; }    
 
         /// <summary>
         /// Gets the unique id.

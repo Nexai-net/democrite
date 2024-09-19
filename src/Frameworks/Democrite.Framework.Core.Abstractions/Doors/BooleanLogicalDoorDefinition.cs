@@ -33,6 +33,7 @@ namespace Democrite.Framework.Core.Abstractions.Doors
         /// Initializes a new instance of the <see cref="BooleanLogicalDoorDefinition"/> class.
         /// </summary>
         public BooleanLogicalDoorDefinition(Guid uid,
+                                            Uri refId,
                                             string name,
                                             string logicalFormula,
                                             string vgrainInterfaceFullName,
@@ -45,7 +46,7 @@ namespace Democrite.Framework.Core.Abstractions.Doors
                                             TimeSpan? retentionMaxDelay = null,
                                             uint? historyMaxRetention = null,
                                             uint? notConsumedMaxRetiention = null)
-            : base(uid, name, vgrainInterfaceFullName, signalSourceIds, doorSourceIds, metaData, activeWindowInterval, retentionMaxDelay, historyMaxRetention, notConsumedMaxRetiention)
+            : base(uid, refId, name, vgrainInterfaceFullName, signalSourceIds, doorSourceIds, metaData, activeWindowInterval, retentionMaxDelay, historyMaxRetention, notConsumedMaxRetiention)
         {
             ArgumentException.ThrowIfNullOrEmpty(logicalFormula);
 

@@ -8,7 +8,9 @@ namespace Democrite.Framework.Builders.Doors
     using Democrite.Framework.Builders.Exceptions;
     using Democrite.Framework.Builders.Resources;
     using Democrite.Framework.Builders.Signals;
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Doors;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Elvex.Toolbox.Statements;
 
@@ -168,7 +170,8 @@ namespace Democrite.Framework.Builders.Doors
                 throw new InvalidParameterException(nameof(BooleanLogicalDoorDefinition.LogicalFormula), reason);
 
             return new BooleanLogicalDoorDefinition(this._rootDoorBuilder.Uid,
-                                                    this._rootDoorBuilder.Name,
+                                                    RefIdHelper.Generate(RefTypeEnum.Door, this._rootDoorBuilder.SimpleNameIdentifier, this._rootDoorBuilder.DefinitionMetaData?.NamespaceIdentifier),
+                                                    this._rootDoorBuilder.DisplayName,
                                                     this._logicalFormula,
                                                     typeof(ILogicalDoorVGrain).AssemblyQualifiedName!,
                                                     this._rootDoorBuilder.SignalIds,

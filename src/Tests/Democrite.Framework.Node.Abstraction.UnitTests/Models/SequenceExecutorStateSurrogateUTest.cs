@@ -7,6 +7,7 @@ namespace Democrite.Framework.Node.Abstraction.UnitTests.Models
     using AutoFixture;
     using AutoFixture.Kernel;
 
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Customizations;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
@@ -76,6 +77,7 @@ namespace Democrite.Framework.Node.Abstraction.UnitTests.Models
             fixture.Register<SequenceDefinition>(() =>
             {
                 return new SequenceDefinition(Guid.NewGuid(),
+                                              RefIdHelper.Generate(Core.Abstractions.Enums.RefTypeEnum.Sequence, "sequence-test-creation", "unit.tests"),
                                               fixture.Create<string>(),
                                               SequenceOptionDefinition.Default,
                                               new SequenceStageDefinition[]

@@ -27,11 +27,13 @@ namespace Democrite.Framework.Core.Abstractions
             static Signals()
             {
                 s_dynamicDefinitionChanged = new SignalDefinition(new Guid("F6B9F91B-6B2A-48D4-BED5-EEEDEE71F2DD"),
+                                                                  RefIdHelper.Generate(Enums.RefTypeEnum.Signal, "dynamic-definition-changed", "democrite.framework.system"),
                                                                   "DynamicDefinitionChanged",
                                                                   new DefinitionMetaData("Signal send to synchronize silo local dynamic definition cache.",
                                                                                          nameof(Democrite) + "/" + "System",
                                                                                          new[] { nameof(Democrite), "System" },
-                                                                                         DateTime.UtcNow));
+                                                                                         DateTime.UtcNow,
+                                                                                         "democrite.framework.system"));
                 DynamicDefinitionChanged = s_dynamicDefinitionChanged.SignalId;
             }
 

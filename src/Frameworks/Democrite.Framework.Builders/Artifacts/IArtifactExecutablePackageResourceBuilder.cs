@@ -96,7 +96,7 @@ namespace Democrite.Framework.Builders.Artifacts
     /// <summary>
     /// Builder in charge to produce a code artifact after type defined (Python, c++, ...)
     /// </summary>
-    public interface IArtifactCodePackageResourceBuilderFinalizer : IArtifactCodePackageResourceBuilderFiles<IArtifactCodePackageResourceBuilderFinalizer>, IDefinitionBaseCompiler<ArtifactExecutableDefinition>
+    public interface IArtifactCodePackageResourceBuilderFinalizer : IArtifactCodePackageResourceBuilderFiles<IArtifactCodePackageResourceBuilderFinalizer>, IDefinitionBaseBuilderByCompilation<ArtifactExecutableDefinition>
     {
         /// <summary>
         /// Define the argument to pass to executed file

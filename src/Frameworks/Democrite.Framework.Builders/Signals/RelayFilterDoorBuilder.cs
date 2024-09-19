@@ -5,7 +5,9 @@
 namespace Democrite.Framework.Builders.Signals
 {
     using Democrite.Framework.Builders.Doors;
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Doors;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Signals;
 
     using Elvex.Toolbox.Abstractions.Conditions;
@@ -70,7 +72,8 @@ namespace Democrite.Framework.Builders.Signals
             ArgumentNullException.ThrowIfNull(this._serializedExpression);
 
             return new RelayFilterDoorDefinition(this._rootDoorBuilder.Uid,
-                                                 this._rootDoorBuilder.Name,
+                                                 RefIdHelper.Generate(RefTypeEnum.Door, this._rootDoorBuilder.SimpleNameIdentifier, this._rootDoorBuilder.DefinitionMetaData?.NamespaceIdentifier),
+                                                 this._rootDoorBuilder.DisplayName,
                                                  typeof(IRelayFilterVGrain).AssemblyQualifiedName!,
                                                  this._rootDoorBuilder.SignalIds,
                                                  this._rootDoorBuilder.DoorIds,

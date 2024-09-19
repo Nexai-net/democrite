@@ -34,7 +34,7 @@ namespace Democrite.Framework.Builders.Sequences
     /// </summary>
     /// <typeparam name="TSequenceVGrain">The type of the sequence virtual grain.</typeparam>
     /// <typeparam name="TContextInfo">The type of the context information.</typeparam>
-    /// <typeparam name="TInputMessage">Input type message.</typeparam>
+    /// <typeparam name="TInputMessage">TInput type message.</typeparam>
     public interface ISequencePipelineStageConfiguredCallBuilder<TSequenceVGrain, TContextInfo, TInputMessage>
         where TSequenceVGrain : IVGrain
     {

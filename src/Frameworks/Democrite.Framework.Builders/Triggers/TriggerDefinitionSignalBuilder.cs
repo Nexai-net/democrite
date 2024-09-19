@@ -14,7 +14,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
     /// </summary>
     /// <seealso cref="TriggerDefinitionBaseBuilder" />
     /// <seealso cref="ITriggerDefinitionFinalizeBuilder" />
-    internal sealed class TriggerDefinitionSignalBuilder : TriggerDefinitionWithInputBaseBuilder, ITriggerDefinitionFinalizeBuilder
+    internal sealed class TriggerDefinitionSignalBuilder : TriggerDefinitionWithInputBaseBuilder, ITriggerDefinitionFinalizeBuilder, ITriggerDefinitionSignalBuilder, ITriggerDefinitionDoorBuilder
     {
         #region Fields
 
@@ -31,9 +31,11 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         public TriggerDefinitionSignalBuilder(TriggerTypeEnum triggerType,
                                               SignalId? signalId,
                                               DoorId? doorId,
+                                              string simpleNameIdentifier,
                                               string displayName,
-                                              Guid? fixUid = null)
-            : base(triggerType, displayName, fixUid)
+                                              Guid? fixUid = null,
+                                              Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
+            : base(triggerType, simpleNameIdentifier, displayName, fixUid, metadataBuilder)
         {
             this._signalId = signalId;
             this._doorId = doorId;
@@ -50,6 +52,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
                 throw new NullReferenceException("At least a Signal or Door must be register");
 
             return new SignalTriggerDefinition(this.Uid,
+                                               GetRefId(),
                                                this.DisplayName,
                                                this.Targets,
                                                true,

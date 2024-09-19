@@ -4,12 +4,10 @@
 
 namespace Democrite.Framework.Builders.Triggers
 {
-    using Democrite.Framework.Core.Abstractions.Triggers;
-
     /// <summary>
     /// Common part of trigger definition
     /// </summary>
-    public interface ITriggerDefinitionFinalizeWithoutInputBuilder : ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeWithoutInputBuilder>, IDefinitionBaseBuilder<TriggerDefinition>
+    public interface ITriggerDefinitionCronBuilder : ITriggerDefinitionWithCustomOutput, ITriggerDefinitionBuilder
     {
     }
 }

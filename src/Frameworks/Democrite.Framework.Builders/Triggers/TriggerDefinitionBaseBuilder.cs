@@ -5,6 +5,7 @@
 namespace Democrite.Framework.Builders.Implementations.Triggers
 {
     using Democrite.Framework.Builders.Triggers;
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Inputs;
@@ -14,19 +15,18 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
     using Democrite.Framework.Core.Abstractions.Triggers;
 
     using System;
-    using System.Linq;
 
     /// <summary>
     /// Get trigger definition
     /// </summary>
     /// <typeparam name="TOutputMesage">The type of the output mesage.</typeparam>
     /// <seealso cref="ITriggerDefinitionBuilder" />
-    internal abstract class TriggerDefinitionBaseBuilder<TDefWithExtention> : ITriggerDefinitionBuilder<TDefWithExtention>
-        where TDefWithExtention : ITriggerDefinitionBuilder<TDefWithExtention>
+    internal abstract class TriggerDefinitionBaseBuilder : ITriggerDefinitionBuilder, ITriggerDefinitionFinalizeBuilder
     {
         #region Fields
 
         private readonly HashSet<TriggerTargetDefinition> _targets;
+        private readonly string _simpleNameIdentifier;
 
         #endregion
 
@@ -35,16 +35,23 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// <summary>
         /// Initializes a new instance of the <see cref="ITriggerDefinitionBuilder"/> class.
         /// </summary>
-        protected TriggerDefinitionBaseBuilder(TriggerTypeEnum triggerType, string displayName, Guid? fixUid = null)
+        protected TriggerDefinitionBaseBuilder(TriggerTypeEnum triggerType,
+                                               string simpleNameIdentifier,
+                                               string displayName,
+                                               Guid? fixUid,
+                                               Action<IDefinitionMetaDataBuilder>? metadataBuilder)
         {
 
             this._targets = new HashSet<TriggerTargetDefinition>();
             this.TriggerType = triggerType;
 
+            this._simpleNameIdentifier = simpleNameIdentifier;
             this.Uid = fixUid ?? Guid.NewGuid();
 
             ArgumentNullException.ThrowIfNullOrEmpty(displayName);
             this.DisplayName = displayName;
+
+            this.DefinitionMetaData = DefinitionMetaDataBuilder.Execute(metadataBuilder);
         }
 
         #endregion
@@ -84,27 +91,13 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         #region Methods
 
         /// <inheritdoc />
-        public TDefWithExtention MetaData(Action<IDefinitionMetaDataBuilder> action)
-        {
-            if (action is not null)
-            {
-                var inst = new DefinitionMetaDataBuilder();
-                action?.Invoke(inst);
-
-                this.DefinitionMetaData = inst.Build(out _);
-            }
-
-            return GetBuilderFinalizer();
-        }
-
-        /// <inheritdoc />
-        public TDefWithExtention AddTargetSequence(Guid targetSequenceId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSequence(Guid targetSequenceId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
         {
             return AddTarget(targetSequenceId, TargetTypeEnum.Sequence, dedicatedOutputBuilders);
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] targetSequenceId)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] targetSequenceId)
         {
             foreach (var targetId in targetSequenceId)
                 AddTargetSequence(targetId, dedicatedOutputBuilders);
@@ -112,7 +105,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
        
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSequences(params Guid[] targetSequenceId)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSequences(params Guid[] targetSequenceId)
         {
             foreach (var targetId in targetSequenceId)
                 AddTargetSequence(targetId, (Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>?)null);
@@ -120,14 +113,14 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSequence(SequenceDefinition sequenceDefinition, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSequence(SequenceDefinition sequenceDefinition, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
         {
             AddTargetSequence(sequenceDefinition.Uid, dedicatedOutputBuilders);
             return GetBuilderFinalizer();
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSequences(params SequenceDefinition[] sequenceDefinition)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSequences(params SequenceDefinition[] sequenceDefinition)
         {
             foreach (var seq in sequenceDefinition)
                 AddTargetSequence(seq.Uid, (Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>?)null);
@@ -135,7 +128,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params SequenceDefinition[] sequenceDefinition)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params SequenceDefinition[] sequenceDefinition)
         {
             foreach (var seq in sequenceDefinition)
                 AddTargetSequence(seq.Uid, dedicatedOutputBuilders);
@@ -143,19 +136,19 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSignal(Guid signalId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSignal(Guid signalId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
         {
             return AddTarget(signalId, TargetTypeEnum.Signal, dedicatedOutputBuilders);
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSignal(SignalId signalId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSignal(SignalId signalId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
         {
             return AddTargetSignal(signalId.Uid, dedicatedOutputBuilders);
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSignals(params SignalId[] signalIds)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSignals(params SignalId[] signalIds)
         {
             foreach (var signalId in signalIds)
                 AddTargetSignal(signalId.Uid, null);
@@ -163,7 +156,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSignals(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params SignalId[] signalIds)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSignals(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params SignalId[] signalIds)
         {
             foreach (var signalId in signalIds)
                 AddTargetSignal(signalId.Uid, dedicatedOutputBuilders);
@@ -171,7 +164,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSignals(params Guid[] signalIds)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSignals(params Guid[] signalIds)
         {
             foreach (var signalId in signalIds)
                 AddTargetSignal(signalId, null);
@@ -179,7 +172,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetSignals(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] signalIds)
+        public ITriggerDefinitionFinalizeBuilder AddTargetSignals(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] signalIds)
         {
             foreach (var signalId in signalIds)
                 AddTargetSignal(signalId, dedicatedOutputBuilders);
@@ -187,19 +180,19 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetStream(Guid targetStreamId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
+        public ITriggerDefinitionFinalizeBuilder AddTargetStream(Guid targetStreamId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
         {
             return AddTarget(targetStreamId, TargetTypeEnum.Stream, dedicatedOutputBuilders);
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetStream(StreamQueueDefinition streamDefinition, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
+        public ITriggerDefinitionFinalizeBuilder AddTargetStream(StreamQueueDefinition streamDefinition, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
         {
             return AddTargetStream(streamDefinition.Uid, dedicatedOutputBuilders);
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetStreams(params Guid[] targetStreamIds)
+        public ITriggerDefinitionFinalizeBuilder AddTargetStreams(params Guid[] targetStreamIds)
         {
             foreach (var targetStreamId in targetStreamIds)
                 AddTargetStream(targetStreamId, null);
@@ -207,7 +200,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetStreams(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] targetStreamIds)
+        public ITriggerDefinitionFinalizeBuilder AddTargetStreams(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] targetStreamIds)
         {
             foreach (var targetStreamId in targetStreamIds)
                 AddTargetStream(targetStreamId, dedicatedOutputBuilders);
@@ -215,7 +208,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetStreams(params StreamQueueDefinition[] streamDefinitions)
+        public ITriggerDefinitionFinalizeBuilder AddTargetStreams(params StreamQueueDefinition[] streamDefinitions)
         {
             foreach (var streamDefinition in streamDefinitions)
                 AddTargetStream(streamDefinition.Uid, null);
@@ -223,7 +216,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         }
 
         /// <inheritdoc />
-        public TDefWithExtention AddTargetStreams(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params StreamQueueDefinition[] streamDefinitions)
+        public ITriggerDefinitionFinalizeBuilder AddTargetStreams(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params StreamQueueDefinition[] streamDefinitions)
         {
             foreach (var streamDefinition in streamDefinitions)
                 AddTargetStream(streamDefinition.Uid, dedicatedOutputBuilders);
@@ -238,7 +231,7 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// <summary>
         /// Adds the target.
         /// </summary>
-        private TDefWithExtention AddTarget(Guid uid, TargetTypeEnum type, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
+        private ITriggerDefinitionFinalizeBuilder AddTarget(Guid uid, TargetTypeEnum type, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null)
         {
             this._targets.Add(new TriggerTargetDefinition(uid, type, dedicatedOutputBuilders?.Invoke(new TriggerOutputBuilder())?.Build(), null));
             return GetBuilderFinalizer();
@@ -247,12 +240,17 @@ namespace Democrite.Framework.Builders.Implementations.Triggers
         /// <summary>
         /// Gets the builder finalizer.
         /// </summary>
-        protected virtual TDefWithExtention GetBuilderFinalizer()
+        protected ITriggerDefinitionFinalizeBuilder GetBuilderFinalizer()
         {
-            if (this is TDefWithExtention finalizeBuilder)
-                return finalizeBuilder;
+            return this;
+        }
 
-            throw new NotImplementedException("Plz overrider GetBuilderFinalizer for " + GetType());
+        /// <summary>
+        /// Gets the reference identifier.
+        /// </summary>
+        protected Uri GetRefId()
+        {
+            return RefIdHelper.Generate(RefTypeEnum.Trigger, this._simpleNameIdentifier, this.DefinitionMetaData?.NamespaceIdentifier);
         }
 
         #endregion

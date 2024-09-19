@@ -27,12 +27,14 @@ namespace Democrite.Framework.Core.Abstractions
         public DefinitionMetaData(string? description,
                                   string? categoryPath,
                                   IEnumerable<string>? tags,
-                                  DateTime utcUpdateTime)
+                                  DateTime utcUpdateTime,
+                                  string? namespaceIdentifier = null)
         {
             this.Description = description;
             this.CategoryPath = categoryPath;
             this.Tags = tags?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;
             this.UTCUpdateTime = utcUpdateTime;
+            this.NamespaceIdentifier = namespaceIdentifier;
         }
 
         #endregion
@@ -62,6 +64,11 @@ namespace Democrite.Framework.Core.Abstractions
         /// </summary>
         public DateTime UTCUpdateTime { get; }
 
+        /// <summary>
+        /// Gets the namespace identifier.
+        /// </summary>
+        public string? NamespaceIdentifier { get; }
+
         #endregion
 
         #region Methods
@@ -84,6 +91,7 @@ namespace Democrite.Framework.Core.Abstractions
             return this.Description == other.Description &&
                    this.CategoryPath == other.CategoryPath &&
                    this.Tags.SequenceEqual(other.Tags) &&
+                   this.NamespaceIdentifier == other.NamespaceIdentifier &&
                    OnEquals(other);
         }
 
@@ -99,6 +107,7 @@ namespace Democrite.Framework.Core.Abstractions
             return HashCode.Combine(this.Description,
                                     this.CategoryPath,
                                     this.Tags.Aggregate(0, (acc, t) => acc ^ (t?.GetHashCode() ?? 0)),
+                                    this.NamespaceIdentifier,
                                     OnGetHashCode());
         }
 

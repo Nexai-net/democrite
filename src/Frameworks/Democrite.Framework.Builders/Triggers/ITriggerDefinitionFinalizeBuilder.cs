@@ -4,17 +4,12 @@
 
 namespace Democrite.Framework.Builders.Triggers
 {
-    using Democrite.Framework.Core.Abstractions.Inputs;
     using Democrite.Framework.Core.Abstractions.Triggers;
 
     /// <summary>
     /// Common part of trigger definition
     /// </summary>
-    public interface ITriggerDefinitionFinalizeBuilder : ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder>, IDefinitionBaseBuilder<TriggerDefinition>
+    public interface ITriggerDefinitionFinalizeBuilder : ITriggerDefinitionBuilder, IDefinitionBaseBuilder<TriggerDefinition>
     {
-        /// <summary>
-        /// Configure how to output message that will be send on fire (Sequence, Signal and/or stream)
-        /// </summary>
-        ITriggerDefinitionFinalizeBuilder SetOutput(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> outputBuilders);
     }
 }

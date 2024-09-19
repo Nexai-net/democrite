@@ -2,6 +2,7 @@
 // The Democrite licenses this file to you under the MIT license.
 // Produce by nexai & community (cf. docs/Teams.md)
 
+// KEEP : Democrite.Framework
 namespace Democrite.Framework
 {
     using Democrite.Framework.Cluster.Configurations;

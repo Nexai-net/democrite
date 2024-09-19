@@ -90,6 +90,22 @@ namespace Democrite.Framework.Core.Abstractions
     /// <summary>
     /// Last step of the trigger process <see cref="IDemocriteExecutionHandler"/> that launch the execution and return the result
     /// </summary>
+    public interface IExecutionRefLauncher : IExecutionLauncher
+    {
+        /// <summary>
+        /// Fires the execution start with result pass by deferred
+        /// </summary>
+        Task<Guid> FireWithDeferred<TResult>();
+
+        /// <summary>
+        /// Fires the execution start without waiting any results
+        /// </summary>
+        Task Fire();
+    }
+
+    /// <summary>
+    /// Last step of the trigger process <see cref="IDemocriteExecutionHandler"/> that launch the execution and return the result
+    /// </summary>
     public interface IExecutionFlowLauncher<TResult> : ICommonExecutionLauncher<IExecutionFlowLauncher<TResult>>, IExecutionLauncher<TResult>
     {
     }

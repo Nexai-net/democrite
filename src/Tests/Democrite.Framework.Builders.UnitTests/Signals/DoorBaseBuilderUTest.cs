@@ -25,7 +25,7 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
             var name = "name" + Guid.NewGuid();
             var id = Guid.NewGuid();
 
-            var rootSimple = Door.Create(name, id)
+            var rootSimple = Door.Create(name, fixUid: id)
                                  .Listen(new SignalId(Guid.NewGuid(), "first"))
                                  .Listen(new SignalId(Guid.NewGuid(), "second"));
                                  

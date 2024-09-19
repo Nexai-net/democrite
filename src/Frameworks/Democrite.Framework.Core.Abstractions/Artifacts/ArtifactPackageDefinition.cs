@@ -27,6 +27,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public ArtifactPackageDefinition(Guid uid,
+                                         Uri refId,
                                          string displayName,
                                          Version? version,
                                          string hash,
@@ -36,7 +37,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                          IEnumerable<string> packageFiles,
                                          ArtifactPackageTypeEnum packageType,
                                          DefinitionMetaData? metaData) 
-            : base(uid, displayName, version, hash, creationOn, artifactType, metaData)
+            : base(uid, refId, displayName, version, hash, creationOn, artifactType, metaData)
         {
             this.PackageSource = packageSource;
             this.PackageFiles = packageFiles?.ToArray() ?? EnumerableHelper<string>.ReadOnlyArray;

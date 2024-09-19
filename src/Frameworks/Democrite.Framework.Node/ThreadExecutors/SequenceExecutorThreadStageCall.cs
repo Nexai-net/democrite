@@ -83,7 +83,10 @@ namespace Democrite.Framework.Node.ThreadExecutors
                 {
                     cfgInput = sequenceContext.TryGetContextData(step.ConfigurationFromContextDataType, this._democriteSerializer);
                     if (cfgInput is null)
+                    {
                         logger.OptiLog(LogLevel.Warning, "ConfigurationFromContextDataType is null or missing : {ConfigurationFromContextDataType}", step.ConfigurationFromContextDataType);
+                        cfgInput = input;
+                    }
                 }
 
                 configuration = step.Configuration.Resolve(cfgInput);

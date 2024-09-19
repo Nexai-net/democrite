@@ -4,6 +4,8 @@
 
 namespace Democrite.Framework.Builders.Signals
 {
+    using Democrite.Framework.Core;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Signals;
 
     using System;
@@ -14,7 +16,7 @@ namespace Democrite.Framework.Builders.Signals
         #region Fields
         
         private SignalDefinition? _parent;
-        
+
         #endregion
 
         #region Ctor
@@ -22,8 +24,8 @@ namespace Democrite.Framework.Builders.Signals
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalBuilder"/> class.
         /// </summary>
-        public SignalBuilder(string name, Guid? uid = null)
-            : base(name, uid)
+        public SignalBuilder(string simpleNameIdentifier, string? displayName = null, Guid? uid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
+            : base(simpleNameIdentifier, displayName, uid, metaDataBuilder)
         {
         }
 
@@ -42,7 +44,8 @@ namespace Democrite.Framework.Builders.Signals
         public SignalDefinition Build()
         {
             return new SignalDefinition(this.Uid,
-                                        this.Name,
+                                        RefIdHelper.Generate(RefTypeEnum.Signal, this.SimpleNameIdentifier, this.DefinitionMetaData?.NamespaceIdentifier),
+                                        this.DisplayName ?? this.SimpleNameIdentifier,
                                         this.DefinitionMetaData);
         }
 

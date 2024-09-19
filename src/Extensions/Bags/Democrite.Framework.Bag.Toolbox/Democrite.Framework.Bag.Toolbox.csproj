@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	
+
 	<Import Project="..\..\..\..\SharedFrameworkAssmblyInfo.props" />
 	<Import Project="..\..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />
 
@@ -13,10 +13,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
-	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
-	  <ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
-	  <ProjectReference Include="..\Democrite.Framework.Bag.Toolbox.Abstractions\Democrite.Framework.Bag.Toolbox.Abstractions.csproj" />
+		<ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
+		<ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Core\Democrite.Framework.Core.csproj" />
+		<ProjectReference Include="..\..\..\Frameworks\Democrite.Framework.Node.Abstractions\Democrite.Framework.Node.Abstractions.csproj" />
+		<ProjectReference Include="..\Democrite.Framework.Bag.Toolbox.Abstractions\Democrite.Framework.Bag.Toolbox.Abstractions.csproj" />
 	</ItemGroup>
 
 </Project>

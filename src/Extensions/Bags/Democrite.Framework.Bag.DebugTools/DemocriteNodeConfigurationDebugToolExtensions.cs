@@ -9,6 +9,7 @@ namespace Democrite.Framework.Configurations
     using Democrite.Framework.Bag.DebugTools.Grains;
     using Democrite.Framework.Bag.DebugTools.Models;
     using Democrite.Framework.Builders;
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Signals;
 
@@ -41,16 +42,22 @@ namespace Democrite.Framework.Configurations
                  .Add<IDisplaySignalsInfoVGrain, DisplaySignalsInfoVGrain>();
             });
 
-            var signalSebugSec = Sequence.Build(nameof(Democrite.Framework.Bag) + ":" + nameof(Democrite.Framework.Bag.DebugTools) + ":" + nameof(DebugToolConstants.DisplaySignalSequence), 
+            var signalSebugSec = Sequence.Build("display-signal",
+                                                nameof(Democrite.Framework.Bag) + ":" + nameof(Democrite.Framework.Bag.DebugTools) + ":" + nameof(DebugToolConstants.DisplaySignalSequence), 
                                                 DebugToolConstants.DisplaySignalSequence, 
                                                 o =>
                                                 {
                                                     o.PreventSequenceExecutorStateStorage()
                                                      .MinimalLogLevel(option?.LogLevel ?? DebugDisplayInfoOptions.Default.LogLevel);
+                                                },
+                                                m =>
+                                                {
+                                                    m.Namespace(DebugToolConstants.BAG_NAMESPACE)
+                                                     .AddTags("debug", "sequence", "display")
+                                                     .CategoryChain("utilities", "debug");
                                                 })
                                                 .RequiredInput<SignalMessage>()
-                                                .Use<IDisplaySignalsInfoVGrain>().Call((g, s, ctx) => g.DisplaySignalInfoAsync(s, ctx))
-                                                                                 .Return
+                                                .Use<IDisplaySignalsInfoVGrain>().Call((g, s, ctx) => g.DisplaySignalInfoAsync(s, ctx)).Return
                                                 .Build();
 
             democriteNodeWizard.AddInMemoryDefinitionProvider(s => s.SetupSequences(signalSebugSec));
@@ -65,7 +72,11 @@ namespace Democrite.Framework.Configurations
         {
             democriteNodeWizard.AddInMemoryDefinitionProvider(s =>
             {
-                var triggers = signalDefinitions.Select(d => Trigger.Signal(d, "AutoTriggerShow:" + d.DisplayName, d.Uid)
+                var triggers = signalDefinitions.Select(d => Trigger.Signal(d,
+                                                                            "auto-signal-trigger-display-" + RefIdHelper.GetSimpleNameIdentification(d.RefId),
+                                                                            "AutoTriggerShow:" + d.DisplayName,
+                                                                            d.Uid,
+                                                                            metadataBuilder : m => m.Namespace(DebugToolConstants.BAG_NAMESPACE))
                                                                     .AddTargetSequence(DebugToolConstants.DisplaySignalSequence)
                                                                     .Build())
                                                 .ToArray();
@@ -83,7 +94,11 @@ namespace Democrite.Framework.Configurations
         {
             democriteNodeWizard.AddInMemoryDefinitionProvider(s =>
             {
-                var triggers = doorDefinitions.Select(d => Trigger.Door(d, "AutoTriggerShow:" + d.DisplayName, d.Uid)
+                var triggers = doorDefinitions.Select(d => Trigger.Door(d,
+                                                                        "auto-door-trigger-display-" + RefIdHelper.GetSimpleNameIdentification(d.RefId),
+                                                                        "AutoTriggerShow:" + d.DisplayName,
+                                                                        d.Uid,
+                                                                        metadataBuilder: m => m.Namespace(DebugToolConstants.BAG_NAMESPACE))
                                                                   .AddTargetSequence(DebugToolConstants.DisplaySignalSequence)
                                                                   .Build())
                                               .ToArray();

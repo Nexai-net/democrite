@@ -6,7 +6,9 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
 {
     using AutoFixture;
 
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions.Doors;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Node.Signals.Doors;
 
@@ -64,13 +66,14 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             const int SUCESS_MSG = DoorVGrainBaseUTest<RelayFilterDoorVGrain, RelayFilterDoorDefinition, IRelayFilterVGrain>.SUCESS_MSG;
 
             return new RelayFilterDoorDefinition(Guid.NewGuid(),
-                                                fixture.Create<string>(),
-                                                null,
-                                                fixture.Create<IEnumerable<SignalId>>(),
-                                                fixture.Create<IEnumerable<DoorId>>(),
-                                                ExpressionExtensions.Serialize((int arg, SignalMessage sm) => arg == SUCESS_MSG),
-                                                false,
-                                                null);
+                                                 RefIdHelper.Generate(RefTypeEnum.Door, "door-test", "unit.test"),
+                                                 fixture.Create<string>(),
+                                                 null!,
+                                                 fixture.Create<IEnumerable<SignalId>>(),
+                                                 fixture.Create<IEnumerable<DoorId>>(),
+                                                 ExpressionExtensions.Serialize((int arg, SignalMessage sm) => arg == SUCESS_MSG),
+                                                 false,
+                                                 null);
         }
 
         #endregion

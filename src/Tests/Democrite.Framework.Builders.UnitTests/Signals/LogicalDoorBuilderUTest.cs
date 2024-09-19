@@ -29,11 +29,11 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
         public void Build_Simple_Logic_Door(LogicEnum logicEnum)
         {
             var internval = TimeSpan.FromSeconds(Random.Shared.Next(10, 1000));
-            var signalA = Signal.Create("signalA");
-            var signalB = Signal.Create("signalB");
-            var signalC = Signal.Create("signalC");
+            var signalA = Signal.Create("signal-a");
+            var signalB = Signal.Create("signal-b");
+            var signalC = Signal.Create("signal-c");
 
-            var door = Door.Create("doorA", Guid.NewGuid())
+            var door = Door.Create("door-a", fixUid: Guid.NewGuid())
                            .Listen(signalA)
                            .Listen(signalB)
                            .Listen(signalC)
@@ -81,13 +81,13 @@ namespace Democrite.Framework.Builders.UnitTests.Signals
 
             var expectedFormula = "A ^ B & C | !this";
 
-            var signalA = Signal.Create("signalA");
-            var signalB = Signal.Create("signalB");
-            var signalC = Signal.Create("signalC");
+            var signalA = Signal.Create("signal-a");
+            var signalB = Signal.Create("signal-b");
+            var signalC = Signal.Create("signal-c");
 
             var thisId = Guid.NewGuid();
 
-            var door = Door.Create("doorA", thisId)
+            var door = Door.Create("door-a", fixUid: thisId)
                            .Listen(signalA)
                            .Listen(signalB)
                            .Listen(signalC)

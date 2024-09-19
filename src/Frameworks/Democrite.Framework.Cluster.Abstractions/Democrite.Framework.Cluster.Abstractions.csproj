@@ -19,6 +19,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Democrite.Framework.Core.Abstractions\Democrite.Framework.Core.Abstractions.csproj" />
+	  <ProjectReference Include="..\Democrite.Framework.Core.CodeGenerator\Democrite.Framework.Core.CodeGenerator.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

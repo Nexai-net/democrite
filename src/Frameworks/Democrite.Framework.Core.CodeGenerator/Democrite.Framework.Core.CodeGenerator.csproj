@@ -1,0 +1,75 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--<Import Project="..\..\..\SharedFrameworkAssmblyInfo.props" />
+	<Import Project="..\..\..\SharedFrameworkDemocriteAssemblyInfo.props" />-->
+
+	<PropertyGroup>
+
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<IsPackable>true</IsPackable>
+		<Description>Democrite core code generator.</Description>
+
+		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Core;Abstract;CodeGenerator</PackageTags>
+
+		<!-- Define the debugger to use when testing -->
+		<IsRoslynComponent>true</IsRoslynComponent>
+
+		<DevelopmentDependency>true</DevelopmentDependency>
+		
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		
+		<!--<PreserveCompilationContext>true</PreserveCompilationContext>-->
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+
+		<!-- Generates a package at build -->
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+		<!-- Do not include the generator as a lib dependency -->
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Templates\RegistryProvider.AssemblyInfo.tpl" />
+	  <None Remove="Templates\RegistryProvider.tpl" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Templates\RegistryProvider.AssemblyInfo.tpl" />
+	  <EmbeddedResource Include="Templates\RegistryProvider.tpl" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Package the generator in the analyzer directory of the nuget package -->
+		<!-- This ensures the library will be packaged as a source generator when we use `dotnet pack` -->
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="ErrorManager.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>ErrorManager.cs</LastGenOutput>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="ErrorManager.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>ErrorManager.tt</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+</Project>

@@ -42,6 +42,7 @@ namespace Democrite.Framework.Core.Abstractions.Doors
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public DoorDefinition(Guid uid,
+                              Uri refId,
                               string name,
                               string vgrainInterfaceFullName,
                               IEnumerable<SignalId>? signalSourceIds,
@@ -51,7 +52,7 @@ namespace Democrite.Framework.Core.Abstractions.Doors
                               TimeSpan? retentionMaxDelay = null,
                               uint? historyMaxRetention = null,
                               uint? notConsumedMaxRetiention = null)
-            : base(uid, name, name, metaData)
+            : base(uid, refId, name, name, metaData)
         {
             ArgumentException.ThrowIfNullOrEmpty(name);
 

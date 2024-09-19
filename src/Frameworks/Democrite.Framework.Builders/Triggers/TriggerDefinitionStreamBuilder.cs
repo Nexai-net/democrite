@@ -14,7 +14,7 @@ namespace Democrite.Framework.Builders.Triggers
     /// </summary>
     /// <seealso cref="TriggerDefinitionBaseBuilder" />
     /// <seealso cref="ITriggerDefinitionFinalizeBuilder" />
-    internal sealed class TriggerDefinitionStreamBuilder : TriggerDefinitionBaseBuilder<ITriggerDefinitionStreamFinalizeBuilder>, ITriggerDefinitionStreamFinalizeBuilder
+    internal sealed class TriggerDefinitionStreamBuilder : TriggerDefinitionBaseBuilder, ITriggerDefinitionStreamBuilder
     {
         #region Fields
         
@@ -29,8 +29,12 @@ namespace Democrite.Framework.Builders.Triggers
         /// <summary>
         /// Initializes a new instance of the <see cref="TriggerDefinitionStreamBuilder"/> class.
         /// </summary>
-        public TriggerDefinitionStreamBuilder(Guid streamSourceDefinitionUid, string displayName, Guid? fixUid)
-            : base(TriggerTypeEnum.Stream, displayName, fixUid)
+        public TriggerDefinitionStreamBuilder(Guid streamSourceDefinitionUid,
+                                              string simpleNameIdentifier,
+                                              string displayName,
+                                              Guid? fixUid,
+                                              Action<IDefinitionMetaDataBuilder>? metadataBuilder)
+            : base(TriggerTypeEnum.Stream, simpleNameIdentifier, displayName, fixUid, metadataBuilder)
         {
             this._streamSourceDefinitionUid = streamSourceDefinitionUid;
         }
@@ -44,24 +48,25 @@ namespace Democrite.Framework.Builders.Triggers
         public override TriggerDefinition Build()
         {
             return new StreamTriggerDefinition(this.Uid,
+                                               GetRefId(),
                                                this.DisplayName,
                                                this.Targets,
                                                true,
-                                               this._fixedMaxConcurrentProcess ?? 1000,
+                                               this._fixedMaxConcurrentProcess ?? StreamTriggerDefinition.DEFAULT_FIX_CONCURRENT_PROCESS,
                                                this._relativeMaxConcurrentProcessFactor,
                                                this._streamSourceDefinitionUid,
                                                base.DefinitionMetaData);
         }
 
         /// <inheritdoc />
-        public IDefinitionBaseBuilder<TriggerDefinition> MaxConcurrentProcess(uint maxConcurrent)
+        public ITriggerDefinitionBuilder MaxConcurrentProcess(uint maxConcurrent)
         {
             this._fixedMaxConcurrentProcess = Math.Max(1, maxConcurrent);
             return this;
         }
 
         /// <inheritdoc />
-        public IDefinitionBaseBuilder<TriggerDefinition> MaxConcurrentFactorClusterRelativeProcess(uint maxConcurrent)
+        public ITriggerDefinitionBuilder MaxConcurrentFactorClusterRelativeProcess(uint maxConcurrent)
         {
             this._relativeMaxConcurrentProcessFactor = Math.Max(1, maxConcurrent);
             return this;

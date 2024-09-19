@@ -4,6 +4,7 @@
 
 namespace Democrite.Framework.Builders.Steps
 {
+    using Democrite.Framework.Builders.Sequences;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Attributes;
     using Democrite.Framework.Core.Abstractions.Sequence;
@@ -40,7 +41,7 @@ namespace Democrite.Framework.Builders.Steps
         /// <summary>
         /// Initializes a new instance of the <see cref="CallStepBuilder"/> class.
         /// </summary>
-        private CallStepBuilder(Type? input, SequenceStageCallParameterDefinition[] parameterAccessExpressions, Type vgrainType, MethodInfo mthd, Type? output)
+        internal CallStepBuilder(Type? input, SequenceStageCallParameterDefinition[] parameterAccessExpressions, Type vgrainType, MethodInfo mthd, Type? output)
             : base(input, output)
         {
             this._parameterAccessExpressions = parameterAccessExpressions;
@@ -146,6 +147,64 @@ namespace Democrite.Framework.Builders.Steps
                                                    preventReturn);
         }
 
+        #endregion
+    }
+
+    /// <summary>
+    /// Builder used to easy call sequence stage intergration
+    /// </summary>
+    /// <seealso cref="Democrite.Framework.Builders.Sequences.ISequencePipelineStageDefinitionProvider" />
+    internal sealed class DirectCallStepBuilder : ISequencePipelineStageDefinitionProvider
+    {
+        #region Fields
+        
+        private readonly ConcretType? _configurationFromContextDataType;
+        private readonly CallStepBuilder _callStepBuilder;
+        private readonly DefinitionMetaData? _metaData;
+        private readonly string _displayName;
+        private readonly bool _preventReturn;
+        private readonly AccessExpressionDefinition? _configurationAccess;
+        private readonly Guid _uid;
+
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DirectCallStepBuilder"/> class.
+        /// </summary>
+        public DirectCallStepBuilder(CallStepBuilder callStepBuilder,
+                                     DefinitionMetaData? metaData,
+                                     Guid uid,
+                                     string displayName,
+                                     bool preventReturn,
+                                     AccessExpressionDefinition? configurationAccess,
+                                     ConcretType? configurationFromContextDataType)
+        {
+            this._callStepBuilder = callStepBuilder;
+            this._uid = uid;
+            this._metaData = metaData;
+            this._displayName = displayName;
+            this._preventReturn = preventReturn;
+            this._configurationAccess = configurationAccess;
+            this._configurationFromContextDataType = configurationFromContextDataType;
+        }
+
+        #endregion
+
+        #region Methods
+
+        /// <inheritdoc />
+        public SequenceStageDefinition ToDefinition()
+        {
+            return this._callStepBuilder.ToDefinition<DirectCallStepBuilder>(this._metaData,
+                                                                             this._uid,
+                                                                             this._displayName,
+                                                                             this._preventReturn,
+                                                                             this._configurationAccess,
+                                                                             this._configurationFromContextDataType);
+        }
+        
         #endregion
     }
 }

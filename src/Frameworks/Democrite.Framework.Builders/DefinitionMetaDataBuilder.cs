@@ -21,6 +21,7 @@ namespace Democrite.Framework.Builders
         private string? _categoryPath;
         private string? _description;
         private string? _displayName;
+        private string? _namespaceIdntifier;
 
         #endregion
 
@@ -77,16 +78,37 @@ namespace Democrite.Framework.Builders
         }
 
         /// <inheritdoc />
-        public DefinitionMetaData Build()
+        public IDefinitionMetaDataBuilder Namespace(string? namespaceIdentifier)
         {
-            return Build(out _);
+            this._namespaceIdntifier = namespaceIdentifier;
+            return this;
         }
 
         /// <inheritdoc />
-        public DefinitionMetaData Build(out string? displayName)
+        public DefinitionMetaData Build()
+        {
+            return Build(out _, out _);
+        }
+
+        /// <inheritdoc />
+        public DefinitionMetaData Build(out string? displayName, out string? namespaceIdentifier)
         {
             displayName = this._displayName;
-            return new DefinitionMetaData(this._description, this._categoryPath, this._tags.ToArray(), DateTime.UtcNow);
+            namespaceIdentifier = this._namespaceIdntifier;
+
+            if (string.IsNullOrEmpty(this._description) &&
+                string.IsNullOrEmpty(this._categoryPath) &&
+                this._tags.Count == 0 &&
+                string.IsNullOrEmpty(this._namespaceIdntifier))
+            {
+                return null!;
+            }
+
+            return new DefinitionMetaData(this._description,
+                                          this._categoryPath,
+                                          this._tags.ToArray(),
+                                          DateTime.UtcNow,
+                                          this._namespaceIdntifier);
         }
 
         /// <inheritdoc />
@@ -108,9 +130,9 @@ namespace Democrite.Framework.Builders
         }
 
         /// <inheritdoc />
-        DefinitionMetaData IDefinitionMetaDataWithDisplayNameBuilder.Build(out string? displayName)
+        DefinitionMetaData IDefinitionMetaDataWithDisplayNameBuilder.Build(out string? displayName, out string? namespaceIdentifier)
         {
-            return this.Build(out displayName);
+            return this.Build(out displayName, out namespaceIdentifier);
         }
 
         /// <inheritdoc />

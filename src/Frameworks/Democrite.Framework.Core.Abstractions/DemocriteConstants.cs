@@ -9,6 +9,13 @@ namespace Democrite
     /// </summary>
     public static class DemocriteConstants
     {
+        #region Fields
+
+        public const string CSHARP_SYSTEM_NAMESPACE = "system";
+        public const string SYSTEM_VGRAIN_NAMESPACE = "democrite.system";
+
+        #endregion
+
         #region ctor
 
         /// <summary>

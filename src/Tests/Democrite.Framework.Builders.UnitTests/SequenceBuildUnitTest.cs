@@ -5,7 +5,6 @@
 namespace Democrite.Framework.Builders.UnitTests
 {
     using Democrite.Framework.Builders;
-    using Democrite.Framework.Builders.Sequences;
     using Democrite.Framework.Builders.UnitTests.TestData;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Sequence.Stages;
@@ -18,7 +17,6 @@ namespace Democrite.Framework.Builders.UnitTests
     using System;
     using System.Diagnostics;
     using System.Net;
-    using System.Text;
 
     /// <summary>
     /// 
@@ -54,62 +52,12 @@ namespace Democrite.Framework.Builders.UnitTests
         #endregion
 
         /// <summary>
-        ///  Test to only ensure complet conf build
-        /// </summary>
-        [Fact(Skip = "Used as devellopement sand box")]
-        public void Full()
-        {
-            //var func = (IBasicTestVGrain act) => act.ExecuteStringAsync;
-
-            var fixStageId = Guid.NewGuid();
-
-            var definition = Sequence.Build("Full")
-                                     .NoInput()
-
-                                     .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
-
-                                     .Foreach(IType.From<char>(), each => each.Use<IBasicTestVGrain>().Call((a, input, ctx) => a.ExecuteIpAddressAsync(input, ctx)).Return)
-
-                                     .Use<IBasicTestVGrain>(cfg => cfg.Description("description")
-                                                                      .CategoryChain("root", "partA", "leaf")
-                                                                      .AddTags("poney")
-                                                                      .AddTags("rose"),
-
-                                                            fixUid: fixStageId)
-                                                            .Call((a, input, ctx) => a.ExecuteStringAsync(ctx))
-                                                            .Return
-
-                                     // Convert string -> Guid
-                                     .Convert<ISequenceTestConverter>().Call((a, input, ctx) => a.Convert(input)).Return
-
-                                     .Use<IBasicTestVGrain>().Call((a, input, ctx) => a.ExecuteIpAddressAsync(input, ctx)).Return
-
-                                     // Convert IPAddress -> Guid
-                                     .Convert<ISequenceTestConverter>().Call((a, input, ctx) => a.Convert(input)).Return
-
-                                     // Convert Guid -> Int
-                                     .Convert<ISequenceTestConverter>().Call((a, input, ctx) => a.Convert(input)).Return
-
-                                     //.SendCopyTo(cfg =>
-                                     //{
-                                     //    // Send guid result to target, another sequence, a DB, a queue ...
-                                     //})
-
-                                     //.Convert<ISequenceTestConverter, int>((a, input, ctx) => a.Convert(input))
-                                     //.Return
-
-                                     .Build();
-
-            throw new InvalidOperationException("NO VALIDATION HAVE BEEN SETUPS.");
-        }
-
-        /// <summary>
         /// Create a simple small sequence definition
         /// </summary>
         [Fact]
         public void Simple()
         {
-            var definition = Sequence.Build("Simple")
+            var definition = Sequence.Build("unit-test-simple")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
                                      .Use<IBasicTestOtherVGrain>().Call((a, input, ctx) => a.OtherReturnIpAddressFromStringAsync(input, ctx)).Return
@@ -158,7 +106,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Foreach()
         {
-            var definition = Sequence.Build("Foreach")
+            var definition = Sequence.Build("unit-test-foreach")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.GetUrisAsync(ctx)).Return
                                      .Foreach(IType.From<Uri>(), each =>
@@ -219,7 +167,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var inputVariable = ";";
 
-            var definition = Sequence.Build("Filter")
+            var definition = Sequence.Build("unit-test-filter")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.GetUrisAsync(ctx)).Return
 
@@ -240,7 +188,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
-            var sequenceBuild = Sequence.Build("InvalidCallControl")
+            var sequenceBuild = Sequence.Build("unit-test-invalid-call-control")
                                         .NoInput()
                                         .Use<IBasicTestVGrain>();
 
@@ -258,7 +206,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
-            var sequenceBuild = Sequence.Build("NotAllowArg")
+            var sequenceBuild = Sequence.Build("unit-test-not-allow-arg")
                                         .NoInput()
                                         .Use<IBasicTestVGrain>();
 
@@ -276,7 +224,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var mockOtherVGrain = new Mock<IBasicTestOtherVGrain>().Object;
 
-            var sequenceBuild = Sequence.Build("InvalidCallRecord_NotAllow_Arguments_DifferentFromInput")
+            var sequenceBuild = Sequence.Build("unit-test-invalid-call-record-not-allow-arguments-different-from-input")
                                         .NoInput()
                                         .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return;
 
@@ -292,7 +240,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Complexe_Sequence_Serializer()
         {
-            var definition = Sequence.Build("Complexe_Sequence_Serializer", metadataBuilder: m =>
+            var definition = Sequence.Build("unit-test-complexe-sequence-serializer", metadataBuilder: m =>
                                      {
                                          m.CategoryPath("root/path/leaft")
                                           .Description("description")
@@ -323,7 +271,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Simple_Sequence_Serializer()
         {
-            var definition = Sequence.Build("Simple_Sequence_Serializer")
+            var definition = Sequence.Build("unit-test-simple-sequence-serializer")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
                                      .Use<IBasicTestOtherVGrain>().Call((a, input, ctx) => a.OtherReturnIpAddressFromStringAsync(input, ctx)).Return
@@ -339,7 +287,7 @@ namespace Democrite.Framework.Builders.UnitTests
         public void Simple_Sequence_Serializer_With_Custom_Access()
         {
 
-            var definition = Sequence.Build("Simple_Sequence_Serializer")
+            var definition = Sequence.Build("unit-test-simple-sequence-serializer")
                                      .NoInput()
                                      .Use<IBasicTestVGrain>().Call((a, ctx) => a.ExecuteStringAsync(ctx)).Return
                                      // Check input.Length
@@ -355,7 +303,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Simple_Sequence_Serializer_With_Input_And_Output()
         {
-            var definition = Sequence.Build("Simple_Sequence_Serializer")
+            var definition = Sequence.Build("unit-test-simple-sequence-serializer")
                                      .RequiredInput<Uri>()
                                      .Use<IBasicTestVGrain>().Call((a, uri, ctx) => a.GetHtmlFromUriAsync(uri!, ctx)).Return
                                      .Use<IBasicTestOtherVGrain>().Call((a, html, ctx) => a.OtherReturnIpAddressFromStringAsync(html, ctx)).Return

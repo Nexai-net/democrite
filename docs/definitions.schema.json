@@ -1,0 +1,410 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "id": "https://github.com/Nexai-net/democrite/docs/democrite.schema.json",
+  "title": "Democrite Definitions",
+  "description": "The schema for dynamic definition description using yaml",
+  "unevaluatedProperties": false,
+  "properties": {
+    "global": {
+      "$ref": "#/$defs/global"
+    },
+    "triggers": {
+      "$ref": "#/$defs/triggers"
+    },
+    "signals": {
+      "$ref": "#/$defs/signals"
+    },
+    "sequences": {
+      "$ref": "#/$defs/sequences"
+    },
+    "streams": {
+      "$ref": "#/$defs/streams"
+    },
+    "todo": {
+      "type": "string",
+      "description": "//  TODO : stream, blackboard, artifact, door"
+    }
+  },
+  "$defs": {
+    "namespace": {
+      "type": "string",
+      "description": "Define a group name used to class reference with the same SNI (Simple Name Identifier)",
+      "minLength": 1,
+      "pattern": "^[a-z0-9.]+$"
+    },
+    "global": {
+      "unevaluatedProperties": false,
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "$ref": "#/$defs/namespace"
+        },
+        "storage": {
+          "type": "string",
+          "description": "Define how the definitions will be persisted. provide the storage configuration name.",
+          "pattern": "^[a-z0-9-]+$"
+        }
+      }
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "sni": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{2,}$",
+      "minLength": 2
+    },
+    "meta-data": {
+      "type": "object",
+      "description": "Define definition meta-data used to qualify the definition",
+      "unevaluatedProperties": false,
+      "properties": {
+        "description": {
+          "type": "string",
+          "minLength": 2
+        },
+        "category": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]{2,}(/[a-z0-9-]{2,})*$"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "config_input": {
+      "unevaluatedProperties": false,
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/simple_type_naming"
+        },
+        "mode": {
+          "type": "string",
+          "pattern": "^property|build$",
+          "default": "property"
+        },
+        "from": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/definition_target_with_input"
+          }
+        }
+      }
+    },
+    "def": {
+      "unevaluatedProperties": false,
+      "properties": {
+        "uid": {
+          "description": "Unique GUID used to identify the definition",
+          "$ref": "#/$defs/uuid"
+        },
+        "meta-data": {
+          "$ref": "#/$defs/meta-data"
+        }
+      }
+    },
+    "definition_target_with_input": {
+      "type": "string",
+      "description": "Define how to get the entity ref, guid or input",
+      "pattern": "^(\\ref/([a-z0-9.]+@)?[a-z0-9-]+)|([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})|(input([.]{1}[a-zA-Z0-9_])*)$",
+      "minLength": 2
+    },
+    "definition_target": {
+      "type": "string",
+      "description": "Define how to get the entity",
+      "pattern": "^(\\ref/([a-z0-9.]+@)?[a-z0-9-]+)|([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$",
+      "minLength": 2
+    },
+    "simple_type_naming": {
+      "type": "string",
+      "description": "Define ref id",
+      "pattern": "^([a-z0-9.]{2,}@)?[a-z0-9-]+{2,}$",
+      "minLength": 2
+    },
+    "trigger": {
+      "unevaluatedProperties": false,
+      "$ref": "#/$defs/def",
+      "properties": {
+        "targets": {
+          "type": "array",
+          "properties": {
+            "sequences": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/definition_target"
+              }
+            },
+            "signals": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/definition_target"
+              }
+            },
+            "streams": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/definition_target"
+              }
+            }
+          }
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "oneOf": [
+              {
+                "static": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "$ref": "#/$defs/simple_type_naming" },
+                    "mode": {
+                      "enum": [ "circling", "random", "broadcast" ]
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type":  "string"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "targets"
+      ]
+    },
+    "triggers": {
+      "unevaluatedProperties": false,
+      "type": "array",
+      "preprefixItems": [
+        {
+          "type": "object",
+          "unevaluatedProperties": false,
+          "$ref": "#/$defs/trigger",
+          "properties": {
+            "cron": {
+              "$ref": "#/$defs/sni"
+            },
+            "period": {
+              "type": "string",
+              "description": "Define the period to trigger  will tick (cf. cron format)",
+              "default": "* * * * *",
+              "pattern": "^(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\\d+(s|m|h))+)|((((\\d+,)+\\d+|(\\d+(/|-)\\d+)|\\d+|\\*) ?){5,7})$"
+            }
+          },
+          "firstProperty": [
+            "cron"
+          ],
+          "required": [
+            "cron",
+            "period"
+          ]
+        },
+        {
+          "type": "object",
+          "unevaluatedProperties": false,
+          "$ref": "#/$defs/trigger",
+          "properties": {
+            "signal": {
+              "$ref": "#/$defs/sni"
+            },
+            "from": {
+              "type": "string",
+              "$ref": "#/$defs/definition_target"
+            }
+          },
+          "firstProperty": [
+            "signal"
+          ],
+          "required": [
+            "signal",
+            "from"
+          ]
+        },
+        {
+          "type": "object",
+          "unevaluatedProperties": false,
+          "$ref": "#/$defs/trigger",
+          "properties": {
+            "stream": {
+              "$ref": "#/$defs/sni"
+            },
+            "from": {
+              "type": "string",
+              "$ref": "#/$defs/definition_target"
+            },
+            "max-consumer": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max-consumer-by-node": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "firstProperty": [
+            "stream"
+          ],
+          "required": [
+            "stream",
+            "from"
+          ]
+        }
+      ]
+    },
+    "signals": {
+      "unevaluatedProperties": false,
+      "type": "array",
+      "preprefixItems": [
+        {
+          "type": "object",
+          "unevaluatedProperties": false,
+          "$ref": "#/$defs/trigger",
+          "properties": {
+            "signal": {
+              "$ref": "#/$defs/sni"
+            }
+          },
+          "firstProperty": [
+            "signal"
+          ],
+          "required": [
+            "signal"
+          ]
+        }
+      ]
+    },
+    "streams": {
+      "unevaluatedProperties": false,
+      "type": "array",
+      "preprefixItems": [
+        {
+          "type": "object",
+          "unevaluatedProperties": false,
+          "$ref": "#/$defs/trigger",
+          "properties": {
+            "stream": {
+              "$ref": "#/$defs/sni"
+            },
+            "config-name": {
+              "type": "string",
+              "description": "Define the name of the stream configuration"
+            },
+            "queue-namespace": {
+              "type": "string",
+              "description": "Define the main stream group"
+            },
+            "queue-name": {
+              "type": "string",
+              "description": "Define the name of the queue inside the namespace"
+            }
+          },
+          "firstProperty": [
+            "stream"
+          ],
+          "required": [
+            "stream",
+            "queue-namespace",
+            "queue-name"
+          ]
+        }
+      ]
+    },
+    "sequences": {
+      "unevaluatedProperties": false,
+      "type": "array",
+      "preprefixItems": [
+        {
+          "unevaluatedProperties": false,
+          "properties": {
+            "uid": {
+              "description": "Unique GUID used to identify the definition",
+              "$ref": "#/$defs/uuid"
+            },
+            "meta-data": {
+              "$ref": "#/$defs/meta-data"
+            },
+            "sequence": {
+              "$ref": "#/$defs/sni"
+            },
+            "required-input": {
+              "$ref": "#/$defs/simple_type_naming"
+            },
+            "stages": {
+              "type": "array",
+              "preprefixItems": [
+                {
+                  "type": "object",
+                  "unevaluatedProperties": false,
+                  "properties": {
+                    "use": {
+                      "$ref": "#/$defs/simple_type_naming"
+                    },
+                    "call": {
+                      "$ref": "#/$defs/sni"
+                    },
+                    "config": {
+                      "$ref": "#/$defs/config_input"
+                    }
+                  },
+                  "firstProperty": [
+                    "use"
+                  ],
+                  "required": [
+                    "use",
+                    "call"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "unevaluatedProperties": false,
+                  "properties": {
+                    "select": {
+                      "$ref": "#/$defs/simple_type_naming"
+                    },
+                    "mode": {
+                      "type": "string",
+                      "pattern": "^property|build$",
+                      "default": "property"
+                    },
+                    "from": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/definition_target_with_input"
+                      }
+                    }
+                  },
+                  "firstProperty": [
+                    "select"
+                  ],
+                  "required": [
+                    "select"
+                  ]
+                }
+              ]
+            }
+          },
+          "firstProperty": [
+            "sequence"
+          ],
+          "required": [
+            "sequence"
+          ]
+        }
+      ]
+    }
+  }
+}

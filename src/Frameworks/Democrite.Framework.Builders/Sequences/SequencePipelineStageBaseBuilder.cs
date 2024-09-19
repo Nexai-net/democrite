@@ -49,7 +49,7 @@ namespace Democrite.Framework.Builders.Sequences
             {
                 var builder = new DefinitionMetaDataBuilder();
                 this.MetaDataBuilderAction?.Invoke(builder);
-                return builder.Build(out displayName);
+                return builder.Build(out displayName, out _);
             }
             displayName = null; 
             return null;

@@ -21,37 +21,59 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Configure a trigger based on cron expression <see href="https://fr.wikipedia.org/wiki/Cron"/>
         /// </summary>
-        public static ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder> Cron(string cronExpressionInUtc, string displayName, Guid? fixUid = null)
+        public static ITriggerDefinitionCronBuilder Cron(string cronExpressionInUtc,
+                                                         string simpleNameIdentifier,
+                                                         string? displayName = null,
+                                                         Guid? fixUid = null,
+                                                         Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
             ArgumentException.ThrowIfNullOrEmpty(cronExpressionInUtc);
 
-            return new TriggerDefinitionCronBuilder(cronExpressionInUtc, "TRG:" + displayName, fixUid);
+            return new TriggerDefinitionCronBuilder(cronExpressionInUtc,
+                                                    simpleNameIdentifier,       
+                                                    displayName ?? simpleNameIdentifier,
+                                                    fixUid,
+                                                    metadataBuilder);
         }
 
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
-        public static ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder> Signal(SignalId signalDefinition, string displayName, Guid? fixUid = null)
+        public static ITriggerDefinitionSignalBuilder Signal(SignalId signalDefinition,
+                                                             string simpleNameIdentifier,
+                                                             string? displayName = null,
+                                                             Guid? fixUid = null,
+                                                             Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
             if (signalDefinition.Uid == Guid.Empty)
                 throw new ArgumentException(nameof(signalDefinition) + " must not be default value");
 
-            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal, signalDefinition, null, "TRG:" + displayName, fixUid);
+            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal,
+                                                      signalDefinition,
+                                                      null,
+                                                      simpleNameIdentifier,
+                                                      displayName ?? simpleNameIdentifier,
+                                                      fixUid,
+                                                      metadataBuilder);
         }
 
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
-        public static ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder> Signal(SignalDefinition signalDefinition, string displayName, Guid? fixUid = null)
+        public static ITriggerDefinitionSignalBuilder Signal(SignalDefinition signalDefinition,
+                                                             string simpleNameIdentifier,
+                                                             string? displayName,
+                                                             Guid? fixUid = null,
+                                                             Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
             ArgumentNullException.ThrowIfNull(signalDefinition);
-            return Signal(signalDefinition.SignalId, displayName, fixUid);
+            return Signal(signalDefinition.SignalId, simpleNameIdentifier, displayName, fixUid, metadataBuilder);
         }
 
         /// <summary>
         /// Configure a multiple trigger based on multiple signal fire
         /// </summary>
-        public static TriggerDefinition[] Signals(IReadOnlyCollection<SignalId> signalsDefinition, Func<ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder>, TriggerDefinition> buildTrigger)
+        public static TriggerDefinition[] Signals(IReadOnlyCollection<SignalId> signalsDefinition, Func<ITriggerDefinitionBuilder, TriggerDefinition> buildTrigger)
         {
             ArgumentNullException.ThrowIfNull(signalsDefinition);
             ArgumentNullException.ThrowIfNull(buildTrigger);
@@ -59,7 +81,7 @@ namespace Democrite.Framework.Builders
             return signalsDefinition.Select(s =>
                                     {
                                         var fixUid = Guid.NewGuid();
-                                        return buildTrigger(Signal(s, fixUid.ToString(), fixUid));
+                                        return buildTrigger(Signal(s, fixUid.ToString(), fixUid.ToString(), fixUid));
                                     })
                                     .ToArray();
         }
@@ -67,27 +89,42 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
-        public static ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder> Door(DoorDefinition doorDefinition, string displayName, Guid? fixUid = null)
+        public static ITriggerDefinitionDoorBuilder Door(DoorDefinition doorDefinition,
+                                                         string simpleNameIdentifier,
+                                                         string? displayName = null,
+                                                         Guid? fixUid = null,
+                                                         Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
             ArgumentNullException.ThrowIfNull(doorDefinition);
-            return Door(doorDefinition.DoorId, displayName, fixUid);
+            return Door(doorDefinition.DoorId, simpleNameIdentifier, displayName, fixUid, metadataBuilder);
         }
 
         /// <summary>
         /// Configure a trigger based on signal fire
         /// </summary>
-        public static ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder> Door(DoorId doorDefinition, string displayName, Guid? fixUid = null)
+        public static ITriggerDefinitionDoorBuilder Door(DoorId doorDefinition,
+                                                         string simpleNameIdentifier,
+                                                         string? displayName = null,
+                                                         Guid? fixUid = null,
+                                                         Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
             if (doorDefinition.Uid == Guid.Empty)
                 throw new ArgumentException(nameof(doorDefinition) + " must not be default value");
 
-            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal, null, doorDefinition, "TRG:" + displayName, fixUid);
+            return new TriggerDefinitionSignalBuilder(TriggerTypeEnum.Signal,
+                                                      null,
+                                                      doorDefinition,
+                                                      simpleNameIdentifier,
+                                                      displayName ?? simpleNameIdentifier,
+                                                      fixUid,
+                                                      metadataBuilder);
         }
 
         /// <summary>
         /// Configure a multiple trigger based on multiple doors fire
         /// </summary>
-        public static TriggerDefinition[] Doors(IReadOnlyCollection<DoorId> doorsDefinition, Func<ITriggerDefinitionBuilder<ITriggerDefinitionFinalizeBuilder>, TriggerDefinition> buildTrigger)
+        public static TriggerDefinition[] Doors(IReadOnlyCollection<DoorId> doorsDefinition,
+                                                Func<ITriggerDefinitionBuilder, TriggerDefinition> buildTrigger)
         {
             ArgumentNullException.ThrowIfNull(doorsDefinition);
             ArgumentNullException.ThrowIfNull(buildTrigger);
@@ -95,7 +132,7 @@ namespace Democrite.Framework.Builders
             return doorsDefinition.Select(s =>
                                   {
                                       var fixUid = Guid.NewGuid();
-                                      return buildTrigger(Door(s, fixUid.ToString(), fixUid));
+                                      return buildTrigger(Door(s, fixUid.ToString(), fixUid.ToString(), fixUid));
                                   })
                                   .ToArray();
         }
@@ -103,19 +140,33 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Configure a trigger based on a <see cref="Orleans.Stream"/> as input
         /// </summary>
-        public static ITriggerDefinitionBuilder<ITriggerDefinitionStreamFinalizeBuilder> Stream(Guid streamSourceDefinitionUid, string displayName, Guid? fixUid = null)
+        public static ITriggerDefinitionStreamBuilder Stream(Guid streamSourceDefinitionUid,
+                                                             string simpleNameIdentifier,
+                                                             string? displayName = null,
+                                                             Guid? fixUid = null,
+                                                             Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
-            return new TriggerDefinitionStreamBuilder(streamSourceDefinitionUid, "TRG:" + displayName, fixUid);
+            return new TriggerDefinitionStreamBuilder(streamSourceDefinitionUid,
+                                                      simpleNameIdentifier,
+                                                      displayName ?? simpleNameIdentifier,
+                                                      fixUid,
+                                                      metadataBuilder);
         }
 
         /// <summary>
         /// Configure a trigger based on a <see cref="Orleans.Stream"/> as input
         /// </summary>
-        public static ITriggerDefinitionBuilder<ITriggerDefinitionStreamFinalizeBuilder> Stream(StreamQueueDefinition streamDefinition, string? displayName = null, Guid? fixUid = null)
+        public static ITriggerDefinitionStreamBuilder Stream(StreamQueueDefinition streamDefinition,
+                                                             string simpleNameIdentifier,
+                                                             string? displayName = null,
+                                                             Guid? fixUid = null,
+                                                             Action<IDefinitionMetaDataBuilder>? metadataBuilder = null)
         {
             return Stream(streamDefinition.Uid,
+                          simpleNameIdentifier,
                           !string.IsNullOrEmpty(displayName) ? displayName : "Consumer Trigger : " + streamDefinition.DisplayName,
-                          fixUid);
+                          fixUid,
+                          metadataBuilder);
         }
     }
 }

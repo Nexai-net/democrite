@@ -26,6 +26,7 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
 
     using System;
     using System.Diagnostics;
+    using Democrite.Framework.Core;
 
     /// <summary>
     /// Test <see cref="SequenceExecutorThreadStageForeach"/> responsable to call vgrain method during flow resolution
@@ -56,7 +57,12 @@ namespace Democrite.Framework.Node.UnitTests.ThreadExecutors
                                                                  null,
                                                                  null);
 
-            var innerDef = new SequenceDefinition(Guid.NewGuid(), "test", SequenceOptionDefinition.Default, new[] { callDefinition }, null);
+            var innerDef = new SequenceDefinition(Guid.NewGuid(),
+                                                  RefIdHelper.Generate(Core.Abstractions.Enums.RefTypeEnum.Sequence, "sequence-test-foreach", "unit.tests"),
+                                                  "test",
+                                                  SequenceOptionDefinition.Default,
+                                                  new[] { callDefinition },
+                                                  null);
 
             var foreachDefinition = new SequenceStageForeachDefinition(Guid.NewGuid(),
                                                                        "Foreach Test",

@@ -30,6 +30,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
         [System.Text.Json.Serialization.JsonConstructor]
         [Newtonsoft.Json.JsonConstructor]
         public ArtifactExecutableDefinition(Guid uid,
+                                            Uri refId,
                                             string displayName,
                                             Version? version,
                                             string hash,
@@ -47,7 +48,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                             DefinitionMetaData? metaData,
                                             ArtifactExecVerboseEnum verbose = ArtifactExecVerboseEnum.Minimal,
                                             IEnumerable<ConfigurationBaseDefinition>? configurations = null)
-            : base(uid, displayName, version, hash, creationOn, ArtifactTypeEnum.Executable, packageSource, packageFiles, packageType, metaData)
+            : base(uid, refId, displayName, version, hash, creationOn, ArtifactTypeEnum.Executable, packageSource, packageFiles, packageType, metaData)
         {
             this.ExecutablePath = executablePath;
             this.AllowPersistence = allowPersistence;

@@ -1,0 +1,83 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#
+    var errors = new Dictionary<string, (string Title, string Description, string Category, string SeverityEnumValue)>()
+    {
+        {  "EDG001", ("simpleNameIdentifier missing", "Missing value/field named 'simpleNameIdentifier'", "Mapper", "Error") },
+        //{  "EDG002", ("Mapper Target Multiple Class Ctor", "Multiple  or zero available ctors", "Mapper", "Error") },
+        //{  "WDG003", ("Field/Prop don't mapped", "Missing field/ctor({0}) parameter {1} -> {2}", "Mapper", "Warning") },
+        //{  "EDG003", ("Field/Prop don't mapped", "Missing field/ctor({0}) parameter {1} -> {2}", "Mapper", "Error") },
+        //{  "EDG004", ("Field/Prop don't mapped", "Missing field/ctor required '{0}'", "Mapper", "Error") },
+        //{  "EDG005", ("Field/Prop collection could be mapped because property source is not a collection", "Invalid field/ctor collection match", "Mapper", "Error") },
+        {  "EDG999", ("Internal Error", "Mapper failed {0}", "Mapper", "Error") },
+    };
+
+#>
+// Copyright (c) Nexai.
+// The Democrite licenses this file to you under the MIT license.
+// Produce by nexai & community (cf. docs/Teams.md)
+
+namespace Democrite.Framework.Core.CodeGenerator
+{
+    using Microsoft.CodeAnalysis;
+
+    using System.Collections.Generic;
+
+    /// <summary>
+    /// Managed use to easy the error reporting during mapping compilation
+    /// </summary>
+    internal static class ErrorManager
+    {
+        #region Fields
+
+        private readonly static IReadOnlyDictionary<string, DiagnosticDescriptor> s_errorInfo;
+
+        #endregion
+
+        #region Ctor
+
+        /// <summary>
+        /// Initializes the <see cref="ErrorManager"/> class.
+        /// </summary>
+        static ErrorManager()
+        {
+            s_errorInfo = new Dictionary<string, DiagnosticDescriptor>()
+            {
+                <#
+                    foreach (var kv in errors)
+                    {
+                    #> 
+                {  "<#= kv.Key #>", new DiagnosticDescriptor("<#= kv.Key #>", "<#= kv.Value.Title #>", "<#= kv.Value.Description #>", "<#= kv.Value.Category #>", DiagnosticSeverity.<#= kv.Value.SeverityEnumValue #>, isEnabledByDefault: true) },
+                <#
+                    }
+                #>
+
+            };
+        }
+
+        #endregion
+
+        #region Properties
+
+        <#
+            foreach (var kv in errors)
+            {
+        
+        #>/// <summary>
+        /// <#= kv.Value.Title #> : <#= kv.Value.Description #>
+        /// </summary>
+        public static DiagnosticDescriptor <#= kv.Key #>
+        {
+            get { return s_errorInfo["<#= kv.Key #>"]; }
+        }
+        <#
+            }
+        #>
+
+        #endregion
+    }
+}

@@ -63,7 +63,8 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Sequence()
         {
-            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>(),
+            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>().ToLower(),
+                                                                  this._fixture.Create<string>(),
                                                                   this._fixture.Create<Guid>(),
                                                                   null,
                                                                   metadataBuilder: m => MimicMetaDataDefinition(m, tester))
@@ -74,7 +75,9 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Sequence_Stage_Call()
         {
-            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>(),this._fixture.Create<Guid>())
+            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>().ToLower(),
+                                                                  this._fixture.Create<string>(),
+                                                                  this._fixture.Create<Guid>())
                                                            .NoInput()
                                                            .Use<ITestVGrain>(metaDataBuilder: m => MimicMetaDataDefinition(m, tester)).Call((g, ctx) => g.TestMethodAsync(ctx)).Return
                                                            .Build(), 
@@ -84,7 +87,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Sequence_Stage_Foreach()
         {
-            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>(), this._fixture.Create<Guid>())
+            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
                                                            .RequiredInput<IEnumerable<string>>()
                                                            .Foreach(IType.From<string>(), s =>
                                                            {
@@ -97,7 +100,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Sequence_Stage_Foreach_InnerDef()
         {
-            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>(), this._fixture.Create<Guid>())
+            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
                                                            .RequiredInput<IEnumerable<string>>()
                                                            .Foreach(IType.From<string>(), s =>
                                                            {
@@ -110,7 +113,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Sequence_Stage_PushToContext()
         {
-            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>(), this._fixture.Create<Guid>())
+            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
                                                            .RequiredInput<int>()
                                                            .PushToContext(i => i, metaDataBuilder: m => MimicMetaDataDefinition(m, tester))
                                                            .Build(),
@@ -120,7 +123,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Sequence_Stage_FireSignal()
         {
-            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>(), this._fixture.Create<Guid>())
+            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
                                                            .RequiredInput<int>()
                                                            .FireSignal(Guid.NewGuid(), metaDataBuilder: m => MimicMetaDataDefinition(m, tester)).RelayMessage()
                                                            .Build(),
@@ -130,7 +133,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Sequence_Stage_Select()
         {
-            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>(), this._fixture.Create<Guid>())
+            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
                                                            .RequiredInput<int>()
                                                            .Select(i => i, metaDataBuilder: m => MimicMetaDataDefinition(m, tester))
                                                            .Build(),
@@ -140,7 +143,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Sequence_Stage_NestedSequenceCall()
         {
-            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>(), this._fixture.Create<Guid>())
+            MetaDataBuildTester(tester => Builders.Sequence.Build(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
                                                            .RequiredInput<int>()
                                                            .CallSequence(Guid.NewGuid(), metaDataBuilder: m => MimicMetaDataDefinition(m, tester)).ReturnNoData
                                                            .Build(),
@@ -150,15 +153,22 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Signal()
         {
-            MetaDataBuildTester(tester => Builders.Signal.Create(this._fixture.Create<SignalId>(), m => MimicMetaDataDefinition(m, tester)));
-            MetaDataBuildTester(tester => Builders.Signal.Create(this._fixture.Create<string>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
+            MetaDataBuildTester(tester => Builders.Signal.Create(new SignalId(this._fixture.Create<Guid>(), this._fixture.Create<string>().ToLower()),
+                                                                 m => MimicMetaDataDefinition(m, tester)));
+
+            MetaDataBuildTester(tester => Builders.Signal.Create(this._fixture.Create<string>().ToLower(),
+                                                                 this._fixture.Create<string>(),
+                                                                 this._fixture.Create<Guid>(),
+                                                                 m => MimicMetaDataDefinition(m, tester)));
         }
 
         [Fact]
         public void Door_Logic()
         {
-            MetaDataBuildTester(tester => Builders.Door.Create(this._fixture.Create<string>(), this._fixture.Create<Guid>())
-                                                       .MetaData(m => MimicMetaDataDefinition(m, tester))
+            MetaDataBuildTester(tester => Builders.Door.Create(this._fixture.Create<string>().ToLower(), 
+                                                               this._fixture.Create<string>(), 
+                                                               this._fixture.Create<Guid>(), 
+                                                               m => MimicMetaDataDefinition(m, tester))
                                                        .Listen(this._fixture.Create<SignalId>())
                                                        .Relay()
                                                        .Build());
@@ -167,8 +177,7 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Door_FilterRelay()
         {
-            MetaDataBuildTester(tester => Builders.Door.Create(this._fixture.Create<string>(), this._fixture.Create<Guid>())
-                                                       .MetaData(m => MimicMetaDataDefinition(m, tester))
+            MetaDataBuildTester(tester => Builders.Door.Create(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester))
                                                        .Listen(this._fixture.Create<SignalId>())
                                                        .UseRelayFilter(s => s.From != null)
                                                        .Build());
@@ -177,46 +186,62 @@ namespace Democrite.Framework.Builders.UnitTests
         [Fact]
         public void Trigger_Cron()
         {
-            MetaDataBuildTester(tester => Builders.Trigger.Cron("* * * * *", this._fixture.Create<string>(), this._fixture.Create<Guid>())
-                                                          .MetaData(m => MimicMetaDataDefinition(m, tester))
+            MetaDataBuildTester(tester => Builders.Trigger.Cron("* * * * *",
+                                                                this._fixture.Create<string>().ToLower(),
+                                                                this._fixture.Create<string>(),
+                                                                this._fixture.Create<Guid>(),
+                                                                m => MimicMetaDataDefinition(m, tester))
+                                                          .AddTargetSequence(Guid.NewGuid())   
                                                           .Build());
         }
 
         [Fact]
         public void Trigger_Signal()
         {
-            MetaDataBuildTester(tester => Builders.Trigger.Signal(this._fixture.Create<SignalId>(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
-                                                          .MetaData(m => MimicMetaDataDefinition(m, tester))
+            MetaDataBuildTester(tester => Builders.Trigger.Signal(this._fixture.Create<SignalId>(),
+                                                                  this._fixture.Create<string>().ToLower(),
+                                                                  this._fixture.Create<string>(),
+                                                                  this._fixture.Create<Guid>(),
+                                                                  m => MimicMetaDataDefinition(m, tester))
+                                                          .AddTargetSequence(Guid.NewGuid())
                                                           .Build());
         }
 
         [Fact]
         public void Trigger_Door()
         {
-            MetaDataBuildTester(tester => Builders.Trigger.Door(this._fixture.Create<DoorId>(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
-                                                          .MetaData(m => MimicMetaDataDefinition(m, tester))
+            MetaDataBuildTester(tester => Builders.Trigger.Door(this._fixture.Create<DoorId>(),
+                                                                this._fixture.Create<string>().ToLower(),
+                                                                this._fixture.Create<string>(),
+                                                                this._fixture.Create<Guid>(),
+                                                                m => MimicMetaDataDefinition(m, tester))
+                                                          .AddTargetSequence(Guid.NewGuid())
                                                           .Build());
         }
 
         [Fact]
         public void Trigger_Stream()
         {
-            MetaDataBuildTester(tester => Builders.Trigger.Stream(this._fixture.Create<Guid>(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
-                                                          .MetaData(m => MimicMetaDataDefinition(m, tester))
+            MetaDataBuildTester(tester => Builders.Trigger.Stream(this._fixture.Create<Guid>(),
+                                                                  this._fixture.Create<string>().ToLower(),
+                                                                  this._fixture.Create<string>(),
+                                                                  this._fixture.Create<Guid>(),
+                                                                  m => MimicMetaDataDefinition(m, tester))
+                                                          .MaxConcurrentProcess(1)
+                                                          .AddTargetSequence(Guid.NewGuid())
                                                           .Build());
         }
 
         [Fact]
         public void StreamQueue()
         {
-            MetaDataBuildTester(tester => Builders.StreamQueue.CreateFromDefaultStream(this._fixture.Create<Guid>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
-            MetaDataBuildTester(tester => Builders.StreamQueue.CreateFromDefaultStream(this._fixture.Create<string>(), this._fixture.Create<string>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
-            MetaDataBuildTester(tester => Builders.StreamQueue.CreateFromDefaultStream(this._fixture.Create<string>(), this._fixture.Create<Guid>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
-            MetaDataBuildTester(tester => Builders.StreamQueue.CreateFromDefaultStream(this._fixture.Create<string>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
+            MetaDataBuildTester(tester => Builders.StreamQueue.CreateFromDefaultStream(this._fixture.Create<string>().ToLower(), this._fixture.Create<Guid>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
+            MetaDataBuildTester(tester => Builders.StreamQueue.CreateFromDefaultStream(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<string>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
+            MetaDataBuildTester(tester => Builders.StreamQueue.CreateFromDefaultStream(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
+            MetaDataBuildTester(tester => Builders.StreamQueue.CreateFromDefaultStream(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
 
-            MetaDataBuildTester(tester => Builders.StreamQueue.Create(this._fixture.Create<string>(), this._fixture.Create<string>(), this._fixture.Create<string>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
-            MetaDataBuildTester(tester => Builders.StreamQueue.Create(this._fixture.Create<string>(), this._fixture.Create<string>(), this._fixture.Create<Guid>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
-
+            MetaDataBuildTester(tester => Builders.StreamQueue.Create(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<string>(), this._fixture.Create<string>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
+            MetaDataBuildTester(tester => Builders.StreamQueue.Create(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<string>(), this._fixture.Create<Guid>(), this._fixture.Create<Guid>(), m => MimicMetaDataDefinition(m, tester)));
         }
 
         [Fact]
@@ -231,7 +256,7 @@ namespace Democrite.Framework.Builders.UnitTests
 
             hashService.GetHash(Arg.Any<IReadOnlyCollection<Uri>>(), fileSystemService, Arg.Any<CancellationToken>()).Returns("Hash42");
 
-            MetaDataBuildTester(tester => Builders.Artifact.VGrain(this._fixture.Create<string>(), this._fixture.Create<Guid>())
+            MetaDataBuildTester(tester => Builders.Artifact.VGrain(this._fixture.Create<string>().ToLower(), this._fixture.Create<string>(), this._fixture.Create<Guid>())
                                                            .MetaData(m => MimicMetaDataDefinition(m, tester))
                                                            .Python()
                                                            .Directory("./")
@@ -244,6 +269,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             m.CategoryPath(origin.CategoryPath!)
              .Description(origin.Description!)
+             .Namespace(origin.NamespaceIdentifier)
              .AddTags(origin.Tags.ToArray());
         }
 
@@ -252,6 +278,7 @@ namespace Democrite.Framework.Builders.UnitTests
             m.CategoryPath(origin.CategoryPath!)
              .Description(origin.Description!)
              .DisplayName(origin.Description!)
+             .Namespace(origin.NamespaceIdentifier)
              .AddTags(origin.Tags.ToArray());
         }
 
@@ -264,7 +291,13 @@ namespace Democrite.Framework.Builders.UnitTests
         private void MetaDataBuildTester<TDefinition>(Func<DefinitionMetaData, TDefinition> builder, Func<TDefinition, DefinitionMetaData?>? metadataTestedAccess = null)
             where TDefinition : class, IDefinition
         {
-            var tester = this._fixture.Create<DefinitionMetaData>();
+            var tester_base = this._fixture.Create<DefinitionMetaData>();
+
+            var tester = new DefinitionMetaData(tester_base.Description,
+                                                tester_base.CategoryPath,
+                                                tester_base.Tags,
+                                                tester_base.UTCUpdateTime,
+                                                tester_base.NamespaceIdentifier?.ToLowerWithSeparator('.').Replace("_", ".").Replace("-", "."));
 
             var tags = tester.Tags.ToArray();
             var distinctTags = tags.Distinct().ToArray();
@@ -281,6 +314,7 @@ namespace Democrite.Framework.Builders.UnitTests
             Check.That(metaData).IsNotNull();
             Check.That(metaData!.CategoryPath).IsNotNull().And.IsEqualTo(tester.CategoryPath);
             Check.That(metaData!.Description).IsNotNull().And.IsEqualTo(tester.Description);
+            Check.That(metaData!.NamespaceIdentifier).IsEqualTo(tester.NamespaceIdentifier);
             Check.That(metaData!.Tags).IsNotNull().And.CountIs(distinctTags.Length).And.Contains(distinctTags);
         }
 

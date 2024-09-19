@@ -12,14 +12,8 @@ namespace Democrite.Framework.Builders.Triggers
     /// <summary>
     /// Common part of trigger definition
     /// </summary>
-    public interface ITriggerDefinitionBuilder<TDefWithExtention>
-        where TDefWithExtention : ITriggerDefinitionBuilder<TDefWithExtention>
+    public interface ITriggerDefinitionBuilder
     {
-        /// <summary>
-        /// Set definition meta data
-        /// </summary>
-        TDefWithExtention MetaData(Action<IDefinitionMetaDataBuilder> action);
-
         /*
          * Sequences
          */
@@ -27,32 +21,32 @@ namespace Democrite.Framework.Builders.Triggers
         /// <summary>
         /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
-        TDefWithExtention AddTargetSequence(Guid targetSequenceId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
+        ITriggerDefinitionFinalizeBuilder AddTargetSequence(Guid targetSequenceId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
 
         /// <summary>
         /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
-        TDefWithExtention AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] targetSequenceId);
+        ITriggerDefinitionFinalizeBuilder AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] targetSequenceId);
 
         /// <summary>
         /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
-        TDefWithExtention AddTargetSequences(params Guid[] targetSequenceId);
+        ITriggerDefinitionFinalizeBuilder AddTargetSequences(params Guid[] targetSequenceId);
 
         /// <summary>
         /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
-        TDefWithExtention AddTargetSequence(SequenceDefinition sequenceDefinition, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
+        ITriggerDefinitionFinalizeBuilder AddTargetSequence(SequenceDefinition sequenceDefinition, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
 
         /// <summary>
         /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
-        TDefWithExtention AddTargetSequences(params SequenceDefinition[] sequenceDefinition);
+        ITriggerDefinitionFinalizeBuilder AddTargetSequences(params SequenceDefinition[] sequenceDefinition);
 
         /// <summary>
         /// Adds the targe id. Sample:  Sequence.DeferredId
         /// </summary>
-        TDefWithExtention AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params SequenceDefinition[] sequenceDefinition);
+        ITriggerDefinitionFinalizeBuilder AddTargetSequences(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params SequenceDefinition[] sequenceDefinition);
 
         /*
          * Signals
@@ -61,32 +55,32 @@ namespace Democrite.Framework.Builders.Triggers
         /// <summary>
         /// Adds a signal as target
         /// </summary>
-        TDefWithExtention AddTargetSignal(SignalId signalId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
+        ITriggerDefinitionFinalizeBuilder AddTargetSignal(SignalId signalId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
 
         /// <summary>
         /// Adds a signal as target
         /// </summary>
-        TDefWithExtention AddTargetSignals(params SignalId[] signalId);
+        ITriggerDefinitionFinalizeBuilder AddTargetSignals(params SignalId[] signalId);
 
         /// <summary>
         /// Adds a signal as target
         /// </summary>
-        TDefWithExtention AddTargetSignals(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params SignalId[] signalId);
+        ITriggerDefinitionFinalizeBuilder AddTargetSignals(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params SignalId[] signalId);
 
         /// <summary>
         /// Adds a signal as target
         /// </summary>
-        TDefWithExtention AddTargetSignal(Guid signalId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
+        ITriggerDefinitionFinalizeBuilder AddTargetSignal(Guid signalId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
 
         /// <summary>
         /// Adds a signal as target
         /// </summary>
-        TDefWithExtention AddTargetSignals(params Guid[] signalId);
+        ITriggerDefinitionFinalizeBuilder AddTargetSignals(params Guid[] signalId);
 
         /// <summary>
         /// Adds a signal as target
         /// </summary>
-        TDefWithExtention AddTargetSignals(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] signalId);
+        ITriggerDefinitionFinalizeBuilder AddTargetSignals(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] signalId);
 
         /*
          * Stream
@@ -95,31 +89,31 @@ namespace Democrite.Framework.Builders.Triggers
         /// <summary>
         /// Adds the targe stream <see cref="StreamQueueDefinition.Uid"/>
         /// </summary>
-        TDefWithExtention AddTargetStream(Guid targetStreamId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
+        ITriggerDefinitionFinalizeBuilder AddTargetStream(Guid targetStreamId, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
 
         /// <summary>
         /// Adds the targe stream <see cref="StreamQueueDefinition.Uid"/>
         /// </summary>
-        TDefWithExtention AddTargetStreams(params Guid[] targetStreamId);
+        ITriggerDefinitionFinalizeBuilder AddTargetStreams(params Guid[] targetStreamId);
 
         /// <summary>
         /// Adds the targe stream <see cref="StreamQueueDefinition.Uid"/>
         /// </summary>
-        TDefWithExtention AddTargetStreams(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] targetStreamId);
+        ITriggerDefinitionFinalizeBuilder AddTargetStreams(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params Guid[] targetStreamId);
 
         /// <summary>
         /// Adds the targe stream <see cref="StreamQueueDefinition.Uid"/>
         /// </summary>
-        TDefWithExtention AddTargetStream(StreamQueueDefinition streamDefinition, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
+        ITriggerDefinitionFinalizeBuilder AddTargetStream(StreamQueueDefinition streamDefinition, Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>>? dedicatedOutputBuilders = null);
 
         /// <summary>
         /// Adds the targe stream <see cref="StreamQueueDefinition.Uid"/>
         /// </summary>
-        TDefWithExtention AddTargetStreams(params StreamQueueDefinition[] streamDefinition);
+        ITriggerDefinitionFinalizeBuilder AddTargetStreams(params StreamQueueDefinition[] streamDefinition);
 
         /// <summary>
         /// Adds the targe stream <see cref="StreamQueueDefinition.Uid"/>
         /// </summary>
-        TDefWithExtention AddTargetStreams(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params StreamQueueDefinition[] streamDefinition);
+        ITriggerDefinitionFinalizeBuilder AddTargetStreams(Func<ITriggerOutputBuilder, IDefinitionBaseBuilder<DataSourceDefinition>> dedicatedOutputBuilders, params StreamQueueDefinition[] streamDefinition);
     }
 }

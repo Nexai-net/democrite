@@ -11,9 +11,5 @@ namespace Democrite.Framework.Builders.Signals
     public interface ISignalNetworkBasePartBuilder<TWizard>
         where TWizard : ISignalNetworkBasePartBuilder<TWizard>
     {
-        /// <summary>
-        /// Define a signals meta group
-        /// </summary>
-        TWizard MetaData(Action<IDefinitionMetaDataBuilder>? action);
     }
 }

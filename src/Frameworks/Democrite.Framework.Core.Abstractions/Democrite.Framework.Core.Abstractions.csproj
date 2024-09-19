@@ -10,6 +10,8 @@
 
 		<PackageTags>Democrite;Orleans;Multi-VGrain;Multi-Grain;Multi-Agent;Framework;Core;Abstract</PackageTags>
 
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -32,6 +34,10 @@
 		<!-- Testing Purpose -->
 		<InternalsVisibleTo Include="Democrite.Framework.Node.Signals.UnitTests" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Democrite.Framework.Core.CodeGenerator\Democrite.Framework.Core.CodeGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>

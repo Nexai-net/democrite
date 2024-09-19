@@ -4,9 +4,11 @@
 
 namespace Democrite.Framework.Builders.Artifacts
 {
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Core.Abstractions.Configurations;
+    using Democrite.Framework.Core.Abstractions.Enums;
 
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Services;
@@ -35,7 +37,7 @@ namespace Democrite.Framework.Builders.Artifacts
         private readonly HashSet<string> _packageExcludeFiles;
         private readonly HashSet<string> _packageExcludeDir;
         private readonly HashSet<Regex> _packageExcludeReg;
-
+        private readonly string _simpleNameIdentifier;
         private readonly string _displayName;
         private readonly Guid _uid;
 
@@ -60,7 +62,7 @@ namespace Democrite.Framework.Builders.Artifacts
         /// <summary>
         /// Initializes a new instance of the <see cref="ArtifactExecutablePackageBuilder"/> class.
         /// </summary>
-        internal ArtifactExecutablePackageBuilder(string displayName, Guid? uid = null)
+        internal ArtifactExecutablePackageBuilder(string simpleNameIdentifier, string? displayName = null, Guid? uid = null)
         {
             this._configs = new Dictionary<string, ConfigurationBaseDefinition>();
 
@@ -73,7 +75,8 @@ namespace Democrite.Framework.Builders.Artifacts
 
             this._packageExcludeReg = new HashSet<Regex>();
 
-            this._displayName = displayName;
+            this._simpleNameIdentifier = simpleNameIdentifier;
+            this._displayName = displayName ?? simpleNameIdentifier;
             this._uid = uid ?? Guid.NewGuid();
         }
 
@@ -271,6 +274,7 @@ namespace Democrite.Framework.Builders.Artifacts
                                                  token);
 
             return new ArtifactExecutableDefinition(this._uid,
+                                                    RefIdHelper.Generate(RefTypeEnum.Artifact, this._simpleNameIdentifier, this._definitionMetaData?.NamespaceIdentifier),
                                                     this._displayName,
                                                     this._packageVersion,
                                                     hash,

@@ -4,7 +4,9 @@
 
 namespace Democrite.Framework.Builders.Sequences
 {
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
+    using Democrite.Framework.Core.Abstractions.Enums;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Elvex.Toolbox;
 
@@ -25,6 +27,7 @@ namespace Democrite.Framework.Builders.Sequences
         private readonly SequenceBuilder? _parent;
 
         private readonly string? _displayName;
+        private readonly string _simpleNameIdentifier;
         private readonly Guid _uid;
         private readonly DefinitionMetaData? _definitionMetaData;
 
@@ -39,6 +42,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// <param name="displayName"></param>
         /// <param name="triggerDefinition">All information about the worflow trigger; if null the sequence will need manual trigger</param>
         internal SequenceBuilder(Guid uid,
+                                 string simpleNameIdentifier,
                                  string displayName,
                                  SequenceOptionDefinition? options,
                                  DefinitionMetaData? definitionMetaData)
@@ -47,6 +51,7 @@ namespace Democrite.Framework.Builders.Sequences
 
             this._options = options ?? SequenceOptionDefinition.Default;
             this._displayName = displayName;
+            this._simpleNameIdentifier = simpleNameIdentifier;
             this._uid = uid;
             this._definitionMetaData = definitionMetaData;
 
@@ -57,7 +62,7 @@ namespace Democrite.Framework.Builders.Sequences
         /// Initializes a new instance of the <see cref="SequenceBuilder"/> class link to a parent one
         /// </summary>
         internal SequenceBuilder(SequenceBuilder parent, string displayName)
-            : this(Guid.NewGuid(), displayName, parent._options, parent._definitionMetaData)
+            : this(Guid.NewGuid(), parent._simpleNameIdentifier, displayName, parent._options, parent._definitionMetaData)
         {
             this._parent = parent;
         }
@@ -114,6 +119,7 @@ namespace Democrite.Framework.Builders.Sequences
         public SequenceDefinition Build()
         {
             return new SequenceDefinition(this._uid,
+                                          RefIdHelper.Generate(RefTypeEnum.Sequence, this._simpleNameIdentifier, this._definitionMetaData?.NamespaceIdentifier), 
                                           this._displayName,
                                           this._options,
                                           this._stages.Select(s => s.ToDefinition()).ToArray(),

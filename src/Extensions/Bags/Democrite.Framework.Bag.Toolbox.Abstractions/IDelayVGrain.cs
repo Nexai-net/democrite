@@ -17,7 +17,9 @@ namespace Democrite.Framework.Bag.Toolbox.Abstractions
     /// Simple grain used to create a Task.Delay in the process
     /// </summary>
     /// <seealso cref="IVGrain" />
-    [VGrainMetaData("40157B9A-27A5-402C-9650-4EFDD921DCDC", 
+    [VGrainMetaData("40157B9A-27A5-402C-9650-4EFDD921DCDC",
+                    "delay",
+                    namespaceIdentifier: "bag.toolbox",
                     displayName: "Delay", 
                     description: "Used to introduce delay in sequence.", 
                     categoryPath: "tools")]

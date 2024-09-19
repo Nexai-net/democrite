@@ -5,10 +5,10 @@
   <ItemGroup>
     <!-- Orlean -->
     <PackageVersion Include="Docker.DotNet" Version="3.125.15" />
-    <PackageVersion Include="Elvex.Toolbox" Version="1.1.8" />
-    <PackageVersion Include="Elvex.Toolbox.Abstractions" Version="1.1.2.519-prerelease" />
-    <PackageVersion Include="Elvex.Toolbox.Configuration" Version="1.1.8" />
-    <PackageVersion Include="Elvex.Toolbox.UnitTests.ToolKit" Version="1.1.8" />
+    <PackageVersion Include="Elvex.Toolbox" Version="1.1.9" />
+    <PackageVersion Include="Elvex.Toolbox.Abstractions" Version="1.1.9" />
+    <PackageVersion Include="Elvex.Toolbox.Configuration" Version="1.1.9" />
+    <PackageVersion Include="Elvex.Toolbox.UnitTests.ToolKit" Version="1.1.9" />
     <PackageVersion Include="H.Formatters.Newtonsoft.Json" Version="13.0.59" />
     <PackageVersion Include="MessagePack" Version="2.5.140" />
     <PackageVersion Include="Microsoft.Orleans.Clustering.AdoNet" Version="7.2.4" />
@@ -29,6 +29,7 @@
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.4" />
     <PackageVersion Include="Microsoft.VisualStudio.SlowCheetah" Version="4.0.50" />
     <PackageVersion Include="MongoDB.Driver" Version="2.25.0" />
+    <PackageVersion Include="Newtonsoft.Json.Schema" Version="4.0.1" />
     <PackageVersion Include="Orleans.Providers.MongoDB" Version="8.0.3" />
     <PackageVersion Include="OrleansDashboard" Version="7.2.2" />
     <!-- System -->
@@ -48,6 +49,7 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" PrivateAssets="all" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" PrivateAssets="all" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageVersion Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <!-- Test -->
@@ -78,5 +80,6 @@
     <PackageVersion Include="System.Runtime.Serialization.Schema" Version="8.0.0" />
     <PackageVersion Include="System.ServiceModel.Syndication" Version="8.0.0" />
     <PackageVersion Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+    <PackageVersion Include="YamlDotNet" Version="16.1.0" />
   </ItemGroup>
 </Project>

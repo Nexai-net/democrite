@@ -10,20 +10,18 @@ namespace Democrite.Framework.Builders.Signals
     internal abstract class SignalNetworkBasePartBuilder<TWizard> : ISignalNetworkBasePartBuilder<TWizard>
         where TWizard : ISignalNetworkBasePartBuilder<TWizard>
     {
-        #region Fields
-        
-        
-        #endregion
-
         #region Ctor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SignalNetworkBasePartBuilder{TWizard, TDefinition}"/> class.
         /// </summary>
-        protected SignalNetworkBasePartBuilder(string name, Guid? uid = null)
+        protected SignalNetworkBasePartBuilder(string simpleNameIdentifier, string? displayName, Guid? uid = null, Action<IDefinitionMetaDataBuilder>? metaDataBuilder = null)
         {
-            this.Name = name;
+            this.DisplayName = displayName;
+            this.SimpleNameIdentifier = simpleNameIdentifier;
             this.Uid = uid ?? Guid.NewGuid();
+
+            this.DefinitionMetaData = DefinitionMetaDataBuilder.Execute(metaDataBuilder);
         }
 
         #endregion
@@ -36,7 +34,12 @@ namespace Democrite.Framework.Builders.Signals
         /// <summary>
         /// Gets unique signal name
         /// </summary>
-        public string Name { get; }
+        public string SimpleNameIdentifier { get; }
+
+        /// <summary>
+        /// Gets the display name.
+        /// </summary>
+        public string? DisplayName { get; }
 
         /// <summary>
         /// Gets the unique id.
@@ -46,23 +49,11 @@ namespace Democrite.Framework.Builders.Signals
         /// <summary>
         /// Gets the meta data.
         /// </summary>
-        public DefinitionMetaData? DefinitionMetaData { get; private set; }
+        public DefinitionMetaData? DefinitionMetaData { get; }
 
         #endregion
 
         #region Methods
-
-        /// <inheritdoc />
-        public TWizard MetaData(Action<IDefinitionMetaDataBuilder>? action)
-        {
-            if (action is not null)
-            {
-                var builder = new DefinitionMetaDataBuilder();
-                action.Invoke(builder);
-                this.DefinitionMetaData = builder.Build(out var _);
-            }
-            return GetWiazrd();
-        }
 
         /// <summary>
         /// Gets the wiazrd.

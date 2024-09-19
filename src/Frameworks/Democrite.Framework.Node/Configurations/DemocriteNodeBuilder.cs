@@ -14,6 +14,7 @@ namespace Democrite.Framework.Configurations
     using Democrite.Framework.Core.Abstractions.Diagnostics;
     using Democrite.Framework.Core.Abstractions.Doors;
     using Democrite.Framework.Core.Abstractions.Exceptions;
+    using Democrite.Framework.Core.Abstractions.References;
     using Democrite.Framework.Core.Abstractions.Sequence;
     using Democrite.Framework.Core.Abstractions.Signals;
     using Democrite.Framework.Core.Abstractions.Storages;
@@ -37,6 +38,7 @@ namespace Democrite.Framework.Configurations
     using Democrite.Framework.Node.Extensions;
     using Democrite.Framework.Node.Inputs;
     using Democrite.Framework.Node.Models;
+    using Democrite.Framework.Node.References;
     using Democrite.Framework.Node.Services;
     using Democrite.Framework.Node.Signals;
     using Democrite.Framework.Node.Streams;
@@ -59,6 +61,7 @@ namespace Democrite.Framework.Configurations
     using Orleans.Hosting;
     using Orleans.Providers;
     using Orleans.Serialization.Configuration;
+    using Orleans.Services;
     using Orleans.Storage;
 
     using System;
@@ -260,6 +263,28 @@ namespace Democrite.Framework.Configurations
 
         #region IDemocriteNodeLocalDefinitionsBuilder
 
+        /// <summary>
+        /// Setup callable definitions
+        /// </summary>
+        public IDemocriteNodeLocalDefinitionsBuilder Setup<TDefinition>(params TDefinition[] definitions)
+            where TDefinition : IDefinition, IRefDefinition
+        {
+            foreach (var def in definitions ?? EnumerableHelper<TDefinition>.ReadOnlyArray)
+            {
+                _ = def switch
+                {
+                    SequenceDefinition sequence => SetupSequences(sequence),
+                    TriggerDefinition trigger => SetupTriggers(trigger),
+                    ArtifactDefinition artifact => SetupArtifacts(artifact),
+                    SignalDefinition signal => SetupSignals(signal),
+                    DoorDefinition door => SetupDoors(door),
+                    StreamQueueDefinition queue => SetupStreamQueues(queue),
+                    _ => throw new InvalidOperationException("Definition unknown, may came from extension (if so call the dedicated method) : " + def)
+                };
+            }
+            return this;
+        }
+
         /// <inheritdoc />
         public IDemocriteNodeLocalDefinitionsBuilder SetupSequences(Action<IDemocriteNodeSequenceWizard> config)
         {
@@ -376,7 +401,7 @@ namespace Democrite.Framework.Configurations
         {
             foreach (var sequenceDefinition in sequenceDefinitions)
             {
-                // TODO : ValidateDefinition(sequenceDefinition);
+                // TODO : ValidateDefinition(sequence);
                 this._inMemorySequenceDefinitionProviderSource.AddOrUpdate(sequenceDefinition);
             }
 
@@ -685,6 +710,13 @@ namespace Democrite.Framework.Configurations
         {
             this._orleanSiloBuilder.AddGrainService<ClusterNodeComponentIdentitCardProvider>();
 
+            // Reference
+            this._orleanSiloBuilder.AddGrainService<DemocriteTypeReferenceGrainService>();
+            this._orleanSiloBuilder.Services.AddSingleton<DemocriteReferenceSolverService>()
+                                            .AddSingleton<IDemocriteReferenceSolverService>(p => p.GetRequiredService<DemocriteReferenceSolverService>())
+                                            .AddSingleton<IGrainServiceClient<IDemocriteTypeReferenceGrainService>>(p => p.GetRequiredService<DemocriteReferenceSolverService>());
+
+            // Grain Service signal relay
             this._orleanSiloBuilder.AddGrainService<SignalLocalGrainServiceRelay>();
             this._orleanSiloBuilder.Services.AddSingleton<SignalLocalGrainServiceRelayClient>()
                                             .AddSingleton<ISignalLocalGrainServiceRelayClient>(p => p.GetRequiredService<SignalLocalGrainServiceRelayClient>())
@@ -702,6 +734,7 @@ namespace Democrite.Framework.Configurations
 
             serviceCollection.AddSingleton<IDedicatedObjectConverter, SignalMessageDedicatedObjectConverter>();
             serviceCollection.AddSingleton<IDedicatedObjectConverter, ScalarDedicatedConverter>();
+            serviceCollection.AddSingleton<IDedicatedObjectConverter, GuidDedicatedConverter>();
 
             //serviceCollection.TryAddSingleton<IDemocriteSerializer, DemocriteSerializer>();
 

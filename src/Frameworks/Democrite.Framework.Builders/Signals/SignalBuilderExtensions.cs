@@ -18,12 +18,12 @@ namespace Democrite.Framework.Builders
         /// <summary>
         /// Starts the building a sub signal.
         /// </summary>
-        public static ISignalBuilder StartBuildSubSignal(this SignalDefinition parentSignal, string signalName, Guid? uid = null, bool contactToParentName = true)
+        public static ISignalBuilder StartBuildSubSignal(this SignalDefinition parentSignal, string simpleNameIdentifier, string? displayName = null, Guid? uid = null, bool contactToParentName = true)
         {
             ArgumentNullException.ThrowIfNull(parentSignal);
-            ArgumentNullException.ThrowIfNullOrEmpty(signalName);
+            ArgumentNullException.ThrowIfNullOrEmpty(simpleNameIdentifier);
 
-            return Signal.StartBuilding(contactToParentName ? parentSignal.Name + ":" + signalName : signalName, uid)
+            return Signal.StartBuilding(simpleNameIdentifier, contactToParentName ? parentSignal.Name + ":" + displayName : displayName, uid)
                          .Parent(parentSignal);
         }
 
@@ -33,12 +33,12 @@ namespace Democrite.Framework.Builders
         /// <returns>
         ///     Return sub definition created
         /// </returns>
-        public static SignalDefinition CreateSubSignal(this SignalDefinition parentSignal, string signalName, Guid? uid = null, bool contactToParentName = true)
+        public static SignalDefinition CreateSubSignal(this SignalDefinition parentSignal, string simpleNameIdentifier, string? displayName = null, Guid? uid = null, bool contactToParentName = true)
         {
             ArgumentNullException.ThrowIfNull(parentSignal);
-            ArgumentNullException.ThrowIfNullOrEmpty(signalName);
+            ArgumentNullException.ThrowIfNullOrEmpty(simpleNameIdentifier);
 
-            return Signal.StartBuilding(contactToParentName ? parentSignal.Name + ":" + signalName : signalName, uid)
+            return Signal.StartBuilding(simpleNameIdentifier, contactToParentName ? parentSignal.Name + ":" + displayName : displayName, uid)
                          .Parent(parentSignal)
                          .Build();
         }
@@ -49,9 +49,9 @@ namespace Democrite.Framework.Builders
         /// <returns>
         ///     Root definition
         /// </returns>
-        public static SignalDefinition CreateSubSignal(this SignalDefinition parentSignal, string signalName, out SignalDefinition subSignalDefinition, Guid? uid = null, bool contactToParentName = true)
+        public static SignalDefinition CreateSubSignal(this SignalDefinition parentSignal, string simpleNameIdentifier, string? displayName, out SignalDefinition subSignalDefinition, Guid? uid = null, bool contactToParentName = true)
         {
-            subSignalDefinition = CreateSubSignal(parentSignal, signalName, uid, contactToParentName);
+            subSignalDefinition = CreateSubSignal(parentSignal, simpleNameIdentifier, displayName, uid, contactToParentName);
             return parentSignal;
         }
     }

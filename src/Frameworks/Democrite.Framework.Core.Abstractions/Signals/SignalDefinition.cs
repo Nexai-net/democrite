@@ -31,12 +31,13 @@ namespace Democrite.Framework.Core.Abstractions.Signals
         /// Initializes a new instance of the <see cref="SignalDefinition"/> class.
         /// </summary>
         public SignalDefinition(Guid uid,
-                                string name,
+                                Uri refId,
+                                string displayName,
                                 DefinitionMetaData? metaData,
                                 SignalId? parentSignalId = null)
-            : base(uid, name, name, metaData)
+            : base(uid, refId, RefIdHelper.GetSimpleNameIdentification(refId)!, displayName, metaData)
         {
-            this.SignalId = new SignalId(uid, name);
+            this.SignalId = new SignalId(uid, base.Name);
             this.ParentSignalId = parentSignalId;
         }
 

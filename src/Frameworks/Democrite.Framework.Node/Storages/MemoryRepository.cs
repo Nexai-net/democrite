@@ -330,7 +330,14 @@ namespace Democrite.Framework.Node.Storages
         /// </summary>
         protected virtual TProjection OnMap<TProjection, TSource>(in TSource? source, string objJson)
         {
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<TProjection>(objJson) ?? throw new InvalidOperationException("Map source (" + typeof(TSource) + ") to projection (" + typeof(TProjection) + ") failed");
+            try
+            {
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<TProjection>(objJson) ?? throw new InvalidOperationException("Map source (" + typeof(TSource) + ") to projection (" + typeof(TProjection) + ") failed");
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         /// <summary>
