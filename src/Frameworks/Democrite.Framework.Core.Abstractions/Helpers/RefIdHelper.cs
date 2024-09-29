@@ -72,7 +72,7 @@ namespace Democrite.Framework.Core
 
             s_simpleNameIdentifierValidator = new Regex("^" + simpleNameIdentifierPattern + "$");
             s_namespaceValidator = new Regex("^" + namespacePattern + "$");
-            s_refIdValidator = new Regex("^ref://(" + string.Join("|", s_typeToString.Values) + ")@" + namespacePattern + "/" + simpleNameIdentifierPattern + "(#" + simpleNameIdentifierPattern + ")?$");
+            s_refIdValidator = new Regex("^" + REF_SCHEMA + "://(" + string.Join("|", s_typeToString.Values) + ")@" + namespacePattern + "/" + simpleNameIdentifierPattern + "(#" + simpleNameIdentifierPattern + ")?$");
         }
 
         /// <summary>

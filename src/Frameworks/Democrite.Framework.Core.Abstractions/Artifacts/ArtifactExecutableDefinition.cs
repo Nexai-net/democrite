@@ -40,7 +40,7 @@ namespace Democrite.Framework.Core.Abstractions.Artifacts
                                             IEnumerable<string> arguments,
                                             string? executor,
                                             char? executorArgumentSeparator,
-                                            IEnumerable<string> executorArguments,
+                                            IEnumerable<string>? executorArguments,
                                             Uri packageSource,
                                             IEnumerable<string> packageFiles,
                                             ArtifactPackageTypeEnum packageType,

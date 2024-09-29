@@ -82,7 +82,7 @@ namespace Democrite.Framework.Node.Artifacts
 
             var artifactId = GetArtifactId(input, executionContext);
 
-            var artifactResult = await this._artifactProvider.TryGetFirstValueAsync(artifactId, executionContext.CancellationToken);
+            var artifactResult = await this._artifactProvider.TryGetByKeyAsync(artifactId, executionContext.CancellationToken);
 
             if (artifactResult.Result == false || artifactResult.value == null)
                 throw new ArtifactMissingException(artifactId, nameof(ArtifactExecutableDefinition), executionContext);

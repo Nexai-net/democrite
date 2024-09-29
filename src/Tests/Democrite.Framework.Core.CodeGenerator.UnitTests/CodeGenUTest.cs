@@ -26,7 +26,7 @@ namespace Democrite.Framework.Core.CodeGenerator
     /// <summary>
     /// Test for Codegen, ensure all the code gen are valid
     /// </summary>
-    public sealed class CodeGen
+    public sealed class CodeGenUTest
     {
         #region Fields
 
@@ -42,11 +42,11 @@ namespace Democrite.Framework.Core.CodeGenerator
         #region Ctor
 
         /// <summary>
-        /// Initializes the <see cref="CodeGen"/> class.
+        /// Initializes the <see cref="CodeGenUTest"/> class.
         /// </summary>
-        static CodeGen()
+        static CodeGenUTest()
         {
-            s_current = typeof(CodeGen).Assembly;
+            s_current = typeof(CodeGenUTest).Assembly;
             s_attr = s_current.GetCustomAttributes().OfType<DemocriteReferenceProviderAttribute>().SingleOrDefault();
 
             s_expectedType = new Type[]
@@ -66,7 +66,8 @@ namespace Democrite.Framework.Core.CodeGenerator
                 typeof(IGenericMultipleGrain<,>),
                 typeof(IGenericWithConstraintGrain<>),
                 typeof(ISimpleWithMethodGrain),
-                typeof(IInheriteWithMethodGrain)
+                typeof(IInheriteWithMethodGrain),
+                typeof(IGenericSimpleWithMethodGrain<>)
             };
 
             s_expectedVGrainMethods = s_expectedVGrainType.SelectMany(v => v.GetMethods())
@@ -100,6 +101,8 @@ namespace Democrite.Framework.Core.CodeGenerator
             CheckValidType(RefTypeEnum.VGrain, indexByRefType, s_expectedVGrainType);
             CheckMethod(indexByRefType);
         }
+
+        #region Tools
 
         private static void CheckMethod(Dictionary<RefTypeEnum, ReferenceTarget[]> indexByType)
         {
@@ -145,8 +148,7 @@ namespace Democrite.Framework.Core.CodeGenerator
                 var compareType = expectedType.GetAbstractType();
 
                 var targetRefs = typeRefs!.OfType<ReferenceTypeTarget>()
-                                          .Where(tr => (tr.Type is ConcretType crt && crt.ToType() == expectedType) ||
-                                                       (tr.Type is GenericType genericType && genericType.FullDisplayName == compareType.FullDisplayName))
+                                          .Where(tr => tr.Type.ToType() == expectedType)
                                           .ToArray();
 
                 Check.WithCustomMessage("Ref Type " + expectedType).That(targetRefs).IsNotNull().And.CountIs(1);
@@ -168,6 +170,8 @@ namespace Democrite.Framework.Core.CodeGenerator
             }
         }
 
+        #endregion
+     
         #endregion
     }
 }

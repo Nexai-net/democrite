@@ -49,7 +49,7 @@ namespace Democrite.Framework.Builders.Artifacts
         private bool _allowPersistence;
         private string? _executor;
         private char? _executableArgSeparator;
-        private string[] _executorArgs;
+        private string[]? _executorArgs;
         private Uri? _packageSource;
         private Version? _packageVersion;
         private ArtifactExecVerboseEnum _verbose;

@@ -5,10 +5,10 @@
   <ItemGroup>
     <!-- Orlean -->
     <PackageVersion Include="Docker.DotNet" Version="3.125.15" />
-    <PackageVersion Include="Elvex.Toolbox" Version="1.1.9" />
+    <PackageVersion Include="Elvex.Toolbox" Version="1.1.10" />
     <PackageVersion Include="Elvex.Toolbox.Abstractions" Version="1.1.9" />
-    <PackageVersion Include="Elvex.Toolbox.Configuration" Version="1.1.9" />
-    <PackageVersion Include="Elvex.Toolbox.UnitTests.ToolKit" Version="1.1.9" />
+    <PackageVersion Include="Elvex.Toolbox.Configuration" Version="1.1.10" />
+    <PackageVersion Include="Elvex.Toolbox.UnitTests.ToolKit" Version="1.1.10" />
     <PackageVersion Include="H.Formatters.Newtonsoft.Json" Version="13.0.59" />
     <PackageVersion Include="MessagePack" Version="2.5.140" />
     <PackageVersion Include="Microsoft.Orleans.Clustering.AdoNet" Version="7.2.4" />
@@ -61,9 +61,9 @@
     <PackageVersion Include="NSubstitute" Version="5.1.0" />
     <PackageVersion Include="Moq" Version="4.20.70" />
     <PackageVersion Include="NFluent" Version="3.0.4" />
-    <PackageVersion Include="xunit" Version="2.7.1" />
+    <PackageVersion Include="xunit" Version="2.9.1" />
     <PackageVersion Include="xunit.extensibility.core" Version="2.6.2" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.8" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <!-- Other -->
     <PackageVersion Include="Cronos" Version="0.8.4" />

@@ -1035,7 +1035,7 @@ namespace Democrite.Framework.Builders.UnitTests
 
             var solver = GenerateTestSolver();
 
-            solver.GetReferenceDefinitions(Arg.Any<Uri>()).Returns(info =>
+            solver.GetReferenceDefinitionsAsync(Arg.Any<Uri>()).Returns(info =>
             {
                 var refId = info[0] as Uri;
 
@@ -1373,7 +1373,7 @@ namespace Democrite.Framework.Builders.UnitTests
         {
             var solver = Substitute.For<IDemocriteReferenceSolverService>();
 
-            solver.GetReferenceType(Arg.Any<Uri>())!.Returns(info =>
+            solver.GetReferenceTypeAsync(Arg.Any<Uri>())!.Returns(info =>
             {
                 var refId = info[0] as Uri;
 

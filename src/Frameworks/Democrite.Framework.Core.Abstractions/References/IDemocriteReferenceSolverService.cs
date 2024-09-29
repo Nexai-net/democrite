@@ -16,21 +16,31 @@ namespace Democrite.Framework.Core.Abstractions.References
         /// <summary>
         /// Gets the method associate to reference
         /// </summary>
-        ValueTask<MethodInfo?> GetReferenceMethodAsync(Uri methodRefId, Type sourceType);
+        ValueTask<MethodInfo?> GetReferenceMethodAsync(Uri methodRefId, Type? sourceType = null, CancellationToken token = default);
 
         /// <summary>
         /// Gets the type associate to reference
         /// </summary>
-        ValueTask<Tuple<Type, Uri>?> GetReferenceType(Uri typeRefId);
+        ValueTask<Tuple<Type, Uri>?> GetReferenceTypeAsync(Uri typeRefId, CancellationToken token = default);
 
         /// <summary>
         /// Gets the reference definitions.
         /// </summary>
-        ValueTask<IReadOnlyCollection<IDefinition>> GetReferenceDefinitions(Uri definitionRefId);
+        ValueTask<IReadOnlyCollection<IDefinition>> GetReferenceDefinitionsAsync(Uri definitionRefId, CancellationToken token = default);
 
         /// <summary>
-        /// Tries the get reference definition.
+        /// Gets the reference definitions UID.
         /// </summary>
-        ValueTask<IDefinition?> TryGetReferenceDefinition(Uri definitionRefId);
+        ValueTask<IReadOnlyCollection<Guid>> GetReferenceDefinitionUidAsync(Uri definitionRefId, CancellationToken token = default);
+
+        /// <summary>
+        /// Tries the get the only definition target by the reference.
+        /// </summary>
+        ValueTask<IDefinition?> TryGetReferenceDefinitionAsync(Uri definitionRefId, CancellationToken token = default);
+
+        /// <summary>
+        /// Tries the get the only definition target by the reference.
+        /// </summary>
+        ValueTask<Guid?> TryGetReferenceDefinitionUriAsync(Uri definitionRefId, CancellationToken token = default);
     }
 }

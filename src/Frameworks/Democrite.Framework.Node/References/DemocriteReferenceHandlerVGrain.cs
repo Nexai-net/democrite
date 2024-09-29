@@ -146,7 +146,7 @@ namespace Democrite.Framework.Node.References
 
             if (targetType == RefTypeEnum.VGrain)
             {
-                var vgrainType = await this._referenceSolverService.GetReferenceType(execCommand.ExecReference);
+                var vgrainType = await this._referenceSolverService.GetReferenceTypeAsync(execCommand.ExecReference);
 
                 if (vgrainType is null)
                     throw new KeyNotFoundException("Reference {0} don't have been founded".WithArguments(execCommand.ExecReference));

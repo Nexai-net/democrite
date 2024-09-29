@@ -34,7 +34,7 @@ namespace Democrite.Framework.Core.Abstractions.Helpers
         /// </summary>
         static EntityHelper()
         {
-            Expression<Func<IEntityWithId<Guid>, Guid>> tmpGetEntityId = e => GetEntityId<IEntityWithId<Guid>, Guid>(null);
+            Expression<Func<IEntityWithId<Guid>, Guid>> tmpGetEntityId = e => GetEntityId<IEntityWithId<Guid>, Guid>(null!);
              s_genericGetEntityId = ((MethodCallExpression)tmpGetEntityId.Body).Method.GetGenericMethodDefinition();
 
             s_locker = new ReaderWriterLockSlim();

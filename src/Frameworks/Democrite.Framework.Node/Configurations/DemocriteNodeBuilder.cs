@@ -591,10 +591,10 @@ namespace Democrite.Framework.Configurations
                                                                                                                                                                               service,
                                                                                                                                                                               logger,
                                                                                                                                                                               key,
-                                                                                                                                                                              GetConfigurationValue<bool>(cfg, ConfigurationNodeSectionNames.NodeCustomMemory + 
-                                                                                                                                                                                                               ConfigurationSectionNames.SectionSeparator + 
-                                                                                                                                                                                                               key + 
-                                                                                                                                                                                                               ConfigurationSectionNames.SectionSeparator + 
+                                                                                                                                                                              GetConfigurationValue<bool>(cfg, ConfigurationNodeSectionNames.NodeCustomMemory +
+                                                                                                                                                                                                               ConfigurationSectionNames.SectionSeparator +
+                                                                                                                                                                                                               key +
+                                                                                                                                                                                                               ConfigurationSectionNames.SectionSeparator +
                                                                                                                                                                                                                ConfigurationSectionNames.BuildRepository)),
                                                                                                        defaultAutoKey: defaultMemoryAutoKey);
 
@@ -712,9 +712,12 @@ namespace Democrite.Framework.Configurations
 
             // Reference
             this._orleanSiloBuilder.AddGrainService<DemocriteTypeReferenceGrainService>();
+            this._orleanSiloBuilder.Services.AddSingleton<DemocriteTypeReferenceGrainServiceClient>()
+                                            .AddSingleton<IDemocriteTypeReferenceGrainServiceClient>(p => p.GetRequiredService<DemocriteTypeReferenceGrainServiceClient>());
+
+            // Reference Solver
             this._orleanSiloBuilder.Services.AddSingleton<DemocriteReferenceSolverService>()
-                                            .AddSingleton<IDemocriteReferenceSolverService>(p => p.GetRequiredService<DemocriteReferenceSolverService>())
-                                            .AddSingleton<IGrainServiceClient<IDemocriteTypeReferenceGrainService>>(p => p.GetRequiredService<DemocriteReferenceSolverService>());
+                                            .AddSingleton<IDemocriteReferenceSolverService>(p => p.GetRequiredService<DemocriteReferenceSolverService>());
 
             // Grain Service signal relay
             this._orleanSiloBuilder.AddGrainService<SignalLocalGrainServiceRelay>();
@@ -789,6 +792,26 @@ namespace Democrite.Framework.Configurations
             this._orleanSiloBuilder.Services.SetupGrainRoutingServices();
 
             AddDemocriteSystemDefinitions(this._orleanSiloBuilder.Services);
+
+            var speSourceProviderTrait = typeof(ISpecificDefinitionSourceProvider);
+            var serviceCollection = this._orleanSiloBuilder.Services;
+            foreach (var desc in serviceCollection.ToArray())
+            {
+                var serviceType = desc.ServiceType;
+                var implServiceType = desc.IsKeyedService ? desc.KeyedImplementationType : desc.ImplementationType;
+                var impl = desc.IsKeyedService ? desc.KeyedImplementationInstance : desc.ImplementationInstance;
+
+                var implType = impl?.GetType();
+
+                if ((serviceType != speSourceProviderTrait && serviceType.IsAssignableTo(speSourceProviderTrait)) ||
+                    (implServiceType is not null && implServiceType != speSourceProviderTrait && implServiceType.IsAssignableTo(speSourceProviderTrait)) ||
+                    (implType is not null && implType != speSourceProviderTrait && implType.IsAssignableTo(speSourceProviderTrait)))
+                {
+                    serviceCollection.Add(new ServiceDescriptor(speSourceProviderTrait,
+                                                                p => desc.IsKeyedService ? p.GetRequiredKeyedService(desc.ServiceType, desc.ServiceKey) : p.GetRequiredService(desc.ServiceType),
+                                                                ServiceLifetime.Singleton));
+                }
+            }
         }
 
         /// <summary>

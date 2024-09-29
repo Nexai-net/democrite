@@ -538,7 +538,7 @@ namespace Democrite.Framework.Builders
             if (!string.IsNullOrEmpty(def.RequiredInput))
             {
                 var inputRefId = GetRefId(def.RequiredInput, RefTypeEnum.Type);
-                var previousInputRef = await this._solverService.GetReferenceType(inputRefId);
+                var previousInputRef = await this._solverService.GetReferenceTypeAsync(inputRefId);
 
                 ctx.CancellationToken.ThrowIfCancellationRequested();
 
@@ -596,7 +596,7 @@ namespace Democrite.Framework.Builders
             where TPipeline : ISequencePipelineBaseBuilder
         {
             var vgrainTargetRefId = GetRefId(useStepDef.Use, RefTypeEnum.VGrain);
-            var grainType = await this._solverService.GetReferenceType(vgrainTargetRefId);
+            var grainType = await this._solverService.GetReferenceTypeAsync(vgrainTargetRefId);
 
             if (grainType is null || grainType.Item1 is null)
                 throw new InvalidDataException("sequence step vgrain not founded " + useStepDef.Use);
@@ -706,7 +706,7 @@ namespace Democrite.Framework.Builders
             if (output is TriggerStaticCollectionOutput staticColl)
             {
                 var valueType = GetRefId(staticColl.Type, RefTypeEnum.Type);
-                var valueTypeRef = await this._solverService.GetReferenceType(valueType);
+                var valueTypeRef = await this._solverService.GetReferenceTypeAsync(valueType);
 
                 if (valueTypeRef is null)
                     throw new KeyNotFoundException(string.Format("Data type not founded ref: {0}", valueTypeRef));
@@ -818,7 +818,7 @@ namespace Democrite.Framework.Builders
                 var definitions = ctx.SolveDefinitionReference(refIdUri);
 
                 if (definitions is null || definitions.Any() == false)
-                    definitions = await this._solverService.GetReferenceDefinitions(refIdUri);
+                    definitions = await this._solverService.GetReferenceDefinitionsAsync(refIdUri);
 
                 if (definitions is not null && definitions.Any())
                 {
@@ -941,7 +941,7 @@ namespace Democrite.Framework.Builders
                     throw new InvalidOperationException("Parameter Type must be set in build mode");
 
                 var outputType = GetRefId(type, RefTypeEnum.Type);
-                var output = await this._solverService.GetReferenceType(outputType);
+                var output = await this._solverService.GetReferenceTypeAsync(outputType);
 
                 if (output?.Item1 == null)
                     throw new KeyNotFoundException("Type not found " + outputType);

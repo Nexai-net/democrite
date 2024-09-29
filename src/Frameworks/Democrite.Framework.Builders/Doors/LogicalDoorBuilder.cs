@@ -171,7 +171,7 @@ namespace Democrite.Framework.Builders.Doors
 
             return new BooleanLogicalDoorDefinition(this._rootDoorBuilder.Uid,
                                                     RefIdHelper.Generate(RefTypeEnum.Door, this._rootDoorBuilder.SimpleNameIdentifier, this._rootDoorBuilder.DefinitionMetaData?.NamespaceIdentifier),
-                                                    this._rootDoorBuilder.DisplayName,
+                                                    this._rootDoorBuilder.DisplayName ?? this._rootDoorBuilder.SimpleNameIdentifier,
                                                     this._logicalFormula,
                                                     typeof(ILogicalDoorVGrain).AssemblyQualifiedName!,
                                                     this._rootDoorBuilder.SignalIds,

@@ -35,6 +35,15 @@ namespace Democrite.Framework.Core.CodeGenerator.UnitTests.Models
     {
     }
 
+    [VGrainMetaData("DC5D3E3E-6945-456C-BA59-B593B2AE418A",
+                    simpleNameIdentifier: "i-generic-simple-with-method-grain",
+                    namespaceIdentifier: CodeGenTestConstants.BagNamespace)]
+    internal interface IGenericSimpleWithMethodGrain<TArg> : IVGrain
+    {
+        [VGrainMetaDataMethod("gen-simple")]
+        Task GenSimple(TArg arg, IExecutionContext executionContext);
+    }
+
     [VGrainMetaData("0656A1F6-5E00-4CE9-87FD-0C3CBBE7A271",
                     simpleNameIdentifier: "i-simple-with-method-grain",
                     namespaceIdentifier: CodeGenTestConstants.BagNamespace)]
@@ -65,7 +74,7 @@ namespace Democrite.Framework.Core.CodeGenerator.UnitTests.Models
     [VGrainMetaData("8B5DFD0F-BBF4-4A80-83DC-9FC74CFB4930",
                     simpleNameIdentifier: "i-inherite-with-method-grain",
                     namespaceIdentifier: CodeGenTestConstants.BagNamespace)]
-    internal interface IInheriteWithMethodGrain : ISimpleWithMethodGrain
+    internal interface IInheriteWithMethodGrain : ISimpleWithMethodGrain, IGenericSimpleWithMethodGrain<double>
     {
         [VGrainMetaDataMethod("simple-child")]
         Task SimpleChild(string arg, IExecutionContext executionContext);

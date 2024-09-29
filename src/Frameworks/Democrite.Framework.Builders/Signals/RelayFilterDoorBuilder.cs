@@ -73,7 +73,7 @@ namespace Democrite.Framework.Builders.Signals
 
             return new RelayFilterDoorDefinition(this._rootDoorBuilder.Uid,
                                                  RefIdHelper.Generate(RefTypeEnum.Door, this._rootDoorBuilder.SimpleNameIdentifier, this._rootDoorBuilder.DefinitionMetaData?.NamespaceIdentifier),
-                                                 this._rootDoorBuilder.DisplayName,
+                                                 this._rootDoorBuilder.DisplayName ?? this._rootDoorBuilder.SimpleNameIdentifier,
                                                  typeof(IRelayFilterVGrain).AssemblyQualifiedName!,
                                                  this._rootDoorBuilder.SignalIds,
                                                  this._rootDoorBuilder.DoorIds,

@@ -128,7 +128,7 @@ namespace Democrite.Framework.Node.Signals
             if (signalDefinitionId == Guid.Empty)
                 throw new InvalidVGrainIdException(GetGrainId(), "signal definition id");
 
-            var signalDefinitions = (await this._signalDefinitionProvider.GetValuesAsync(token, signalDefinitionId)).Distinct().ToArray();
+            var signalDefinitions = (await this._signalDefinitionProvider.GetByKeyAsync(token, signalDefinitionId)).Distinct().ToArray();
 
             if (signalDefinitions.Length > 1)
             {

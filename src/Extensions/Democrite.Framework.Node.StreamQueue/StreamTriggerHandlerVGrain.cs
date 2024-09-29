@@ -95,7 +95,7 @@ namespace Democrite.Framework.Node.StreamQueue
         {
             var grainId = GetGrainId();
 
-            var streamInfo = await this._streamQueueDefinitionProvider.GetFirstValueByIdAsync(this.TriggerDefinition.StreamSourceDefinitionUid, token);
+            var streamInfo = await this._streamQueueDefinitionProvider.GetByKeyAsync(this.TriggerDefinition.StreamSourceDefinitionUid, token);
 
 #pragma warning disable IDE0270 // Use coalesce expression
             if (streamInfo is null)

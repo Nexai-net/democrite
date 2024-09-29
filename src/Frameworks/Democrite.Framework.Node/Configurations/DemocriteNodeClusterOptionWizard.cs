@@ -12,11 +12,7 @@ namespace Democrite.Framework.Node.Configurations
     using Orleans.Configuration;
 
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// 
@@ -86,12 +82,15 @@ namespace Democrite.Framework.Node.Configurations
         /// </summary>
         public void Build()
         {
-            this._serviceDescriptors.Configure<ClusterMembershipOptions>(a =>
+            if (this._clusterMembershipOptions)
             {
-                a.DefunctSiloExpiration = this._defunctSiloExpiration;
-                a.DefunctSiloCleanupPeriod = this._defunctSiloCleanupPeriod;
-                a.IAmAliveTablePublishTimeout = this._iamAliveTablePublishTimeout;
-            });
+                this._serviceDescriptors.Configure<ClusterMembershipOptions>(a =>
+                {
+                    a.DefunctSiloExpiration = this._defunctSiloExpiration;
+                    a.DefunctSiloCleanupPeriod = this._defunctSiloCleanupPeriod;
+                    a.IAmAliveTablePublishTimeout = this._iamAliveTablePublishTimeout;
+                });
+            }
 
             if (this._clusterNodeOptions)
             {

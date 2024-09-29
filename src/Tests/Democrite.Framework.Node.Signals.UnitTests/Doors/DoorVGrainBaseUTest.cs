@@ -343,7 +343,7 @@ namespace Democrite.Framework.Node.Signals.UnitTests.Door
             mockServiceCollection.AddSingleton<DoorDefinition>(def)
                                  .AddSingleton(def);
 
-            mockDefinitionProvider.GetFirstValueByIdAsync(Arg.Is(def.Uid), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult<DoorDefinition?>(def));
+            mockDefinitionProvider.GetByKeyAsync(Arg.Is(def.Uid), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult<DoorDefinition?>(def));
 
             var forceGrainId = GrainId.Create(GrainType.Create(typeof(TDoorGrain).Name), GrainIdKeyExtensions.CreateGuidKey(def.Uid));
 

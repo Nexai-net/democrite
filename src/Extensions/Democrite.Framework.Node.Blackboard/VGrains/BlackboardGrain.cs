@@ -312,7 +312,7 @@ namespace Democrite.Framework.Node.Blackboard.VGrains
                     this.Logger.OptiLog(LogLevel.Debug, "[Blackboard {grainId}] -- Start Building", grainId);
 
                     var templateProvider = this._serviceProvider.GetRequiredService<IBlackboardTemplateDefinitionProvider>();
-                    var tmpl = await templateProvider.GetFirstValueByIdAsync(blackboardTemplateUid, token.CancellationToken);
+                    var tmpl = await templateProvider.GetByKeyAsync(blackboardTemplateUid, token.CancellationToken);
 
 #pragma warning disable IDE0270 // Use coalesce expression
                     if (tmpl is null)

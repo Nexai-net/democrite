@@ -12,9 +12,10 @@ namespace Democrite.Framework.Node.References
     using Democrite.Framework.Core.Abstractions.References;
     using Democrite.Framework.Node.Services;
 
-    using Elvex.Toolbox.Abstractions.Comparers;
+    using Elvex.Toolbox;
     using Elvex.Toolbox.Abstractions.Models;
     using Elvex.Toolbox.Extensions;
+    using Elvex.Toolbox.Helpers;
     using Elvex.Toolbox.Models;
 
     using Microsoft.Extensions.Logging;
@@ -31,27 +32,66 @@ namespace Democrite.Framework.Node.References
     /// </summary>
     internal interface IDemocriteTypeReferenceGrainService : IGrainService
     {
-        /// <inheritdoc cref="IDemocriteReferenceSolverService.GetReferenceType(Uri)" />
-        ValueTask<ReferenceTarget?> GetReferenceTarget(Uri refId, bool askOtherNodes = true);
+        /// <summary>
+        /// Gets the latest local registry if etag differt from <paramref name="myCurrentEtag"/>
+        /// </summary>
+        ValueTask<ReferenceTargetRegistry?> GetLatestRegistryAsync(string myCurrentEtag, GrainCancellationToken token);
+
+        /// <summary>
+        /// Try update the local registry
+        /// </summary>
+        Task TryUpdateLocalRegistry();
+
+        /// <summary>
+        /// Determines whether if ETAG is the last used
+        /// </summary>
+        ValueTask<bool> IsToUpdate(string currentRegistryEtag);
+    }
+
+    /// <summary>
+    /// Client to consume the cluster type/reference
+    /// </summary>
+    internal interface IDemocriteTypeReferenceGrainServiceClient : IGrainServiceClient<IDemocriteTypeReferenceGrainService>
+    {
+        /// <summary>
+        /// Gets the latest local registry if etag differt from <paramref name="myCurrentEtag"/>
+        /// </summary>
+        ValueTask<ReferenceTargetRegistry?> GetLatestRegistryAsync(string myCurrentEtag, GrainCancellationToken token);
+
+        /// <summary>
+        /// Determines whether if ETAG is the last used
+        /// </summary>
+        bool IsToUpdate(string currentRegistryEtag);
     }
 
     /// <inheritdoc cref="IDemocriteTypeReferenceGrainService" />
+    /// <remarks>
+    ///     Synchronize the registry beetween all cluster using ETAG
+    ///     
+    ///     1) Build local generate a new ETAG
+    ///     2) Notify the other to sync
+    ///     
+    ///  Synchronization
+    ///     1) Ask all the other theire registry and ETAG
+    ///     2) If all the node have the same ETAG then stop sync
+    ///     3) Aggregate all the targets
+    ///          3.1) If after aggregation all the target are the same than used to be just change you ETAG to match the other
+    ///          3.2) if change between the previous information then notify the other that change exist then trigger a synchronization circle until all the node have the same ETAG
+    /// </remarks>
     internal sealed class DemocriteTypeReferenceGrainService : DemocriteVGrainService, IDemocriteTypeReferenceGrainService
     {
         #region Fields
 
-        private static readonly Type s_serviceTraits = typeof(IDemocriteTypeReferenceGrainService);
+        private readonly ILogger<IDemocriteTypeReferenceGrainService> _logger;
 
         private readonly IRemoteGrainServiceFactory _remoteGrainServiceFactory;
-        private readonly ILogger<IDemocriteTypeReferenceGrainService> _logger;
         private readonly IClusterManifestProvider _clusterManifestProvider;
 
-        private readonly HashSet<ReferenceTarget> _referenceTargets;
-        private readonly ReaderWriterLockSlim _locker;
-        private readonly Dictionary<Uri, ReferenceTarget> _indexByFullUri;
-        private readonly Dictionary<string, HashSet<ReferenceTarget>> _indexByNamespace;
-        private readonly Dictionary<string, HashSet<ReferenceTarget>> _indexBySimpleNameIdentifier;
-        private readonly Dictionary<RefTypeEnum, HashSet<ReferenceTarget>> _indexByRefType;
+        private readonly HashSet<ReferenceTarget> _referenceTargetLocal;
+        private readonly HashSet<ReferenceTarget> _referenceTargetRemote;
+        private readonly SemaphoreSlim _locker;
+
+        private string _currentEtag;
 
         #endregion
 
@@ -68,42 +108,42 @@ namespace Democrite.Framework.Node.References
                                                   ILogger<IDemocriteTypeReferenceGrainService> logger)
             : base(grainId, silo, loggerFactory)
         {
-            this._referenceTargets = new HashSet<ReferenceTarget>();
-            this._locker = new ReaderWriterLockSlim();
+            this._referenceTargetLocal = new HashSet<ReferenceTarget>();
+            this._referenceTargetRemote = new HashSet<ReferenceTarget>();
+            this._locker = new SemaphoreSlim(1);
 
             this._logger = logger;
 
             this._remoteGrainServiceFactory = remoteGrainServiceFactory;
 
-            this._indexByFullUri = new Dictionary<Uri, ReferenceTarget>(UriComparer.WithFragment);
-            this._indexByRefType = new Dictionary<RefTypeEnum, HashSet<ReferenceTarget>>();
-            this._indexByNamespace = new Dictionary<string, HashSet<ReferenceTarget>>(StringComparer.OrdinalIgnoreCase);
-            this._indexBySimpleNameIdentifier = new Dictionary<string, HashSet<ReferenceTarget>>(StringComparer.OrdinalIgnoreCase);
-
             this._clusterManifestProvider = clusterManifestProvider;
 
+#pragma warning disable IDE0049 // Simplify Names
             var types = CSharpTypeInfo.ScalarTypes
                                       .Append(typeof(string))
                                       .Append(typeof(Guid))
                                       .Select(t => new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, t.Name.ToLowerWithSeparator('-'), DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)t.GetAbstractType()))
                                       .Concat(new[]
                                       {
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "int", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(int).GetAbstractType()),
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "big-int", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(Int64).GetAbstractType()),
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "double", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(double).GetAbstractType()),
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "float", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(float).GetAbstractType()),
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "long", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(long).GetAbstractType()),
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "string", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(string).GetAbstractType()),
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "short", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(short).GetAbstractType()),
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "ushort", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(ushort).GetAbstractType()),
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "byte", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(byte).GetAbstractType()),
-                                          new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "sbyte", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(sbyte).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "int", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(int).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "big-int", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(Int64).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "double", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(double).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "float", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(float).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "long", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(long).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "string", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(string).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "short", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(short).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "ushort", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(ushort).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "byte", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(byte).GetAbstractType()),
+                                        new ReferenceTypeTarget(RefIdHelper.Generate(RefTypeEnum.Type, "sbyte", DemocriteConstants.CSHARP_SYSTEM_NAMESPACE), RefTypeEnum.Type, (ConcretType)typeof(sbyte).GetAbstractType()),
                                       })
                                       .Distinct()
                                       .ToArray();
+#pragma warning restore IDE0049 // Simplify Names
 
             foreach (var t in types)
                 InjectReferenceTarget(t);
+
+            this._currentEtag = Guid.NewGuid().ToString().Replace("-", "");
         }
 
         #endregion
@@ -111,9 +151,93 @@ namespace Democrite.Framework.Node.References
         #region Methods
 
         /// <inheritdoc />
-        protected override Task RefreshInfoAsync()
+        public ValueTask<ReferenceTargetRegistry?> GetLatestRegistryAsync(string myCurrentEtag, GrainCancellationToken token)
         {
-            this._locker.EnterWriteLock();
+            ReferenceTargetRegistry? result = null!;
+            if (this._currentEtag != myCurrentEtag)
+            {
+                result = new ReferenceTargetRegistry(this._currentEtag,
+                                                     this._referenceTargetLocal.Concat(this._referenceTargetRemote).ToArray());
+            }
+
+            token.CancellationToken.ThrowIfCancellationRequested();
+
+            return ValueTask.FromResult<ReferenceTargetRegistry?>(result);
+        }
+
+        /// <inheritdoc />
+        public async Task TryUpdateLocalRegistry()
+        {
+            bool localChanges = false;
+
+            using (var disposeToken = CancellationHelper.DisposableTimeout(TimeSpan.FromSeconds(25)))
+            using (var grainToken = disposeToken.Content.ToGrainCancellationTokenSource())
+            {
+                await this._locker.WaitAsync(disposeToken.Content);
+                try
+                {
+                    var registries = await CallOtherClusterNodes(r => r.GetLatestRegistryAsync(this._currentEtag, grainToken.Token).AsTask());
+
+                    if (registries.All(r => r is null))
+                        return;
+
+                    var copyRemote = this._referenceTargetRemote.ToHashSet();
+                    var oldRefs = this._referenceTargetLocal.Concat(this._referenceTargetRemote).ToArray();
+
+                    this._referenceTargetRemote.Clear();
+
+                    foreach (var registry in registries.NotNull())
+                    {
+                        foreach (var target in registry.References)
+                        {
+                            if (this._referenceTargetLocal.Contains(target))
+                                return;
+
+                            this._referenceTargetRemote.Add(target);
+                        }
+                    }
+
+                    var newRefs = this._referenceTargetLocal.Concat(this._referenceTargetRemote).ToArray();
+                    var diff = newRefs.Except(oldRefs).Any();
+
+                    if (diff == false)
+                    {
+                        this._currentEtag = registries.Where(r => r is not null)
+                                                      .GroupBy(r => r!.Etag)
+                                                      .OrderByDescending(r => r.Count()).First().Key;
+                    }
+                    else
+                    {
+                        UpdateLocalETAG();
+                        localChanges = true;
+                    }
+                }
+                finally
+                {
+                    this._locker.Release();
+                }
+
+                if (localChanges)
+                    await NotifyChangesAsync();
+            }
+        }
+
+        /// <inheritdoc />
+        public ValueTask<bool> IsToUpdate(string currentRegistryEtag)
+        {
+            return ValueTask.FromResult(this._currentEtag == currentRegistryEtag);
+        }
+
+        #region Tools
+
+        /// <inheritdoc />
+        /// <remarks>
+        ///     Refresh local info
+        /// </remarks>
+        protected override async Task RefreshInfoAsync()
+        {
+            bool haveChanged = false;
+            await this._locker.WaitAsync();
             try
             {
                 var entry = Assembly.GetEntryAssembly();
@@ -122,19 +246,22 @@ namespace Democrite.Framework.Node.References
 
                 var allAssemblies = new[] { entry, exec, calling };
                 var refProviders = EnumerableHelper<AssemblyName>.ReadOnly
-                                        .Concat(entry?.GetReferencedAssemblies() ?? EnumerableHelper<AssemblyName>.ReadOnly)
-                                        .Concat(exec.GetReferencedAssemblies())
-                                        .Concat(calling.GetReferencedAssemblies())
-                                        .Distinct()
-                                        .Select(a => Assembly.Load(a))
-                                        .Concat(allAssemblies)
-                                        .NotNull()
-                                        .Distinct()
-                                        .SelectMany(a => a.GetCustomAttributes().OfType<DemocriteReferenceProviderAttribute>())
-                                        .ToArray();
-
+                                                                 .Concat(entry?.GetReferencedAssemblies() ?? EnumerableHelper<AssemblyName>.ReadOnly)
+                                                                 .Concat(exec.GetReferencedAssemblies())
+                                                                 .Concat(calling.GetReferencedAssemblies())
+                                                                 .Distinct()
+                                                                 .Select(a => Assembly.Load(a))
+                                                                 .Concat(allAssemblies)
+                                                                 .NotNull()
+                                                                 .Distinct()
+                                                                 .SelectMany(a => a.GetCustomAttributes().OfType<DemocriteReferenceProviderAttribute>())
+                                                                 .ToArray();
                 if (refProviders.Any())
-                    SafeImportProvider(refProviders);
+                    haveChanged |= SafeImportProvider(refProviders);
+
+                if (haveChanged)
+                    UpdateLocalETAG();
+
             }
             catch (Exception ex)
             {
@@ -145,91 +272,124 @@ namespace Democrite.Framework.Node.References
                 AppDomain.CurrentDomain.AssemblyLoad -= CurrentDomain_AssemblyLoad;
                 AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
 
-                this._locker.ExitWriteLock();
+                this._locker.Release();
             }
 
-            return Task.CompletedTask;
+            if (haveChanged)
+                await NotifyChangesAsync();
         }
 
-        /// <inheritdoc />
-        public async ValueTask<ReferenceTarget?> GetReferenceTarget(Uri typeRefId, bool askOtherNodes = true)
+        /// <summary>
+        /// Updates the local etag.
+        /// </summary>
+        private void UpdateLocalETAG()
         {
-            if (RefIdHelper.IsRefId(typeRefId) == false)
-                throw new InvalidDataException("Must be a valid RefId");
-
-            RefIdHelper.Explode(typeRefId, out var type, out var @namespace, out var sni);
-
-            ReferenceTarget? founded = null;
-            var addToCacheIfFounded = false;
-
-            this._locker.EnterReadLock();
-            try
-            {
-                if (!this._indexByFullUri.TryGetValue(typeRefId, out founded))
-                {
-                    addToCacheIfFounded = true;
-                    if (this._indexBySimpleNameIdentifier.TryGetValue(sni, out var targets))
-                    {
-                        if (targets.Count == 1)
-                        {
-                            founded = targets.First();
-                        }
-                        else
-                        {
-                            var typeMatch = targets.Where(t => t.RefType == type).ToArray();
-
-                            if (type == RefTypeEnum.Method)
-                                typeMatch = typeMatch.Where(t => t.RefId.Fragment == typeRefId.Fragment).ToArray();
-
-                            if (typeMatch.Length == 1)
-                                return typeMatch.Single();
-                            else if (typeMatch.Any() && this._indexByNamespace.TryGetValue(@namespace, out var nameSpacesTargets))
-                                founded = typeMatch.Intersect(nameSpacesTargets).SingleOrDefault();
-                        }
-                    }
-                }
-            }
-            finally
-            {
-                this._locker.ExitReadLock();
-            }
-
-            if (founded is null && askOtherNodes)
-            {
-                addToCacheIfFounded = true;
-                founded = await FetchFromClusterRefAsync(typeRefId);
-            }
-
-            if (founded is not null && addToCacheIfFounded)
-                PushToCacheFullUri(typeRefId, founded);
-
-            return founded;
+            this._currentEtag = Guid.NewGuid().ToString().Replace("-", "");
         }
 
-        #region Tools
+        ///// <inheritdoc />
+        //public async ValueTask<ReferenceTarget?> GetReferenceTarget(Uri typeRefId, bool askOtherNodes = true)
+        //{
+        //    if (RefIdHelper.IsRefId(typeRefId) == false)
+        //        throw new InvalidDataException("Must be a valid RefId");
+
+        //    RefIdHelper.Explode(typeRefId, out var type, out var @namespace, out var sni);
+
+        //    ReferenceTarget? founded = null;
+        //    var addToCacheIfFounded = false;
+
+        //    this._locker.EnterReadLock();
+        //    try
+        //    {
+        //        if (!this._indexByFullUri.TryGetValue(typeRefId, out founded))
+        //        {
+        //            addToCacheIfFounded = true;
+        //            if (this._indexBySimpleNameIdentifier.TryGetValue(sni, out var targets))
+        //            {
+        //                if (targets.Count == 1)
+        //                {
+        //                    founded = targets.First();
+        //                }
+        //                else
+        //                {
+        //                    var typeMatch = targets.Where(t => t.RefType == type).ToArray();
+
+        //                    if (type == RefTypeEnum.Method)
+        //                        typeMatch = typeMatch.Where(t => t.RefId.Fragment == typeRefId.Fragment).ToArray();
+
+        //                    if (typeMatch.Length == 1)
+        //                        return typeMatch.Single();
+        //                    else if (typeMatch.Any() && this._indexByNamespace.TryGetValue(@namespace, out var nameSpacesTargets))
+        //                        founded = typeMatch.Intersect(nameSpacesTargets).SingleOrDefault();
+        //                }
+        //            }
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        this._locker.ExitReadLock();
+        //    }
+
+        //    if (founded is null && askOtherNodes)
+        //    {
+        //        addToCacheIfFounded = true;
+        //        founded = await FetchFromClusterRefAsync(typeRefId);
+        //    }
+
+        //    if (founded is not null && addToCacheIfFounded)
+        //        PushToCacheFullUri(typeRefId, founded);
+
+        //    return founded;
+        //}
 
         /// <summary>
         /// Currents the domain assembly load.
         /// </summary>
         private void CurrentDomain_AssemblyLoad(object? sender, AssemblyLoadEventArgs args)
         {
-            this._locker.EnterWriteLock();
+            bool needClusterSync = false;
+
+            this._locker.Wait();
             try
             {
+                var savedEtagState = this._currentEtag;
                 var providers = args.LoadedAssembly.GetCustomAttributes()
-                                                  .OfType<DemocriteReferenceProviderAttribute>()
-                                                  .ToArray();
+                                                   .OfType<DemocriteReferenceProviderAttribute>()
+                                                   .ToArray();
 
                 if (providers.Any())
                     SafeImportProvider(providers);
+
+                needClusterSync = this._currentEtag != savedEtagState;
             }
             finally
             {
-                this._locker.ExitWriteLock();
+                this._locker.Release();
             }
+
+            if (needClusterSync)
+                Task.Run(NotifyChangesAsync);
         }
 
-        private void SafeImportProvider(params DemocriteReferenceProviderAttribute[] refProviders)
+        /// <summary>
+        /// Notifies the other cluster node that reference registry have changes
+        /// </summary>
+        private async Task NotifyChangesAsync()
+        {
+            await CallOtherClusterNodes<NoneType>(async f =>
+            {
+                await f.TryUpdateLocalRegistry();
+                return NoneType.Instance;
+            });
+        }
+
+        /// <summary>
+        /// Safes the import provider.
+        /// </summary>
+        /// <returns>
+        ///     return <c>true</c> if new elements have been imported
+        /// </returns>
+        private bool SafeImportProvider(params DemocriteReferenceProviderAttribute[] refProviders)
         {
             var registry = new DemocriteReferenceRegistry(this.Logger);
 
@@ -246,96 +406,52 @@ namespace Democrite.Framework.Node.References
             }
 
             var newReferences = registry.GetReferences();
-            var referenceToAdd = newReferences.Except(this._referenceTargets).ToArray();
+            var referenceToAdd = newReferences.Except(this._referenceTargetLocal)
+                                              .Except(this._referenceTargetRemote)
+                                              .ToArray();
+
+            bool haveChanges = false;
 
             foreach (var newRef in referenceToAdd)
-                InjectReferenceTarget(newRef);
+                haveChanges |= InjectReferenceTarget(newRef);
 
-            if (referenceToAdd.Any())
-            {
-                // TODO: Change ETAG and notify the other nodes
-            }
+            return haveChanges;
         }
 
         /// <summary>
         /// Injects the reference target.
         /// </summary>
-        private void InjectReferenceTarget(ReferenceTarget? newRef)
+        private bool InjectReferenceTarget(ReferenceTarget? newRef)
         {
-            if (newRef is null || this._referenceTargets.Contains(newRef))
-                return;
+            if (newRef is null)
+                return false;
 
-            this._referenceTargets.Add(newRef);
-
-            // Compute search index
-            if (this._indexByFullUri.ContainsKey(newRef.RefId) == false)
-                this._indexByFullUri.Add(newRef.RefId, newRef);
-
-            RefIdHelper.Explode(newRef.RefId, out var refType, out var @namespace, out var simpleNameIdentifier);
-
-            if (!this._indexByNamespace.TryGetValue(@namespace, out var targetsByNamespaces))
-            {
-                targetsByNamespaces = new HashSet<ReferenceTarget>();
-                this._indexByNamespace.Add(@namespace, targetsByNamespaces);
-            }
-
-            if (!this._indexByRefType.TryGetValue(refType, out var targetsByRefTypes))
-            {
-                targetsByRefTypes = new HashSet<ReferenceTarget>();
-                this._indexByRefType.Add(refType, targetsByNamespaces);
-            }
-
-            if (!this._indexBySimpleNameIdentifier.TryGetValue(simpleNameIdentifier, out var targetsBySimpleNameIdentifier))
-            {
-                targetsBySimpleNameIdentifier = new HashSet<ReferenceTarget>();
-                this._indexBySimpleNameIdentifier.Add(simpleNameIdentifier, targetsBySimpleNameIdentifier);
-            }
-
-            targetsByNamespaces.Add(newRef);
-            targetsByRefTypes.Add(newRef);
-            targetsBySimpleNameIdentifier.Add(newRef);
+            return this._referenceTargetLocal.Add(newRef);
         }
 
         /// <summary>
-        /// Pushes to cache full URI the association <paramref name="typeRefId"/> with <paramref name="founded"/>.
+        /// Calls the other cluster nodes.
         /// </summary>
-        private void PushToCacheFullUri(Uri typeRefId, ReferenceTarget founded)
-        {
-            this._locker.EnterWriteLock();
-            try
-            {
-                if (this._indexByFullUri.ContainsKey(typeRefId) == false)
-                    this._indexByFullUri.Add(typeRefId, founded);
-            }
-            finally
-            {
-                this._locker.ExitWriteLock();
-            }
-        }
-
-        /// <summary>
-        /// Fetches from cluster reference asynchronous.
-        /// </summary>
-        // TODO : auto test multi nodes
-        private async Task<ReferenceTarget?> FetchFromClusterRefAsync(Uri refId)
+        private async Task<IReadOnlyCollection<TResult?>> CallOtherClusterNodes<TResult>(Func<IDemocriteTypeReferenceGrainService, Task<TResult?>> fetch)
         {
             var otherSiloAddresses = this._clusterManifestProvider.Current.Silos
                                                                   .Select(s => s.Key)
                                                                   .Where(s => s != base.Silo)
                                                                   .ToArray();
 
+            var results = new List<TResult?>();
+
             foreach (var otherSiloAddress in otherSiloAddresses)
             {
                 var grainId = SystemTargetGrainId.Create(this.GrainReference.GrainId.Type, otherSiloAddress);
                 var remoteGrain = this._remoteGrainServiceFactory.GetRemoteGrainService<IDemocriteTypeReferenceGrainService>(grainId.GrainId);
 
-                var target = await remoteGrain.GetReferenceTarget(refId, false);
+                var remoteResult = await fetch(remoteGrain);
 
-                if (target is not null)
-                    return target;
+                results.Add(remoteResult);
             }
 
-            return null;
+            return results;
         }
 
         #endregion

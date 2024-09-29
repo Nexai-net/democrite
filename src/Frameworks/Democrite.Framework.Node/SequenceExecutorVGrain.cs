@@ -151,7 +151,7 @@ namespace Democrite.Framework.Node
 
             try
             {
-                var sequenceDefintion = await this._sequenceDefinitionManager.GetFirstValueByIdAsync(state.SequenceDefinitionId, execCancelToken);
+                var sequenceDefintion = await this._sequenceDefinitionManager.GetByKeyAsync(state.SequenceDefinitionId, execCancelToken);
 
                 if (sequenceDefintion is null)
                     throw new MissingDefinitionException(typeof(SequenceDefinition), state.SequenceDefinitionId.ToString());
@@ -183,7 +183,7 @@ namespace Democrite.Framework.Node
                     Debug.Assert(state.MainThread != null);
 
                     var mainExecutionThread = await SequenceExecutorExecThread.BuildFromAsync(state.MainThread,
-                                                                                              id => this._sequenceDefinitionManager.GetFirstValueByIdAsync(id, execCancelToken),
+                                                                                              id => this._sequenceDefinitionManager.GetByKeyAsync(id, execCancelToken),
                                                                                               this._stageProvider,
                                                                                               this._objectConverter,
                                                                                               this._timeManager,

@@ -37,6 +37,7 @@
 	<ItemGroup>
 		<InternalsVisibleTo Include="Democrite.UnitTests.ToolKit" />
 		<InternalsVisibleTo Include="Democrite.Framework.Node.UnitTests" />
+		<InternalsVisibleTo Include="Democrite.Framework.Core.CodeGenerator.UnitTests"/>
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 	

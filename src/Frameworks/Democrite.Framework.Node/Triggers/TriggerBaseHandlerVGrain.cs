@@ -274,7 +274,7 @@ namespace Democrite.Framework.Node.Triggers
                                                          bool waitResult,
                                                          CancellationToken token)
         {
-            var targetSequences = await inst._sequenceDefinitionProvider.GetValuesAsync(token, sequences);
+            var targetSequences = await inst._sequenceDefinitionProvider.GetByKeyAsync(token, sequences);
 
             if (input is IEnumerable enumerable && input is not string)
             {
@@ -320,7 +320,7 @@ namespace Democrite.Framework.Node.Triggers
                                                          bool waitResult,
                                                          CancellationToken token)
         {
-            var targetSignals = await inst._signalDefinitionProvider.GetValuesAsync(token, signals);
+            var targetSignals = await inst._signalDefinitionProvider.GetByKeyAsync(token, signals);
 
             if (input is IEnumerable enumerable && input is not string)
             {
@@ -361,7 +361,7 @@ namespace Democrite.Framework.Node.Triggers
                                                          bool waitResult,
                                                          CancellationToken token)
         {
-            var targetStreams = await inst._streamQueueDefinitionProvider.GetValuesAsync(token, streams);
+            var targetStreams = await inst._streamQueueDefinitionProvider.GetByKeyAsync(token, streams);
 
             if (input is IEnumerable enumerable && input is not string)
             {
@@ -473,7 +473,7 @@ namespace Democrite.Framework.Node.Triggers
             using (var timeoutToken = CancellationHelper.DisposableTimeout(s_inputBuildTimeout))
             using (var ensureCancelToken = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Content, this.VGrainLifecycleToken, cancellationToken))
             {
-                var definition = (await this._triggerDefinitionProvider.GetFirstValueByIdAsync(triggerDefinitionId, ensureCancelToken.Token)) as TTriggerDefinition;
+                var definition = (await this._triggerDefinitionProvider.GetByKeyAsync(triggerDefinitionId, ensureCancelToken.Token)) as TTriggerDefinition;
 
 #pragma warning disable IDE0270 // Use coalesce expression
                 if (definition == null)

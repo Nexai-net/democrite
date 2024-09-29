@@ -190,7 +190,7 @@ namespace Democrite.Framework.Node.Signals.Doors
 
             var doorId = this.GetPrimaryKey();
 
-            var info = await this._doorDefinitionProvider.GetFirstValueByIdAsync(doorId, ct) ?? throw new DoorNotFoundException(doorId.ToString());
+            var info = await this._doorDefinitionProvider.GetByKeyAsync(doorId, ct) ?? throw new DoorNotFoundException(doorId.ToString());
 
             this._identityCard = await base.RegisterAsComponentAsync<IComponentDoorIdentityCard>(info.Uid);
 

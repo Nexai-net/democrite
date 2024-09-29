@@ -127,7 +127,7 @@ namespace Democrite.Framework.Node.Blackboard
                                                                   CancellationToken token = default,
                                                                   Guid? callContextId = null)
         {
-            var tmpl = await this._blackboardTemplateDefinitionProvider.GetFirstValueByIdAsync(boardTemplateConfigurationUid, token);
+            var tmpl = await this._blackboardTemplateDefinitionProvider.GetByKeyAsync(boardTemplateConfigurationUid, token);
 
 #pragma warning disable IDE0270 // Use coalesce expression
             if (tmpl is null)

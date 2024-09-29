@@ -25,8 +25,6 @@ namespace Democrite.Framework.Core.Extensions
 
     using Orleans.Runtime;
 
-    using System.Linq;
-
     public static class DemocriteCoreServicesExtensions
     {
         /// <summary>
@@ -35,6 +33,8 @@ namespace Democrite.Framework.Core.Extensions
         public static IServiceCollection SetupCoreServices(this IServiceCollection serviceCollection)
         {
             AddDefaultCoreService<ISequenceDefinitionProvider, SequenceDefinitionProvider>(serviceCollection);
+            AddDefaultCoreService<IDefinitionProvider, DefinitionProvider>(serviceCollection);
+
             AddDefaultCoreService<IDiagnosticLogger, DiagnosticLogger>(serviceCollection);
 
             AddDefaultCoreService<IProcessSystemService, ProcessSystemService>(serviceCollection);
