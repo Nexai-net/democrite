@@ -559,6 +559,7 @@ namespace Democrite.Framework.Configurations
             var defaultMemoryAutoKey = configuration.GetSection(ConfigurationNodeSectionNames.NodeMemoryDefaultAutoConfigKey).Get<string>();
 
             AutoConfigImpl<INodeDemocriteMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                              "Democrite-System-Storage",
                                                                                               indexedAssemblies,
                                                                                               s => s.GetServiceByKey<string, IGrainStorage>(DemocriteConstants.DefaultDemocriteStateConfigurationKey) != null,
                                                                                               ConfigurationNodeSectionNames.NodeDemocriteMemoryAutoConfigKey,
@@ -566,6 +567,7 @@ namespace Democrite.Framework.Configurations
                                                                                               defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigImpl<INodeDemocriteAdminMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                                   "Democrite-Admin-Storage",
                                                                                                    indexedAssemblies,
                                                                                                    s => s.GetServiceByKey<string, IGrainStorage>(DemocriteConstants.DefaultDemocriteAdminStateConfigurationKey) != null,
                                                                                                    ConfigurationNodeSectionNames.NodeDemocriteAdminMemoryAutoConfigKey,
@@ -573,6 +575,7 @@ namespace Democrite.Framework.Configurations
                                                                                                    defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigImpl<INodeReminderStateMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                                  "Orlean-Reminder-Storage",
                                                                                                   indexedAssemblies,
                                                                                                   s => s.Any(d => (d.ServiceType == typeof(IReminderTable))),
                                                                                                   ConfigurationNodeSectionNames.NodeReminderStateMemoryAutoConfigKey,
@@ -582,6 +585,7 @@ namespace Democrite.Framework.Configurations
             base.OnAutoConfigure(configuration, indexedAssemblies, logger);
 
             AutoConfigBasedOnKeys<INodeCustomGrainMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeCustomMemory,
+                                                                                                       "Custom-Grain-Storage",
                                                                                                        configuration,
                                                                                                        indexedAssemblies,
                                                                                                        (s, key) => s.GetServiceByKey<string, IGrainStorage>(key) != null,
@@ -599,6 +603,7 @@ namespace Democrite.Framework.Configurations
                                                                                                        defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigBasedOnKeys<INodeCustomDefinitionProviderAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeDefinitionProvider,
+                                                                                                              "Custom-Definition-Provider",
                                                                                                               configuration,
                                                                                                               indexedAssemblies,
                                                                                                               (s, key) => s.GetServiceByKey<string, ISequenceDefinitionSourceProvider>(key) != null,
@@ -607,6 +612,7 @@ namespace Democrite.Framework.Configurations
                                                                                                               defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigImpl<INodeDefaultMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                            "Default-Grain-Storage",
                                                                                             indexedAssemblies,
                                                                                             s => s.GetServiceByKey<string, IGrainStorage>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME) != null,
                                                                                             ConfigurationNodeSectionNames.NodeDefaultMemoryAutoConfigKey,
@@ -614,6 +620,7 @@ namespace Democrite.Framework.Configurations
                                                                                             defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigImpl<IClusterEndpointAutoConfigurator, IDemocriteClusterBuilder>(configuration,
+                                                                                       "Cluster-Endpoint",
                                                                                        indexedAssemblies,
                                                                                        s => s.Any(d => (d.ServiceType == typeof(EndpointOptions) && d.ImplementationType != null)),
                                                                                        ConfigurationSectionNames.Endpoints,
@@ -621,6 +628,7 @@ namespace Democrite.Framework.Configurations
 
             // Repository
             AutoConfigBasedOnKeys<INodeCustomRepositoryMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(ConfigurationNodeSectionNames.NodeRepositoryStorages,
+                                                                                                            "Custom-Repository-Storage",
                                                                                                             configuration,
                                                                                                             indexedAssemblies,
                                                                                                             (s, key) => s.GetServiceByKey<string, IRepositorySpecificFactory>(key) != null,
@@ -628,12 +636,14 @@ namespace Democrite.Framework.Configurations
                                                                                                             defaultAutoKey: defaultMemoryAutoKey);
 
             AutoConfigImpl<INodeDemocriteDynamicDefinitionsMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                                                "Dynamic-Definitions-Storage",
                                                                                                                 indexedAssemblies,
                                                                                                                 (s) => s.GetServiceByKey<string, IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteDynamicDefinitionsConfigurationKey) != null,
                                                                                                                 ConfigurationNodeSectionNames.NodeDemocriteDynamicDefinitionsMemoryAutoConfigKey,
                                                                                                                 logger);
 
             AutoConfigImpl<INodeDefaultRepositoryMemoryAutoConfigurator, IDemocriteNodeMemoryBuilder>(configuration,
+                                                                                                      "Default-Repository-Storage",
                                                                                                       indexedAssemblies,
                                                                                                       (s) => s.GetServiceByKey<string, IRepositorySpecificFactory>(DemocriteConstants.DefaultDemocriteRepositoryConfigurationKey) != null,
                                                                                                       ConfigurationNodeSectionNames.NodeRepositoryStoragesDefaultAutoConfigKey,
@@ -670,6 +680,7 @@ namespace Democrite.Framework.Configurations
         /// Helper use to configured services on each on specific key in the configuration
         /// </summary>
         private void AutoConfigBasedOnKeys<TAutoConfig, TAutoWizard>(string rootConfig,
+                                                                     string logActionName,
                                                                      IConfiguration configuration,
                                                                      IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
                                                                      Func<IServiceCollection, string, bool> predicateConfigurationExist,
@@ -687,6 +698,7 @@ namespace Democrite.Framework.Configurations
             foreach (var child in rootSection.GetChildren())
             {
                 AutoConfigImpl(configuration,
+                               logActionName,
                                indexedAssemblies,
                                s => predicateConfigurationExist?.Invoke(s, child.Key) ?? false,
 

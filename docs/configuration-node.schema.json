@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "id": "https://github.com/Nexai-net/democrite/docs/configuration-node.schema.json",
+  "title": "Democrite Configurations",
+  "description": "The schema for dynamic democrite server configuration",
+  "unevaluatedProperties": false,
+  "$ref": "https://github.com/Nexai-net/democrite/docs/configuration.schema.json",
+  "properties": {
+    "Endpoints": {
+      "$ref": "#/$defs/EndpointsDef"
+    },
+    "Node": {
+      "$ref": "#/$defs/NodeDef"
+    },
+    "Storages": {
+      "$ref": "#/$defs/StoragesDef"
+    },
+    "Repositories": {
+      "$ref": "#/$defs/RepositoriesDef"
+    },
+    "Definitions": {
+      "$ref": "#/$defs/DefinitionsDef"
+    }
+  },
+  "$defs": {
+    "_serviceDef": {
+      "unevaluatedProperties": false,
+      "type": "object",
+      "properties": {
+        "AutoKey": {
+          "$ref": "https://github.com/Nexai-net/democrite/docs/configuration.schema.json/$defs/_autoKey"
+        }
+      }
+    },
+    "EndpointsDef": {
+      "type": "object",
+      "properties": {
+        "Loopback": {
+          "type": "boolean"
+        },
+        "SiloPort": {
+          "type": "integer"
+        },
+        "GatewayPort": {
+          "type": "integer"
+        },
+        "AutoGatewayPort": {
+          "type": "boolean"
+        }
+      }
+    },
+    "NodeDef": {
+      "type": "object",
+      "properties": {
+
+      }
+    },
+    "StoragesDef": {
+      "type": "object",
+      "properties": {
+        "Default": {
+          "$ref": "#/$defs/_serviceDef"
+        },
+        "Admin": {
+          "$ref": "#/$defs/_serviceDef"
+        },
+        "Democrite": {
+          "$ref": "#/$defs/_serviceDef"
+        },
+        "Reminders": {
+          "$ref": "#/$defs/_serviceDef"
+        },
+        "DynamicDefinitions": null,
+        "Customs": {
+          "type": "object",
+          "patternProperties": {
+            "[a-zA-Z0-9-]+": {
+              "type": "object",
+              "$ref": "#/$defs/_serviceDef"
+            }
+          }
+        }
+      }
+    },
+    "RepositoriesDef": {
+      "type": "object",
+      "properties": {
+        "Default": {
+          "$ref": "#/$defs/_serviceDef"
+        }
+      }
+    },
+    "DefinitionsDef": {
+      "type": "object",
+      "properties": {
+
+      }
+    }
+  }
+}

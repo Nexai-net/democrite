@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "id": "https://github.com/Nexai-net/democrite/docs/configuration.schema.json",
+  "title": "Democrite Configurations",
+  "description": "The schema for dynamic democrite server configuration",
+  "unevaluatedProperties": false,
+  "properties": {
+    "Extensions": {
+      "$ref": "#/$defs/ExtensionsDef"
+    },
+    "Cluster": {
+      "$ref": "#/$defs/ClusterDef"
+    }
+  },
+  "$defs": {
+    "_autoKey": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9.]+$"
+    },
+    "ExtensionsDef": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9.]+.dll$/i"
+      }
+    },
+
+    "ClusterDef": {
+      "properties": {
+        "AutoKey": {
+          "$ref": "#/$defs/_autoKey"
+        },
+        "ConnectionString": {
+          "type": "string"
+        }
+      },
+      "required": [ "AutoKey" ]
+    }
+  }
+}

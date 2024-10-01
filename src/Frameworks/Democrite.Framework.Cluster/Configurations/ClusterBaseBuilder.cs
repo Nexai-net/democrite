@@ -10,6 +10,7 @@ namespace Democrite.Framework.Cluster.Configurations
     using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Cluster.Services;
     using Democrite.Framework.Configurations;
+    using Democrite.Framework.Core;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Deferred;
     using Democrite.Framework.Core.Abstractions.Repositories;
@@ -61,6 +62,8 @@ namespace Democrite.Framework.Cluster.Configurations
     {
         #region Fields
 
+        private readonly DemocriteClusterNodeInfo _clusterInfo;
+
         private readonly IAssemblyInspector _assemblyInspector;
         private readonly IFileSystemHandler _fileSystemHandler;
         private readonly INetworkInspector _networkInspector;
@@ -111,6 +114,9 @@ namespace Democrite.Framework.Cluster.Configurations
             this._services = new Queue<ServiceDescriptor>();
 
             this.MemoryLogger = new InMemoryLogger(new LoggerFilterOptions() { MinLevel = LogLevel.Trace }.ToMonitorOption());
+
+            this._clusterInfo = new DemocriteClusterNodeInfo();
+            AddService<IDemocriteClusterNodeInfo, DemocriteClusterNodeInfo>();
         }
 
         #endregion
@@ -563,9 +569,11 @@ namespace Democrite.Framework.Cluster.Configurations
                 var extensionsDll = extensions.GetChildren()
                                               .Select(x => x.Value)
                                               .Where(x => !string.IsNullOrWhiteSpace(x))
-                                              .SelectMany(d => this._fileSystemHandler.SearchFiles(Environment.CurrentDirectory, "*" + d! + ".dll", false))
+                                              .SelectMany(d => this._fileSystemHandler.SearchFiles(Environment.CurrentDirectory, d! + ".dll", false))
                                               .Distinct()
                                               .ToArray();
+                
+                logger.OptiLog(LogLevel.Information, "[Extensions] - Extensions to load - {extensions}", string.Join(Environment.NewLine, extensions));
 
                 foreach (var extension in extensionsDll)
                 {
@@ -577,16 +585,19 @@ namespace Democrite.Framework.Cluster.Configurations
                         {
                             var assembly = this._assemblyLoader.Load(stream);
                             this._assemblyInspector.RegisterAssemblyAndDependencies(assembly, true);
+                            logger.OptiLog(LogLevel.Information, "[Extensions] - Loaded - {extension}", Path.GetFileName(extension.OriginalString));
                         }
                     }
                 }
             }
 
-            var assemblies = this._assemblyInspector.SearchAssembliesWithAttribute<AutoConfiguratorKeyAttribute>();
+            var assemblies = this._clusterInfo.CurrentLoadedAssemblies; //this._assemblyInspector.SearchAssembliesWithAttribute<AutoConfiguratorKeyAttribute>();
 
-            var indexedAssemblies = assemblies?.GroupBy(kv => kv.attribute?.Key ?? string.Empty)
+            var indexedAssemblies = assemblies?.Select(a => (Assembly: a, Attr: this._assemblyInspector.GetAssemblyAttributes<AutoConfiguratorKeyAttribute>(a).FirstOrDefault()))
+                                               .Where(a => a.Attr is not null)
+                                               .GroupBy(kv => kv.Attr?.Key ?? string.Empty)
                                                .ToDictionary(grp => grp.Key,
-                                                             grp => (IReadOnlyDictionary<Type, Type>)grp.Select(g => g.assembly)
+                                                             grp => (IReadOnlyDictionary<Type, Type>)grp.Select(g => g.Assembly)
                                                                                                         .Distinct()
                                                                                                         .SelectMany(a => this._assemblyInspector.GetAssemblyAttributes<AutoConfiguratorAttribute>(a))
                                                                                                         .GroupBy(cfg => cfg.AutoConfigService)
@@ -596,6 +607,7 @@ namespace Democrite.Framework.Cluster.Configurations
             OnAutoConfigure(configuration, indexedAssemblies, logger);
 
             AutoConfigImpl<IMembershipsAutoConfigurator, IDemocriteClusterBuilder>(configuration,
+                                                                                   "ClusterMembership",
                                                                                    indexedAssemblies,
                                                                                    s => s.Any(d => (d.ServiceType == typeof(IMembershipTable) && d.ImplementationType != null) ||
                                                                                                    (d.ServiceType == typeof(IGatewayListProvider) && d.ImplementationType != null)),
@@ -617,6 +629,7 @@ namespace Democrite.Framework.Cluster.Configurations
         /// </summary>
         /// <exception cref="MissingRequiredDemocriteConfigurationException">Raised when no auto configuration have been setup for specific key.</exception>
         protected void AutoConfigImpl<TAutoConfig, TAutoWizard>(IConfiguration configuration,
+                                                                string logActionName,
                                                                 IReadOnlyDictionary<string, IReadOnlyDictionary<Type, Type>> indexedAssemblies,
                                                                 Func<IServiceCollection, bool> predicateConfigurationExist,
                                                                 string configFullKey,
@@ -628,10 +641,15 @@ namespace Democrite.Framework.Cluster.Configurations
             where TAutoConfig : IAutoConfigurator
             where TAutoWizard : IBuilderDemocriteBaseWizard
         {
+            const string AUTO_KEY_CFG_KEY = ConfigurationSectionNames.SectionSeparator + ConfigurationSectionNames.AutoConfigKey;
+
             var serviceCollection = GetServiceCollection();
 
             if (predicateConfigurationExist(serviceCollection))
+            {
+                logger.OptiLog(LogLevel.Information, "[{ConfigAction}][Key:{key}] - Already Configured", logActionName, key);
                 return;
+            }
 
             var autoConfigKey = configuration.GetValue<string?>(configFullKey);
 
@@ -644,10 +662,15 @@ namespace Democrite.Framework.Cluster.Configurations
             if (indexedAssemblies.TryGetValue(autoConfigKey, out var autoConfigurators) &&
                 autoConfigurators.TryGetValue(typeof(TAutoConfig), out var autoConfigurator))
             {
+                logger.OptiLog(LogLevel.Information, "[{ConfigAction}][Key:{key}] - {autokey} - Auto-Configuration by {configurator}", logActionName, key, autoConfigKey, autoConfigurator.Name);
+
                 var configurator = (TAutoConfig)(Activator.CreateInstance(autoConfigurator) ?? throw new NotSupportedException());
 
                 if (customConfig is null)
                 {
+                    if (configFullKey.EndsWith(AUTO_KEY_CFG_KEY))
+                        configFullKey = configFullKey.Substring(0, configFullKey.Length - AUTO_KEY_CFG_KEY.Length);
+
                     if (configurator is IAutoConfigurator<TAutoWizard>)
                         customConfig = (c, wizard, cfg, service, logger) => ((IAutoConfigurator<TAutoWizard>)c!).AutoConfigure(wizard, cfg, service, logger);
                     else if (configurator is IAutoKeyConfigurator<TAutoWizard>)
@@ -657,13 +680,18 @@ namespace Democrite.Framework.Cluster.Configurations
                 if (customConfig is null)
                     throw new InvalidOperationException("Auto config or custom config is not setups");
 
+                logger.OptiLog(LogLevel.Trace, "[{ConfigAction}][Key:{key}] - Configuring ...", logActionName, key);
+
                 customConfig(configurator, (TAutoWizard)(object)this, configuration, serviceCollection, logger);
+
+                logger.OptiLog(LogLevel.Trace, "[{ConfigAction}][Key:{key}] - Configured", logActionName, key);
 
                 // Directly push data to predicateConfigurationExist function to work correctly
                 SetupServices();
                 return;
             }
 
+            logger.OptiLog(LogLevel.Information, "[{ConfigAction}][Key:{key}] - {autokey} - Missing", logActionName, key, autoConfigKey);
             throw MissingRequiredAutoDemocriteConfigurationException.Create<TAutoConfig>(autoConfigKey);
         }
 
@@ -715,7 +743,7 @@ namespace Democrite.Framework.Cluster.Configurations
         /// <summary>
         /// Setup an option information
         /// </summary>
-        protected void AddOption<TOptions>(Action<TOptions> optionsCfg) 
+        protected void AddOption<TOptions>(Action<TOptions> optionsCfg)
             where TOptions : class
         {
             this._options.Enqueue((IServiceCollection s) => s.Configure(optionsCfg));
