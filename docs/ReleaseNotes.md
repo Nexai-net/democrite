@@ -7,12 +7,62 @@ Release Notes
 
 # Beta
 
+## 0.5.0-prerelease
+
+In this version we mainly:
+- Optimize architecture around repository declaration and creation
+- Fix bugs, improve testing
+- New feature call [RefId](#050-prerelease/feature/refid)
+- New feature call Yaml [Compilation](#050-prerelease/feature/yaml-compilation)
+
+### Features
+- **Artifact**
+    - ***Arguments*** : 
+        - You can now differenciate command line argument for the launcher than launched script
+        - Choose the charactere that will be used in command line between the argument name and his value, by default is ':'. Example : --port:4242
+
+- **RefId**
+    - Using attribute and code genertion we tag each VGrain with a unique "SNI" (Simple Name Identifier) and a namespace through an URI used as user friend identifier
+        - URI Example: ***ref://vgr@bag.text/text-toolbox*** is the unique reference to a vgrain (interface) in the namespace "bag.text" with a SNI "text-toolbox"
+    - A ref id could target:
+        - VGrain interface
+        - VGrain Implementation
+        - Type (class, struct)
+        - Methods
+        - Definitions (Sequence, Trigger, Signal, ...)
+        - Blackboard controller
+
+- **Yaml Compilation**
+    - Compile Yaml into definitions
+    - Schema definition used to help yaml creation [Schema](https://github.com/Nexai-net/democrite/docs/democrite.schema.json)
+    - Support definitions
+        - Sequence
+        - Trigger (Cron, Signal)
+        - Signal
+        - StreamQueue
+
+- **Auto-Configuration**
+    - Schema definition to help configuration [Schema](https://github.com/Nexai-net/democrite/docs/configuration-node.schema.json)
+    - Add logs to better understands
+
+### Fix
+-   **Repository**
+    - ***Mongo***: Discriminator filter prevent some correct match 
+-   **Artifact**: We are currently integrating other langugage like java and minor internal bug was revealed
+    - ***Docker***: Fix image creation
+-   **Auto-Configuration** : Fix configuration through json file, extension loading ...
+-   **Portability**: Replaces Named Semaphore with Mutex: Suggests using a Mutex as a more portable alternative for synchronization.
+
+### Breaking Changes
+>[CAUTION]
+> - **Repository** : Due to artitecture change some custom implementation risk to be impacted
+
 ## 0.4.4-prerelease
 
 This update focuses on stability and bug fixes. <br/>
 We've enhanced our development process with new testing and automation tools to prevent regressions and improve overall quality.<br/>
 
-Please note that Amexio group is now supporting this projet.
+Please note that **Amexio** group is now supporting this projet.
 
 ## 0.4.3-prerelease
 

@@ -852,8 +852,20 @@ In the section [Sample/DynamicDefinition](/samples/DynamicDefinition//)
     - Suppression
 
 ## Next
+<br />
 
 ![Static Badge](https://img.shields.io/badge/BETA-FF6A00?style=for-the-badge&logo=windows)
+
+<br />
+
+**v 0.5.0-prerelease:** <br />
+[Release Node](/docs/ReleaseNotes.md#050-prerelease)
+- [x] Stabilisation
+- [x] Bug fixing
+- [x] Repository Architecture optimization
+- [x] Auto-Configuration through json file
+- [x] Target democrite resources throught [RefId](/docs/ReleaseNotes.md#050-prerelease)
+- [x] Create democrite throught [Yaml compilation](/docs/ReleaseNotes.md#050-prerelease)
 
 **v 0.4.4-prerelease:** <br/>
 - [x] Stabilisation
