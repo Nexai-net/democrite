@@ -4,23 +4,18 @@
 
 namespace Democrite.Framework.Node.Artifacts
 {
-    using Democrite.Framework.Cluster.Abstractions.Services;
     using Democrite.Framework.Core.Abstractions;
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Node.Abstractions.Artifacts;
     using Democrite.Framework.Node.Abstractions.Exceptions;
-    using Democrite.Framework.Node.Resources;
 
-    using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Disposables;
     using Elvex.Toolbox.Extensions;
 
     using Microsoft.Extensions.Logging;
 
-    using Newtonsoft.Json.Linq;
-
     using System;
-    using System.Diagnostics;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -34,7 +29,7 @@ namespace Democrite.Framework.Node.Artifacts
         private readonly ReaderWriterLockSlim _execCacheLocker;
 
         private readonly IReadOnlyCollection<IArtifactExecutorDedicatedFactory> _artifactExecutorDedicatedFactories;
-        private readonly Dictionary<Guid, Semaphore> _lockByArtifact;
+        private readonly Dictionary<Guid, Mutex> _lockByArtifact;
         private readonly SemaphoreSlim _lock;
 
         #endregion
@@ -47,7 +42,7 @@ namespace Democrite.Framework.Node.Artifacts
         public ArtifactExecutorFactory(IEnumerable<IArtifactExecutorDedicatedFactory> artifactExecutorDedicatedFactories)
         {
             this._cacheExec = new Dictionary<Guid, IArtifactExternalCodeExecutor>();
-            this._lockByArtifact = new Dictionary<Guid, Semaphore>();
+            this._lockByArtifact = new Dictionary<Guid, Mutex>();
             
             this._execCacheLocker = new ReaderWriterLockSlim();
             this._lock = new SemaphoreSlim(1);
@@ -65,8 +60,8 @@ namespace Democrite.Framework.Node.Artifacts
                                                                          ILogger logger,
                                                                          CancellationToken token)
         {
-            Semaphore locker;
-            await this._lock.LockAsync();
+            Mutex locker;
+            await this._lock.LockAsync(token);
             try
             {
                 if (this._lockByArtifact.TryGetValue(artifactCodePackageResource.Uid, out var cachedLocker))
@@ -75,7 +70,7 @@ namespace Democrite.Framework.Node.Artifacts
                 }
                 else
                 {
-                    locker = new Semaphore(1, 1, artifactCodePackageResource.Uid.ToString());
+                    locker = new Mutex(false, artifactCodePackageResource.Uid.ToString());
                     this._lockByArtifact.Add(artifactCodePackageResource.Uid, locker);
                 }
             }
@@ -85,53 +80,68 @@ namespace Democrite.Framework.Node.Artifacts
             }
 
             // Get a system thread safe to ensure the resources link to the artefact are not already used.
-            using (locker.Lock())
+            using (locker.Lock(token: token))
             {
-                IArtifactExternalCodeExecutor? cachedExecutor = null;
-                this._execCacheLocker.EnterReadLock();
-                try
-                {
-                    if (this._cacheExec.TryGetValue(artifactCodePackageResource.Uid, out var artifactExecutor))
-                        cachedExecutor = artifactExecutor;
-                }
-                finally
-                {
-                    this._execCacheLocker.ExitReadLock();
-                }
-
-                var dedicateFactory = this._artifactExecutorDedicatedFactories.FirstOrDefault(f => f.CanManaged(artifactCodePackageResource));
-
-                if (dedicateFactory is null)
-                    throw new ArtifactPreparationFailedException("Missing dedicated artifact executor. " + artifactCodePackageResource.ToDebugDisplayName(), executionContext);
-
-                if (cachedExecutor is not null)
-                {
-                    if (await dedicateFactory.CheckExecutorValidityAsync(artifactCodePackageResource, cachedExecutor, executionContext, logger, token))
-                        return cachedExecutor;
-
-                    await cachedExecutor.StopAsync(executionContext, logger, token);
-                }
-
-                var executor = await dedicateFactory.BuildNewExecutorAsync(artifactCodePackageResource, cachedExecutor, executionContext, logger, token);
-
-                if (cachedExecutor is not null && object.ReferenceEquals(executor, cachedExecutor) == false)
-                    await cachedExecutor.DisposeAsync();
-
-                this._execCacheLocker.EnterWriteLock();
-                try
-                {
-                    /*
-                     * Due to dedicated locker by artifact Uid we are sure that previous (if exist) is not different from 'cachedExecutor' variable.
-                     */
-                    this._cacheExec[artifactCodePackageResource.Uid] = executor;
-                }
-                finally
-                {
-                    this._execCacheLocker.ExitWriteLock();
-                }
-
-                return executor;
+                // Ensure asyc code and mutext lock and unlock in the same thread
+                var builTask = Task.Run(async () => await BuildInstallAsync(artifactCodePackageResource, executionContext, logger, token), token);
+                return builTask.GetAwaiter().GetResult();
             }
+        }
+
+        /// <summary>
+        /// Builds the install.
+        /// </summary>
+        private async ValueTask<IArtifactExternalCodeExecutor> BuildInstallAsync(ArtifactExecutableDefinition artifactCodePackageResource,
+                                                                                 IExecutionContext executionContext,
+                                                                                 ILogger logger,
+                                                                                 CancellationToken token)
+        {
+            IArtifactExternalCodeExecutor? cachedExecutor = null;
+            this._execCacheLocker.EnterReadLock();
+            try
+            {
+                if (this._cacheExec.TryGetValue(artifactCodePackageResource.Uid, out var artifactExecutor))
+                    cachedExecutor = artifactExecutor;
+            }
+            finally
+            {
+                this._execCacheLocker.ExitReadLock();
+            }
+
+            token.ThrowIfCancellationRequested();
+
+            var dedicateFactory = this._artifactExecutorDedicatedFactories.FirstOrDefault(f => f.CanManaged(artifactCodePackageResource));
+
+            if (dedicateFactory is null)
+                throw new ArtifactPreparationFailedException("Missing dedicated artifact executor. " + artifactCodePackageResource.ToDebugDisplayName(), executionContext);
+
+            if (cachedExecutor is not null)
+            {
+                if (await dedicateFactory.CheckExecutorValidityAsync(artifactCodePackageResource, cachedExecutor, executionContext, logger, token))
+                    return cachedExecutor;
+
+                await cachedExecutor.StopAsync(executionContext, logger, token);
+            }
+
+            var executor = await dedicateFactory.BuildNewExecutorAsync(artifactCodePackageResource, cachedExecutor, executionContext, logger, token);
+            if (cachedExecutor is not null && object.ReferenceEquals(executor, cachedExecutor) == false)
+                await cachedExecutor.DisposeAsync();
+
+            this._execCacheLocker.EnterWriteLock();
+            try
+            {
+                /*
+                 * Due to dedicated locker by artifact Uid we are sure that previous (if exist) is not different from 'cachedExecutor' variable.
+                 */
+                this._cacheExec[artifactCodePackageResource.Uid] = executor;
+                token.ThrowIfCancellationRequested();
+            }
+            finally
+            {
+                this._execCacheLocker.ExitWriteLock();
+            }
+
+            return executor;
         }
 
         /// <inheritdoc />

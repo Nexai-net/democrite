@@ -90,6 +90,7 @@ namespace Democrite.Framework.Node.Artifacts
             var files = artifactExecutableDefinition.PackageFiles
                                                     .Select(f => new Uri(rootPath, f))
                                                     .ToArray();
+            token.ThrowIfCancellationRequested();
 
             await InstallInLocalAsync(artifactExecutableDefinition,
                                       rootPath,
@@ -97,6 +98,8 @@ namespace Democrite.Framework.Node.Artifacts
                                       logger,
                                       executionContext,
                                       token);
+            
+            token.ThrowIfCancellationRequested();
 
             IArtifactExternalCodeExecutor newExecutor;
 

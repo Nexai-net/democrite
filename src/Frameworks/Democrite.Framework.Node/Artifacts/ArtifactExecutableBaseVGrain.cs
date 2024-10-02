@@ -87,10 +87,14 @@ namespace Democrite.Framework.Node.Artifacts
             if (artifactResult.Result == false || artifactResult.value == null)
                 throw new ArtifactMissingException(artifactId, nameof(ArtifactExecutableDefinition), executionContext);
 
+            executionContext.CancellationToken.ThrowIfCancellationRequested();
+
             var artifactCodePackageResource = artifactResult.value as ArtifactExecutableDefinition;
 
             if (artifactResult.value == null)
                 throw new ArtifactInvalidTypeException(artifactId, artifactResult.value!.GetType(), typeof(ArtifactExecutableDefinition), executionContext);
+
+            executionContext.CancellationToken.ThrowIfCancellationRequested();
 
             var executor = await this._artifactExecutorFactory.BuildAsync(artifactCodePackageResource!,
                                                                           executionContext,
@@ -99,6 +103,8 @@ namespace Democrite.Framework.Node.Artifacts
 
             try
             {
+                executionContext.CancellationToken.ThrowIfCancellationRequested();
+
                 if (artifactCodePackageResource?.Verbose == ArtifactExecVerboseEnum.Full)
                     logger.OptiLog(LogLevel.Information, "[External VGrain] {app} starting ...", artifactCodePackageResource.DisplayName);
 

@@ -9,7 +9,6 @@ namespace Democrite.Framework.Node.Artifacts
     using Democrite.Framework.Core.Abstractions.Artifacts;
     using Democrite.Framework.Core.Abstractions.Exceptions;
     using Democrite.Framework.Node.Abstractions.Artifacts;
-    using Democrite.Framework.Node.Models;
 
     using Elvex.Toolbox.Abstractions.Services;
     using Elvex.Toolbox.Communications;
@@ -23,6 +22,7 @@ namespace Democrite.Framework.Node.Artifacts
     using Newtonsoft.Json.Linq;
 
     using System;
+    using System.Diagnostics;
     using System.Reactive.Linq;
     using System.Text;
     using System.Threading;
@@ -117,6 +117,7 @@ namespace Democrite.Framework.Node.Artifacts
                     {
                         JoinArgument(args, "--port", portReserved.Token.ToString());
 
+                        Debug.Assert(this._comServer is null, "Comserver is still alive on remote");
                         this._comServer = new ComServer(portReserved.Token);
 
                         var clientTask = this._comServer.WaitNextClientAsync(launchingCancelTokenSource.Token);
@@ -295,7 +296,7 @@ namespace Democrite.Framework.Node.Artifacts
             var tmp = this._comServer;
             this._comServer = null;
 
-            if (tmp != null)
+            if (tmp is not null)
                 await tmp.DisposeAsync();
 
             var processorTmp = this.Processor;

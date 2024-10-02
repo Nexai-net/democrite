@@ -103,6 +103,8 @@
             // Build image if needed
             await EnsureArtifactImageIsAvailableAsync(definition, (ArtifactExecutableDockerEnvironmentDefinition)definition.Environment!, logger, token);
 
+            token.ThrowIfCancellationRequested();
+
             if (definition.AllowPersistence)
             {
                 executor = new ExternalDockerCodeDeamonExecutor(definition,
