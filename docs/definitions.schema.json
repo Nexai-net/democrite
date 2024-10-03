@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "version": "1.0.0",
-  "id": "https://github.com/Nexai-net/democrite/docs/democrite.schema.json",
+  "id": "https://raw.githubusercontent.com/Nexai-net/democrite/refs/heads/main/docs/definitions.schema.json",
   "title": "Democrite Definitions",
   "description": "The schema for dynamic definition description using yaml",
   "unevaluatedProperties": false,

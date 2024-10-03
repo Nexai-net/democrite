@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "version": "1.0.0",
-  "id": "https://github.com/Nexai-net/democrite/docs/configuration.schema.json",
+  "id": "https://raw.githubusercontent.com/Nexai-net/democrite/refs/heads/hotfix/schema_id/docs/configuration.schema.json",
   "title": "Democrite Configurations",
   "description": "The schema for dynamic democrite server configuration",
   "unevaluatedProperties": false,
